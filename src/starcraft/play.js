@@ -1,24 +1,18 @@
 import { Game } from "./game.js";
 
+let game;
 let isRunning = true;
+let hasGreetedOpponent = false;
 
 export async function start(args) {
-  const game = new Game(args);
+  game = new Game(args);
+  isRunning = true;
 
   await game.start();
 
-  let hasGreetedOpponent = false;
-
   while (isRunning) {
-    if (!hasGreetedOpponent && (game.time() > 10)) {
-      await game.chat("Good luck!");
-      hasGreetedOpponent = true;
-    }
-
-    if (game.minerals() > 300) {
-      await game.chat("gg");
-      isRunning = false;
-    }
+    await checkGreet();
+    await checkEnd();
 
     await game.step();
   }
@@ -28,4 +22,18 @@ export async function start(args) {
 
 export function stop() {
   isRunning = false;
+}
+
+async function checkGreet() {
+  if (!hasGreetedOpponent && (game.time() > 10)) {
+    await game.chat("Good luck!");
+    hasGreetedOpponent = true;
+  }
+}
+
+async function checkEnd() {
+  if (game.minerals() > 300) {
+    await game.chat("gg");
+    isRunning = false;
+  }
 }
