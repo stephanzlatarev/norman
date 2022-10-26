@@ -33,17 +33,47 @@ export class Game {
   }
 
   time() {
-    if (!this.state || !this.state.observation || !this.state.observation.gameLoop) return 0;
-
-    return this.state.observation.gameLoop;
+    return this.state ? this.state.observation.gameLoop : 0;
   }
 
   minerals() {
-    if (!this.state || !this.state.observation || !this.state.observation.playerCommon || !this.state.observation.playerCommon.minerals) return 0;
-
-    return this.state.observation.playerCommon.minerals;
+    return this.state ? this.state.observation.playerCommon.minerals : 0;
   }
 
+  workers() {
+    return this.state ? this.state.observation.playerCommon.foodWorkers : 0;
+  }
+
+  energySupply() {
+    return this.state ? this.state.observation.playerCommon.foodCap : 0;
+  }
+
+  energyUse() {
+    return this.state ? this.state.observation.playerCommon.foodUsed : 0;
+  }
+
+  async train() {
+    if (!this.state) return;
+
+    const nexus = this.state.observation.rawData.units.find(unit => unit.unitType === 59);
+
+    if (nexus.orders.length >= 5) return;
+
+    await this.client.action({
+      actions: [
+        {
+          actionRaw: {
+            unitCommand: {
+              unitTags: [nexus.tag],
+              abilityId: 1006,
+              queueCommand: false,
+              target: {}
+            }
+          }
+        }
+      ]
+    });
+  }
 }
 
 function parseArguments(args) {

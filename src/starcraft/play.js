@@ -12,6 +12,7 @@ export async function start(args) {
 
   while (isRunning) {
     await checkGreet();
+    await checkBuildWorker();
     await checkEnd();
 
     await game.step();
@@ -35,5 +36,11 @@ async function checkEnd() {
   if (game.minerals() > 300) {
     await game.chat("gg");
     isRunning = false;
+  }
+}
+
+async function checkBuildWorker() {
+  if ((game.minerals() >= 50) && (game.energyUse() < game.energySupply())) {
+    await game.train("probe");
   }
 }
