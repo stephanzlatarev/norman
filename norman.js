@@ -1,36 +1,17 @@
-import { Game } from "./src/starcraft/game.js";
+import { start, stop } from "./src/starcraft/play.js";
 import log from "./src/log.js";
-
-let running = true;
 
 process.on("SIGTERM", function() {
   log("Stopping...");
-  running = false;
+
+  stop();
 });
 
 async function run() {
-  const game = new Game(process.argv);
-
   log("Hello!");
-  await game.start();
 
-  let hasGreetedOpponent = false;
+  await start(process.argv);
 
-  while (running) {
-    if (!hasGreetedOpponent && (game.time() > 10)) {
-      await game.chat("Good luck!");
-      hasGreetedOpponent = true;
-    }
-
-    if (game.minerals() > 300) {
-      await game.chat("gg");
-      running = false;
-    }
-
-    await game.step();
-  }
-
-  await game.quit();
   log("Bye!");
 }
 
