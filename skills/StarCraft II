@@ -1,0 +1,27 @@
+---
+
+Context:
+  Game: StarCraft II
+
+Skill: Admit defeat
+  When losing
+  Then surrender
+
+---
+
+Context:
+  Body: StarCraft II API
+
+Skill: Surrender
+  First send action request:
+    type: chat
+    channel: Broadcast
+    message: gg
+  Then send quit request
+
+Skill: Know when losing
+  When observation response contains:
+    enemy unit > 1
+  Then losing
+
+---

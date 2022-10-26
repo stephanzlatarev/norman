@@ -1,5 +1,11 @@
 {
   "name": "norman",
   "version": "1.0.0",
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "start": "node ./norman.js"
+  },
+  "dependencies": {
+    "@node-sc2/proto": "^0.6.0-alpha.0"
+  }
 }
