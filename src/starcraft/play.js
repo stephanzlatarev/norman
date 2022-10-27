@@ -42,6 +42,8 @@ async function checkEnd() {
 }
 
 async function checkBuildWorker() {
+  if (game.workers() >= 16) return;
+
   const nexus = game.get("nexus");
 
   if (nexus && (game.minerals() >= 50) && (game.energyUse() < game.energySupply()) && (nexus.orders.length === 0)) {
