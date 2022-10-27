@@ -63,7 +63,7 @@ async function checkBuildWorker() {
 async function checkBuildPylon() {
   if (game.isBuilding()) return;
 
-  if ((game.minerals() >= 100) && (game.energyUse() > game.energySupply() - 5)) {
+  if ((game.minerals() >= 100) && (game.energyUse() > game.energySupply() - 10)) {
     await game.build("pylon");
   }
 }
