@@ -4,6 +4,12 @@ import log from "../log.js";
 
 const PROTOSS = 3;
 
+const UNIT_TYPE = {
+  nexus: 59,
+  probe: 84,
+  pylon: 60,
+};
+
 export class Game {
 
   constructor(args) {
@@ -55,11 +61,13 @@ export class Game {
   get(type) {
     if (!this.state) return;
 
-    if (type === "nexus") {
-      return this.state.observation.rawData.units.find(unit => unit.unitType === 59);
-    } else if (type === "probe") {
-      return this.state.observation.rawData.units.find(unit => unit.unitType === 84);
-    }
+    return this.state.observation.rawData.units.find(unit => unit.unitType === UNIT_TYPE[type]);
+  }
+
+  list(type) {
+    if (!this.state) return;
+
+    return this.state.observation.rawData.units.filter(unit => unit.unitType === UNIT_TYPE[type]);
   }
 
   async train(type) {
@@ -103,6 +111,45 @@ export class Game {
                   actionRaw: {
                     unitCommand: {
                       abilityId: 881, // Build pylon
+                      unitTags: [probe.tag],
+                      targetWorldSpacePos: { x: x, y: y },
+                      queueCommand: false
+                    }
+                  }
+                },
+                {
+                  actionRaw: {
+                    unitCommand: {
+                      abilityId: 298, // Go back to harvesting
+                      unitTags: [probe.tag],
+                      targetUnitTag: nexus.rallyTargets[0].tag,
+                      queueCommand: true
+                    }
+                  }
+                }
+              ]
+            });
+
+            if (response.result[0] === 1) return;
+          }
+        }
+      }
+    } else if (type === "gateway") {
+      const probe = this.get("probe");
+      const pylons = this.list("pylon");
+      const nexus = this.get("nexus");
+
+      const STEP = 3.5;
+
+      for (const pylon of pylons) {
+        for (let x = pylon.pos.x - STEP; x <= pylon.pos.x + STEP; x += STEP) {
+          for (let y = pylon.pos.y - STEP; y <= pylon.pos.y + STEP; y += STEP) {
+            const response = await this.client.action({
+              actions: [
+                {
+                  actionRaw: {
+                    unitCommand: {
+                      abilityId: 883, // Build gateway
                       unitTags: [probe.tag],
                       targetWorldSpacePos: { x: x, y: y },
                       queueCommand: false

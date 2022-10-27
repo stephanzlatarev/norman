@@ -4,6 +4,7 @@ let game;
 let isRunning = true;
 let hasGreetedOpponent = false;
 let markEnergySupply = 0;
+let markGateways = 0;
 
 export async function start(args) {
   game = new Game(args);
@@ -15,6 +16,7 @@ export async function start(args) {
     await checkGreet();
     await checkBuildWorker();
     await checkBuildPylon();
+    await checkBuildGateway();
     await checkEnd();
 
     await game.step();
@@ -56,5 +58,12 @@ async function checkBuildPylon() {
   if ((game.minerals() >= 100) && (game.energyUse() > game.energySupply() - 5) && (markEnergySupply !== game.energySupply())) {
     markEnergySupply = game.energySupply();
     await game.build("pylon");
+  }
+}
+
+async function checkBuildGateway() {
+  if (game.minerals() >= markGateways * 100 + 150) {
+    markGateways++;
+    await game.build("gateway");
   }
 }
