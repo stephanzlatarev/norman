@@ -5,6 +5,7 @@ let game;
 let isRunning = true;
 let hasGreetedOpponent = false;
 let markEnemy;
+let isDefendingFromEnemy = null;
 
 export async function start(args) {
   game = new Game(args);
@@ -14,18 +15,20 @@ export async function start(args) {
 
   while (isRunning) {
     try {
+      await game.step();
+
       await checkGreet();
       await checkBuildWorker();
       await checkBuildPylon();
       await checkBuildGateway();
       await checkBuildZealot();
       await checkAttackZealot();
+      await checkDefendWorkers();
+      await checkHarvestWorkers();
       await checkEnd();
     } catch (error) {
       log("ERROR:", error);
     }
-
-    await game.step();
   }
 
   await game.quit();
@@ -43,7 +46,11 @@ async function checkGreet() {
 }
 
 async function checkEnd() {
-  if (game.minerals() > 3000) {
+  const nexus = game.get("nexus");
+  const probes = game.list("probe");
+  const zealots = game.list("zealot");
+
+  if (!nexus || (probes.length + zealots.length === 0)) {
     await game.chat("gg");
     isRunning = false;
   }
@@ -101,4 +108,45 @@ async function checkAttackZealot() {
       await game.use("attack", zealot.tag);
     }
   }
+}
+
+async function checkDefendWorkers() {
+  const nexus = game.get("nexus");
+  if (!nexus) return;
+
+  const enemy = game.enemy();
+  if (!enemy && isDefendingFromEnemy) isDefendingFromEnemy = "stop";
+  if (!enemy) return;
+
+  const zealots = game.list("zealot");
+  if (zealots.length) return;
+
+  const distance = Math.abs(nexus.pos.x - enemy.pos.x) + Math.abs(nexus.pos.y - enemy.pos.y);
+  if (distance < 20) {
+    if (isDefendingFromEnemy !== enemy.tag) {
+      const probes = game.list("probe");
+
+      for (const probe of probes) {
+        await game.attack(probe.tag, enemy.tag);
+      }
+
+      isDefendingFromEnemy = enemy.tag;
+    }
+  } else if (isDefendingFromEnemy) {
+    isDefendingFromEnemy = "stop";
+  }
+}
+
+async function checkHarvestWorkers() {
+  if (isDefendingFromEnemy !== "stop") return;
+
+  const probes = game.list("probe");
+
+  for (const probe of probes) {
+    if (probe.orders.length && (probe.orders[0].abilityId === 23)) {
+      await game.harvest(probe.tag);
+    }
+  }
+
+  isDefendingFromEnemy = null;
 }

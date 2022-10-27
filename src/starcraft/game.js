@@ -298,6 +298,27 @@ export class Game {
     });
   }
 
+  async harvest(unit) {
+    const nexus = this.get("nexus");
+
+    if (!nexus) return;
+
+    await this.client.action({
+      actions: [
+        {
+          actionRaw: {
+            unitCommand: {
+              abilityId: 298, // Go back to harvesting
+              unitTags: [unit],
+              targetUnitTag: nexus.rallyTargets[0].tag,
+              queueCommand: false
+            }
+          }
+        }
+      ]
+    });
+  }
+
 }
 
 function parseArguments(args) {
