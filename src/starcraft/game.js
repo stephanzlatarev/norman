@@ -9,6 +9,7 @@ const UNIT_TYPE = {
   nexus: 59,
   probe: 84,
   pylon: 60,
+  zealot: 73,
 };
 
 export class Game {
@@ -218,6 +219,21 @@ export class Game {
                 unitTags: [nexus.tag],
                 abilityId: 3755,
                 targetUnitTag: target ? target : nexus.tag
+              }
+            }
+          }
+        ]
+      });
+    } else if (type === "attack") {
+      await this.client.action({
+        actions: [
+          {
+            actionRaw: {
+              unitCommand: {
+                unitTags: [target],
+                abilityId: 3674,
+                targetWorldSpacePos: { x: Math.random() * 250, y: Math.random() * 250 },
+                queueCommand: false
               }
             }
           }

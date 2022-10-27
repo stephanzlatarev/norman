@@ -16,6 +16,7 @@ export async function start(args) {
     await checkBuildPylon();
     await checkBuildGateway();
     await checkBuildZealot();
+    await checkAttackZealot();
     await checkEnd();
 
     await game.step();
@@ -78,6 +79,16 @@ async function checkBuildZealot() {
     if (gateway.orders.length === 0) {
       await game.train("zealot", gateway.tag);
       await game.use("chronoboost", gateway.tag);
+    }
+  }
+}
+
+async function checkAttackZealot() {
+  const zealots = game.list("zealot");
+
+  for (const zealot of zealots) {
+    if (zealot.orders.length === 0) {
+      await game.use("attack", zealot.tag);
     }
   }
 }
