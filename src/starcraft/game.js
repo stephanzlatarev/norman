@@ -74,6 +74,52 @@ export class Game {
       ]
     });
   }
+
+  async build(type) {
+    if (!this.state) return;
+
+    if (type === "pylon") {
+      const probe = this.state.observation.rawData.units.find(unit => unit.unitType === 84);
+      const nexus = this.state.observation.rawData.units.find(unit => unit.unitType === 59);
+      const mineralField = this.state.observation.rawData.units.find(unit => unit.unitType === 341);
+
+      const targets = [
+        { x: nexus.pos.x - 10, y: nexus.pos.y },
+        { x: nexus.pos.x + 10, y: nexus.pos.y },
+        { x: nexus.pos.x, y: nexus.pos.y - 10 },
+        { x: nexus.pos.x, y: nexus.pos.y + 10 },
+      ];
+
+      for (const target of targets) {
+        const response = await this.client.action({
+          actions: [
+            {
+              actionRaw: {
+                unitCommand: {
+                  abilityId: 881, // Build pylon
+                  unitTags: [probe.tag],
+                  targetWorldSpacePos: target,
+                  queueCommand: false
+                }
+              }
+            },
+            {
+              actionRaw: {
+                unitCommand: {
+                  abilityId: 298, // Go back to harvesting
+                  unitTags: [probe.tag],
+                  targetUnitTag: mineralField.tag,
+                  queueCommand: true
+                }
+              }
+            }
+          ]
+        });
+
+        if (response.result[0] === 1) break;
+      }
+    }
+  }
 }
 
 function parseArguments(args) {

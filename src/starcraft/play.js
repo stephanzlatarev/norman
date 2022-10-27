@@ -13,6 +13,7 @@ export async function start(args) {
   while (isRunning) {
     await checkGreet();
     await checkBuildWorker();
+    await checkBuildPylon();
     await checkEnd();
 
     await game.step();
@@ -42,5 +43,11 @@ async function checkEnd() {
 async function checkBuildWorker() {
   if ((game.minerals() >= 50) && (game.energyUse() < game.energySupply())) {
     await game.train("probe");
+  }
+}
+
+async function checkBuildPylon() {
+  if ((game.minerals() >= 100) && (game.energyUse() > game.energySupply() - 5)) {
+    await game.build("pylon");
   }
 }
