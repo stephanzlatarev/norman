@@ -92,40 +92,39 @@ export class Game {
       const probe = this.get("probe");
       const nexus = this.get("nexus");
 
-      const targets = [
-        { x: nexus.pos.x - 7, y: nexus.pos.y },
-        { x: nexus.pos.x + 7, y: nexus.pos.y },
-        { x: nexus.pos.x, y: nexus.pos.y - 7 },
-        { x: nexus.pos.x, y: nexus.pos.y + 7 },
-      ];
+      const STEP = 7;
 
-      for (const target of targets) {
-        const response = await this.client.action({
-          actions: [
-            {
-              actionRaw: {
-                unitCommand: {
-                  abilityId: 881, // Build pylon
-                  unitTags: [probe.tag],
-                  targetWorldSpacePos: target,
-                  queueCommand: false
+      for (let distance = STEP; distance < 200; distance += STEP) {
+        for (let x = nexus.pos.x - distance; x <= nexus.pos.x + distance; x += STEP) {
+          for (let y = nexus.pos.y - distance; y <= nexus.pos.y + distance; y += STEP) {
+            const response = await this.client.action({
+              actions: [
+                {
+                  actionRaw: {
+                    unitCommand: {
+                      abilityId: 881, // Build pylon
+                      unitTags: [probe.tag],
+                      targetWorldSpacePos: { x: x, y: y },
+                      queueCommand: false
+                    }
+                  }
+                },
+                {
+                  actionRaw: {
+                    unitCommand: {
+                      abilityId: 298, // Go back to harvesting
+                      unitTags: [probe.tag],
+                      targetUnitTag: nexus.rallyTargets[0].tag,
+                      queueCommand: true
+                    }
+                  }
                 }
-              }
-            },
-            {
-              actionRaw: {
-                unitCommand: {
-                  abilityId: 298, // Go back to harvesting
-                  unitTags: [probe.tag],
-                  targetUnitTag: nexus.rallyTargets[0].tag,
-                  queueCommand: true
-                }
-              }
-            }
-          ]
-        });
+              ]
+            });
 
-        if (response.result[0] === 1) break;
+            if (response.result[0] === 1) return;
+          }
+        }
       }
     }
   }

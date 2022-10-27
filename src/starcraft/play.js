@@ -3,6 +3,7 @@ import { Game } from "./game.js";
 let game;
 let isRunning = true;
 let hasGreetedOpponent = false;
+let markEnergySupply = 0;
 
 export async function start(args) {
   game = new Game(args);
@@ -34,7 +35,7 @@ async function checkGreet() {
 }
 
 async function checkEnd() {
-  if (game.minerals() > 300) {
+  if (game.minerals() > 3000) {
     await game.chat("gg");
     isRunning = false;
   }
@@ -50,7 +51,8 @@ async function checkBuildWorker() {
 }
 
 async function checkBuildPylon() {
-  if ((game.minerals() >= 100) && (game.energyUse() > game.energySupply() - 5)) {
+  if ((game.minerals() >= 100) && (game.energyUse() > game.energySupply() - 5) && (markEnergySupply !== game.energySupply())) {
+    markEnergySupply = game.energySupply();
     await game.build("pylon");
   }
 }
