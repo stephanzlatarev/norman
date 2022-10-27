@@ -94,11 +94,16 @@ export class Game {
     const enemies = this.state.observation.rawData.units.filter(unit => (unit.owner === this.enemyId));
     const nexus = this.get("nexus");
     let nearestEnemy;
+    let isEnemyEngaged = false;
     let distanceToNearestEnemy = 1000;
     for (const enemy of enemies) {
+      if (enemy.isFlying) continue;
+      if (isEnemyEngaged && (enemy.engagedTargetTag !== "0")) continue;
+
       const distance = Math.abs(enemy.pos.x - nexus.pos.x) + Math.abs(enemy.pos.y - nexus.pos.y);
       if (distance < distanceToNearestEnemy) {
         nearestEnemy = enemy;
+        isEnemyEngaged = (enemy.engagedTargetTag !== "0");
         distanceToNearestEnemy = distance;
       }
     }
