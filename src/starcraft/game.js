@@ -35,6 +35,17 @@ export class Game {
     await this.client.step({ count: 1 });
 
     this.state = await this.client.observation();
+
+    if (this.ownerId === undefined) {
+      this.ownerId = this.state.observation.rawData.units.find(unit => unit.unitType === UNIT_TYPE.nexus).owner;
+
+      for (const player of this.gameInfo.playerInfo) {
+        if (this.ownerId !== player.playerId) {
+          this.enemyId = player.playerId;
+          break;
+        }
+      }
+    }
   }
 
   async chat(message) {
@@ -64,13 +75,23 @@ export class Game {
   get(type) {
     if (!this.state) return;
 
-    return this.state.observation.rawData.units.find(unit => unit.unitType === UNIT_TYPE[type]);
+    return this.state.observation.rawData.units.find(unit => (unit.unitType === UNIT_TYPE[type]) && (unit.owner === this.ownerId));
   }
 
   list(type) {
     if (!this.state) return [];
 
-    return this.state.observation.rawData.units.filter(unit => unit.unitType === UNIT_TYPE[type]);
+    return this.state.observation.rawData.units.filter(unit => (unit.unitType === UNIT_TYPE[type]) && (unit.owner === this.ownerId));
+  }
+
+  enemy(enemyTag) {
+    if (!this.state) return;
+
+    const one = this.state.observation.rawData.units.find(unit => (unit.tag === enemyTag));
+
+    if (one) return one;
+
+    return this.state.observation.rawData.units.find(unit => (unit.owner === this.enemyId));
   }
 
   isBuilding() {
@@ -243,6 +264,24 @@ export class Game {
       });
     }
   }
+
+  async attack(unit, target) {
+    await this.client.action({
+      actions: [
+        {
+          actionRaw: {
+            unitCommand: {
+              unitTags: [unit],
+              abilityId: 3674,
+              targetUnitTag: target,
+              queueCommand: false
+            }
+          }
+        }
+      ]
+    });
+  }
+
 }
 
 function parseArguments(args) {
