@@ -1,4 +1,5 @@
 import { Game } from "./game.js";
+import log from "../log.js";
 
 let game;
 let isRunning = true;
@@ -11,13 +12,17 @@ export async function start(args) {
   await game.start();
 
   while (isRunning) {
-    await checkGreet();
-    await checkBuildWorker();
-    await checkBuildPylon();
-    await checkBuildGateway();
-    await checkBuildZealot();
-    await checkAttackZealot();
-    await checkEnd();
+    try {
+      await checkGreet();
+      await checkBuildWorker();
+      await checkBuildPylon();
+      await checkBuildGateway();
+      await checkBuildZealot();
+      await checkAttackZealot();
+      await checkEnd();
+    } catch (error) {
+      log("ERROR:", error);
+    }
 
     await game.step();
   }

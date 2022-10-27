@@ -6,6 +6,7 @@ const PROTOSS = 3;
 
 const UNIT_TYPE = {
   gateway: 62,
+  mineral: 341,
   nexus: 59,
   probe: 84,
   pylon: 60,
@@ -128,6 +129,7 @@ export class Game {
     if (type === "pylon") {
       const probe = this.get("probe");
       const nexus = this.get("nexus");
+      const harvest = nexus.rallyTargets[0] ? nexus.rallyTargets[0].tag : this.get("mineral").tag;
 
       const STEP = 7;
 
@@ -151,7 +153,7 @@ export class Game {
                     unitCommand: {
                       abilityId: 298, // Go back to harvesting
                       unitTags: [probe.tag],
-                      targetUnitTag: nexus.rallyTargets[0].tag,
+                      targetUnitTag: harvest,
                       queueCommand: true
                     }
                   }
