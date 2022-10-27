@@ -52,12 +52,20 @@ export class Game {
     return this.state ? this.state.observation.playerCommon.foodUsed : 0;
   }
 
+  get(type) {
+    if (!this.state) return;
+
+    if (type === "nexus") {
+      return this.state.observation.rawData.units.find(unit => unit.unitType === 59);
+    } else if (type === "probe") {
+      return this.state.observation.rawData.units.find(unit => unit.unitType === 84);
+    }
+  }
+
   async train() {
     if (!this.state) return;
 
-    const nexus = this.state.observation.rawData.units.find(unit => unit.unitType === 59);
-
-    if (nexus.orders.length >= 5) return;
+    const nexus = this.get("nexus");
 
     await this.client.action({
       actions: [
@@ -79,15 +87,14 @@ export class Game {
     if (!this.state) return;
 
     if (type === "pylon") {
-      const probe = this.state.observation.rawData.units.find(unit => unit.unitType === 84);
-      const nexus = this.state.observation.rawData.units.find(unit => unit.unitType === 59);
-      const mineralField = this.state.observation.rawData.units.find(unit => unit.unitType === 341);
+      const probe = this.get("probe");
+      const nexus = this.get("nexus");
 
       const targets = [
-        { x: nexus.pos.x - 10, y: nexus.pos.y },
-        { x: nexus.pos.x + 10, y: nexus.pos.y },
-        { x: nexus.pos.x, y: nexus.pos.y - 10 },
-        { x: nexus.pos.x, y: nexus.pos.y + 10 },
+        { x: nexus.pos.x - 7, y: nexus.pos.y },
+        { x: nexus.pos.x + 7, y: nexus.pos.y },
+        { x: nexus.pos.x, y: nexus.pos.y - 7 },
+        { x: nexus.pos.x, y: nexus.pos.y + 7 },
       ];
 
       for (const target of targets) {
@@ -108,7 +115,7 @@ export class Game {
                 unitCommand: {
                   abilityId: 298, // Go back to harvesting
                   unitTags: [probe.tag],
-                  targetUnitTag: mineralField.tag,
+                  targetUnitTag: nexus.rallyTargets[0].tag,
                   queueCommand: true
                 }
               }
@@ -118,6 +125,28 @@ export class Game {
 
         if (response.result[0] === 1) break;
       }
+    }
+  }
+
+  async use(type) {
+    if (!this.state) return;
+
+    if (type === "chronoboost") {
+      const nexus = this.get("nexus");
+
+      await this.client.action({
+        actions: [
+          {
+            actionRaw: {
+              unitCommand: {
+                unitTags: [nexus.tag],
+                abilityId: 3755,
+                targetUnitTag: nexus.tag
+              }
+            }
+          }
+        ]
+      });
     }
   }
 }
