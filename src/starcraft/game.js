@@ -91,7 +91,18 @@ export class Game {
 
     if (one) return one;
 
-    return this.state.observation.rawData.units.find(unit => (unit.owner === this.enemyId));
+    const enemies = this.state.observation.rawData.units.filter(unit => (unit.owner === this.enemyId));
+    const nexus = this.get("nexus");
+    let nearestEnemy;
+    let distanceToNearestEnemy = 1000;
+    for (const enemy of enemies) {
+      const distance = Math.abs(enemy.pos.x - nexus.pos.x) + Math.abs(enemy.pos.y - nexus.pos.y);
+      if (distance < distanceToNearestEnemy) {
+        nearestEnemy = enemy;
+        distanceToNearestEnemy = distance;
+      }
+    }
+    return nearestEnemy;
   }
 
   isBuilding() {
