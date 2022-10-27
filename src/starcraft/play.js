@@ -3,8 +3,6 @@ import { Game } from "./game.js";
 let game;
 let isRunning = true;
 let hasGreetedOpponent = false;
-let markEnergySupply = 0;
-let markGateways = 0;
 
 export async function start(args) {
   game = new Game(args);
@@ -56,15 +54,17 @@ async function checkBuildWorker() {
 }
 
 async function checkBuildPylon() {
-  if ((game.minerals() >= 100) && (game.energyUse() > game.energySupply() - 5) && (markEnergySupply !== game.energySupply())) {
-    markEnergySupply = game.energySupply();
+  if (game.isBuilding()) return;
+
+  if ((game.minerals() >= 100) && (game.energyUse() > game.energySupply() - 5)) {
     await game.build("pylon");
   }
 }
 
 async function checkBuildGateway() {
-  if (game.minerals() >= markGateways * 100 + 150) {
-    markGateways++;
+  if (game.isBuilding()) return;
+
+  if ((game.minerals() >= game.list("gateway").length * 100 + 150) && (game.energyUse() <= game.energySupply() - 2)) {
     await game.build("gateway");
   }
 }

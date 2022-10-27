@@ -66,9 +66,21 @@ export class Game {
   }
 
   list(type) {
-    if (!this.state) return;
+    if (!this.state) return [];
 
     return this.state.observation.rawData.units.filter(unit => unit.unitType === UNIT_TYPE[type]);
+  }
+
+  isBuilding() {
+    const probes = this.list("probe");
+
+    for (const probe of probes) {
+      if (probe.orders.length === 2) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   async train(type, factory) {
