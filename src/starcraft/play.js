@@ -17,6 +17,7 @@ export async function start(args) {
     await checkBuildWorker();
     await checkBuildPylon();
     await checkBuildGateway();
+    await checkBuildZealot();
     await checkEnd();
 
     await game.step();
@@ -65,5 +66,18 @@ async function checkBuildGateway() {
   if (game.minerals() >= markGateways * 100 + 150) {
     markGateways++;
     await game.build("gateway");
+  }
+}
+
+async function checkBuildZealot() {
+  if ((game.minerals() < 100) || (game.energyUse() > 198)) return;
+
+  const gateways = game.list("gateway");
+
+  for (const gateway of gateways) {
+    if (gateway.orders.length === 0) {
+      await game.train("zealot", gateway.tag);
+      await game.use("chronoboost", gateway.tag);
+    }
   }
 }

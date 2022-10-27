@@ -5,6 +5,7 @@ import log from "../log.js";
 const PROTOSS = 3;
 
 const UNIT_TYPE = {
+  gateway: 62,
   nexus: 59,
   probe: 84,
   pylon: 60,
@@ -70,7 +71,7 @@ export class Game {
     return this.state.observation.rawData.units.filter(unit => unit.unitType === UNIT_TYPE[type]);
   }
 
-  async train(type) {
+  async train(type, factory) {
     if (!this.state) return;
 
     if (type === "probe") {
@@ -83,6 +84,21 @@ export class Game {
               unitCommand: {
                 unitTags: [nexus.tag],
                 abilityId: 1006,
+                queueCommand: false,
+                target: {}
+              }
+            }
+          }
+        ]
+      });
+    } else if (type === "zealot") {
+      await this.client.action({
+        actions: [
+          {
+            actionRaw: {
+              unitCommand: {
+                unitTags: [factory],
+                abilityId: 916,
                 queueCommand: false,
                 target: {}
               }
@@ -176,7 +192,7 @@ export class Game {
     }
   }
 
-  async use(type) {
+  async use(type, target) {
     if (!this.state) return;
 
     if (type === "chronoboost") {
@@ -189,7 +205,7 @@ export class Game {
               unitCommand: {
                 unitTags: [nexus.tag],
                 abilityId: 3755,
-                targetUnitTag: nexus.tag
+                targetUnitTag: target ? target : nexus.tag
               }
             }
           }
