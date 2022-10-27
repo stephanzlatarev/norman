@@ -4,7 +4,6 @@ import log from "../log.js";
 let game;
 let isRunning = true;
 let hasGreetedOpponent = false;
-let markEnemy;
 let isDefendingFromEnemy = null;
 
 export async function start(args) {
@@ -98,12 +97,11 @@ async function checkBuildZealot() {
 
 async function checkAttackZealot() {
   const zealots = game.list("zealot");
-  const enemy = game.enemy(markEnemy);
+  const enemy = game.enemy();
 
   for (const zealot of zealots) {
     if (enemy && ((zealot.orders.length === 0) || (zealot.orders[0].targetUnitTag !== enemy.tag))) {
-      await game.attack(zealot.tag, markEnemy);
-      markEnemy = enemy.tag;
+      await game.attack(zealot.tag, enemy.tag);
     } else if (zealot.orders.length === 0) {
       await game.use("attack", zealot.tag);
     }
