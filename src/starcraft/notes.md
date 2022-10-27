@@ -27,6 +27,7 @@ await game.client.action({ actions: [{ actionChat: { channel: 1, message: "Test"
 #### Console
 
 ```
+async function step(count) { for (let i = 0; i < count; i++) await game.step(); }
 process.stdin.on("data", data => {
   try {
     eval(`
