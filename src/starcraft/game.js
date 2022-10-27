@@ -62,25 +62,27 @@ export class Game {
     }
   }
 
-  async train() {
+  async train(type) {
     if (!this.state) return;
 
-    const nexus = this.get("nexus");
+    if (type === "probe") {
+      const nexus = this.get("nexus");
 
-    await this.client.action({
-      actions: [
-        {
-          actionRaw: {
-            unitCommand: {
-              unitTags: [nexus.tag],
-              abilityId: 1006,
-              queueCommand: false,
-              target: {}
+      await this.client.action({
+        actions: [
+          {
+            actionRaw: {
+              unitCommand: {
+                unitTags: [nexus.tag],
+                abilityId: 1006,
+                queueCommand: false,
+                target: {}
+              }
             }
           }
-        }
-      ]
-    });
+        ]
+      });
+    }
   }
 
   async build(type) {
