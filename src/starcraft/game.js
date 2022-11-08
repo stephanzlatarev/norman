@@ -20,8 +20,11 @@ export class Game {
     this.settings = parseArguments(args);
   }
 
-  async start() {
+  async connect() {
     await connect(this.client, this.settings);
+  }
+
+  async start() {
     await play(this.client, this.settings);
 
     this.gameInfo = await this.client.gameInfo();
@@ -82,6 +85,10 @@ export class Game {
     if (!this.state) return [];
 
     return this.state.observation.rawData.units.filter(unit => (unit.unitType === UNIT_TYPE[type]) && (unit.owner === this.ownerId));
+  }
+
+  enemies() {
+    return this.state.observation.rawData.units.filter(unit => (unit.owner === this.enemyId));
   }
 
   enemy(enemyTag) {
@@ -243,7 +250,7 @@ export class Game {
     }
   }
 
-  async use(type, target) {
+  async use(type, target, object) {
     if (!this.state) return;
 
     if (type === "chronoboost") {
@@ -271,6 +278,54 @@ export class Game {
                 unitTags: [target],
                 abilityId: 3674,
                 targetWorldSpacePos: { x: Math.random() * 250, y: Math.random() * 250 },
+                queueCommand: false
+              }
+            }
+          }
+        ]
+      });
+    } else if (type === "test") {
+      const distance = target.radius;
+      const dx = distance * (Math.random() * 2 - 1);
+      const dy = distance * (Math.random() * 2 - 1);
+      await this.client.action({
+        actions: [
+          {
+            actionRaw: {
+              unitCommand: {
+                unitTags: [target.tag],
+                abilityId: 3674,
+                targetWorldSpacePos: { x: target.pos.x + dx, y: target.pos.y + dy },
+                queueCommand: false
+              }
+            }
+          }
+        ]
+      });
+    } else if (type === "test1") {
+      await this.client.action({
+        actions: [
+          {
+            actionRaw: {
+              unitCommand: {
+                unitTags: [target.tag],
+                abilityId: 3674,
+                targetUnitTag: object.tag,
+                queueCommand: false
+              }
+            }
+          }
+        ]
+      });
+    } else if (type === "move") {
+      await this.client.action({
+        actions: [
+          {
+            actionRaw: {
+              unitCommand: {
+                unitTags: [target.tag],
+                abilityId: 16,
+                targetWorldSpacePos: { x: object.x, y: object.y },
                 queueCommand: false
               }
             }
@@ -367,16 +422,6 @@ async function start(client) {
   for (let i = 0; i < 12; i++) {
     try {
       await client.connect({ host: "localhost", port: 5000 });
-      await client.createGame({
-        realtime: false,
-        battlenetMapName: "Data-C",
-        playerSetup: [
-          { type: 1, race: PROTOSS },            // Participant, Protoss
-          { type: 2, race: 4, difficulty: 1 },   // Computer, Random
-        ]
-      });
-
-      log("Game started.");
       return;
     } catch (_) {
       await new Promise(r => setTimeout(r, 5000));
@@ -387,6 +432,16 @@ async function start(client) {
 }
 
 async function play(client, settings) {
+  await client.createGame({
+    realtime: false,
+    localMap: { mapPath: "norman-defend-nexus-versus-drones.SC2Map" },
+//    battlenetMapName: "Data-C",
+    playerSetup: [
+      { type: 1, race: PROTOSS },            // Participant, Protoss
+      { type: 2, race: 4, difficulty: 1 },   // Computer, Random
+    ]
+  });
+
   const player = {};
 
   player.race = PROTOSS;

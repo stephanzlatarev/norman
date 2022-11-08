@@ -10,6 +10,7 @@ export async function start(args) {
   game = new Game(args);
   isRunning = true;
 
+  await game.connect();
   await game.start();
 
   while (isRunning) {
