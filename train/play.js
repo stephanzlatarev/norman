@@ -1,6 +1,6 @@
-import { map, pov, score } from "./starcraftGame.js";
-import { observe, protocol } from "./starcraftProtocol.js";
-import { toAction, toData } from "./commands.js";
+import { map, pov, score } from "./starcraft/game.js";
+import { observe, protocol } from "./starcraft/protocol.js";
+import { toAction, toData } from "./starcraft/commands.js";
 
 export default class {
 

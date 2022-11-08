@@ -1,6 +1,6 @@
 import Brain from "./brain.js";
-import { map, assign, pov, score } from "./starcraftGame.js";
-import { connect, start, observe, find, command, step } from "./starcraftProtocol.js";
+import { map, assign, pov, score } from "./starcraft/game.js";
+import { connect, start, observe, find, command, step } from "./starcraft/protocol.js";
 import Play from "./play.js";
 
 const brain = new Brain(65*2, 2, 10, 50);
