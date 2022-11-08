@@ -65,6 +65,9 @@ export default class {
     return data;
   }
 
+  async save(file) {
+    await this.model.save(file);
+  }
 }
 
 function accuracy(info) {
