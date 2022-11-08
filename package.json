@@ -6,6 +6,7 @@
     "start": "node ./norman.js"
   },
   "dependencies": {
-    "@node-sc2/proto": "^0.6.0-alpha.0"
+    "@node-sc2/proto": "^0.6.0-alpha.0",
+    "@tensorflow/tfjs-node": "^4.0.0"
   }
 }
