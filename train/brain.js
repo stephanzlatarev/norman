@@ -65,8 +65,13 @@ export default class {
     return data;
   }
 
-  async save(file) {
-    await this.model.save(file);
+  async load(file) {
+    this.model = await tf.loadLayersModel(file);
+    this.model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
+  }
+
+  async save(folder) {
+    await this.model.save(folder);
   }
 }
 

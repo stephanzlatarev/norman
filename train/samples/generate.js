@@ -21,12 +21,12 @@ const SCENARIOS = [
 export default async function() {
   const samples = [];
 
-  for (let wdx = 0; wdx <= 10; wdx++) {
-    for (let wdy = -10; wdy <= 10; wdy++) {
+  for (let wdx = 0; wdx <= 10; wdx += 0.5) {
+    for (let wdy = -10; wdy <= 10; wdy += 0.5) {
       if ((wdx === 0) && (wdy === 0)) continue;
 
       for (let edy = 1; edy <= 15; edy++) {
-        const shouldAttack = (edy === 1) && (wdx === 1) && (wdy === 1);
+        const shouldAttack = (edy === 1) && (wdx === 0.5) && (wdy === 0.5);
 
         addSample(samples, { input: generateInput(wdx, wdy, edy), output: generateOutput(shouldAttack, wdx, wdy, edy) });
       }
@@ -50,7 +50,7 @@ function generateInput(wingDistanceX, wingDistanceY, enemyDistanceY) {
   const situation = [
     { tag: "self", owner: 1, pos: { x: SELF_X, y: SELF_Y } },
     { tag: "wingman", owner: 1, pos: { x: SELF_X + wingDistanceX, y: SELF_Y + wingDistanceY } },
-    { tag: "enemy", owner: 1, pos: { x: SELF_X, y: SELF_Y + enemyDistanceY } },
+    { tag: "enemy", owner: 2, pos: { x: SELF_X, y: SELF_Y + enemyDistanceY } },
   ];
 
   return pov(situation, "self");
@@ -60,6 +60,6 @@ function generateOutput(shouldAttack, wingDistanceX, wingDistanceY, enemyDistanc
   if (shouldAttack) {
     return toData({ abilityId: 3674, x: 0, y: enemyDistanceY });
   } else {
-    return toData({ abilityId: 16, x: wingDistanceX, y: wingDistanceY - 1 }); // "- 1" means we get in formation relative to the enemy
+    return toData({ abilityId: 16, x: wingDistanceX - 0.5, y: wingDistanceY - 0.5 }); // Get in formation relative to the enemy
   }
 }
