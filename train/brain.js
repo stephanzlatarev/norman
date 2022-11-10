@@ -6,7 +6,10 @@ const HIDDEN_LAYER_INFLATION = 1.2;
 const OPTIMIZER_RATE = 0.1;
 const ACTIVATION_FUNCTION = "sigmoid";
 const OPTIMIZER_FUNCTION = tf.train.sgd(OPTIMIZER_RATE);
-const LOSS_FUNCTION = "meanSquaredError";
+const LOSS_FUNCTION = loss;
+
+let mask;
+let maskSize;
 
 export default class {
 
@@ -82,6 +85,25 @@ export default class {
   async save(folder) {
     await this.model.save(folder);
   }
+}
+
+// Similar to "meanSquaredError" but treats second point as a circle (0.0 == 1.0)
+function loss(expect, actual) {
+  if (maskSize !== expect.shape[0]) {
+    mask = createMask(expect);
+  }
+
+  let error = actual.sub(expect).abs();
+  error = error.minimum(error.sub(mask).abs());
+
+  return error.square().mean();
+}
+
+function createMask(tensor) {
+  const zero = tf.zerosLike(tensor).slice([0, 0], [tensor.shape[0], 1]);
+  const ones = tf.onesLike(tensor).slice([0, 0], [tensor.shape[0], 1]);
+
+  return zero.concat(ones, 1);
 }
 
 function accuracy(info) {
