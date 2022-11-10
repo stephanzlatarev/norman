@@ -55,10 +55,10 @@ function spot(probes, drones) {
 
 function center(ability, direction) {
   // ˂ ┌ ˄ ┐└ ˅ ┘ ˃ « ╔ A ╗╚ Y ╝ »
-  if (ability >= 0.3) {
-    return "˄┐┐˃˃┘┘˅˅└└˂˂┌┌˄"[Math.floor(direction * 16)];
-  } else if (ability >= 0.7) {
+  if (ability >= 0.7) {
     return "A╗╗»»╝╝YY╚╚««╔╔A"[Math.floor(direction * 16)];
+  } else if (ability >= 0.3) {
+    return "˄┐┐˃˃┘┘˅˅└└˂˂┌┌˄"[Math.floor(direction * 16)];
   }
 
   return "☺";

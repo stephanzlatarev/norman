@@ -8,9 +8,6 @@ const ACTIVATION_FUNCTION = "sigmoid";
 const OPTIMIZER_FUNCTION = tf.train.sgd(OPTIMIZER_RATE);
 const LOSS_FUNCTION = loss;
 
-let mask;
-let maskSize;
-
 export default class {
 
   constructor(inputSize, outputSize, learningEpochs, learningBatchSize) {
@@ -40,9 +37,7 @@ export default class {
     const input = tf.tensor(batch.input, [this.learningBatchSize, this.inputSize]);
     const output = tf.tensor(batch.output, [this.learningBatchSize, this.outputSize]);
     let info;
-    let cycle = 0;
 
-//    console.log("SIZE:", batch.input.length);
     while (new Date().getTime() - time < millis) {
       info = await this.model.fit(input, output, {
         epochs: this.learningEpochs,
@@ -50,10 +45,9 @@ export default class {
         shuffle: true,
         verbose: false,
       });
-      cycle++;
     }
 
-    console.log("Learning", cycle, "batches for", (new Date().getTime() - time), "millis improved accuracy to", accuracy(info));
+    summary(time, info);
 
     tf.engine().endScope();
   }
@@ -87,34 +81,21 @@ export default class {
   }
 }
 
-// Similar to "meanSquaredError" but treats second point as a circle (0.0 == 1.0)
+// Similar to "meanSquaredError" but error is calculated in a ring (0.0 == 1.0)
 function loss(expect, actual) {
-  if (maskSize !== expect.shape[0]) {
-    mask = createMask(expect);
-  }
+  const error = actual.sub(expect).abs();
+  const flip = error.sub(tf.scalar(1)).abs();
 
-  let error = actual.sub(expect).abs();
-  error = error.minimum(error.sub(mask).abs());
-
-  return error.square().mean();
+  return error.minimum(flip).square().mean();
 }
 
-function createMask(tensor) {
-  const zero = tf.zerosLike(tensor).slice([0, 0], [tensor.shape[0], 1]);
-  const ones = tf.onesLike(tensor).slice([0, 0], [tensor.shape[0], 1]);
+function summary(time, info) {
+  const lossAtStart = info.history.loss[0];
+  const lossAtEnd = info.history.loss[info.history.loss.length - 1];
+  const accuracy = 1 - lossAtEnd;
+  const iterationsTillZeroLoss = (lossAtStart - lossAtEnd) ? lossAtEnd / (lossAtStart - lossAtEnd) : -1;
+  const millisPerIteration = new Date().getTime() - time;
+  const perfectionTime = new Date(new Date().getTime() + millisPerIteration * iterationsTillZeroLoss);
 
-  return zero.concat(ones, 1);
-}
-
-function accuracy(info) {
-  let sum = 0;
-  let count = 0;
-
-//  console.log("EPOCHS:", info.history.loss.length);
-  for (const loss of info.history.loss) {
-    sum += loss;
-    count++;
-  }
-
-  return count ? (1 - sum / count) : -1;
+  console.log("Accuracy:", accuracy, "\tPerfection:", perfectionTime.toISOString());
 }

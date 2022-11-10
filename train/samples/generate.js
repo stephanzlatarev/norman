@@ -64,9 +64,17 @@ function generateInput(wingDistanceX, wingDistanceY, enemyDistanceY) {
 }
 
 function generateOutput(shouldAttack, wingDistanceX, wingDistanceY, enemyDistanceY) {
+  let output;
+
   if (shouldAttack) {
-    return toData({ abilityId: 3674, x: 0, y: enemyDistanceY });
+    output = toData({ abilityId: 3674, x: 0, y: enemyDistanceY });
   } else {
-    return toData({ abilityId: 16, x: wingDistanceX - 0.5, y: wingDistanceY - 0.5 }); // Get in formation relative to the enemy
+    output = toData({ abilityId: 16, x: wingDistanceX - 0.5, y: wingDistanceY - 0.5 }); // Get in formation relative to the enemy
   }
+
+  if (output[0] === 0.15) {
+    output = toData({ abilityId: 3674, x: 0, y: enemyDistanceY });
+  }
+
+  return output;
 }

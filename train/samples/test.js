@@ -60,8 +60,12 @@ async function test(brain, test) {
 
   let loss = 0;
   for (let i = 0; i < response.length; i++) {
-    const error = response[i] - test.output[i];
-    loss += error * error;
+    const error = Math.abs(response[i] - test.output[i]);
+    if (error <= 0.5) {
+      loss += error * error;
+    } else {
+      loss += (1 - error) * (1 - error);
+    }
   }
 
   return {
