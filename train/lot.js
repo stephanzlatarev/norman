@@ -36,6 +36,8 @@ export default class {
   }
 
   batch(size, transform) {
+    if ((size >= this.input.length) && !transform) return { input: this.input, output: this.output };
+
     const input = [];
     const output = [];
 

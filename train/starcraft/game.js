@@ -42,7 +42,7 @@ export function pov(situation, unitTag) {
   return pov;
 }
 
-export function spin(pov, r, f) {
+export function spinPov(pov, r, f) {
   const rotation = (typeof(r) === "number") ? r : Math.floor(Math.random() * 8);
   const flip = (typeof(f) === "boolean") ? f : (Math.random() < 0.5);
   const result = [];
@@ -64,28 +64,12 @@ export function spin(pov, r, f) {
   return result;
 }
 
-export function show(pov) {
-  const o = (x) => (x ? "x" : "-");
-
-  console.log("   ", o(pov[0]), "\t\t\t", o(pov[65]));
-  for (let distance = 0; distance < 8; distance++) {
-    console.log(
-      (distance + 1), "|",
-      o(pov[distance*8 + 1]), o(pov[distance*8 + 2]), o(pov[distance*8 + 3]), o(pov[distance*8 + 4]),
-      o(pov[distance*8 + 5]), o(pov[distance*8 + 6]), o(pov[distance*8 + 7]), o(pov[distance*8 + 8]),
-      "\t",
-      o(pov[distance*8 + 1 + 65]), o(pov[distance*8 + 2 + 65]), o(pov[distance*8 + 3 + 65]), o(pov[distance*8 + 4 + 65]),
-      o(pov[distance*8 + 5 + 65]), o(pov[distance*8 + 6 + 65]), o(pov[distance*8 + 7 + 65]), o(pov[distance*8 + 8 + 65]),
-    );
-  }
-}
-
 const POV_SQUARE_DISTANCE = [0, 1, 3*3, 6*6, 14*14, 32*32, 76*76, 182*182];
 function getDistance(dd) {
   for (let distance = 0; distance < POV_SQUARE_DISTANCE.length; distance++) {
     if (dd <= POV_SQUARE_DISTANCE[distance]) return distance;
   }
-  return POV_SQUARE_DISTANCE[POV_SQUARE_DISTANCE.length - 1];
+  return POV_SQUARE_DISTANCE.length;
 }
 
 const POV_ANGLE_THRESHOLD = 0.41421356; // Math.tan(22.5 degree)

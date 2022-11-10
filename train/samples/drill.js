@@ -1,6 +1,7 @@
 import fs from "fs";
 import Brain from "../brain.js";
-import { spin, show } from "../starcraft/game.js";
+import { spinCommand } from "../starcraft/commands.js";
+import { spinPov } from "../starcraft/game.js";
 
 export default async function() {
   const samples = JSON.parse(fs.readFileSync("./train/sandbox/samples/test.json").toString());
@@ -9,13 +10,16 @@ export default async function() {
   const OUTPUT_SIZE = samples[0].output.length;
 
   // TODO: Choose epochs and batch size based on number of samples and their size
-  const brain = new Brain(INPUT_SIZE, OUTPUT_SIZE, 100, 50);
+  const brain = new Brain(INPUT_SIZE, OUTPUT_SIZE, 10, samples.length * 8 * 2);
   await brain.load("file:///git/my/norman/train/sandbox/brain/model.json");
 
   for (const sample of samples) {
     for (let angle = 0; angle < 8; angle++) {
-      brain.learn(spin(sample.input, angle, false), sample.output, 1);
-      brain.learn(spin(sample.input, angle, true), sample.output, 1);
+      for (let flip = 0; flip <= 1; flip++) {
+        const input = spinPov(sample.input, angle, !!flip);
+        const output = spinCommand(sample.output, angle, !!flip);
+        brain.learn(input, output, 1);
+      }
     }
   }
 

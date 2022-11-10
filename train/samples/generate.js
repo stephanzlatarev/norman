@@ -7,11 +7,15 @@ import { toData } from "../starcraft/commands.js";
 
 // TODO: Use the gherkin skill file
 const SCENARIOS = [
+  // Given drones are close
+  // And we are in formation
+  // Then attack
+
+  // Given we surround drones
+  // Then attack
+
   // Given drones are at a distance
   // Then move in formation
-
-  // Given drones are close
-  // And we are in formation => attack
 
   // Given drones are close
   // But we are not in formation
@@ -26,7 +30,10 @@ export default async function() {
       if ((wdx === 0) && (wdy === 0)) continue;
 
       for (let edy = 1; edy <= 15; edy++) {
-        const shouldAttack = (edy === 1) && (wdx === 0.5) && (wdy === 0.5);
+        let shouldAttack = false;
+
+        if ((edy === 1) && (wdx === 0.5) && (wdy === 0.5)) shouldAttack = true; // We're in formation
+        if (wdy >= edy) shouldAttack = true; // We surround the enemy
 
         addSample(samples, { input: generateInput(wdx, wdy, edy), output: generateOutput(shouldAttack, wdx, wdy, edy) });
       }

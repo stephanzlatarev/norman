@@ -3,7 +3,7 @@ import Lot from "./lot.js";
 
 const MAX_SAMPLES = 100000;
 const HIDDEN_LAYER_INFLATION = 1.2;
-const OPTIMIZER_RATE = 0.2;
+const OPTIMIZER_RATE = 0.1;
 const ACTIVATION_FUNCTION = "sigmoid";
 const OPTIMIZER_FUNCTION = tf.train.sgd(OPTIMIZER_RATE);
 const LOSS_FUNCTION = "meanSquaredError";
@@ -30,6 +30,8 @@ export default class {
   }
 
   async run(millis) {
+    tf.engine().startScope();
+
     const time = new Date().getTime();
     const batch = this.lot.batch(this.learningBatchSize);
     const input = tf.tensor(batch.input, [this.learningBatchSize, this.inputSize]);
@@ -37,6 +39,7 @@ export default class {
     let info;
     let cycle = 0;
 
+//    console.log("SIZE:", batch.input.length);
     while (new Date().getTime() - time < millis) {
       info = await this.model.fit(input, output, {
         epochs: this.learningEpochs,
@@ -48,12 +51,18 @@ export default class {
     }
 
     console.log("Learning", cycle, "batches for", (new Date().getTime() - time), "millis improved accuracy to", accuracy(info));
+
+    tf.engine().endScope();
   }
 
   async answer(input) {
+    tf.engine().startScope();
+
     const question = tf.tensor(input, [1, this.inputSize]);
     const answer = await this.model.predict(question).array();
-//    console.log("ANSWER:", JSON.stringify(input), "->", JSON.stringify(answer), "=", JSON.stringify(answer[0]));
+
+    tf.engine().endScope();
+
     return answer[0];
   }
 
@@ -79,6 +88,7 @@ function accuracy(info) {
   let sum = 0;
   let count = 0;
 
+//  console.log("EPOCHS:", info.history.loss.length);
   for (const loss of info.history.loss) {
     sum += loss;
     count++;

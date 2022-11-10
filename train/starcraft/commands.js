@@ -52,6 +52,18 @@ export function toData(action) {
   return data;
 }
 
+export function spinCommand(output, angle, flip) {
+  let rotangle = output[1];
+
+  if (flip) rotangle = (1 - 1/8) - rotangle;
+
+  rotangle -= angle / 8;
+  if (rotangle < 0) rotangle += 1;
+  if (rotangle >= 1) rotangle -= 1;
+
+  return [ output[0], rotangle ];
+}
+
 function dx(direction) {
   if (direction < 0.5) {
     return 1 - Math.abs(direction - 0.25) * 4;
