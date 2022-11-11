@@ -3,9 +3,8 @@ import Lot from "./lot.js";
 
 const MAX_SAMPLES = 100000;
 const HIDDEN_LAYER_INFLATION = 1.2;
-const OPTIMIZER_RATE = 0.1;
 const ACTIVATION_FUNCTION = "sigmoid";
-const OPTIMIZER_FUNCTION = tf.train.sgd(OPTIMIZER_RATE);
+const OPTIMIZER_FUNCTION = "adam";
 const LOSS_FUNCTION = loss;
 
 export default class {
