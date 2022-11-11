@@ -45,14 +45,16 @@ export default async function() {
   performance.sort((a, b) => (a.loss > b.loss ? -1 : 1));
 
   console.log();
-  console.log("=== Worse performs ===");
-  for (let i = 0; i < 5; i++) highlight(performance[i]);
-
-  console.log();
   console.log("=== Best performs ===");
   for (let i = performance.length - 1; i > performance.length - 6; i--) highlight(performance[i]);
 
+  console.log();
+  console.log("=== Worst performs ===");
+  for (let i = 5; i >= 0; i--) highlight(performance[i]);
+
+  console.log();
   console.log("Overall loss over", lossCount, "samples:", (lossSum / lossCount));
+  console.log();
 }
 
 async function test(brain, test) {
