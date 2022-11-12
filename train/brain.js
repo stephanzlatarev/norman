@@ -2,7 +2,7 @@ import * as tf from "@tensorflow/tfjs-node";
 import Lot from "./lot.js";
 
 const MAX_SAMPLES = 100000;
-const HIDDEN_LAYER_INFLATION = 1.2;
+const HIDDEN_LAYER_INFLATION = 0.8;
 const ACTIVATION_FUNCTION = "sigmoid";
 const OPTIMIZER_FUNCTION = "adam";
 const LOSS_FUNCTION = "meanSquaredError";
