@@ -5,7 +5,7 @@ const MAX_SAMPLES = 100000;
 const HIDDEN_LAYER_INFLATION = 1.2;
 const ACTIVATION_FUNCTION = "sigmoid";
 const OPTIMIZER_FUNCTION = "adam";
-const LOSS_FUNCTION = loss;
+const LOSS_FUNCTION = "meanSquaredError";
 
 export default class {
 
@@ -78,14 +78,6 @@ export default class {
   async save(folder) {
     await this.model.save(folder);
   }
-}
-
-// Similar to "meanSquaredError" but error is calculated in a ring (0.0 == 1.0)
-function loss(expect, actual) {
-  const error = actual.sub(expect).abs();
-  const flip = error.sub(tf.scalar(1)).abs();
-
-  return error.minimum(flip).square().mean();
 }
 
 function summary(time, info) {
