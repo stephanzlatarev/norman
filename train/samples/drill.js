@@ -3,12 +3,16 @@ import Brain from "../brain.js";
 import Memory from "../memory.js";
 import Probe from "../starcraft/probe.js";
 
+let drilling = false;
+
 export default async function() {
   const samples = JSON.parse(fs.readFileSync("./train/sandbox/samples/probe.json").toString());
 
   const probe = new Probe();
   const memory = new Memory(10000, 0);
   const brain = new Brain(probe, memory, "file:///git/my/norman/train/sandbox/brain");
+
+  init();
 
   for (const sample of samples) {
     probe.sensor = sample.sensor;
@@ -21,7 +25,18 @@ export default async function() {
     } while (probe.spinning);
   }
 
-  while (true) {
+  while (drilling) {
     await brain.learn(5000);
   }
+}
+
+function init() {
+  drilling = true;
+
+  process.stdin.on("keypress", (_, key) => {
+    if (key.name === "escape") {
+      drilling = false;
+    }
+  });
+  console.log("Press Esc to leave");
 }

@@ -1,3 +1,4 @@
+import readline from "readline";
 import drill from "./samples/drill.js";
 import gen from "./samples/generate.js";
 import test from "./samples/test.js";
@@ -51,6 +52,10 @@ async function run(tool) {
   }
 
   console.log("Done");
+  process.exit(0);
 }
 
 run(...parse(process.argv)).catch(error => console.log("ERROR:", error));
+
+readline.emitKeypressEvents(process.stdin);
+process.stdin.setRawMode(true);
