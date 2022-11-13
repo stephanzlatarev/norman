@@ -1,105 +1,82 @@
 // TODO: Take as argument the game ("starcraft") and scenario ("probes-3x3")
-// Then use the pov function in the given game to transfer the scenario data into learning samples
+// TODO: Use a gherkin skill file and translate the scenarios to samples
 
 import fs from "fs";
-
-// TODO: Use the gherkin skill file
-const SCENARIOS = [
-  // Given drones are close
-  // And we are in formation
-  // Then attack
-
-  // Given we surround drones
-  // Then attack
-
-  // Given drones are at a distance
-  // Then move in formation
-
-  // Given drones are close
-  // But we are not in formation
-  // Then move in formation
-];
+import Probe from "../starcraft/probe.js";
+import { dx, dy } from "../starcraft/space.js";
 
 export default async function() {
   const samples = [];
 
-  // Wing is straight ahead
-  for (let wingDistance = 1; wingDistance <= 8; wingDistance++) {
-    for (let enemyDistance = 1; enemyDistance <= 8; enemyDistance++) {
-      // Attack towards wing
-      addSample(samples, enemyDistance, wingDistance, 1, true, 1);
+  // When enemy is far away Then approach it
+  addSample(samples, [], [{ angle: 1, distance: 2 }], false, 1);
+  addSample(samples, [], [{ angle: 1, distance: 2 }, { angle: 2, distance: 2 }], false, 1);
+  addSample(samples, [], [{ angle: 1, distance: 2 }, { angle: 2, distance: 2 }, { angle: 8, distance: 2 }], false, 1);
+  addSample(samples, [], [{ angle: 2, distance: 2 }, { angle: 8, distance: 2 }], false, 1);
+  addSample(samples, [{ angle: 1, distance: 2 }], [{ angle: 1, distance: 2 }, { angle: 2, distance: 2 }], false, 1);
+  addSample(samples, [{ angle: 1, distance: 2 }], [{ angle: 1, distance: 2 }], false, 1);
+  addSample(samples, [{ angle: 1, distance: 2 }, { angle: 2, distance: 2 }], [{ angle: 1, distance: 2 }], false, 1);
+
+  // When enemy is in reach Then attack
+  addSample(samples, [], [{ angle: 1, distance: 1 }], true, 1);
+
+  // When two enemies are in reach And there is support for one Then attack it
+  for (const distance of [1, 2]) {
+    for (const angle of [1, 2, 3, 4, 5]) {
+      addSample(samples, [{ angle: angle, distance: distance }], [{ angle: 1, distance: 1 }, { angle: angle, distance: 1 }], true, angle);
     }
+    addSample(samples, [{ angle: 3, distance: distance }], [{ angle: 1, distance: 1 }, { angle: 2, distance: 1 }], true, 2);
+  }
+  
+  // When enemy is surrounded Then attack
+  for (const distance of [1, 2]) {
+    addSample(samples, [{ angle: 2, distance: 1 }, { angle: 8, distance: 1 }], [{ angle: 1, distance: distance }], (distance === 1), 1);
+  }
+  for (const angle of [8, 1, 2]) {
+    addSample(samples, [{ angle: angle, distance: 2 }], [{ angle: 1, distance: 1 }], true, 1);
   }
 
-  // Wing is to the right and ahead
-  addSample(samples, 1, 1, 2, true, 1);
-  for (let enemyDistance = 2; enemyDistance <= 8; enemyDistance++) {
-    // Move forward surrounding enemy
-    addSample(samples, enemyDistance, 1, 2, false, 8);
+  // When wing is behind Then move back
+  for (const angle of [4, 5]) {
+    addSample(samples, [{ angle: angle, distance: 1 }], [{ angle: 1, distance: 2 }], false, 5);
+    addSample(samples, [{ angle: angle, distance: 2 }], [{ angle: 1, distance: 2 }], false, 5);
   }
+  addSample(samples, [{ angle: 5, distance: 2 }, { angle: 4, distance: 2 }], [{ angle: 1, distance: 2 }], false, 5);
+  addSample(samples, [{ angle: 6, distance: 2 }, { angle: 4, distance: 2 }], [{ angle: 1, distance: 2 }], false, 5);
+  addSample(samples, [{ angle: 3, distance: 2 }, { angle: 7, distance: 2 }], [{ angle: 1, distance: 2 }], false, 5);
 
-  // Wing is to the right and ahead but a distance
-  for (let wingDistance = 2; wingDistance <= 8; wingDistance++) {
-    // When enemy is close move back in wing's direction
-    addSample(samples, 1, wingDistance, 2, false, 3);
+  // When wing is to one side Then move to the other side
+  addSample(samples, [{ angle: 2, distance: 1 }], [{ angle: 1, distance: 2 }], false, 8);
+  addSample(samples, [{ angle: 2, distance: 2 }], [{ angle: 1, distance: 2 }], false, 1);
+  addSample(samples, [{ angle: 3, distance: 1 }], [{ angle: 1, distance: 2 }], false, 1);
+  addSample(samples, [{ angle: 3, distance: 2 }], [{ angle: 1, distance: 2 }], false, 1);
+  addSample(samples, [{ angle: 3, distance: 2 },{ angle: 2, distance: 2 }], [{ angle: 1, distance: 2 }], false, 8);
 
-    for (let enemyDistance = 2; enemyDistance <= 8; enemyDistance++) {
-      // Move towards enemy
-      addSample(samples, enemyDistance, wingDistance, 2, false, 1);
-    }
-  }
-
-  // Wing is right beside me
-  addSample(samples, 1, 1, 3, true, 1);
-  for (let enemyDistance = 2; enemyDistance <= 8; enemyDistance++) {
-    // Move forward surrounding enemy
-    addSample(samples, enemyDistance, 1, 3, false, 8);
-  }
-
-  // Wing is beside me but a distance
-  for (let wingDistance = 2; wingDistance <= 8; wingDistance++) {
-    // When enemy is close move back in wing's direction
-    addSample(samples, 1, wingDistance, 3, false, 4);
-
-    for (let enemyDistance = 2; enemyDistance <= 8; enemyDistance++) {
-      // Move towards wing
-      addSample(samples, enemyDistance, wingDistance, 3, false, 3);
-    }
-  }
-
-  // Wing is behind me
-  for (let wingDistance = 1; wingDistance <= 8; wingDistance++) {
-    for (let enemyDistance = 1; enemyDistance <= 8; enemyDistance++) {
-      // Move back towards wing
-      addSample(samples, enemyDistance, wingDistance, 4, false, 4);
-      addSample(samples, enemyDistance, wingDistance, 5, false, 5);
-    }
-  }
-
-  fs.writeFileSync("./train/sandbox/samples/test.json", "[\r\n" + samples.join(",\r\n") + "\r\n]");
+  fs.writeFileSync("./train/sandbox/samples/probe.json", "[\r\n" + samples.join(",\r\n") + "\r\n]");
 }
 
-function addSample(samples, enemyDistance, wingDistance, wingAngle, commandAttack, commandAngle) {
-  samples.push(JSON.stringify({ input: generateInput(enemyDistance, wingDistance, wingAngle), output: generateOutput(commandAttack, commandAngle) }));
-}
+function addSample(samples, wings, enemies, commandAttack, commandAngle) {
+  const probe = new Probe("self");
+  const units = [{ tag: "self", owner: 0, x: 0, y: 0 }];
 
-const POV_SIZE = 65*2;
-function generateInput(enemyDistance, wingDistance, wingAngle) {
-  const pov = [];
-  for (let i = 0 ; i < POV_SIZE; i++) pov.push(0);
+  for (const unit of wings) {
+    const distance = (unit.distance === 1) ? 0.1 : 10;
+    const direction = (unit.angle - 1) / 8;
+    units.push({ owner: 0, x: dx(direction) * distance, y: dy(direction) * distance});
+  }
 
-  // self
-  pov[65] = 0.1;
+  for (const unit of enemies) {
+    const distance = (unit.distance === 1) ? 0.1 : 10;
+    const direction = (unit.angle - 1) / 8;
+    units.push({ owner: 1, x: dx(direction) * distance, y: dy(direction) * distance});
+  }
 
-  // wing
-  pov[65 + (wingDistance - 1) * 8 + wingAngle] = 0.1;
+  probe.situate(units);
+  probe.motor = [commandAttack ? 0.8 : 0.4, (commandAngle - 1) / 8];
 
-  // enemy
-  pov[(enemyDistance - 1) * 8 + 1] = 0.1;
+  do {
+    samples.push(JSON.stringify({ sensor: probe.sensor, motor: probe.motor }));
 
-  return pov;
-}
-
-function generateOutput(commandAttack, commandAngle) {
-  return [commandAttack ? 0.85 : 0.5, (commandAngle - 1) / 8];
+    probe.spin();
+  } while (probe.spinning);
 }

@@ -1,9 +1,13 @@
 import Brain from "./brain.js";
-import { map, pov, score } from "./starcraft/game.js";
-import monitor from "./starcraft/monitor.js";
-import { command, connect, observe, start, step, protocol } from "./starcraft/protocol.js";
+import Memory from "./memory.js";
+import Probe from "./starcraft/probe.js";
+import { map, score } from "./starcraft/game.js";
+import { connect, command, observe, protocol, start, step } from "./starcraft/protocol.js";
 
-const brain = new Brain(130, 2, 1, 1);
+const probe = new Probe();
+const memory = new Memory(10000, 0);
+const brain = new Brain(probe, memory, "file:///git/my/norman/train/sandbox/brain");
+
 const stats = {
   matches: 0,
   wins: 0,
@@ -11,8 +15,6 @@ const stats = {
 };
 
 export default async function() {
-  await brain.load("file:///git/my/norman/train/sandbox/brain/model.json");
-
   await connect();
 
   while (true) {
@@ -29,13 +31,18 @@ async function play() {
   let playScore;
 
   while (typeof(playScore) !== "number") {
+    console.log("____________________");
+
     for (const unit of protocol.probes()) {
-      const input = pov(situation, unit.tag)
-      const output = await brain.answer(input);
+      const probe = new Probe(unit.tag);
 
-      monitor(input, output);
+      probe.situate(situation);
+      probe.motor = await brain.react(probe.sensor);
 
-      await command(unit.tag, output);
+      console.log("\t", unit.tag);
+      probe.print();
+
+      await command(unit.tag, probe.toCommand());
     }
 
     await step();

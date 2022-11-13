@@ -1,63 +1,52 @@
 import * as tf from "@tensorflow/tfjs-node";
-import Lot from "./lot.js";
 
-const MAX_SAMPLES = 100000;
 const HIDDEN_LAYER_INFLATION = 0.8;
+const LEARNING_EPOCHS = 100;
+const LEARNING_BATCH = 50;
 const ACTIVATION_FUNCTION = "sigmoid";
 const OPTIMIZER_FUNCTION = "adam";
 const LOSS_FUNCTION = "meanSquaredError";
 
-export default class {
+export default class Brain {
 
-  constructor(inputSize, outputSize, learningEpochs, learningBatchSize) {
-    this.inputSize = inputSize;
-    this.outputSize = outputSize;
-    this.learningEpochs = learningEpochs;
-    this.learningBatchSize = learningBatchSize;
-
-    this.model = tf.sequential();
-    this.model.add(tf.layers.dense({ inputShape: [inputSize], units: Math.floor(inputSize * HIDDEN_LAYER_INFLATION), activation: ACTIVATION_FUNCTION }));
-    this.model.add(tf.layers.dense({ units: outputSize, activation: ACTIVATION_FUNCTION }));
-    this.model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
-
-    this.lot = new Lot(MAX_SAMPLES);
+  constructor(body, memory, file) {
+    this.body = body;
+    this.memory = memory;
+    this.file = file;
   }
 
-  // Expects input and output to be one-dimensional array, and score to be a number
-  learn(input, output, score) {
-    this.lot.push(input, output, score);
-  }
-
-  async run(millis) {
-    tf.engine().startScope();
+  async learn(millis) {
+    await startScope(this);
 
     const time = new Date().getTime();
-    const batch = this.lot.batch(this.learningBatchSize);
-    const input = tf.tensor(batch.input, [this.learningBatchSize, this.inputSize]);
-    const output = tf.tensor(batch.output, [this.learningBatchSize, this.outputSize]);
+    const batch = this.memory.all();
+    const input = tf.tensor(batch.input, [batch.input.length, this.body.sensor.length]);
+    const output = tf.tensor(batch.output, [batch.output.length, this.body.motor.length]);
+
     let info;
 
     while (new Date().getTime() - time < millis) {
       info = await this.model.fit(input, output, {
-        epochs: this.learningEpochs,
-        batchSize: this.learningBatchSize,
+        epochs: LEARNING_EPOCHS,
+        batchSize: LEARNING_BATCH,
         shuffle: true,
         verbose: false,
       });
     }
 
+    save(this.file, this.model);
     summary(time, info);
 
-    tf.engine().endScope();
+    endScope();
   }
 
-  async answer(input) {
-    tf.engine().startScope();
+  async react(input) {
+    await startScope(this);
 
-    const question = tf.tensor(input, [1, this.inputSize]);
+    const question = tf.tensor(input, [1, this.body.sensor.length]);
     const answer = await this.model.predict(question).array();
 
-    tf.engine().endScope();
+    endScope();
 
     return answer[0];
   }
@@ -65,19 +54,55 @@ export default class {
   async random() {
     const data = [];
 
-    for (let i = 0; i < this.outputSize; i++) data.push(Math.random());
+    for (let i = 0; i < this.body.motor.length; i++) data.push(Math.random());
 
     return data;
   }
+}
 
-  async load(file) {
-    this.model = await tf.loadLayersModel(file);
-    this.model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
+async function create(inputSize, outputSize) {
+  const model = tf.sequential();
+
+  model.add(tf.layers.dense({ inputShape: [inputSize], units: Math.floor(inputSize * HIDDEN_LAYER_INFLATION), activation: ACTIVATION_FUNCTION }));
+  model.add(tf.layers.dense({ units: outputSize, activation: ACTIVATION_FUNCTION }));
+  model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
+
+  return model;
+}
+
+async function load(folder) {
+  const model = await tf.loadLayersModel(folder + "/model.json");
+
+  model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
+
+  return model;
+}
+
+async function save(folder, model) {
+  if (folder) {
+    await model.save(folder);
+  }
+}
+
+async function startScope(brain) {
+  tf.engine().startScope();
+
+  if (brain.model) return;
+
+  if (brain.file) {
+    try {
+      brain.model = await load(brain.file);
+      return;
+    } catch (error) {
+      console.log(error.message);
+    }
   }
 
-  async save(folder) {
-    await this.model.save(folder);
-  }
+  brain.model = await create(brain.body.sensor.length, brain.body.motor.length);
+}
+
+function endScope() {
+  tf.engine().endScope();
 }
 
 function summary(time, info) {
@@ -88,5 +113,5 @@ function summary(time, info) {
   const millisPerIteration = new Date().getTime() - time;
   const perfectionTime = new Date(new Date().getTime() + millisPerIteration * iterationsTillZeroLoss);
 
-  console.log("Accuracy:", accuracy, "\tPerfection:", perfectionTime.toISOString());
+  console.log("Accuracy:", accuracy, "\tPerfection:", (iterationsTillZeroLoss > 0) ? perfectionTime.toISOString() : "-");
 }

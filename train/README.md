@@ -29,16 +29,11 @@ OUTPUT:
 
 ### TODO
 
-1. Make a map for 3 probes vs 3 drones
-2. Rotate pov when learning
-3. Make a monitor for octosector pov
+1. memory.js should detect conflicting samples (inputs are the same but expected outputs differ).
 
-temp changes:
-* play.js:14 - play limits wins to 1. was 10
-* train.js:65 - learn limited to 3 passes. was 10
-x starcraftGame.js:11-12 - explorers limited to 0. was 12
-x play.js:137 - fight samples excluded. only formation samples included
-x train.js:53-59 - don't learn new samples
+- Types of training activities:
+    - Train by samples - generate samples; learn samples; watch performance over samples 
+    - Train by play - make random variations and learn; watch performance over play. Make explorers make random but dedicated moves. Don't move chaoticly.
 
 * add class Skill. Replace map, perform, hypothesize, score, etc. with use of Skill instances. Replace this with Skill instance defined in YAML file.
 * add class Data. Replace trainingSet, samples, etc. with Data instances.

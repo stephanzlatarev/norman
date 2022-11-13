@@ -1,6 +1,5 @@
 import starcraft from "@node-sc2/proto";
 import { spawn } from "child_process";
-import { toAction } from "./commands.js";
 
 export async function connect() {
   await game.connect();
@@ -22,14 +21,11 @@ export async function ability(unitTag, ability, x, y) {
   await game.command(unitTag, ability, x, y);
 }
 
-export async function command(unitTag, data) {
-  if (!data) return;
+export async function command(unitTag, action) {
+  if (!action) return;
 
   const unit = game.find(unitTag);
   if (!unit) return;
-
-  const action = toAction(data);
-  if (!action) return;
 
   const distance = unit.radius * 2;
   await game.command(unitTag, action.abilityId, unit.pos.x + action.x * distance, unit.pos.y + action.y * distance);

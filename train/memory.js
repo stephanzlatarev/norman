@@ -1,5 +1,5 @@
 
-export default class {
+export default class Memory {
 
   constructor(size, minScore) {
     this.maxSize = size;
@@ -10,7 +10,7 @@ export default class {
     this.score = [];
   }
 
-  push(input, output, score) {
+  add(input, output, score) {
     if (score < this.minScore) return;
 
     if (this.score.length && (score > this.score[this.score.length - 1])) {
@@ -19,12 +19,12 @@ export default class {
         if (score > this.score[index]) break;
       }
 
-      this.input.splice(index, 0, input);
-      this.output.splice(index, 0, output);
+      this.input.splice(index, 0, [...input]);
+      this.output.splice(index, 0, [...output]);
       this.score.splice(index, 0, score);
     } else {
-      this.input.push(input);
-      this.output.push(output);
+      this.input.push([...input]);
+      this.output.push([...output]);
       this.score.push(score);
     }
 
@@ -35,8 +35,12 @@ export default class {
     }
   }
 
-  batch(size, transform) {
-    if ((size >= this.input.length) && !transform) return { input: this.input, output: this.output };
+  all() {
+    return { input: this.input, output: this.output };
+  }
+
+  batch(size) {
+    if (size >= this.input.length) return all();
 
     const input = [];
     const output = [];
@@ -44,13 +48,8 @@ export default class {
     for (let i = 0; i < size; i++) {
       const index = Math.floor(this.input.length * Math.random() * Math.random());
 
-      if (transform) {
-        input.push(transform(this.input[index]));
-        output.push(transform(this.output[index]));
-      } else {
-        input.push(this.input[index]);
-        output.push(this.output[index]);
-      }
+      input.push(this.input[index]);
+      output.push(this.output[index]);
     }
 
     return { input: input, output: output };
