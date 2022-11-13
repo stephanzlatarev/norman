@@ -8,10 +8,19 @@ export default class Memory {
     this.input = [];
     this.output = [];
     this.score = [];
+    this.hash = {};
   }
 
   add(input, output, score) {
     if (score < this.minScore) return;
+
+    const inputHash = JSON.stringify(input);
+    const outputHash = JSON.stringify(output);
+    if (this.hash[inputHash] && (this.hash[inputHash] !== outputHash)) {
+      console.log("Memory collision detected:", inputHash, "requires", this.hash[inputHash], "and", outputHash);
+      return;
+    }
+    this.hash[inputHash] = JSON.stringify(output);
 
     if (this.score.length && (score > this.score[this.score.length - 1])) {
       let index = 0;
