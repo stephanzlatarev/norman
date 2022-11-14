@@ -5,12 +5,14 @@ import Probe from "../starcraft/probe.js";
 
 let drilling = false;
 
-export default async function() {
-  const samples = JSON.parse(fs.readFileSync("./train/sandbox/samples/probe.json").toString());
+export default async function(skill) {
+  if (!skill) return;
+
+  const samples = JSON.parse(fs.readFileSync("./train/sandbox/samples/" + skill + ".json").toString());
 
   const probe = new Probe();
   const memory = new Memory(10000, 0);
-  const brain = new Brain(probe, memory, "file:///git/my/norman/train/sandbox/brain");
+  const brain = new Brain(probe, memory, "file:///git/my/norman/train/sandbox/brain/" + skill);
 
   init();
 

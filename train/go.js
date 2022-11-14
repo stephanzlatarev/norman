@@ -7,7 +7,7 @@ import play from "./play.js";
 function parse(args) {
   if (args && args.length > 2) {
     if (args[2] === "gen") return ["gen"];
-    if (args[2] === "drill") return ["drill"];
+    if (args[2] === "drill") return ["drill", args[3]];
     if (args[2] === "play") return ["play"];
     if (args[2] === "test") return ["test"];
   }
@@ -15,7 +15,7 @@ function parse(args) {
   return [];
 }
 
-async function run(tool) {
+async function run(tool, param) {
   switch (tool) {
     case "gen": {
       console.log("Generating samples...");
@@ -24,8 +24,8 @@ async function run(tool) {
     }
 
     case "drill": {
-      console.log("Learning by samples...");
-      await drill();
+      console.log("Learning", param, "by samples...");
+      await drill(param);
       break;
     }
 

@@ -11,6 +11,7 @@ export default async function() {
   const brain = new Brain(probe, memory, "file:///git/my/norman/train/sandbox/brain");
 
   const performance = [];
+  const ordered = [];
   let index = 0;
   let lossSum = 0;
   let lossCount = 0;
@@ -33,6 +34,7 @@ export default async function() {
       sampling.loss = check.loss;
 
       performance.push(sampling);
+      if (!probe.spinning) ordered.push(sampling);
 
       lossSum += sampling.loss;
       lossCount++;
@@ -44,6 +46,10 @@ export default async function() {
   }
 
   performance.sort((a, b) => (a.loss > b.loss ? -1 : 1));
+
+  console.log();
+  console.log("=== First samples ===");
+  for (let i = 0; i < 5; i++) highlight(probe, ordered[i]);
 
   console.log();
   console.log("=== Best performs ===");
