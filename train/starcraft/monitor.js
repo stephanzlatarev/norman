@@ -37,14 +37,16 @@ export default function(sensor, motor, size, index) {
 
 function spot(probes, drones) {
   // · ☺ ☻❶❷❸❹❺❻❼❽❾❿ ☼
-  if (probes && drones) {
+  if ((probes < 0) && (drones < 0)) {
+    return ".";
+  } else if ((probes > 0) && (drones > 0)) {
     return "☼";
-  } else if (probes) {
+  } else if (probes > 0) {
     return "☻";
-  } else if (drones) {
+  } else if (drones > 0) {
     return "☺";
   }
-  return "·";
+  return "x";
 }
 
 function center(ability, direction) {
@@ -55,5 +57,5 @@ function center(ability, direction) {
     return "˄┐┐˃˃┘┘˅˅└└˂˂┌┌˄"[Math.floor(direction * 16)];
   }
 
-  return "☺";
+  return "☻";
 }

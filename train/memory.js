@@ -4,11 +4,7 @@ export default class Memory {
   constructor(size, minScore) {
     this.maxSize = size;
     this.minScore = minScore || 0;
-
-    this.input = [];
-    this.output = [];
-    this.score = [];
-    this.hash = {};
+    this.clear();
   }
 
   add(input, output, score) {
@@ -17,7 +13,7 @@ export default class Memory {
     const inputHash = JSON.stringify(input);
     const outputHash = JSON.stringify(output);
     if (this.hash[inputHash] && (this.hash[inputHash] !== outputHash)) {
-      console.log("Memory collision detected:", inputHash, "requires", this.hash[inputHash], "and", outputHash);
+      if (this.options.informAboutCollisions) console.log("Memory collision detected:", inputHash, "requires", this.hash[inputHash], "and", outputHash);
       return;
     }
     this.hash[inputHash] = JSON.stringify(output);
@@ -44,12 +40,20 @@ export default class Memory {
     }
   }
 
+  clear(options) {
+    this.options = options || {};
+    this.input = [];
+    this.output = [];
+    this.score = [];
+    this.hash = {};
+  }
+
   all() {
     return { input: this.input, output: this.output };
   }
 
   batch(size) {
-    if (size >= this.input.length) return all();
+    if (size >= this.input.length) return this.all();
 
     const input = [];
     const output = [];

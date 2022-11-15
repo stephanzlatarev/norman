@@ -1,95 +1,59 @@
-import fs from "fs";
 import Brain from "../brain.js";
-import Memory from "../memory.js";
 import Probe from "../starcraft/probe.js";
 
-export default async function() {
-  const samples = JSON.parse(fs.readFileSync("./train/sandbox/samples/probe.json").toString());
+let testing;
 
+export default async function(skill) {
   const probe = new Probe();
-  const memory = new Memory(10000, 0);
-  const brain = new Brain(probe, memory, "file:///git/my/norman/train/sandbox/brain");
+  const brain = new Brain(probe, null, "file:///git/my/norman/train/sandbox/brain/" + skill);
 
-  const performance = [];
-  const ordered = [];
-  let index = 0;
-  let lossSum = 0;
-  let lossCount = 0;
+  let good = 0;
+  let bad = 0;
 
-  for (const sample of samples) {
-    probe.sensor = sample.sensor;
-    probe.motor = sample.motor;
+  init();
 
-    do {
-      const sampling = {
-        label: index + "/" + probe.spinning,
-        input: [...probe.sensor],
-        output: [...probe.motor],
-        response: [],
-        loss: 1,
-      };
+  while (testing) {
+    const input = sensor();
+    const output = await brain.react(input);
 
-      const check = await test(brain, sampling);
-      sampling.response = check.response;
-      sampling.loss = check.loss;
-
-      performance.push(sampling);
-      if (!probe.spinning) ordered.push(sampling);
-
-      lossSum += sampling.loss;
-      lossCount++;
-
-      probe.spin();
-    } while (probe.spinning);
-
-    index++;
-  }
-
-  performance.sort((a, b) => (a.loss > b.loss ? -1 : 1));
-
-  console.log();
-  console.log("=== First samples ===");
-  for (let i = 0; i < 5; i++) highlight(probe, ordered[i]);
-
-  console.log();
-  console.log("=== Best performs ===");
-  for (let i = performance.length - 1; i > performance.length - 6; i--) highlight(probe, performance[i]);
-
-  console.log();
-  console.log("=== Worst performs ===");
-  for (let i = 5; i >= 0; i--) highlight(probe, performance[i]);
-
-  console.log();
-  console.log("Overall loss over", lossCount, "samples:", (lossSum / lossCount));
-  console.log();
-}
-
-async function test(brain, test) {
-  const response = await brain.react(test.input);
-
-  let loss = 0;
-  for (let i = 0; i < response.length; i++) {
-    const error = Math.abs(response[i] - test.output[i]);
-    if (error <= 0.5) {
-      loss += error * error;
+    if (output[0] > 0.6) {
+      // CORRECT - Attack
+      good++;
     } else {
-      loss += (1 - error) * (1 - error);
+      // INCORRECT
+      bad++;
+
+      console.log(" === INCORRECT ===", output, "|", bad, "vs", good, "|", (bad * 100 / (good + bad)).toFixed(2) + "%");
+      probe.sensor = input;
+      probe.motor = output;
+      probe.print();
+
+      await sleep(10);
     }
   }
-
-  return {
-    response: [...response],
-    loss: loss / response.length,
-  };
 }
 
-async function highlight(probe, sampling) {
-  console.log("=========", sampling.label, "\tLOSS:", sampling.loss);
+function sensor() {
+  let data = [];
+  for (let i = 0; i < 32; i++) data[i] = Math.floor(Math.random() * 2);
 
-  probe.sensor = sampling.input;
-  probe.motor = sampling.response;
-  probe.print();
+  let enemy = 16 + Math.floor(Math.random * 8);
+  data[enemy] = 1;
 
-  console.log("EXPECTED:", sampling.output);
-  console.log("ACTUAL  :", sampling.response);
+  return data;
+}
+
+function init() {
+  testing = true;
+
+  process.stdin.on("keypress", (_, key) => {
+    if (key.name === "escape") {
+      testing = false;
+    }
+  });
+  console.log("Press Esc to leave");
+}
+
+async function sleep(millis) {
+  await new Promise(r => setTimeout(r, millis));
 }
