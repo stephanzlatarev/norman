@@ -116,6 +116,22 @@ export class Game {
     return nearestEnemy;
   }
 
+  enemiesByDistance() {
+    if (!this.state) return;
+
+    const enemies = this.state.observation.rawData.units.filter(unit => (unit.owner === this.enemyId));
+    const nexus = this.get("nexus");
+
+    enemies.sort((a, b) => {
+      const distanceA = Math.abs(a.pos.x - nexus.pos.x) + Math.abs(a.pos.y - nexus.pos.y) + (a.isFlying ? 1000 : 0);
+      const distanceB = Math.abs(b.pos.x - nexus.pos.x) + Math.abs(b.pos.y - nexus.pos.y) + (b.isFlying ? 1000 : 0);
+
+      return distanceA - distanceB;
+    });
+
+    return enemies;
+  }
+
   isBuilding() {
     const probes = this.list("probe");
 

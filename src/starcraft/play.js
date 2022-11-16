@@ -105,15 +105,69 @@ async function checkBuildZealot() {
 
 async function checkAttackZealot() {
   const zealots = game.list("zealot");
-  const enemy = game.enemy();
+  const enemies = game.enemiesByDistance();
 
-  for (const zealot of zealots) {
-    if (enemy && ((zealot.orders.length === 0) || (zealot.orders[0].targetUnitTag !== enemy.tag))) {
-      await game.attack(zealot.tag, enemy.tag);
-    } else if (zealot.orders.length === 0) {
-      await game.use("attack", zealot.tag);
+  if (enemies.length) {
+    // Attack
+    countAttackingZealots(enemies, zealots);
+
+    const force = Math.max(4, enemies[0].numberOfAttackingZealots);
+
+    for (const zealot of zealots) {
+      if (!isZealotAttacking(zealot, enemies)) {
+        const enemy = pickEnemy(enemies, force);
+
+        await game.attack(zealot.tag, enemy.tag);
+      }
+    }
+  } else {
+    // Explore
+    for (const zealot of zealots) {
+      if (!zealot.orders.length || !zealot.orders[0].targetWorldSpacePos) {
+        await game.use("attack", zealot.tag);
+      }
     }
   }
+}
+
+function isZealotAttacking(zealot, enemies) {
+  if (zealot.orders.length === 0) return false;
+
+  const enemyUnderAttack = zealot.orders[0].targetUnitTag;
+
+  for (const enemy of enemies) {
+    if (enemy.tag === enemyUnderAttack) return true;
+  }
+
+  return false;
+}
+
+function countAttackingZealots(enemies, zealots) {
+  for (const enemy of enemies) if (!enemy.numberOfAttackingZealots) enemy.numberOfAttackingZealots = 0;
+
+  for (const zealot of zealots) {
+    if (zealot.orders.length === 0) continue;
+
+    const enemyUnderAttack = zealot.orders[0].targetUnitTag;
+    for (const enemy of enemies) {
+      if (enemy.tag === enemyUnderAttack) {
+        enemy.numberOfAttackingZealots++;
+        break;
+      }
+    }
+  }
+}
+
+function pickEnemy(enemies, force) {
+  for (const enemy of enemies) {
+    if (enemy.numberOfAttackingZealots < force) {
+      enemy.numberOfAttackingZealots++;
+      return enemy;
+    }
+  }
+
+  enemies[0].numberOfAttackingZealots++;
+  return enemies[0];
 }
 
 async function checkDefendWorkers() {
