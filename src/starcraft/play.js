@@ -4,7 +4,7 @@ import Probe from "./probe.js";
 import log from "../log.js";
 
 const probe = new Probe();
-const brain = new Brain(probe, null, "file://" + (process.cwd().startsWith("C:") ? process.cwd().slice(2) : process.cwd()) + "/skills/probe");
+const brain = new Brain(probe, null, "./skills/probe");
 
 let game;
 let isRunning;

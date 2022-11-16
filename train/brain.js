@@ -1,4 +1,5 @@
 import * as tf from "@tensorflow/tfjs-node";
+import fs from "fs";
 
 const HIDDEN_LAYER_INFLATION = 0.8;
 const LEARNING_EPOCHS = 100;
@@ -34,7 +35,8 @@ export default class Brain {
       });
     }
 
-    save(this.file, this.model);
+    await this.model.save(new Storage(this.file));
+
     summary(time, info);
 
     endScope();
@@ -70,20 +72,6 @@ async function create(inputSize, outputSize) {
   return model;
 }
 
-async function load(folder) {
-  const model = await tf.loadLayersModel(folder + "/model.json");
-
-  model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
-
-  return model;
-}
-
-async function save(folder, model) {
-  if (folder) {
-    await model.save(folder);
-  }
-}
-
 async function startScope(brain) {
   tf.engine().startScope();
 
@@ -91,7 +79,8 @@ async function startScope(brain) {
 
   if (brain.file) {
     try {
-      brain.model = await load(brain.file);
+      brain.model = await tf.loadLayersModel(new Storage(brain.file));
+      brain.model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
       return;
     } catch (error) {
       console.log(error.message);
@@ -114,4 +103,22 @@ function summary(time, info) {
   const perfectionTime = new Date(new Date().getTime() + millisPerIteration * iterationsTillZeroLoss);
 
   console.log("Accuracy:", accuracy, "\tPerfection:", (iterationsTillZeroLoss > 0) ? perfectionTime.toISOString() : "-");
+}
+
+class Storage {
+
+  constructor(file) {
+    this.file = file;
+  }
+
+  async load() {
+    const model = JSON.parse(fs.readFileSync(this.file));
+    model.weightData = new Uint8Array(model.weightData).buffer;
+    return model;
+  }
+
+  async save(model) {
+    model.weightData = Array.from(new Uint8Array(model.weightData));
+    fs.writeFileSync(this.file, JSON.stringify(model));
+  }
 }

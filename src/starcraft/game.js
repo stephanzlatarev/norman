@@ -119,8 +119,10 @@ export class Game {
   enemiesByDistance() {
     if (!this.state) return;
 
-    const enemies = this.state.observation.rawData.units.filter(unit => (unit.owner === this.enemyId));
     const nexus = this.get("nexus");
+    if (!nexus) return [];
+
+    const enemies = this.state.observation.rawData.units.filter(unit => (unit.owner === this.enemyId));
 
     enemies.sort((a, b) => {
       const distanceA = Math.abs(a.pos.x - nexus.pos.x) + Math.abs(a.pos.y - nexus.pos.y) + (a.isFlying ? 1000 : 0);

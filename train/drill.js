@@ -13,7 +13,7 @@ export default async function(skill) {
 
   const probe = new Probe();
   const memory = new Memory(10000, 0);
-  const brain = new Brain(probe, memory, "file:///git/my/norman/train/sandbox/brain/" + skill);
+  const brain = new Brain(probe, memory, "./train/sandbox/brain/" + skill);
 
   const examples = JSON.parse(fs.readFileSync("./train/sandbox/skill/" + skill + ".json").toString()).examples;
   const samples = readSamples(examples);
