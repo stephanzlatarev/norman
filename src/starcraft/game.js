@@ -432,15 +432,17 @@ async function start(client) {
 }
 
 async function play(client, settings) {
-  await client.createGame({
-    realtime: false,
-    localMap: { mapPath: "norman-defend-nexus-versus-drones.SC2Map" },
-//    battlenetMapName: "Data-C",
-    playerSetup: [
-      { type: 1, race: PROTOSS },            // Participant, Protoss
-      { type: 2, race: 4, difficulty: 1 },   // Computer, Random
-    ]
-  });
+  if (!settings.ladderServer) {
+    await client.createGame({
+      realtime: false,
+      // localMap: { mapPath: "norman-defend-nexus.SC2Map" },
+      battlenetMapName: "Data-C",
+      playerSetup: [
+        { type: 1, race: PROTOSS },            // Participant, Protoss
+        { type: 2, race: 4, difficulty: 1 },   // Computer, Random
+      ]
+    });
+  }
 
   const player = {};
 
