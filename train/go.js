@@ -1,15 +1,11 @@
 import readline from "readline";
-import drill from "./samples/drill.js";
-import gen from "./samples/generate.js";
-import test from "./samples/test.js";
+import drill from "./drill.js";
 import play from "./play.js";
 
 function parse(args) {
   if (args && args.length > 2) {
-    if (args[2] === "gen") return ["gen"];
     if (args[2] === "drill") return ["drill", args[3]];
     if (args[2] === "play") return ["play"];
-    if (args[2] === "test") return ["test"];
   }
 
   return [];
@@ -17,11 +13,6 @@ function parse(args) {
 
 async function run(tool, param) {
   switch (tool) {
-    case "gen": {
-      console.log("Generating samples...");
-      await gen();
-      break;
-    }
 
     case "drill": {
       console.log("Learning", param, "by samples...");
@@ -32,12 +23,6 @@ async function run(tool, param) {
     case "play": {
       console.log("Playing in game...");
       await play();
-      break;
-    }
-
-    case "test": {
-      console.log("Testing samples...");
-      await test();
       break;
     }
 
@@ -55,7 +40,7 @@ async function run(tool, param) {
   process.exit(0);
 }
 
-run(...parse(process.argv)).catch(error => console.log("ERROR:", error));
+run(...parse(process.argv)).catch(error => { console.log("ERROR:", error); process.exit(1); });
 
 readline.emitKeypressEvents(process.stdin);
 process.stdin.setRawMode(true);

@@ -1,8 +1,8 @@
 import fs from "fs";
-import Brain from "../brain.js";
-import Memory from "../memory.js";
-import Probe from "../starcraft/probe.js";
-import { dx, dy } from "../starcraft/space.js";
+import Brain from "./brain.js";
+import Memory from "./memory.js";
+import Probe from "./starcraft/probe.js";
+import { dx, dy } from "./starcraft/space.js";
 
 let drilling = false;
 

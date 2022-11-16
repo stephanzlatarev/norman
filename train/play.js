@@ -6,7 +6,7 @@ import { connect, command, observe, protocol, start, step } from "./starcraft/pr
 
 const probe = new Probe();
 const memory = new Memory(10000, 0);
-const brain = new Brain(probe, memory, "file:///git/my/norman/train/sandbox/brain");
+const brain = new Brain(probe, memory, "file:///git/my/norman/train/sandbox/brain/probe");
 
 const stats = {
   matches: 0,
@@ -25,7 +25,7 @@ export default async function() {
     await start();
     await step();
 
-    while (await play(brain));
+    while (await play());
   }
 }
 
@@ -49,7 +49,7 @@ async function play() {
       probe.motor = await brain.react(probe.sensor);
 
       if (pause) {
-        console.log("\t", unit.tag);
+        console.log("\t", unit.tag, "\t", JSON.stringify(probe.motor));
         probe.print();
       }
 
