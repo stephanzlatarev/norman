@@ -166,6 +166,44 @@ export class Game {
     }
   }
 
+  situation() {
+    const context = [...this.list("probe"), ...this.enemies()];
+    const situation = [];
+
+    for (const unit of context) {
+      situation.push({
+        tag: unit.tag,
+        owner: unit.owner,
+        x: unit.pos.x,
+        y: unit.pos.y,
+      });
+    }
+
+    return situation;
+  }
+
+  async command(unit, action) {
+    if (!this.state) return;
+    if (!action) return;
+
+    const distance = unit.radius * 3;
+
+    await this.client.action({
+      actions: [
+        {
+          actionRaw: {
+            unitCommand: {
+              unitTags: [unit.tag],
+              abilityId: action.abilityId,
+              targetWorldSpacePos: { x: unit.pos.x + action.x * distance, y: unit.pos.y + action.y * distance },
+              queueCommand: false
+            }
+          }
+        }
+      ]
+    });
+  }
+
   async build(type) {
     if (!this.state) return;
 

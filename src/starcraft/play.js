@@ -1,14 +1,21 @@
 import { Game } from "./game.js";
+import Brain from "../brain.js";
+import Probe from "./probe.js";
 import log from "../log.js";
 
+const probe = new Probe();
+const brain = new Brain(probe, null, "file://" + (process.cwd().startsWith("C:") ? process.cwd().slice(2) : process.cwd()) + "/skills/probe");
+
 let game;
-let isRunning = true;
-let hasGreetedOpponent = false;
-let isDefendingFromEnemy = null;
+let isRunning;
+let hasGreetedOpponent;
+let isDefendingFromEnemy;
 
 export async function start(args) {
   game = new Game(args);
   isRunning = true;
+  hasGreetedOpponent = false;
+  isDefendingFromEnemy = false;
 
   await game.connect();
   await game.start();
@@ -110,34 +117,40 @@ async function checkAttackZealot() {
 }
 
 async function checkDefendWorkers() {
-  const nexus = game.get("nexus");
-  if (!nexus) return;
+  isDefendingFromEnemy = shouldDefendWithWorkers();
 
-  const enemy = game.enemy();
-  if (!enemy && isDefendingFromEnemy) isDefendingFromEnemy = "stop";
-  if (!enemy) return;
+  if (!isDefendingFromEnemy) return;
 
-  const zealots = game.list("zealot");
-  if (zealots.length) return;
+  const probes = game.list("probe");
+  const situation = game.situation();
 
-  const distance = Math.abs(nexus.pos.x - enemy.pos.x) + Math.abs(nexus.pos.y - enemy.pos.y);
-  if (distance < 20) {
-    if (isDefendingFromEnemy !== enemy.tag) {
-      const probes = game.list("probe");
+  for (const unit of probes) {
+    const probe = new Probe(unit.tag);
 
-      for (const probe of probes) {
-        await game.attack(probe.tag, enemy.tag);
-      }
+    probe.situate(situation);
+    probe.motor = await brain.react(probe.sensor);
 
-      isDefendingFromEnemy = enemy.tag;
-    }
-  } else if (isDefendingFromEnemy) {
-    isDefendingFromEnemy = "stop";
+    await game.command(unit, probe.toCommand());
   }
 }
 
+function shouldDefendWithWorkers() {
+  const nexus = game.get("nexus");
+  if (!nexus) return false;
+
+  const zealots = game.list("zealot");
+  if (zealots.length) return false;
+
+  const enemy = game.enemy();
+  if (!enemy) return false;
+
+  if (Math.abs(nexus.pos.x - enemy.pos.x) + Math.abs(nexus.pos.y - enemy.pos.y) > 50) return false;
+
+  return true;
+}
+
 async function checkHarvestWorkers() {
-  if (isDefendingFromEnemy !== "stop") return;
+  if (isDefendingFromEnemy) return;
 
   const probes = game.list("probe");
 
@@ -146,6 +159,4 @@ async function checkHarvestWorkers() {
       await game.harvest(probe.tag);
     }
   }
-
-  isDefendingFromEnemy = null;
 }
