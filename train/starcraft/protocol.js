@@ -27,7 +27,7 @@ export async function command(unitTag, action) {
   const unit = game.find(unitTag);
   if (!unit) return;
 
-  const distance = unit.radius * 2;
+  const distance = unit.radius * 3;
   await game.command(unitTag, action.abilityId, unit.pos.x + action.x * distance, unit.pos.y + action.y * distance);
 }
 
@@ -68,7 +68,7 @@ class Protocol {
   async start() {
     await this.client.createGame({
       realtime: false,
-      localMap: { mapPath: "norman-defend-3x3.SC2Map" },
+      localMap: { mapPath: "norman-defend-nexus.SC2Map" },
       playerSetup: [
         { type: 1, race: 3 },                  // Participant, Protoss
         { type: 2, race: 4, difficulty: 1 },   // Computer, Random
