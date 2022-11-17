@@ -175,16 +175,22 @@ async function checkDefendWorkers() {
 
   if (!isDefendingFromEnemy) return;
 
+  const nexus = game.get("nexus");
+  const enemy = game.enemy();
   const probes = game.list("probe");
   const situation = game.situation();
 
   for (const unit of probes) {
-    const probe = new Probe(unit.tag);
+    if (isUnitBehindNexus(unit, nexus, enemy)) {
+      await game.attack(unit.tag, enemy.tag);
+    } else {
+      const probe = new Probe(unit.tag);
+  
+      probe.situate(situation);
+      probe.motor = await brain.react(probe.sensor);
 
-    probe.situate(situation);
-    probe.motor = await brain.react(probe.sensor);
-
-    await game.command(unit, probe.toCommand());
+      await game.command(unit, probe.toCommand());
+    }
   }
 }
 
@@ -201,6 +207,24 @@ function shouldDefendWithWorkers() {
   if (Math.abs(nexus.pos.x - enemy.pos.x) + Math.abs(nexus.pos.y - enemy.pos.y) > 50) return false;
 
   return true;
+}
+
+function isUnitBehindNexus(unit, nexus, enemy) {
+  let xaxis = false;
+  if (unit.pos.x >= enemy.pos.x) {
+    if ((nexus.pos.x - nexus.radius <= unit.pos.x) && (nexus.pos.x + nexus.radius >= enemy.pos.x)) xaxis = true;
+  } else {
+    if ((nexus.pos.x - nexus.radius <= enemy.pos.x) && (nexus.pos.x + nexus.radius >= unit.pos.x)) xaxis = true;
+  }
+
+  let yaxis;
+  if (unit.pos.y >= enemy.pos.y) {
+    if ((nexus.pos.y - nexus.radius <= unit.pos.y) && (nexus.pos.y + nexus.radius >= enemy.pos.y)) yaxis = true;
+  } else {
+    if ((nexus.pos.y - nexus.radius <= enemy.pos.y) && (nexus.pos.y + nexus.radius >= unit.pos.y)) yaxis = true;
+  }
+
+  return xaxis && yaxis;
 }
 
 async function checkHarvestWorkers() {
