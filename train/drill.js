@@ -75,7 +75,7 @@ function readSamples(examples) {
 
   for (const example of examples) {
     list.push({
-      sensor: readSensor(example.situation),
+      sensor: readSensor(example.situation, example),
       motor: readMotor(example.action),
       level: list.length,
     });
@@ -84,15 +84,20 @@ function readSamples(examples) {
   return list;
 }
 
-function readSensor(units) {
+function readSensor(units, options) {
   const friends = readSituation(units, 0, "friend");
+  const friendsMask = readSituation(units, 1, "friend");
   const enemies = readSituation(units, 1, "enemy");
+  const enemiesMask = readSituation(units, 0, "enemy");
   const emptyFriendly = readSituation(units, 0, "empty");
   const emptyEnemy = readSituation(units, 1, "empty");
   const sensor = [...friends];
 
   // Make wild cards
   for (let i = 0; i < sensor.length; i++) sensor[i] = -1;
+  if (options.slots !== "multi") for (let i = 0; i < sensor.length; i++) if (friendsMask[i]) sensor[i] = 0;
+  if (options.enemy === "fixed") for (let i = sensor.length / 2; i < sensor.length; i++) sensor[i] = 0;
+  if (options.slots !== "multi") for (let i = 0; i < sensor.length; i++) if (enemiesMask[i]) sensor[i] = 0;
 
   // Mark friendly units
   for (let i = 0; i < sensor.length; i++) if (friends[i]) sensor[i] = 1;

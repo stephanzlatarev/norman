@@ -39,6 +39,10 @@ function spot(probes, drones) {
   // · ☺ ☻❶❷❸❹❺❻❼❽❾❿ ☼
   if ((probes < 0) && (drones < 0)) {
     return ".";
+  } else if ((probes < 0) && (drones === 0)) {
+    return "'";
+  } else if ((probes === 0) && (drones < 0)) {
+    return "*";
   } else if ((probes > 0) && (drones > 0)) {
     return "☼";
   } else if (probes > 0) {

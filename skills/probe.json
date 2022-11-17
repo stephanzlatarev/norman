@@ -1,0 +1,52 @@
+{
+  "skill": "probe",
+  "body": "probe",
+
+  "examples": [
+    {
+      "situation": [
+        { "unit": "empty", "direction": 1, "distance": 1 },
+        { "unit": "empty", "direction": 2, "distance": 1 },
+        { "unit": "empty", "direction": 3, "distance": 1 },
+        { "unit": "empty", "direction": 4, "distance": 1 },
+        { "unit": "empty", "direction": 5, "distance": 1 },
+        { "unit": "empty", "direction": 6, "distance": 1 },
+        { "unit": "empty", "direction": 7, "distance": 1 },
+        { "unit": "empty", "direction": 8, "distance": 1 },
+        { "unit": "enemy", "direction": 1, "distance": 2 },
+        { "unit": "empty", "direction": 2, "distance": 2 },
+        { "unit": "empty", "direction": 3, "distance": 2 },
+        { "unit": "empty", "direction": 4, "distance": 2 },
+        { "unit": "friend", "direction": 5, "distance": 2 },
+        { "unit": "friend", "direction": 6, "distance": 2 },
+        { "unit": "empty", "direction": 7, "distance": 2 },
+        { "unit": "empty", "direction": 8, "distance": 2 }
+      ],
+      "action": { "ability": "attack", "direction": 2 }
+    },
+    {
+      "situation": [ { "unit": "enemy", "direction": 1, "distance": 1 } ],
+      "enemy": "fixed",
+      "slots": "multi",
+      "action": { "ability": "attack", "direction": 1 }
+    },
+    {
+      "situation": [ { "unit": "enemy", "direction": 1, "distance": 2 } ],
+      "enemy": "fixed",
+      "slots": "multi",
+      "action": { "ability": "attack", "direction": 1 }
+    },
+    {
+      "situation": [ { "unit": "enemy", "direction": 1, "distance": 1 } ],
+      "slots": "multi",
+      "action": { "ability": "attack", "direction": 1 }
+    },
+    {
+      "situation": [ { "unit": "enemy", "direction": 1, "distance": 2 } ],
+      "slots": "multi",
+      "action": { "ability": "attack", "direction": 1 }
+    }
+
+  ]
+
+}
