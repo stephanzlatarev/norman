@@ -105,9 +105,9 @@ async function checkBuildZealot() {
 
 async function checkAttackZealot() {
   const zealots = game.list("zealot");
-  const enemies = game.enemiesByDistance();
+  const enemies = game.enemiesByDistance().filter(unit => !unit.isFlying);
 
-  if (enemies.length) {
+  if (enemies.length && (zealots.length > enemies.length)) {
     // Attack
     countAttackingZealots(enemies, zealots);
 
