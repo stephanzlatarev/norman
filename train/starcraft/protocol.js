@@ -44,7 +44,7 @@ class Protocol {
   async connect() {
     console.log("Connecting...");
 
-    spawn("..\\Versions\\Base88500\\SC2.exe", [
+    spawn("..\\Versions\\Base89165\\SC2.exe", [
       "-displaymode", "0", "-windowx", "0", "-windowy", "0",
       "-windowwidth", "1920", "-windowwidth", "1440", // Alternatively, width: 1920 height: 1080/1200/1440 (1680/1050)
       "-listen", "127.0.0.1", "-port", "5000"
