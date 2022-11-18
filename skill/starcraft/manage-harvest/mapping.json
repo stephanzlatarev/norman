@@ -1,0 +1,8 @@
+{
+  "input": [
+    "minerals",
+    "nexus.idle",
+    "probes.count"
+  ],
+  "command": 2
+}

@@ -1,214 +1,131 @@
 import starcraft from "@node-sc2/proto";
-import { spawn } from "child_process";
-import log from "../nodejs/log.js";
 
-const PROTOSS = 3;
+import { memory } from "../nodejs/memory.js";
+import Observer from "./observer.js";
 
-const UNIT_TYPE = {
-  gateway: 62,
-  mineral: 341,
-  nexus: 59,
-  probe: 84,
-  pylon: 60,
-  zealot: 73,
-};
+import Probe from "./probe.js";
+import Brain from "../nodejs/brain.js";
 
-export class Game {
+const brain = new Brain("starcraft/probe");
 
-  constructor(args) {
+export default class Game {
+
+  constructor() {
     this.client = starcraft();
-    this.settings = parseArguments(args);
+    this.observer = new Observer();
+    this.actions = [];
   }
 
-  async connect() {
-    await connect(this.client, this.settings);
-  }
-
-  async start() {
-    await play(this.client, this.settings);
-
-    this.gameInfo = await this.client.gameInfo();
-  }
-
-  async quit() {
-    await this.client.quit();
-  }
-
-  async step() {
+  async tick() {
     await this.client.step({ count: 1 });
+    await this.observer.observe(this.client);
+  }
 
-    this.state = await this.client.observation();
+  async perform(command, data) {
+    if (command < 1) {
+      // No action
+    } else if (command < 2) {
+      // Post a message in the chat
+      this.actions.push({
+        actionChat: {
+          channel: 1,
+          message: String.fromCharCode(...data)
+        }
+      });
+    } else if (command < 3) {
+      // Command a unit with [<unit tag>, <ability id>]
+      const unitTag = memory.get("ref/" + data[0]);
+      const unitCommand = {
+        unitTags: [unitTag],
+        abilityId: data[1],
+        targetWorldSpacePos: undefined,
+        queueCommand: false,
+      };
 
-    if (this.ownerId === undefined) {
-      this.ownerId = this.state.observation.rawData.units.find(unit => unit.unitType === UNIT_TYPE.nexus).owner;
-
-      for (const player of this.gameInfo.playerInfo) {
-        if (this.ownerId !== player.playerId) {
-          this.enemyId = player.playerId;
-          break;
+      if (data[2] && data[3]) {
+        // TODO: Fix this when you add the skill to select location from map. data[2] is x; data[3] is y
+        if (data[1] === 881) {
+          unitCommand.targetWorldSpacePos = memory.get("pylon.slot");
+        } else if (data[1] === 880) {
+          unitCommand.targetWorldSpacePos = memory.get("nexus.slot");
+        } else if (data[1] === 883) {
+          unitCommand.targetWorldSpacePos = memory.get("gateway.slot");
+        } else {
+          unitCommand.targetWorldSpacePos = { x: data[2], y: data[3] };
         }
       }
-    }
-  }
 
-  async chat(message) {
-    await this.client.action({ actions: [{ actionChat: { channel: 1, message: message } }] });
-  }
+      memory.set("mode/" + unitTag, memory.get("mode"));
 
-  time() {
-    return this.state ? this.state.observation.gameLoop : 0;
-  }
+      this.actions.push({ actionRaw: { unitCommand: unitCommand } });
+    } else if (command < 4) {
+      // TODO: Fix this. The input should come from data
+      // Command a unit with [<unit tag>, <ability id>]
+      const unit = memory.get("ref/" + data[0]);
+      const abilityId = data[1];
+      const target = memory.get("ref/" + data[2]);
 
-  minerals() {
-    return this.state ? this.state.observation.playerCommon.minerals : 0;
-  }
+      this.actions.push({
+        actionRaw: {
+          unitCommand: {
+            unitTags: [unit],
+            abilityId: abilityId,
+            targetUnitTag: target,
+            queueCommand: false,
+          }
+        }
+      });
 
-  workers() {
-    return this.state ? this.state.observation.playerCommon.foodWorkers : 0;
-  }
+      // TODO: Remove this when settling skill "harvest-minerals"
+      memory.set("assignments/" + unit, target);
+      let harvesters = memory.get("assignments/" + target);
+      if (!harvesters) harvesters = [];
+      harvesters.push(unit);
+      memory.set("assignments/" + target, harvesters);
+    } else if (command < 5) {
+      // Command a unit with [<unit tag>, <ability id>, <unit tag>]
+      const unit = memory.get("ref/" + data[0]);
+      const abilityId = data[1];
+      const target = memory.get("ref/" + data[2]);
 
-  energySupply() {
-    return this.state ? this.state.observation.playerCommon.foodCap : 0;
-  }
+      this.actions.push({
+        actionRaw: {
+          unitCommand: {
+            unitTags: [unit],
+            abilityId: abilityId,
+            targetUnitTag: target,
+            queueCommand: false,
+          }
+        }
+      });
+    } else if (command < 6) {
+      // TODO: Each probe should be a body, so that the unit is immediately known
+      const unitTag = memory.get("ref/" + data[0]);
+      const unit = this.observer.getUnit(unitTag);
 
-  energyUse() {
-    return this.state ? this.state.observation.playerCommon.foodUsed : 0;
-  }
+      if (!unit) return;
 
-  get(type) {
-    if (!this.state) return;
-
-    return this.state.observation.rawData.units.find(unit => (unit.unitType === UNIT_TYPE[type]) && (unit.owner === this.ownerId));
-  }
-
-  list(type) {
-    if (!this.state) return [];
-
-    return this.state.observation.rawData.units.filter(unit => (unit.unitType === UNIT_TYPE[type]) && (unit.owner === this.ownerId));
-  }
-
-  enemies() {
-    return this.state.observation.rawData.units.filter(unit => (unit.owner === this.enemyId));
-  }
-
-  enemy(enemyTag) {
-    if (!this.state) return;
-
-    const one = this.state.observation.rawData.units.find(unit => (unit.tag === enemyTag));
-
-    if (one) return one;
-
-    const enemies = this.state.observation.rawData.units.filter(unit => (unit.owner === this.enemyId));
-    const nexus = this.get("nexus");
-    let nearestEnemy;
-    let distanceToNearestEnemy = 1000;
-
-    enemies.sort((a, b) => a.tag.localeCompare(b.tag));
-    for (const enemy of enemies) {
-      if (enemy.isFlying) continue;
-
-      const distance = Math.abs(enemy.pos.x - nexus.pos.x) + Math.abs(enemy.pos.y - nexus.pos.y);
-      if (distance < distanceToNearestEnemy) {
-        nearestEnemy = enemy;
-        distanceToNearestEnemy = distance;
-      }
-    }
-    return nearestEnemy;
-  }
-
-  enemiesByDistance() {
-    if (!this.state) return;
-
-    const nexus = this.get("nexus");
-    if (!nexus) return [];
-
-    const enemies = this.state.observation.rawData.units.filter(unit => (unit.owner === this.enemyId));
-
-    enemies.sort((a, b) => {
-      const distanceA = Math.abs(a.pos.x - nexus.pos.x) + Math.abs(a.pos.y - nexus.pos.y) + (a.isFlying ? 1000 : 0);
-      const distanceB = Math.abs(b.pos.x - nexus.pos.x) + Math.abs(b.pos.y - nexus.pos.y) + (b.isFlying ? 1000 : 0);
-
-      return distanceA - distanceB;
-    });
-
-    return enemies;
-  }
-
-  isBuilding() {
-    const probes = this.list("probe");
-
-    for (const probe of probes) {
-      if (probe.orders.length === 2) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  async train(type, factory) {
-    if (!this.state) return;
-
-    if (type === "probe") {
-      const nexus = this.get("nexus");
-
-      await this.client.action({
-        actions: [
-          {
-            actionRaw: {
-              unitCommand: {
-                unitTags: [nexus.tag],
-                abilityId: 1006,
-                queueCommand: false,
-                target: {}
-              }
+      if (isUnitBehindNexus(unit)) {
+        this.actions.push({
+          actionRaw: {
+            unitCommand: {
+              unitTags: [unit.tag],
+              abilityId: 3674,
+              targetWorldSpacePos: { x: memory.get("enemy.x"), y: memory.get("enemy.y") },
+              queueCommand: false
             }
           }
-        ]
-      });
-    } else if (type === "zealot") {
-      await this.client.action({
-        actions: [
-          {
-            actionRaw: {
-              unitCommand: {
-                unitTags: [factory],
-                abilityId: 916,
-                queueCommand: false,
-                target: {}
-              }
-            }
-          }
-        ]
-      });
-    }
-  }
+        });
+      } else {
+        const probe = new Probe(unit.tag);
 
-  situation() {
-    const context = [...this.list("probe"), ...this.enemies()];
-    const situation = [];
+        probe.situate(this.observer.situation());
+        probe.motor = await brain.react(probe.sensor);
 
-    for (const unit of context) {
-      situation.push({
-        tag: unit.tag,
-        owner: unit.owner,
-        x: unit.pos.x,
-        y: unit.pos.y,
-      });
-    }
+        const action = probe.toCommand();
+        const distance = unit.radius * 3;
 
-    return situation;
-  }
-
-  async command(unit, action) {
-    if (!this.state) return;
-    if (!action) return;
-
-    const distance = unit.radius * 3;
-
-    await this.client.action({
-      actions: [
-        {
+        this.actions.push({
           actionRaw: {
             unitCommand: {
               unitTags: [unit.tag],
@@ -217,304 +134,63 @@ export class Game {
               queueCommand: false
             }
           }
-        }
-      ]
-    });
+        });
+      }
+
+      memory.set("time/" + unitTag, memory.get("time"));
+      return "continue";
+    }
   }
 
-  async build(type) {
-    if (!this.state) return;
-
-    if (type === "pylon") {
-      const probe = this.get("probe");
-      const nexus = this.get("nexus");
-      const harvest = nexus.rallyTargets[0] ? nexus.rallyTargets[0].tag : this.get("mineral").tag;
-
-      const STEP = 7;
-
-      for (let distance = STEP; distance < 200; distance += STEP) {
-        for (let x = nexus.pos.x - distance; x <= nexus.pos.x + distance; x += STEP) {
-          for (let y = nexus.pos.y - distance; y <= nexus.pos.y + distance; y += STEP) {
-            const response = await this.client.action({
-              actions: [
-                {
-                  actionRaw: {
-                    unitCommand: {
-                      abilityId: 881, // Build pylon
-                      unitTags: [probe.tag],
-                      targetWorldSpacePos: { x: x, y: y },
-                      queueCommand: false
-                    }
-                  }
-                },
-                {
-                  actionRaw: {
-                    unitCommand: {
-                      abilityId: 298, // Go back to harvesting
-                      unitTags: [probe.tag],
-                      targetUnitTag: harvest,
-                      queueCommand: true
-                    }
-                  }
-                }
-              ]
-            });
-
-            if (response.result[0] === 1) return;
-          }
-        }
-      }
-    } else if (type === "gateway") {
-      const probe = this.get("probe");
-      const pylons = this.list("pylon");
-      const nexus = this.get("nexus");
-
-      const STEP = 3.5;
-
-      for (const pylon of pylons) {
-        for (let x = pylon.pos.x - STEP; x <= pylon.pos.x + STEP; x += STEP) {
-          for (let y = pylon.pos.y - STEP; y <= pylon.pos.y + STEP; y += STEP) {
-            const response = await this.client.action({
-              actions: [
-                {
-                  actionRaw: {
-                    unitCommand: {
-                      abilityId: 883, // Build gateway
-                      unitTags: [probe.tag],
-                      targetWorldSpacePos: { x: x, y: y },
-                      queueCommand: false
-                    }
-                  }
-                },
-                {
-                  actionRaw: {
-                    unitCommand: {
-                      abilityId: 298, // Go back to harvesting
-                      unitTags: [probe.tag],
-                      targetUnitTag: nexus.rallyTargets[0].tag,
-                      queueCommand: true
-                    }
-                  }
-                }
-              ]
-            });
-
-            if (response.result[0] === 1) return;
-          }
+  async tock() {
+    const units = [];
+    for (const action of this.actions) {
+      if (action.actionRaw && action.actionRaw.unitCommand && action.actionRaw.unitCommand.unitTags) {
+        const actionUnit = action.actionRaw.unitCommand.unitTags[0];
+        if (units.indexOf(actionUnit) >= 0) {
+          action.actionRaw.unitCommand.queueCommand = true;
+        } else {
+          units.push(actionUnit);
         }
       }
     }
+
+    await this.client.action({ actions: this.actions });
+
+    this.actions = [];
+
+    if (memory.get("game over")) this.dettach();
   }
 
-  async use(type, target, object) {
-    if (!this.state) return;
-
-    if (type === "chronoboost") {
-      const nexus = this.get("nexus");
-
-      await this.client.action({
-        actions: [
-          {
-            actionRaw: {
-              unitCommand: {
-                unitTags: [nexus.tag],
-                abilityId: 3755,
-                targetUnitTag: target ? target : nexus.tag
-              }
-            }
-          }
-        ]
-      });
-    } else if (type === "attack") {
-      await this.client.action({
-        actions: [
-          {
-            actionRaw: {
-              unitCommand: {
-                unitTags: [target],
-                abilityId: 3674,
-                targetWorldSpacePos: { x: Math.random() * 250, y: Math.random() * 250 },
-                queueCommand: false
-              }
-            }
-          }
-        ]
-      });
-    } else if (type === "test") {
-      const distance = target.radius;
-      const dx = distance * (Math.random() * 2 - 1);
-      const dy = distance * (Math.random() * 2 - 1);
-      await this.client.action({
-        actions: [
-          {
-            actionRaw: {
-              unitCommand: {
-                unitTags: [target.tag],
-                abilityId: 3674,
-                targetWorldSpacePos: { x: target.pos.x + dx, y: target.pos.y + dy },
-                queueCommand: false
-              }
-            }
-          }
-        ]
-      });
-    } else if (type === "test1") {
-      await this.client.action({
-        actions: [
-          {
-            actionRaw: {
-              unitCommand: {
-                unitTags: [target.tag],
-                abilityId: 3674,
-                targetUnitTag: object.tag,
-                queueCommand: false
-              }
-            }
-          }
-        ]
-      });
-    } else if (type === "move") {
-      await this.client.action({
-        actions: [
-          {
-            actionRaw: {
-              unitCommand: {
-                unitTags: [target.tag],
-                abilityId: 16,
-                targetWorldSpacePos: { x: object.x, y: object.y },
-                queueCommand: false
-              }
-            }
-          }
-        ]
-      });
+  async dettach() {
+    if (this.client) {
+      await this.client.quit();
     }
-  }
-
-  async attack(unit, target) {
-    await this.client.action({
-      actions: [
-        {
-          actionRaw: {
-            unitCommand: {
-              unitTags: [unit],
-              abilityId: 3674,
-              targetUnitTag: target,
-              queueCommand: false
-            }
-          }
-        }
-      ]
-    });
-  }
-
-  async harvest(unit) {
-    const nexus = this.get("nexus");
-
-    if (!nexus) return;
-
-    await this.client.action({
-      actions: [
-        {
-          actionRaw: {
-            unitCommand: {
-              abilityId: 298, // Go back to harvesting
-              unitTags: [unit],
-              targetUnitTag: nexus.rallyTargets[0].tag,
-              queueCommand: false
-            }
-          }
-        }
-      ]
-    });
   }
 
 }
 
-function parseArguments(args) {
-  const settings = {};
+// TODO: Make a skill out of this
+function isUnitBehindNexus(unit) {
+  const nexusX = memory.get("mainbase.x");
+  const nexusY = memory.get("mainbase.y");
+  const nexusRadius = memory.get("mainbase.radius");
+  const enemyX = memory.get("enemy.x");
+  const enemyY = memory.get("enemy.y");
 
-  if (args && args.length) {
-    for (let i = 0; i < args.length - 1; i++) {
-      if (args[i] === "--LadderServer") {
-        settings.ladderServer = args[i + 1];
-      } else if (args[i] === "--GamePort") {
-        settings.gamePort = parseInt(args[i + 1]);
-      } else if (args[i] === "--StartPort") {
-        settings.startPort = parseInt(args[i + 1]);
-      }
-    }
+  let xaxis = false;
+  if (unit.pos.x >= enemyX) {
+    if ((nexusX - nexusRadius <= unit.pos.x) && (nexusX + nexusRadius >= enemyX)) xaxis = true;
+  } else {
+    if ((nexusX - nexusRadius <= enemyX) && (nexusX + nexusRadius >= unit.pos.x)) xaxis = true;
   }
 
-  return settings;
-}
-
-async function connect(client, settings) {
-  try {
-    await client.connect({
-      host: settings.ladderServer || "localhost",
-      port: settings.gamePort || 5000,
-    });
-  } catch (message) {
-    if (!settings.ladderServer && (message.error.code === "ECONNREFUSED")) {
-      await start(client);
-    } else {
-      throw error;
-    }
-  }
-}
-
-async function start(client) {
-  log("Starting StarCraft II game...");
-
-  spawn("..\\Versions\\Base88500\\SC2.exe", [
-    "-displaymode", "0", "-windowx", "0", "-windowy", "0",
-    "-windowwidth", "1920", "-windowwidth", "1440", // Alternatively, width: 1920 height: 1080/1200/1440 (1680/1050)
-    "-listen", "127.0.0.1", "-port", "5000"
-  ], {
-    cwd: "C:\\games\\StarCraft II\\Support"
-  });
-
-  for (let i = 0; i < 12; i++) {
-    try {
-      await client.connect({ host: "localhost", port: 5000 });
-      return;
-    } catch (_) {
-      await new Promise(r => setTimeout(r, 5000));
-    }
+  let yaxis;
+  if (unit.pos.y >= enemyY) {
+    if ((nexusY - nexusRadius <= unit.pos.y) && (nexusY + nexusRadius >= enemyY)) yaxis = true;
+  } else {
+    if ((nexusY - nexusRadius <= enemyY) && (nexusY + nexusRadius >= enemyY)) yaxis = true;
   }
 
-  throw "Unable to start game!";
-}
-
-async function play(client, settings) {
-  if (!settings.ladderServer) {
-    await client.createGame({
-      realtime: false,
-      // localMap: { mapPath: "norman-defend-nexus.SC2Map" },
-      battlenetMapName: "Data-C",
-      playerSetup: [
-        { type: 1, race: PROTOSS },            // Participant, Protoss
-        { type: 2, race: 4, difficulty: 1 },   // Computer, Random
-      ]
-    });
-  }
-
-  const player = {};
-
-  player.race = PROTOSS;
-  player.options = { raw: true };
-
-  if (settings.ladderServer) {
-    let startPort = settings.startPort + 1;
-
-    player.sharedPort = startPort++;
-    player.serverPorts = { gamePort: startPort++, basePort: startPort++ };
-    player.clientPorts = [
-      { gamePort: startPort++, basePort: startPort++ },
-      { gamePort: startPort++, basePort: startPort++ },
-    ];
-  };
-
-  await client.joinGame(player);
+  return xaxis && yaxis;
 }

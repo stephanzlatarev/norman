@@ -1,0 +1,11 @@
+{
+  "input": [
+    "minerals",
+    "food.cap",
+    "food.used"
+  ],
+  "command": 0,
+  "skills": [
+    "starcraft/build-structure"
+  ]
+}

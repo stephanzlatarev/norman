@@ -1,0 +1,8 @@
+{
+  "input": [
+    "nexus.ready",
+    "probes.count",
+    "gateway.ready"
+  ],
+  "command": 4
+}

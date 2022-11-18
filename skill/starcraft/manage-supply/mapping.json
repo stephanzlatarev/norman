@@ -1,0 +1,8 @@
+{
+  "input": [
+    "minerals",
+    "pylon.count",
+    "food.used"
+  ],
+  "command": 2
+}

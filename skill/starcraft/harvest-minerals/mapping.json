@@ -1,0 +1,8 @@
+{
+  "input": [
+    "mode",
+    "probes.idle",
+    "minerals.closest"
+  ],
+  "command": 3
+}

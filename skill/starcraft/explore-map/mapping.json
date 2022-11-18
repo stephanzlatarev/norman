@@ -1,0 +1,9 @@
+{
+  "input": [
+    "mode",
+    "zealot.idle",
+    "enemybase.x",
+    "enemybase.y"
+  ],
+  "command": 2
+}
