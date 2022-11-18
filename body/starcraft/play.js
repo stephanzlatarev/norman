@@ -1,7 +1,7 @@
 import { Game } from "./game.js";
-import Brain from "../brain.js";
 import Probe from "./probe.js";
-import log from "../log.js";
+import Brain from "../nodejs/brain.js";
+import log from "../nodejs/log.js";
 
 const probe = new Probe();
 const brain = new Brain(probe, null, "starcraft/probe");

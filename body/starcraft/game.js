@@ -1,6 +1,6 @@
 import starcraft from "@node-sc2/proto";
 import { spawn } from "child_process";
-import log from "../log.js";
+import log from "../nodejs/log.js";
 
 const PROTOSS = 3;
 

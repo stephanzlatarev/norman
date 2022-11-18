@@ -1,5 +1,5 @@
-import { start, stop } from "./src/starcraft/play.js";
-import log from "./src/log.js";
+import { start, stop } from "./body/starcraft/play.js";
+import log from "./body/nodejs/log.js";
 
 process.on("SIGTERM", function() {
   log("Stopping...");
