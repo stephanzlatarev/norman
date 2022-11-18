@@ -4,7 +4,7 @@ import Probe from "./probe.js";
 import log from "../log.js";
 
 const probe = new Probe();
-const brain = new Brain(probe, null, "./skills/probe");
+const brain = new Brain(probe, null, "starcraft/probe");
 
 let game;
 let isRunning;

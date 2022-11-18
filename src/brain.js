@@ -12,10 +12,10 @@ const LOSS_FUNCTION = "meanSquaredError";
 
 export default class Brain {
 
-  constructor(body, memory, file) {
+  constructor(body, memory, skill) {
     this.body = body;
     this.memory = memory;
-    this.file = file;
+    this.skill = skill;
   }
 
   async learn(millis) {
@@ -37,7 +37,7 @@ export default class Brain {
       });
     }
 
-    await this.model.save(new Storage(this.file));
+    await this.model.save(new Storage(this.skill));
 
     summary(time, info);
 
@@ -79,9 +79,9 @@ async function startScope(brain) {
 
   if (brain.model) return;
 
-  if (brain.file) {
+  if (brain.skill) {
     try {
-      brain.model = await tf.loadLayersModel(new Storage(brain.file));
+      brain.model = await tf.loadLayersModel(new Storage(brain.skill));
       brain.model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
       return;
     } catch (error) {
@@ -109,8 +109,8 @@ function summary(time, info) {
 
 class Storage {
 
-  constructor(file) {
-    this.file = file;
+  constructor(skill) {
+    this.file = "./skill/" + file + "/brain";
   }
 
   async load() {
