@@ -136,7 +136,7 @@ function pickFreeLocationForPylon(observation, owner) {
   for (const nexus of nexuses) {
     const face = getNexusFace(nexus, observation);
   
-    for (const i of [2.5, -2.5, 0, 5, -5]) {
+    for (const i of [0, 2.5, -2.5, 5, -5]) {
       const location = { x: nexus.pos.x + face.side.x * 4 + face.vector.x * i, y: nexus.pos.y + face.side.y * 4 + face.vector.y * i };
   
       if (!isClose({ pos: location }, 1, pylons)) {
