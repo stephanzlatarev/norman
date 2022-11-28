@@ -138,9 +138,9 @@ export default class Observer {
 
     if ((mode !== "defend") && (memory.get("mode") === "defend")) {
       const probes = this.observation.rawData.units.filter(unit => (unit.owner === this.owner) && (unit.unitType === 84));
-      memory.set("ref/1", probes[0].tag); // Builder of nexus is "refs/1"
-      memory.set("ref/2", probes[1].tag); // Builder of pylon is "refs/2"
-      memory.set("ref/3", probes[2].tag); // Builder of gateway is "refs/3"
+      if (!probes.find((probe) => (probe.tag === memory.get("ref/1")))) memory.set("ref/1", probes[0].tag); // Builder of nexus is "refs/1"
+      if (!probes.find((probe) => (probe.tag === memory.get("ref/2")))) memory.set("ref/2", probes[1].tag); // Builder of pylon is "refs/2"
+      if (!probes.find((probe) => (probe.tag === memory.get("ref/3")))) memory.set("ref/3", probes[2].tag); // Builder of gateway is "refs/3"
 
       for (const probe of probes) memory.clear("assignments/" + probe.tag);
       for (const resource of hack.getAllResources(this.observation)) memory.clear("assignments/" + resource.tag);
