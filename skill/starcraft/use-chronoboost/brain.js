@@ -5,7 +5,7 @@ export default class UseChronoBoostBrain {
     const nexus = input[0];
     const countOfProbes = input[1];
 
-    if (countOfProbes < 20) {
+    if (countOfProbes < 16) {
       return [nexus, 3755, nexus];
     }
   }

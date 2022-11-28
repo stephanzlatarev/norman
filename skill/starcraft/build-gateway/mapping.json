@@ -1,7 +1,5 @@
 {
   "input": [
-    "nexus.count",
-    "gateway.count",
     "minerals",
     "food.used",
     "food.cap"

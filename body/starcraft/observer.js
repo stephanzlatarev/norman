@@ -28,6 +28,7 @@ export default class Observer {
     memory.set("gateway.count", gatewayCount.bind(this));
     memory.set("gateway.slot", gatewaySlot.bind(this));
     memory.set("gateway.idle", gatewayIdle.bind(this));
+    memory.set("gateway.idle.count", gatewayIdleCount.bind(this));
     memory.set("gateway.ready", gatewayReady.bind(this));
 
     memory.set("zealot.count", zealotCount.bind(this));
@@ -241,6 +242,10 @@ function gatewaySlot() {
 
 function gatewayIdle() {
   return memory.ref(hack.pickIdleGateway(this.observation, this.owner));
+}
+
+function gatewayIdleCount() {
+  return this.observation.rawData.units.filter(unit => ((unit.owner === this.owner) && (unit.unitType === 62) && (unit.buildProgress === 1) && !unit.orders.length)).length;
 }
 
 function gatewayReady() {

@@ -6,7 +6,7 @@ export default class UseChronoBoostBrain {
     const countOfProbes = input[1];
     const gateway = input[2];
 
-    if (countOfProbes >= 20) {
+    if (countOfProbes >= 16) {
       return [nexus, 3755, gateway];
     }
   }

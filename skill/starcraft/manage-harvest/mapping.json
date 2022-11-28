@@ -2,7 +2,8 @@
   "input": [
     "minerals",
     "nexus.idle",
-    "probes.count"
+    "probes.count",
+    "gateway.idle.count"
   ],
   "command": 2
 }
