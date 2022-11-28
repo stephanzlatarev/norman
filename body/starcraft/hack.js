@@ -21,7 +21,7 @@ const MINERALS = {
   884: 1, 885: 1, 886: 1, 887: 1,
 };
 const VESPENES = {
-  342: 1, 344: 1, 608: 1, 880: 1, 881: 1,
+  342: 1, 343: 1, 344: 1, 608: 1, 880: 1, 881: 1,
 };
 
 function getAllResources(observation) {
