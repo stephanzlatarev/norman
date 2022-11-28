@@ -137,8 +137,8 @@ function pickFreeLocationForPylon(observation, owner) {
   for (const nexus of nexuses) {
     const face = getNexusFace(nexus, observation);
   
-    for (const i of [0, 2.5, -2.5, 5, -5]) {
-      const location = { x: nexus.pos.x + face.side.x * 4 + face.vector.x * i, y: nexus.pos.y + face.side.y * 4 + face.vector.y * i };
+    for (const i of [0.5, -1.5, 2.5, -3.5, 4.5]) {
+      const location = { x: nexus.pos.x + face.side.x * 3.5 + face.vector.x * i, y: nexus.pos.y + face.side.y * 3.5 + face.vector.y * i };
   
       if (!isClose({ pos: location }, 1, pylons)) {
         return location;
@@ -240,7 +240,7 @@ function pickFreeLocationForNexus(observation, owner) {
   }
 
   const fields = findClusterOfResources(anchor, resources);
-  const location = findFreePlace(base.radius + 2.5, fields);
+  const location = findFreePlace(base.radius, fields);
 
   memory.set("expansion.x", location.x);
   memory.set("expansion.y", location.y);
@@ -297,8 +297,8 @@ function pickFreeLocationForGateway(observation, owner) {
   for (const nexus of nexuses) {
     const face = getNexusFace(nexus, observation);
   
-    for (const i of [2.5, -2.5]) {
-      const location = { x: nexus.pos.x + face.side.x * 8 + face.vector.x * i, y: nexus.pos.y + face.side.y * 8 + face.vector.y * i };
+    for (const i of [2, -2]) {
+      const location = { x: nexus.pos.x + face.side.x * 6 + face.vector.x * i, y: nexus.pos.y + face.side.y * 6 + face.vector.y * i };
   
       if (!isClose({ pos: location }, 1, gateways)) {
         return location;
