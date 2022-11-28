@@ -94,7 +94,7 @@ export default class Observer {
     if (enemyUnit) {
       memory.set("enemy.x", enemyUnit.pos.x);
       memory.set("enemy.y", enemyUnit.pos.y);
-      memory.set("enemy.army", Math.max(enemyUnits.length, memory.get("enemy.army")));
+      memory.set("enemy.army", Math.min(Math.max(enemyUnits.length, memory.get("enemy.army")), 15));
       mode = "attack";
 
       if (!zealots.length && (getNexusCount() === 1)) {
