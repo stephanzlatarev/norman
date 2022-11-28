@@ -64,13 +64,14 @@ export default class Observer {
         }
       }
 
-      memory.set("rally.x", mainBase.pos.x + 3.5);
-      memory.set("rally.y", mainBase.pos.y + 3.5);
+      memory.set("rally.x", mainBase.pos.x);
+      memory.set("rally.y", mainBase.pos.y);
 
       if (gameInfo.startRaw.startLocations.length) {
         memory.set("enemybase.x", gameInfo.startRaw.startLocations[0].x);
         memory.set("enemybase.y", gameInfo.startRaw.startLocations[0].y);
       }
+      memory.set("enemy.army", 0);
     }
 
     const getNexusCount = nexusCount.bind(this);
@@ -79,12 +80,21 @@ export default class Observer {
     memory.set("game over", (!getNexusCount() || (getProbeCount() + getZealotCount() === 0)));
 
     let mode = "explore";
-    const enemyUnit = this.observation.rawData.units.find(unit => (!unit.isFlying && (unit.owner === this.enemy)));
+    const nexus = this.observation.rawData.units.find(unit => (unit.tag === memory.get("ref/0")));
+    const enemyUnits = this.observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === this.enemy)));
+    enemyUnits.sort((a, b) => {
+      const da = (a.pos.x - nexus.pos.x) * (a.pos.x - nexus.pos.x) + (a.pos.y - nexus.pos.y) * (a.pos.y - nexus.pos.y);
+      const db = (b.pos.x - nexus.pos.x) * (b.pos.x - nexus.pos.x) + (b.pos.y - nexus.pos.y) * (b.pos.y - nexus.pos.y);
+      return da - db;
+    });
+    const enemyUnit = enemyUnits.length ? enemyUnits[0] : null;
+
     const zealots = this.observation.rawData.units.filter(unit => ((unit.owner === this.owner) && (unit.unitType === 73)));
     zealots.sort((a, b) => a.tag.localeCompare(b.tag));
     if (enemyUnit) {
       memory.set("enemy.x", enemyUnit.pos.x);
       memory.set("enemy.y", enemyUnit.pos.y);
+      memory.set("enemy.army", Math.max(enemyUnits.length, memory.get("enemy.army")));
       mode = "attack";
 
       if (!zealots.length && (getNexusCount() === 1)) {
@@ -113,28 +123,31 @@ export default class Observer {
       }
     }
 
-    const leaderTag = memory.get("rally.leader");
-    let leaderUnit = this.observation.rawData.units.find(unit => (unit.tag === leaderTag));
-    if (!leaderTag) {
-      leaderUnit = this.observation.rawData.units.find(unit => ((unit.owner === this.owner) && (unit.unitType === 73)));
-    }
-
-    if (leaderUnit) {
-      memory.set("rally.leader", leaderUnit.tag);
-      memory.set("rally.x", leaderUnit.pos.x);
-      memory.set("rally.y", leaderUnit.pos.y);
-    }
-
     if (mode === "attack") {
-      const leaderX = memory.get("rally.x");
-      const leaderY = memory.get("rally.y");
+      const leader = hack.pickZealotLeader(this.observation, this.owner);
+      const leaderX = leader ? leader.pos.x : nexus.pos.x;
+      const leaderY = leader ? leader.pos.y : nexus.pos.y;
+
       let armySize = 0;
       for (const zealot of zealots) {
-        if ((Math.abs(zealot.pos.x - leaderX) < 15) && (Math.abs(zealot.pos.y - leaderY) < 15)) {
+        if ((Math.abs(zealot.pos.x - leaderX) < 10) && (Math.abs(zealot.pos.y - leaderY) < 10)) {
           armySize++;
         }
       }
-      if (armySize < 4) mode = "rally";
+
+      if (leader) {
+        memory.set("rally.leader", leader.tag);
+      } else {
+        memory.clear("rally.leader");
+      }
+      memory.set("rally.x", leaderX);
+      memory.set("rally.y", leaderY);
+
+      if (armySize > memory.get("enemy.army")) {
+        mode = "attack";
+      } else {
+        mode = "rally";
+      }
     }
 
     if ((mode !== "defend") && (memory.get("mode") === "defend")) {

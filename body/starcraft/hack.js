@@ -11,6 +11,7 @@ export default {
   pickIdleGateway: pickIdleGateway,
   pickFreeLocationForGateway: pickFreeLocationForGateway,
   pickIdleZealot: pickIdleZealot,
+  pickZealotLeader: pickZealotLeader,
   countArmy: countArmy,
 };
 
@@ -346,4 +347,15 @@ function isFighting(zealot) {
 
   const ability = zealot.orders[0].abilityId;
   return ((ability === 3674) || (ability === 23) || (ability === 2048));
+}
+
+function pickZealotLeader(observation, owner) {
+  const nexus = observation.rawData.units.find(unit => (unit.tag === memory.get("ref/0")));
+  const zealots = observation.rawData.units.filter(unit => ((unit.owner === owner) && (unit.unitType === 73)));
+  zealots.sort((a, b) => {
+    const da = (a.pos.x - nexus.pos.x) * (a.pos.x - nexus.pos.x) + (a.pos.y - nexus.pos.y) * (a.pos.y - nexus.pos.y);
+    const db = (b.pos.x - nexus.pos.x) * (b.pos.x - nexus.pos.x) + (b.pos.y - nexus.pos.y) * (b.pos.y - nexus.pos.y);
+    return da - db;
+  });
+  return zealots.length ? zealots[Math.floor(zealots.length / 2)] : null;
 }
