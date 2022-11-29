@@ -3,7 +3,8 @@
     "minerals",
     "nexus.idle",
     "probes.count",
-    "gateway.idle.count"
+    "gateway.idle.count",
+    "nexus.count"
   ],
   "command": 2
 }

@@ -6,8 +6,10 @@ export default class ManageHarvestBrain {
     const nexus = input[1];
     const countOfProbes = input[2];
     const countOfIdleGateways = input[3];
+    const countOfNexuses = input[4];
+    const probesLimit = Math.min(countOfNexuses * 16 + 8, 80);
 
-    if ((minerals >= 50) && (countOfProbes < 80) && !countOfIdleGateways) {
+    if ((minerals >= 50) && (countOfProbes < probesLimit) && !countOfIdleGateways) {
       return [nexus, 1006];
     }
   }
