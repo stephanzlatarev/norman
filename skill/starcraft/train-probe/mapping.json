@@ -1,0 +1,18 @@
+{
+  "label": "train probe",
+  "goal": "destroy enemy",
+
+  "body": {
+    "code": "body/starcraft/unit/nexus"
+  },
+
+  "input": [
+    "orders",
+    "game/minerals"
+  ],
+
+  "output": [
+    "build-probe",
+    "game/minerals"
+  ]
+}

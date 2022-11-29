@@ -1,9 +1,0 @@
-{
-  "input": [
-    "gateway.idle",
-    "minerals",
-    "food.used",
-    "food.cap"
-  ],
-  "command": 2
-}

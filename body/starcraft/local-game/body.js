@@ -3,20 +3,21 @@ import Game from "../game.js";
 
 export default class LocalGame extends Game {
 
-  constructor(config) {
-    super();
-    this.config = config;
+  constructor(node) {
+    super(node);
   }
 
   async attach() {
     console.log("Starting StarCraft II game...");
 
-    spawn("..\\Versions\\" + this.config.starcraft.version + "\\SC2.exe", [
+    const config = this.node.get("config");
+
+    spawn("..\\Versions\\" + config.version + "\\SC2.exe", [
       "-displaymode", "0", "-windowx", "0", "-windowy", "0",
       "-windowwidth", "1920", "-windowwidth", "1440", // Alternatively, width: 1920 height: 1080/1200/1440 (1680/1050)
       "-listen", "127.0.0.1", "-port", "5000"
     ], {
-      cwd: this.config.starcraft.path + "\\Support"
+      cwd: config.path + "\\Support"
     });
 
     for (let i = 0; i < 12; i++) {
@@ -28,10 +29,10 @@ export default class LocalGame extends Game {
       }
     }
 
-    await this.client.createGame(this.config.starcraft.game);
+    await this.client.createGame(config);
 
     await this.client.joinGame({
-      race: this.config.starcraft.game.playerSetup[0].race,
+      race: config.playerSetup[0].race,
       options: { raw: true },
     });
   }

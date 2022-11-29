@@ -1,8 +1,0 @@
-{
-  "input": [
-    "minerals",
-    "food.used",
-    "food.cap"
-  ],
-  "command": 2
-}

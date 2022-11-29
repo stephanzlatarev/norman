@@ -1,7 +1,27 @@
 {
+  "label": "use chronoboost",
+  "goal": "destroy enemy",
+
+  "body": {
+    "code": "body/starcraft/unit/nexus"
+  },
+
+  "memory": {
+    "paths": [
+      {
+        "label": "CHRONOBOOST",
+        "path": ["BODY", "chronoboost", "BODY"],
+        "provisional": true
+      }
+    ]
+  },
+
   "input": [
-    "nexus.ready",
-    "probes.count"
+    "energy"
   ],
-  "command": 4
+
+  "output": [
+    "CHRONOBOOST",
+    "energy"
+  ]
 }

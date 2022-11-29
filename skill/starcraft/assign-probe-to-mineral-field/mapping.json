@@ -1,0 +1,66 @@
+{
+  "label": "assign probe to mineral field",
+  "goal": "destroy enemy",
+
+  "comment": "Use the skill with probes which are either idle, or just returned harvest to nexus. The skill will help pick the closest underutilized mineral field",
+
+  "body": {
+    "code": "body/starcraft/unit/probe"
+  },
+
+  "memory": {
+    "nodes": {
+      "NEW-MINERAL": { "unitType": "mineral" },
+      "OLD-MINERAL": { "unitType": "mineral" },
+      "PROBE-1": { "unitType": "probe" },
+      "PROBE-2": { "unitType": "probe" }
+    },
+
+    "constraints": [
+      [ "NEW-MINERAL", "≠", "OLD-MINERAL" ],
+      [ "BODY", "≠", "PROBE-1" ],
+      [ "BODY", "≠", "PROBE-2" ],
+      [ "PROBE-1", "~", "PROBE-2" ]
+    ],
+
+    "paths": [
+      {
+        "label": "NEW-ASSIGNMENT",
+        "path": ["BODY", "harvest", "NEW-MINERAL"],
+        "provisional": true
+      },
+      {
+        "label": "OLD-ASSIGNMENT",
+        "path": ["BODY", "harvest", "OLD-MINERAL"],
+        "optional": true
+      },
+      {
+        "path": ["PROBE-1", "harvest", "NEW-MINERAL"],
+        "optional": true
+      },
+      {
+        "path": ["PROBE-2", "harvest", "NEW-MINERAL"],
+        "optional": true
+      }
+    ]
+  },
+
+  "input": [
+    "PROBE-1",
+    "PROBE-2",
+    "OLD-MINERAL/x",
+    "OLD-MINERAL/y",
+    "OLD-MINERAL/nexus/x",
+    "OLD-MINERAL/nexus/y",
+    "NEW-MINERAL/x",
+    "NEW-MINERAL/y",
+    "NEW-MINERAL/nexus/x",
+    "NEW-MINERAL/nexus/y"
+  ],
+
+  "output": [
+    "OLD-ASSIGNMENT",
+    "NEW-ASSIGNMENT"
+  ]
+
+}

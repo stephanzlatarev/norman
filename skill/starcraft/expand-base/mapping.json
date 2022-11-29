@@ -1,8 +1,0 @@
-{
-  "input": [
-    "minerals",
-    "probes.count",
-    "nexus.count"
-  ],
-  "command": 2
-}

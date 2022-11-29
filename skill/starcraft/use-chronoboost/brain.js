@@ -2,11 +2,12 @@
 export default class UseChronoBoostBrain {
 
   react(input) {
-    const nexus = input[0];
-    const countOfProbes = input[1];
+    const nexusEnergy = input[0];
 
-    if (countOfProbes < 16) {
-      return [nexus, 3755, nexus];
+    // Add input[1]=<count of probes>. Use chronoboost on nexus only if count of probes < 16
+
+    if (nexusEnergy >= 50) {
+      return [1, nexusEnergy - 50];
     }
   }
 
