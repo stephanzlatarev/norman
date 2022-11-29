@@ -137,8 +137,8 @@ function pickFreeLocationForPylon(observation, owner) {
   for (const nexus of nexuses) {
     const face = getNexusFace(nexus, observation);
   
-    for (const i of [0.5, -1.5, 2.5, -3.5, 4.5]) {
-      const location = { x: nexus.pos.x + face.side.x * 3.5 + face.vector.x * i, y: nexus.pos.y + face.side.y * 3.5 + face.vector.y * i };
+    for (const i of [{s:1.5,v:3.5}, {s:-0.5,v:3.5}, {s:1.5,v:-3.5}, {s:-0.5,v:-3.5}, {s:6.5,v:-1.5}, {s:6.5,v:1.5}]) {
+      const location = { x: nexus.pos.x + face.side.x * i.s + face.vector.x * i.v, y: nexus.pos.y + face.side.y * i.s + face.vector.y * i.v };
   
       if (!isClose({ pos: location }, 1, pylons)) {
         return location;
@@ -177,13 +177,13 @@ function getNexusFace(nexus, observation) {
 
   let face;
   if ((rights >= lefts) && (rights >= ups) && (rights >= downs)) {
-    face = { side: { x: 1, y: 0 }, vector: { x: 0, y: 1 } };
+    face = { side: { x: 1, y: 0 }, vector: { x: 0, y: (ups >= downs) ? -1 : 1 } };
   } else if ((lefts >= ups) && (lefts >= downs)) {
-    face = { side: { x: -1, y: 0 }, vector: { x: 0, y: 1 } };
+    face = { side: { x: -1, y: 0 }, vector: { x: 0, y: (ups >= downs) ? -1 : 1 } };
   } else if (ups >= downs) {
-    face = { side: { x: 0, y: 1 }, vector: { x: 1, y: 0 } };
+    face = { side: { x: 0, y: 1 }, vector: { x: (rights >= lefts) ? -1 : 1, y: 0 } };
   } else {
-    face = { side: { x: 0, y: -1 }, vector: { x: 1, y: 0 } };
+    face = { side: { x: 0, y: -1 }, vector: { x: (rights >= lefts) ? -1 : 1, y: 0 } };
   }
 
   memory.set(memoryKey, face);
@@ -297,8 +297,8 @@ function pickFreeLocationForGateway(observation, owner) {
   for (const nexus of nexuses) {
     const face = getNexusFace(nexus, observation);
   
-    for (const i of [2, -2]) {
-      const location = { x: nexus.pos.x + face.side.x * 6 + face.vector.x * i, y: nexus.pos.y + face.side.y * 6 + face.vector.y * i };
+    for (const i of [{s:4,v:2}, {s:4,v:-2}]) {
+      const location = { x: nexus.pos.x + face.side.x * i.s + face.vector.x * i.v, y: nexus.pos.y + face.side.y * i.s + face.vector.y * i.v };
   
       if (!isClose({ pos: location }, 1, gateways)) {
         return location;
