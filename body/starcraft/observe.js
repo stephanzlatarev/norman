@@ -23,7 +23,7 @@ export default async function(node, client) {
   const nexus = observation.rawData.units.find(unit => unit.unitType === 59);
 
   observeChat(node, client);
-  observeResources(node, observation.rawData.units, node.memory.get(node.path + "/" + nexus.tag));
+  observeResources(node, observation.rawData.units, nexus);
   observeUnits(node, client, observation.rawData.units);
 
   if (!nexus) {
@@ -40,6 +40,8 @@ function observeChat(node, client) {
 }
 
 function observeResources(node, resources, nexus) {
+  const nexusInMemory = node.memory.get(node.path + "/" + nexus.tag);
+
   for (const resourceInReality of resources) {
     const unitType = RESOURCES[resourceInReality.unitType];
     if (!unitType) continue;
@@ -47,8 +49,11 @@ function observeResources(node, resources, nexus) {
     const resourceInMemory = node.memory.get(node.path + "/" + resourceInReality.tag);
     if (!resourceInMemory.get("unitType")) {
       resourceInMemory.set("unitType", unitType).set("tag", resourceInReality.tag)
-      .set("x", resourceInReality.pos.x).set("y", resourceInReality.pos.y)
-      .set("nexus", nexus);
+      .set("x", resourceInReality.pos.x).set("y", resourceInReality.pos.y);
+
+      if ((Math.abs(resourceInReality.pos.x - nexus.pos.x) <= 10) && (Math.abs(resourceInReality.pos.y - nexus.pos.y) <= 10)) {
+        resourceInMemory.set("nexus", nexusInMemory);
+      }
     }
   }
 }

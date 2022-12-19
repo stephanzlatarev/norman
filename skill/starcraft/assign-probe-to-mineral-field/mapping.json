@@ -30,6 +30,9 @@
         "provisional": true
       },
       {
+        "path": ["NEW-MINERAL", "nexus", "NEW-NEXUS"]
+      },
+      {
         "label": "OLD-ASSIGNMENT",
         "path": ["BODY", "harvest", "OLD-MINERAL"],
         "optional": true
