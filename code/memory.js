@@ -23,7 +23,7 @@ export default class Memory {
     for (const path of layer.paths) {
       if (!path.optional) {
         const list = [];
-        populateMatches(list, this, node, layer.nodes, path.path, path);
+        populateMatches(list, this, node, layer.nodes, path.path, path, { BODY: node });
 
         if (list.length) {
           requiredMatchLists.push(list);
@@ -174,12 +174,6 @@ class Node {
     return this;
   }
 
-}
-
-function show(a) {
-  if (!a) return "-";
-  if (a.path && a.ref) return "[" + a.path + " #" + a.ref + "]";
-  return a;
 }
 
 class MemoryLayer {
