@@ -54,6 +54,10 @@
   function goalToItem(goal, level) {
     const item = $("<li>").addClass("list-group-item").addClass("label-text").text(goal.label);
 
+    if (typeof(goal.props["stepTimeInMillis"]) === "number") {
+      $("<span>").css("font-size", "75%").css("color", "gray").addClass("info-right").text(goal.props["stepTimeInMillis"] + " ms/step").appendTo(item);
+    }
+
     if (goal.links && goal.links.length) {
       const list = $("<ul>").addClass("list-group").appendTo(item);
 

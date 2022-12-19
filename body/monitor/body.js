@@ -55,6 +55,6 @@ function convert(node) {
     ref: node.ref,
     label: node.get("label") ? node.get("label") : node.path.split("/").at(-1),
     props: node.props(),
-    links: node.links().map(item => item.path.startsWith(node.path + "/") ? convert(item) : { label: item.get("label"), props: {} }),
+    links: node.links().map(item => item.path.startsWith(node.path + "/") ? convert(item) : { label: item.get("label"), props: item.props() }),
   };
 }

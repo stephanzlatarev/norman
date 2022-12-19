@@ -15,6 +15,8 @@ export default class Goal {
     // each goal will be achieved by one or more pairs of "body" and "skill"
 
     for (const goal of this.node.links()) {
+      const goalStepTimeInMillis = new Date().getTime();
+
       if (!goal.links().length) {
         const skills = await this.skill.find(goal.get("label"));
 
@@ -24,9 +26,15 @@ export default class Goal {
       }
 
       for (const skill of goal.links()) {
+        const skillStepTimeInMillis = new Date().getTime();
+
         const bodyFilter = skill.get("body");
         await traverse(this.node.memory.get("body"), bodyFilter, async (body) => await this.skill.perform(skill, body));
+
+        skill.set("stepTimeInMillis", new Date().getTime() - skillStepTimeInMillis);
       }
+
+      goal.set("stepTimeInMillis", new Date().getTime() - goalStepTimeInMillis);
     }
   }
 
