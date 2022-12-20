@@ -32,8 +32,8 @@ export default class Norman {
   }
   
   stop() {
-    if (body.ok()) {
-      body.detach();
+    if (this.body.ok()) {
+      this.body.detach();
     }
   }
 
