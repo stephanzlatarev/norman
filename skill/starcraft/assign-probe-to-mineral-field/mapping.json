@@ -11,6 +11,7 @@
   "memory": {
     "nodes": {
       "NEW-MINERAL": { "unitType": "mineral" },
+      "NEW-NEXUS": { "unitType": "nexus" },
       "OLD-MINERAL": { "unitType": "mineral" },
       "PROBE-1": { "unitType": "probe" },
       "PROBE-2": { "unitType": "probe" }
