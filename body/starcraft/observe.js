@@ -14,11 +14,10 @@ const RESOURCES = {
 export default async function(node, client) {
   const observation = (await client.observation()).observation;
 
-  const time = observation.gameLoop;
-  node.set("time", time);
-
-  const minerals = observation.playerCommon.minerals;
-  node.set("minerals", minerals);
+  node.set("time", observation.gameLoop);
+  node.set("minerals", observation.playerCommon.minerals);
+  node.set("foodUsed", observation.playerCommon.foodUsed);
+  node.set("foodCap", observation.playerCommon.foodCap);
 
   const nexus = observation.rawData.units.find(unit => unit.unitType === 59);
 
