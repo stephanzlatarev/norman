@@ -1,6 +1,6 @@
 {
   "label": "train probe",
-  "goal": "destroy enemy",
+  "goal": "build strength",
 
   "body": {
     "code": "body/starcraft/unit/nexus"

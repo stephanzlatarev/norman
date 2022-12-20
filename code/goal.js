@@ -27,7 +27,10 @@ async function doGoal(controller, goal) {
     const skills = await controller.skill.find(goal.get("label"));
 
     for (let i = 0; i < skills.length; i++) {
-      goal.set("" + (i + 1), skills[i]);
+      const skill = skills[i];
+      const index = i + 1;
+      skill.path = goal.path + "/" + index;
+      goal.set("" + index, skill);
     }
   }
 

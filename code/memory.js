@@ -219,6 +219,8 @@ class MemoryLayer {
         if (!pathTarget.memory) {
           pathTarget.memory = node.memory;
           pathTarget.path = node.path + "/" + pathLabel;
+          pathTarget.ref = node.memory.index++;
+          node.memory.nodes.push(pathTarget);
         }
       } else if ((value < 0) && (node.get(pathLabel) === pathTarget)) {
         node.clear(pathLabel);
