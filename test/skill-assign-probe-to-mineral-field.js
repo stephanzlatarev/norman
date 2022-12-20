@@ -3,6 +3,7 @@ import fs from "fs";
 import Memory from "../code/memory.js";
 
 const PATTERN = JSON.parse(fs.readFileSync("./skill/starcraft/assign-probe-to-mineral-field/mapping.json")).memory;
+const GOAL = null;
 
 describe("Skill 'assign probe to mineral field'. List assignment options for", function() {
 
@@ -10,7 +11,7 @@ describe("Skill 'assign probe to mineral field'. List assignment options for", f
     const memory = situation();
     const probe = memory.get("game/probe-1");
 
-    const layers = memory.layers(probe, PATTERN);
+    const layers = memory.layers(GOAL, probe, PATTERN);
 
     assertEqual(memory, layers, [
       { "BODY": "game/probe-1", "NEW-MINERAL": "game/mineral-1", "OLD-MINERAL": null, "PROBE-1": "game/probe-2", "PROBE-2": "game/probe-2" },
@@ -27,7 +28,7 @@ describe("Skill 'assign probe to mineral field'. List assignment options for", f
     const memory = situation();
     const probe = memory.get("game/probe-2");
 
-    const layers = memory.layers(probe, PATTERN);
+    const layers = memory.layers(GOAL, probe, PATTERN);
 
     assertEqual(memory, layers, [
       { "BODY": "game/probe-2", "NEW-MINERAL": "game/mineral-2", "OLD-MINERAL": "game/mineral-1", "PROBE-1": null, "PROBE-2": null },
@@ -43,7 +44,7 @@ describe("Skill 'assign probe to mineral field'. List assignment options for", f
     const memory = situation();
     const probe = memory.get("game/probe-3");
 
-    const layers = memory.layers(probe, PATTERN);
+    const layers = memory.layers(GOAL, probe, PATTERN);
 
     assertEqual(memory, layers, [
       { "BODY": "game/probe-3", "NEW-MINERAL": "game/mineral-1", "OLD-MINERAL": "game/mineral-4", "PROBE-1": "game/probe-2", "PROBE-2": "game/probe-2" },
@@ -57,7 +58,7 @@ describe("Skill 'assign probe to mineral field'. List assignment options for", f
     const memory = situation();
     const probe = memory.get("game/probe-4");
 
-    const layers = memory.layers(probe, PATTERN);
+    const layers = memory.layers(GOAL, probe, PATTERN);
 
     assertEqual(memory, layers, [
       { "BODY": "game/probe-4", "NEW-MINERAL": "game/mineral-1", "OLD-MINERAL": "game/mineral-4", "PROBE-1": "game/probe-2", "PROBE-2": "game/probe-2" },
@@ -71,7 +72,7 @@ describe("Skill 'assign probe to mineral field'. List assignment options for", f
     const memory = situation();
     const probe = memory.get("game/probe-5");
 
-    const layers = memory.layers(probe, PATTERN);
+    const layers = memory.layers(GOAL, probe, PATTERN);
 
     assertEqual(memory, layers, [
       { "BODY": "game/probe-5", "NEW-MINERAL": "game/mineral-1", "OLD-MINERAL": "game/mineral-4", "PROBE-1": "game/probe-2", "PROBE-2": "game/probe-2" },

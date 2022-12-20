@@ -21,10 +21,10 @@ export default class Skill {
   // The skill brain produces output which is written in the memory following the output graph pattern.
   //
   // The body will read the memory during tock phase and will issue motor commands accordingly.
-  async perform(skill, body) {
+  async perform(goal, skill, body) {
     const layer = skill.get("memory");
     if (layer) {
-      const layers = this.node.memory.layers(body, layer);
+      const layers = this.node.memory.layers(goal, body, layer);
       for (const one of layers) {
         await performOnce(skill, one);
       }

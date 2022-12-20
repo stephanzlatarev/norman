@@ -10,12 +10,13 @@ export default class Memory {
     populate(this.root, data);
   }
 
-  layers(node, layer) {
+  layers(goal, body, layer) {
     const requiredMatchLists = [];
     const provisionalPaths = {};
 
     if (!layer.nodes) layer.nodes = {};
-    layer.nodes.BODY = node.data;
+    if (body && body.ref) layer.nodes.BODY = { ref: body.ref };
+    if (goal && goal.ref) layer.nodes.GOAL = { ref: goal.ref };
 
     if (!layer.constraints) layer.constraints = [];
     if (!layer.paths) layer.paths = [];
@@ -23,7 +24,7 @@ export default class Memory {
     for (const path of layer.paths) {
       if (!path.optional) {
         const list = [];
-        populateMatches(list, this, node, layer.nodes, path.path, path, { BODY: node });
+        populateMatches(list, this, goal, body, layer.nodes, path.path, path, { BODY: body, GOAL: goal });
 
         if (list.length) {
           requiredMatchLists.push(list);
@@ -47,7 +48,7 @@ export default class Memory {
       for (const path of layer.paths) {
         if (path.optional) {
           const list = [];
-          populateMatches(list, this, node, layer.nodes, path.path, path, match);
+          populateMatches(list, this, goal, body, layer.nodes, path.path, path, match);
 
           if (list.length) {
             thisMatches.push(list);
@@ -61,7 +62,7 @@ export default class Memory {
     const layers = [];
 
     for (const matches of allMatches) {
-      layers.push(new MemoryLayer(matches, node, provisionalPaths));
+      layers.push(new MemoryLayer(matches, goal, body, provisionalPaths));
     }
 
     return layers;
@@ -103,11 +104,13 @@ class Node {
 
   constructor(memory, path) {
     this.memory = memory;
-    this.ref = memory.index++; // TODO: Remove this.ref
     this.path = path;
     this.data = {};
 
-    memory.nodes.push(this);
+    if (memory) {
+      this.ref = memory.index++;
+      memory.nodes.push(this);
+    }
   }
 
   props() {
@@ -178,9 +181,10 @@ class Node {
 
 class MemoryLayer {
 
-  constructor(layer, node, paths) {
+  constructor(layer, goal, body, paths) {
     this.layer = layer;
-    this.node = node;
+    this.goal = goal;
+    this.body = body;
     this.paths = paths;
   }
 
@@ -199,22 +203,28 @@ class MemoryLayer {
       }
     }
 
-    return this.node.get(label);
+    return this.body.get(label);
   }
 
   set(label, value) {
     if (this.paths[label]) {
       const path = this.paths[label];
+      const node = (path[0] === "BODY") ? this.body : this.goal;
       const pathLabel = path[1];
       const pathTarget = this.layer[path[2]];
 
       if (value > 0) {
-        this.node.set(pathLabel, pathTarget);
-      } else if ((value < 0) && (this.node.get(pathLabel) === pathTarget)) {
-        this.node.clear(pathLabel);
+        node.set(pathLabel, pathTarget);
+
+        if (!pathTarget.memory) {
+          pathTarget.memory = node.memory;
+          pathTarget.path = node.path + "/" + pathLabel;
+        }
+      } else if ((value < 0) && (node.get(pathLabel) === pathTarget)) {
+        node.clear(pathLabel);
       }
     } else {
-      this.node.set(label, value);
+      this.body.set(label, value);
     }
   }
 
@@ -257,16 +267,27 @@ function populate(node, data) {
   }
 }
 
-function populateMatches(list, memory, self, nodes, path, pathOptions, requiredMatch) {
+function populateMatches(list, memory, goal, body, nodes, path, pathOptions, requiredMatch) {
   if (pathOptions.provisional) {
-    if ((path.length !== 3) || (path[0] !== "BODY")) console.log("ERROR: No provisional support for path:", path);
+    if (path.length !== 3) console.log("ERROR: No provisional support for path:", path);
+    if ((path[0] !== "GOAL") && (path[0] !== "BODY")) console.log("ERROR: No provisional support for path:", path);
 
-    const root = self;
+    const root = (path[0] === "BODY") ? body : goal;
     const leaves = memory.nodes.filter(node => isMatching(node, nodes[path[2]]));
 
-    for (const leaf of leaves) {
-      if (requiredMatch && !isAcceptable(requiredMatch, path[0], root)) continue;
-      if (requiredMatch && !isAcceptable(requiredMatch, path[2], leaf)) continue;
+    if (leaves.length) {
+      for (const leaf of leaves) {
+        if (requiredMatch && !isAcceptable(requiredMatch, path[0], root)) continue;
+        if (requiredMatch && !isAcceptable(requiredMatch, path[2], leaf)) continue;
+
+        const match = {};
+        match[path[0]] = root;
+        match[path[2]] = leaf;
+        list.push(match);
+      }
+    } else {
+      const leaf = new Node();
+      populate(leaf, nodes[path[2]]);
 
       const match = {};
       match[path[0]] = root;
@@ -274,7 +295,14 @@ function populateMatches(list, memory, self, nodes, path, pathOptions, requiredM
       list.push(match);
     }
   } else {
-    const roots = (path[0] === "BODY") ? [self] : memory.nodes.filter(node => isMatching(node, nodes[path[0]]));
+    let roots;
+    if (path[0] === "BODY") {
+      roots = [body];
+    } else if (path[0] === "GOAL") {
+      roots = [goal];
+    } else {
+      roots = memory.nodes.filter(node => isMatching(node, nodes[path[0]]));
+    }
 
     for (const root of roots) {
       if (requiredMatch && !isAcceptable(requiredMatch, path[0], root)) continue;
@@ -380,6 +408,7 @@ function joinOneMatch(a, b) {
 }
 
 function isMatching(object, template) {
+  if (template["ref"]) return object.ref === template["ref"];
   for (const key in template) {
     if (object.get(key) !== template[key]) return false;
   }

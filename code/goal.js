@@ -13,34 +13,50 @@ export default class Goal {
 
   async tick() {
     // each goal will be achieved by one or more pairs of "body" and "skill"
-
     for (const goal of this.node.links()) {
-      const goalStepTimeInMillis = new Date().getTime();
-
-      if (!goal.links().length) {
-        const skills = await this.skill.find(goal.get("label"));
-
-        for (let i = 0; i < skills.length; i++) {
-          goal.set("" + (i + 1), skills[i]);
-        }
-      }
-
-      for (const skill of goal.links()) {
-        const skillStepTimeInMillis = new Date().getTime();
-
-        const bodyFilter = skill.get("body");
-        await traverse(this.node.memory.get("body"), bodyFilter, async (body) => await this.skill.perform(skill, body));
-
-        skill.set("stepTimeInMillis", new Date().getTime() - skillStepTimeInMillis);
-      }
-
-      goal.set("stepTimeInMillis", new Date().getTime() - goalStepTimeInMillis);
+      await doGoal(this, goal);
     }
   }
 
 }
 
-async function traverse(node, bodyFilter, op) {
+async function doGoal(controller, goal) {
+  const goalStepTimeInMillis = new Date().getTime();
+
+  if (goal.links().length === 0) {
+    const skills = await controller.skill.find(goal.get("label"));
+
+    for (let i = 0; i < skills.length; i++) {
+      goal.set("" + (i + 1), skills[i]);
+    }
+  }
+
+  if (goal.links().length > 0) {
+    for (const subgoal of goal.links()) {
+      const body = subgoal.get("body");
+
+      if (body) {
+        await doSkill(controller, goal, subgoal);
+      } else {
+        await doGoal(controller, subgoal);
+      }
+    }
+  }
+
+  goal.set("stepTimeInMillis", new Date().getTime() - goalStepTimeInMillis);
+}
+
+async function doSkill(controller, goal, skill) {
+  const skillStepTimeInMillis = new Date().getTime();
+
+  const bodyFilter = skill.get("body");
+  await traverseBodies(controller.node.memory.get("body"), bodyFilter, async (body) => await controller.skill.perform(goal, skill, body));
+
+  skill.set("stepTimeInMillis", new Date().getTime() - skillStepTimeInMillis);
+}
+
+
+async function traverseBodies(node, bodyFilter, op) {
   const body = node.get("body");
 
   if (body) {
@@ -60,7 +76,7 @@ async function traverse(node, bodyFilter, op) {
 
   for (const child of node.links()) {
     if (child.path.startsWith(node.path + "/")) {
-      await traverse(child, bodyFilter, op);
+      await traverseBodies(child, bodyFilter, op);
     }
   }
 }

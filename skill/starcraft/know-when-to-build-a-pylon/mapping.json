@@ -1,0 +1,33 @@
+{
+  "label": "know when to build a pylon",
+  "goal": "build strength",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "BUILD-A-PYLON": { "label": "build a pylon" }
+    },
+
+    "paths": [
+      {
+        "label": "LETS-BUILD-A-PYLON",
+        "path": ["GOAL", "build-a-pylon", "BUILD-A-PYLON"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [
+    "foodUsed",
+    "foodCap",
+    "minerals"
+  ],
+
+  "output": [
+    "LETS-BUILD-A-PYLON",
+    "minerals"
+  ]
+}

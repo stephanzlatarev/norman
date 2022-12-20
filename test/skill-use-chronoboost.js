@@ -3,6 +3,7 @@ import fs from "fs";
 import Memory from "../code/memory.js";
 
 const PATTERN = JSON.parse(fs.readFileSync("./skill/starcraft/use-chronoboost/mapping.json")).memory;
+const GOAL = null;
 
 describe("Skill 'use chronoboost'. List chronoboost options", function() {
 
@@ -12,7 +13,7 @@ describe("Skill 'use chronoboost'. List chronoboost options", function() {
 
     for (let i = 1; i <= 10; i++) memory.get("game/mineral-" + i);
 
-    assertEqual(memory, memory.layers(nexus, PATTERN), [
+    assertEqual(memory, memory.layers(GOAL, nexus, PATTERN), [
       { "BODY": nexus.path }
     ]);
   });
@@ -25,7 +26,7 @@ describe("Skill 'use chronoboost'. List chronoboost options", function() {
 
     for (let i = 1; i <= 10; i++) memory.get("game/mineral-" + i);
 
-    assertEqual(memory, memory.layers(nexus, PATTERN), [
+    assertEqual(memory, memory.layers(GOAL, nexus, PATTERN), [
       { "BODY": nexus.path }
     ]);
   });

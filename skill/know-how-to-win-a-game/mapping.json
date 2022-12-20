@@ -1,0 +1,28 @@
+{
+  "label": "know how to win a game",
+  "goal": "destroy enemy",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "BUILD-STRENGTH": { "label": "build strength" }
+    },
+
+    "paths": [
+      {
+        "label": "LETS-BUILD-STRENGTH",
+        "path": ["GOAL", "build-strength", "BUILD-STRENGTH"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [],
+
+  "output": [
+    "LETS-BUILD-STRENGTH"
+  ]
+}
