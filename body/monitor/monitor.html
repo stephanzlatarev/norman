@@ -129,7 +129,7 @@
       const list = $("<ul>").addClass("list-group").appendTo(item);
 
       for (const child of body.links) {
-        if (child.props["code"]) {
+        if (child && child.props["code"]) {
           list.append(bodyToItem(child, level + 1));
         }
       }

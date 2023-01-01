@@ -55,6 +55,14 @@ function convert(node) {
     ref: node.ref,
     label: node.get("label") ? node.get("label") : node.path.split("/").at(-1),
     props: node.props(),
-    links: node.links().map(item => item.path.startsWith(node.path + "/") ? convert(item) : { label: item.get("label"), props: item.props() }),
+    links: node.links().map(item => filter(node, item)),
   };
+}
+
+function filter(node, child) {
+  if (child.path.startsWith(node.path + "/")) {
+    return convert(child);
+  } else if (!node.path.startsWith(child.path)) {
+    return { path: child.path, label: child.get("label"), props: child.props() };
+  }
 }
