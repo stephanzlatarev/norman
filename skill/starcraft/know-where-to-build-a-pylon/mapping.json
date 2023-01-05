@@ -1,0 +1,35 @@
+{
+  "label": "know where to build a pylon",
+  "goal": "build a pylon",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": { "type": "location" },
+      "NEXUS": { "unitType": "nexus" }
+    },
+
+    "paths": [
+      { "path": ["BODY", "homebase", "NEXUS"] },
+      {
+        "label": "SET-LOCATION",
+        "path": ["GOAL", "location", "LOCATION"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [
+    "NEXUS/x",
+    "NEXUS/y"
+  ],
+
+  "output": [
+    "SET-LOCATION",
+    "LOCATION/x",
+    "LOCATION/y"
+  ]
+}

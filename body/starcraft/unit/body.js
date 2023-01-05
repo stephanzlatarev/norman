@@ -6,7 +6,7 @@ export default class Unit {
     this.actions = [];
   }
 
-  command(abilityId, targetUnitTag) {
+  command(abilityId, targetUnitTag, targetWorldSpacePos) {
     const command = {
       unitTags: [this.node.get("tag")],
       abilityId: abilityId,
@@ -15,6 +15,10 @@ export default class Unit {
 
     if (targetUnitTag) {
       command.targetUnitTag = targetUnitTag;
+    }
+
+    if (targetWorldSpacePos) {
+      command.targetWorldSpacePos = targetWorldSpacePos;
     }
 
     this.actions.push({ actionRaw: { unitCommand: command } });

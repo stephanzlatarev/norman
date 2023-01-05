@@ -27,6 +27,8 @@ export default async function(node, client) {
 
   if (!nexus) {
     node.set("over", true);
+  } else {
+    node.set("homebase", node.memory.get(node.path + "/" + nexus.tag));
   }
 }
 

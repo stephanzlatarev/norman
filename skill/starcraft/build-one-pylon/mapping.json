@@ -1,0 +1,38 @@
+{
+  "label": "build one pylon",
+  "goal": "build a pylon",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": {},
+      "PROBE": {}
+    },
+
+    "paths": [
+      {
+        "path": ["GOAL", "location", "LOCATION"]
+      },
+      {
+        "path": ["GOAL", "builder", "PROBE"]
+      },
+      {
+        "label": "NEW-ASSIGNMENT",
+        "path": ["PROBE", "build-pylon", "LOCATION"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [
+    "PROBE",
+    "LOCATION"
+  ],
+
+  "output": [
+    "NEW-ASSIGNMENT"
+  ]
+}

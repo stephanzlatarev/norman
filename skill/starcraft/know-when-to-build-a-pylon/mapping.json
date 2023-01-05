@@ -8,7 +8,7 @@
 
   "memory": {
     "nodes": {
-      "BUILD-A-PYLON": { "label": "build a pylon" }
+      "BUILD-A-PYLON": { "label": "build a pylon", "type": "goal" }
     },
 
     "paths": [

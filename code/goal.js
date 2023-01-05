@@ -36,11 +36,11 @@ async function doGoal(controller, goal) {
 
   if (goal.links().length > 0) {
     for (const subgoal of goal.links()) {
-      const body = subgoal.get("body");
+      const type = subgoal.get("type");
 
-      if (body) {
+      if (type === "skill") {
         await doSkill(controller, goal, subgoal);
-      } else {
+      } else if (type === "goal") {
         await doGoal(controller, subgoal);
       }
     }

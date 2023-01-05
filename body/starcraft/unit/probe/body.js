@@ -7,12 +7,16 @@ export default class Probe extends Unit {
   }
 
   async tock() {
-    const harvestMineralField = this.node.get("harvest");
+    if (this.node.get("build-pylon")) {
+      const location = this.node.get("build-pylon");
+      const x = location.get("x");
+      const y = location.get("y");
 
-    if (harvestMineralField) {
+      super.command(881, null, { x: x, y: y });
+    } else if (this.node.get("harvest")) {
       const currentAbilityId = this.node.get("orderAbilityId");
       const currentTargetUnitTag = this.node.get("orderTargetUnitTag");
-      const commandTargetUnitTag = harvestMineralField.get("tag");
+      const commandTargetUnitTag = this.node.get("harvest").get("tag");
 
       if (currentAbilityId === 299) {
         // The probe is returning the harvest. Don't stop it

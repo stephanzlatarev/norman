@@ -8,7 +8,7 @@
 
   "memory": {
     "nodes": {
-      "BUILD-STRENGTH": { "label": "build strength" }
+      "BUILD-STRENGTH": { "label": "build strength", "type": "goal" }
     },
 
     "paths": [

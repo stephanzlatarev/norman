@@ -24,7 +24,7 @@ export default class Memory {
     for (const path of layer.paths) {
       if (!path.optional) {
         const list = [];
-        populateMatches(list, this, goal, body, layer.nodes, path.path, path, { BODY: body, GOAL: goal });
+        populateMatches(list, this, goal, body, layer.nodes, path.path, path, { BODY: body, GOAL: goal }, true);
 
         if (list.length) {
           requiredMatchLists.push(list);
@@ -48,7 +48,7 @@ export default class Memory {
       for (const path of layer.paths) {
         if (path.optional) {
           const list = [];
-          populateMatches(list, this, goal, body, layer.nodes, path.path, path, match);
+          populateMatches(list, this, goal, body, layer.nodes, path.path, path, match, false);
 
           if (list.length) {
             thisMatches.push(list);
@@ -209,7 +209,16 @@ class MemoryLayer {
   set(label, value) {
     if (this.paths[label]) {
       const path = this.paths[label];
-      const node = (path[0] === "BODY") ? this.body : this.goal;
+
+      let node;
+      if (path[0] === "BODY") {
+        node = this.body;
+      } else if (path[0] === "GOAL") {
+        node = this.goal;
+      } else if (this.layer[path[0]]) {
+        node = this.layer[path[0]];
+      }
+
       const pathLabel = path[1];
       const pathTarget = this.layer[path[2]];
 
@@ -224,6 +233,13 @@ class MemoryLayer {
         }
       } else if ((value < 0) && (node.get(pathLabel) === pathTarget)) {
         node.clear(pathLabel);
+      }
+    } else if (this.layer[label.split("/")[0]]) {
+      const path = label.split("/");
+      if (path.length === 2) {
+        this.layer[path[0]].set(path[1], value);
+      } else {
+        console.log("ERROR: No deep set support for", label, "in memory layer");
       }
     } else {
       this.body.set(label, value);
@@ -269,12 +285,20 @@ function populate(node, data) {
   }
 }
 
-function populateMatches(list, memory, goal, body, nodes, path, pathOptions, requiredMatch) {
+function populateMatches(list, memory, goal, body, nodes, path, pathOptions, requiredMatch, isRequired) {
   if (pathOptions.provisional) {
-    if (path.length !== 3) console.log("ERROR: No provisional support for path:", path);
-    if ((path[0] !== "GOAL") && (path[0] !== "BODY")) console.log("ERROR: No provisional support for path:", path);
+    if (path.length !== 3) console.log("ERROR: No provisional support for path", path);
 
-    const root = (path[0] === "BODY") ? body : goal;
+    let root;
+    if (path[0] === "BODY") {
+      root = body;
+    } else if (path[0] === "GOAL") {
+      root = goal;
+    } else if (nodes[path[0]]) {
+      root = memory.ref(nodes[path[0]].ref);
+    }
+    if (!root) console.log("ERROR: No provisional support for path", path, "in nodes", nodes);
+
     const leaves = memory.nodes.filter(node => isMatching(node, nodes[path[2]]));
 
     if (leaves.length) {
@@ -332,6 +356,15 @@ function populateMatches(list, memory, goal, body, nodes, path, pathOptions, req
 
       if (isMatchOk) {
         list.push(match);
+      }
+    }
+
+    if (isRequired && (list.length === 1)) {
+      const match = list[0];
+      for (const label in match) {
+        if (match[label].ref && nodes[label]&& !nodes[label].ref) {
+          nodes[label] = { ref: match[label].ref };
+        }
       }
     }
   }
