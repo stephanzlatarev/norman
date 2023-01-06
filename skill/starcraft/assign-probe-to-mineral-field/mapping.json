@@ -1,6 +1,6 @@
 {
   "label": "assign probe to mineral field",
-  "goal": "build strength",
+  "goal": "collect minerals",
 
   "comment": "Use the skill with probes which are either idle, or just returned harvest to nexus. The skill will help pick the closest underutilized mineral field",
 

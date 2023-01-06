@@ -1,0 +1,28 @@
+{
+  "label": "collect minerals",
+  "goal": "build strength",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "COLLECT-MINERALS": { "label": "collect minerals", "type": "goal" }
+    },
+
+    "paths": [
+      {
+        "label": "LETS-COLLECT-MINERALS",
+        "path": ["GOAL", "collect-minerals", "COLLECT-MINERALS"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [],
+
+  "output": [
+    "LETS-COLLECT-MINERALS"
+  ]
+}
