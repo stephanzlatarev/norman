@@ -2,7 +2,7 @@ import assert from "assert";
 import fs from "fs";
 import Memory from "../code/memory.js";
 
-const PATTERN = JSON.parse(fs.readFileSync("./skill/starcraft/assign-probe-to-mineral-field/mapping.json")).memory;
+const PATTERN = JSON.parse(fs.readFileSync("./test/skill-assign-probe-to-mineral-field.json")).memory;
 const GOAL = null;
 
 describe("Skill 'assign probe to mineral field'. List assignment options for", function() {
