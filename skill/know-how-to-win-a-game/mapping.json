@@ -1,6 +1,6 @@
 {
   "label": "know how to win a game",
-  "goal": "destroy enemy",
+  "goal": "win the game",
 
   "body": {
     "is-game": true
