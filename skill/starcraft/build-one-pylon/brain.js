@@ -9,7 +9,7 @@ export default class BuildOnePylonBrain {
 
     if ((Math.abs(locationX - pylonX) < 1) && (Math.abs(locationY - pylonY) < 1)) {
       // The pylon is built
-      return [-1, 0];
+      return [-1, -1];
     }
 
     return [0, 1];
