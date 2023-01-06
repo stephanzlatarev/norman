@@ -9,7 +9,8 @@
   "memory": {
     "nodes": {
       "LOCATION": {},
-      "PROBE": {}
+      "PROBE": { "unitType": "probe" },
+      "PYLON": { "unitType": "pylon" }
     },
 
     "paths": [
@@ -23,16 +24,23 @@
         "label": "NEW-ASSIGNMENT",
         "path": ["PROBE", "build-pylon", "LOCATION"],
         "provisional": true
+      },
+      {
+        "path": ["PYLON"],
+        "optional": true
       }
     ]
   },
 
   "input": [
-    "PROBE",
-    "LOCATION"
+    "PYLON/x",
+    "PYLON/y",
+    "LOCATION/x",
+    "LOCATION/y"
   ],
 
   "output": [
+    "GOAL",
     "NEW-ASSIGNMENT"
   ]
 }

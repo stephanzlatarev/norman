@@ -6,11 +6,19 @@ const PATTERN = JSON.parse(fs.readFileSync("./skill/starcraft/build-one-pylon/ma
 
 describe("Skill 'build one pylon'", function() {
 
+  it("when no builder or location have been selected", function() {
+    const memory = new Memory();
+    const game = memory.get("game").set("is-game", true);
+    const goalBuildPylon = memory.get("goal/build-a-pylon");
+
+    assertEqual(memory, memory.layers(goalBuildPylon, game, PATTERN), []);
+  });
+
   it("when a builder and a location have been selected", function() {
     const memory = new Memory();
     const game = memory.get("game").set("is-game", true);
     const goalBuildPylon = memory.get("goal/build-a-pylon");
-    const probe = memory.get("body/probe-1").set("x", 101).set("y", 102);
+    const probe = memory.get("body/probe-1").set("unitType", "probe").set("x", 101).set("y", 102);
     const location = memory.get(goalBuildPylon.path + "/location").set("x", 201).set("y", 202);
 
     goalBuildPylon.set("builder", probe);
@@ -21,12 +29,22 @@ describe("Skill 'build one pylon'", function() {
     ]);
   });
 
-  it("when no builder or location have been selected", function() {
+  it("when the pylon is built", function() {
     const memory = new Memory();
     const game = memory.get("game").set("is-game", true);
     const goalBuildPylon = memory.get("goal/build-a-pylon");
+    const probe = memory.get("body/probe-1").set("unitType", "probe").set("x", 101).set("y", 102);
+    const location = memory.get(goalBuildPylon.path + "/location").set("x", 201).set("y", 202);
+    const pylon1 = memory.get("body/pylon-1").set("unitType", "pylon").set("x", 201).set("y", 202);
+    const pylon2 = memory.get("body/pylon-2").set("unitType", "pylon").set("x", 301).set("y", 302);
 
-    assertEqual(memory, memory.layers(goalBuildPylon, game, PATTERN), []);
+    goalBuildPylon.set("builder", probe);
+    goalBuildPylon.set("location", location);
+
+    assertEqual(memory, memory.layers(goalBuildPylon, game, PATTERN), [
+      { "PROBE": probe.path, "LOCATION": location.path, "PYLON": pylon1.path },
+      { "PROBE": probe.path, "LOCATION": location.path, "PYLON": pylon2.path },
+    ]);
   });
 
 });

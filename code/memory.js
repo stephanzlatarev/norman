@@ -177,6 +177,16 @@ class Node {
     return this;
   }
 
+  unlink(node) {
+    for (const label in this.data) {
+      const item = this.data[label];
+
+      if (item === node) {
+        delete this.data[label];
+      }
+    }
+  }
+
 }
 
 class MemoryLayer {
@@ -236,7 +246,11 @@ class MemoryLayer {
       }
     } else if (this.layer[label.split("/")[0]]) {
       const path = label.split("/");
-      if (path.length === 2) {
+      if (path.length === 1) {
+        if (value === -1) {
+          removeNode(this.layer[label]);
+        }
+      } else if (path.length === 2) {
         this.layer[path[0]].set(path[1], value);
       } else {
         console.log("ERROR: No deep set support for", label, "in memory layer");
@@ -502,4 +516,16 @@ function toString(node, tab) {
   }
 
   return text;
+}
+
+function removeNode(node) {
+  const index = node.memory.nodes.indexOf(node);
+
+  if (index >= 0) {
+    node.memory.nodes.splice(index, 1);
+
+    for (const one of node.memory.nodes) {
+      one.unlink(node);
+    }
+  }
 }

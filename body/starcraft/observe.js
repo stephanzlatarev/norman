@@ -1,6 +1,7 @@
 
 const UNITS = {
   59: "nexus",
+  60: "pylon",
   84: "probe"
 };
 const RESOURCES = { 
