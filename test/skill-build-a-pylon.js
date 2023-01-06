@@ -2,7 +2,7 @@ import assert from "assert";
 import fs from "fs";
 import Memory from "../code/memory.js";
 
-const PATTERN = JSON.parse(fs.readFileSync("./skill/starcraft/build-one-pylon/mapping.json")).memory;
+const PATTERN = JSON.parse(fs.readFileSync("./skill/starcraft/build-a-pylon/mapping.json")).memory;
 
 describe("Skill 'build one pylon'", function() {
 

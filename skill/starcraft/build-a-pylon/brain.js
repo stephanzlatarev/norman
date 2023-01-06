@@ -1,5 +1,5 @@
 
-export default class BuildOnePylonBrain {
+export default class BuildAPylonBrain {
 
   react(input) {
     const pylonX = input[0];
