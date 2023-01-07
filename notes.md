@@ -1,10 +1,6 @@
 
-- when detaching the game make related goals disappear
-- remove memory nodes for detached bodies
-- when a goal completes and is removed, then remove all its memory traces
-- split memory.js to classes
 
-=============
+============= MILESTONE 1 - Upgrade skills to work with memory
 
 - change skill "assign-probe-to-mineral-field" to goal "Collect minerals" with skill "Know when a probe is idle" to produce goal "Harvest a mineral field" for this idle probe and the closest underutilized mineral field (goal "Select closest underutilized mineral field")
 
@@ -19,16 +15,32 @@
 - add skill to attack with army
 - add skill to defend nexus with probes when facing worker rush
 
-- test against norman's previous version
+- test against norman's previous version & upload to arena
+
+============= MILESTONE 2 - Use stalkers in army
 
 - add skill to build assimilator
 - add skill to harvest vespene gas
 - add skill to build cybernetics core
 - add skill to train stalker
+- use stalkers in the army
+
+- test against norman's previous version & upload to arena
+
+============= MILESTONE 3 - Add ability to train skills with samples given in the Web UI
+
+============= MILESTONE 4 - Add skill to balance quotas for units - probes, zealots, stalkers
 
 - add skill to balance quotas
 
-=============
+============= MILESTONE 5 - Add Gherkin to describe skills. Internally convert to the json description
+
+============= FIXES & IMPROVEMENTS
+
+- when detaching the game make related goals disappear
+- remove memory nodes for detached bodies
+- when a goal completes and is removed, then remove all its memory traces
+- split memory.js to classes
 
 - see if check for unchanged memory for skill pattern will speed up skill "assign-probe-to-mineral-field"
   or check if can replace it with "know when to manage probes"?
