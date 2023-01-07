@@ -23,7 +23,9 @@ export default class Goal {
 async function doGoal(controller, goal) {
   const goalStepTimeInMillis = new Date().getTime();
 
-  if (goal.links().length === 0) {
+  const isExpanded = goal.get("isExpanded");
+
+  if (!isExpanded) {
     const skills = await controller.skill.find(goal.get("label"));
 
     for (let i = 0; i < skills.length; i++) {
@@ -32,17 +34,17 @@ async function doGoal(controller, goal) {
       skill.path = goal.path + "/" + index;
       goal.set("" + index, skill);
     }
+
+    goal.set("isExpanded", true);
   }
 
-  if (goal.links().length > 0) {
-    for (const subgoal of goal.links()) {
-      const type = subgoal.get("type");
+  for (const subgoal of goal.links()) {
+    const type = subgoal.get("type");
 
-      if (type === "skill") {
-        await doSkill(controller, goal, subgoal);
-      } else if (type === "goal") {
-        await doGoal(controller, subgoal);
-      }
+    if (type === "skill") {
+      await doSkill(controller, goal, subgoal);
+    } else if (type === "goal") {
+      await doGoal(controller, subgoal);
     }
   }
 

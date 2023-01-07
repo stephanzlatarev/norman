@@ -1,0 +1,55 @@
+{
+  "label": "know when to harvest minerals",
+  "goal": "collect minerals",
+
+  "comment": "When there's an idle probe and the quota for harvesting minerals is not reached, then assign the probe to harvest some mineral field",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "PROBE": { "unitType": "probe" },
+      "MINERAL": { "unitType": "mineral" },
+      "HARVEST": { "label": "harvest a mineral field", "type": "goal" },
+      "SELECT": { "label": "select mineral field for harvest", "type": "goal" }
+    },
+
+    "paths": [
+      {
+        "path": ["PROBE"]
+      },
+      {
+        "path": ["PROBE", "harvest", "MINERAL"],
+        "optional": true
+      },
+      {
+        "label": "LETS-HARVEST-MINERALS",
+        "path": ["GOAL", "harvest a mineral field", "HARVEST"],
+        "provisional": true
+      },
+      {
+        "label": "WITH-THIS-PROBE",
+        "path": ["HARVEST", "harvester", "PROBE"],
+        "provisional": true
+      },
+      {
+        "label": "SELECT-MINERAL-FIELD",
+        "path": ["HARVEST", "select mineral field for harvest", "SELECT"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [
+    "PROBE",
+    "MINERAL"
+  ],
+
+  "output": [
+    "LETS-HARVEST-MINERALS",
+    "WITH-THIS-PROBE",
+    "SELECT-MINERAL-FIELD"
+  ]
+}

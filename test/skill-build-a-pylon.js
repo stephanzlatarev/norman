@@ -4,7 +4,7 @@ import Memory from "../code/memory.js";
 
 const PATTERN = JSON.parse(fs.readFileSync("./skill/starcraft/build-a-pylon/mapping.json")).memory;
 
-describe("Skill 'build one pylon'", function() {
+describe("Skill 'build a pylon'", function() {
 
   it("when no builder or location have been selected", function() {
     const memory = new Memory();

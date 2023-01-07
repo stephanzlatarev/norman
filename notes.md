@@ -2,12 +2,9 @@
 
 ============= MILESTONE 1 - Upgrade skills to work with memory
 
-- change skill "assign-probe-to-mineral-field" to goal "Collect minerals" with skill "Know when a probe is idle" to produce goal "Harvest a mineral field" for this idle probe and the closest underutilized mineral field (goal "Select closest underutilized mineral field")
+- skill "build a pylon" to be able to build a next pylons
 
 - add skill to expand base
-
-- improve skill "build one pylon"
-  - use goal sequence "Select nexus", "Map area around nexus", "Select location", "Select builder"
 
 - add skill to build gateway
 - add skill to train zealot
@@ -17,7 +14,13 @@
 
 - test against norman's previous version & upload to arena
 
-============= MILESTONE 2 - Use stalkers in army
+============= MILESTONE 2a - Use stalkers in army
+
+- improve skill "know how to select mineral field for harvest" to select the mineral field that is closest to nexus and then closest to probe
+
+- improve skill "build a pylon" with goal sequence "Select nexus", "Map area around nexus", "Select location", "Select builder"
+
+============= MILESTONE 2b - Use stalkers in army
 
 - add skill to build assimilator
 - add skill to harvest vespene gas
@@ -34,6 +37,8 @@
 - add skill to balance quotas
 
 ============= MILESTONE 5 - Add Gherkin to describe skills. Internally convert to the json description
+
+============= MILESTONE 7 - Match skills to goals by outcomes instead of by label
 
 ============= FIXES & IMPROVEMENTS
 

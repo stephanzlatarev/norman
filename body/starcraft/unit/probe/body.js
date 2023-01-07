@@ -25,6 +25,9 @@ export default class Probe extends Unit {
       } else if ((currentAbilityId !== 298) || (currentTargetUnitTag !== commandTargetUnitTag)) {
         // Command the probe to harvest this mineral field
         super.command(298, commandTargetUnitTag);
+
+        this.node.set("orderAbilityId", 298);
+        this.node.set("orderTargetUnitTag", commandTargetUnitTag);
       }
     }
 

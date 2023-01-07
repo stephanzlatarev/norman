@@ -14,9 +14,10 @@ export default class Memory {
     const requiredMatchLists = [];
     const provisionalPaths = {};
 
+    layer = JSON.parse(JSON.stringify(layer)); // Make sure calculating the memory layers doesn't change the input pattern
     if (!layer.nodes) layer.nodes = {};
-    if (body && body.ref) layer.nodes.BODY = { ref: body.ref };
-    if (goal && goal.ref) layer.nodes.GOAL = { ref: goal.ref };
+    if (body && body.ref) layer.nodes.BODY = body;
+    if (goal && goal.ref) layer.nodes.GOAL = goal;
 
     if (!layer.constraints) layer.constraints = [];
     if (!layer.paths) layer.paths = [];
@@ -308,8 +309,8 @@ function populateMatches(list, memory, goal, body, nodes, path, pathOptions, req
       root = body;
     } else if (path[0] === "GOAL") {
       root = goal;
-    } else if (nodes[path[0]]) {
-      root = memory.ref(nodes[path[0]].ref);
+    } else if (nodes[path[0]] instanceof Node) {
+      root = nodes[path[0]];
     }
     if (!root) console.log("ERROR: No provisional support for path", path, "in nodes", nodes);
 
@@ -326,8 +327,13 @@ function populateMatches(list, memory, goal, body, nodes, path, pathOptions, req
         list.push(match);
       }
     } else {
-      const leaf = new Node();
-      populate(leaf, nodes[path[2]]);
+      let leaf;
+      if (nodes[path[2]] instanceof Node) {
+        leaf = nodes[path[2]];
+      } else {
+        leaf = new Node();
+        populate(leaf, nodes[path[2]]);
+      }
 
       const match = {};
       match[path[0]] = root;
@@ -353,14 +359,9 @@ function populateMatches(list, memory, goal, body, nodes, path, pathOptions, req
       let isMatchOk = true;
       let node = root;
       for (let i = 1; i < path.length - 1; i += 2) {
-        node = node.get(path[i]);
+        node = getMatchingChild(node, path[i], path[i + 1], nodes, requiredMatch)
 
-        if (!node || !isMatching(node, nodes[path[i + 1]])) {
-          isMatchOk = false;
-          break;
-        }
-
-        if (requiredMatch && !isAcceptable(requiredMatch, path[i + 1], node)) {
+        if (!node) {
           isMatchOk = false;
           break;
         }
@@ -372,15 +373,31 @@ function populateMatches(list, memory, goal, body, nodes, path, pathOptions, req
         list.push(match);
       }
     }
+  }
 
-    if (isRequired && (list.length === 1)) {
-      const match = list[0];
-      for (const label in match) {
-        if (match[label].ref && nodes[label]&& !nodes[label].ref) {
-          nodes[label] = { ref: match[label].ref };
-        }
+  if (isRequired && (list.length === 1)) {
+    const match = list[0];
+    for (const label in match) {
+      if (match[label] instanceof Node) {
+        nodes[label] = match[label];
       }
     }
+  }
+}
+
+function getMatchingChild(node, pathLink, pathChild, nodes, requiredMatch) {
+  if (pathLink === "*") {
+    for (const label in node.data) {
+      const match = getMatchingChild(node, label, pathChild, nodes, requiredMatch);
+      if (match) return match;
+    }
+  } else {
+    const match = node.get(pathLink);
+
+    if (!match || !isMatching(match, nodes[pathChild])) return;
+    if (requiredMatch && !isAcceptable(requiredMatch, pathChild, match)) return;
+
+    return match;
   }
 }
 
@@ -457,7 +474,7 @@ function joinOneMatch(a, b) {
 }
 
 function isMatching(object, template) {
-  if (template["ref"]) return object.ref === template["ref"];
+  if (template instanceof Node) return object === template;
   for (const key in template) {
     if (object.get(key) !== template[key]) return false;
   }

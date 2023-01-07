@@ -1,0 +1,57 @@
+{
+  "label": "know how to select mineral field for harvest",
+  "goal": "select mineral field for harvest",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "MINERAL": { "unitType": "mineral" },
+      "NEXUS": { "unitType": "nexus" },
+      "PROBE-1": { "unitType": "probe" },
+      "PROBE-2": { "unitType": "probe" },
+      "HARVESTER": { "unitType": "probe" },
+      "HARVEST": { "type": "goal" }
+    },
+
+    "constraints": [
+      [ "PROBE-1", "~", "PROBE-2" ]
+    ],
+
+    "paths": [
+      {
+        "path": ["MINERAL", "nexus", "NEXUS"]
+      },
+      {
+        "path": ["PROBE-1", "harvest", "MINERAL"],
+        "optional": true
+      },
+      {
+        "path": ["PROBE-2", "harvest", "MINERAL"],
+        "optional": true
+      },
+      {
+        "path": ["HARVEST", "harvester", "HARVESTER"]
+      },
+      {
+        "path": ["HARVEST", "*", "GOAL"]
+      },
+      {
+        "label": "SELECT-MINERAL-FIELD",
+        "path": ["HARVEST", "harvest", "MINERAL"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [
+    "PROBE-1",
+    "PROBE-2"
+  ],
+
+  "output": [
+    "SELECT-MINERAL-FIELD"
+  ]
+}

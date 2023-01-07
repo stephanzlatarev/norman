@@ -1,0 +1,39 @@
+{
+  "label": "assign harvester",
+  "goal": "harvest a mineral field",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "PROBE": { "unitType": "probe" },
+      "MINERAL": { "unitType": "mineral" }
+    },
+
+    "paths": [
+      {
+        "path": ["GOAL", "harvester", "PROBE"]
+      },
+      {
+        "path": ["GOAL", "harvest", "MINERAL"]
+      },
+      {
+        "label": "NEW-ASSIGNMENT",
+        "path": ["PROBE", "harvest", "MINERAL"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [
+    "PROBE",
+    "MINERAL"
+  ],
+
+  "output": [
+    "GOAL",
+    "NEW-ASSIGNMENT"
+  ]
+}
