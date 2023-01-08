@@ -76,7 +76,8 @@ function observeUnits(node, client, units) {
 
     unitInMemory.set("energy", unitInReality.energy);
 
-    unitInMemory.set("orders", unitInReality.orders.length);
+    unitInMemory.set("orders", unitInReality.orders);
+    unitInMemory.set("ordersCount", unitInReality.orders.length);
     if (unitInReality.orders.length) {
       unitInMemory.set("orderAbilityId", unitInReality.orders[0].abilityId);
       unitInMemory.set("orderTargetUnitTag", unitInReality.orders[0].targetUnitTag);

@@ -8,12 +8,10 @@ export default class Nexus extends Unit {
 
   async tock() {
     if (this.node.get("build-probe")) {
-      super.command(1006);
-      this.node.clear("build-probe");
+      super.command(1006, null, null, "build-probe");
     }
     if (this.node.get("chronoboost")) {
-      super.command(3755, this.node.get("chronoboost").get("tag"));
-      this.node.clear("chronoboost");
+      super.command(3755, this.node.get("chronoboost").get("tag"), null, "chronoboost");
     }
     await super.tock();
   }

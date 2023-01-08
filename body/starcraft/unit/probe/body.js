@@ -12,12 +12,11 @@ export default class Probe extends Unit {
       const x = location.get("x");
       const y = location.get("y");
 
-      super.command(881, null, { x: x, y: y });
-
-      this.node.set("orderAbilityId", 881);
+      super.command(881, null, { x: x, y: y }, "build-pylon");
     } else if (this.node.get("harvest")) {
-      const currentAbilityId = this.node.get("orderAbilityId");
-      const currentTargetUnitTag = this.node.get("orderTargetUnitTag");
+      const orders = this.node.get("orders");
+      const currentAbilityId = (orders && orders.length) ? orders[0].abilityId : -1;
+      const currentTargetUnitTag = (orders && orders.length) ? orders[0].targetUnitTag : -1;
       const commandTargetUnitTag = this.node.get("harvest").get("tag");
 
       if (currentAbilityId === 299) {
@@ -25,9 +24,6 @@ export default class Probe extends Unit {
       } else if ((currentAbilityId !== 298) || (currentTargetUnitTag !== commandTargetUnitTag)) {
         // Command the probe to harvest this mineral field
         super.command(298, commandTargetUnitTag);
-
-        this.node.set("orderAbilityId", 298);
-        this.node.set("orderTargetUnitTag", commandTargetUnitTag);
       }
     }
 

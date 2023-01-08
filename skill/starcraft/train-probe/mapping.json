@@ -7,7 +7,7 @@
   },
 
   "input": [
-    "orders",
+    "ordersCount",
     "game/minerals"
   ],
 
