@@ -2,8 +2,6 @@
 
 ============= MILESTONE 1 - Upgrade skills to work with memory
 
-- skill "build a pylon" to be able to build a next pylons
-
 - add skill to expand base
 
 - add skill to build gateway
@@ -13,6 +11,10 @@
 - add skill to defend nexus with probes when facing worker rush
 
 - test against norman's previous version & upload to arena
+
+- fix: chronoboost doesn't work the second time. Check if command is properly queued
+- fix: pylon location is changed during command. Check if command is properly queued. Check why issue more than one command.
+- fix: probe building pylon doesn't always go back to harvesting. Check why
 
 ============= MILESTONE 2a - Use stalkers in army
 
