@@ -1,0 +1,38 @@
+{
+  "label": "build a nexus",
+  "goal": "build a nexus",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": {},
+      "PROBE": { "unitType": "probe" }
+    },
+
+    "paths": [
+      {
+        "path": ["GOAL", "location", "LOCATION"]
+      },
+      {
+        "path": ["GOAL", "builder", "PROBE"]
+      },
+      {
+        "label": "NEW-ASSIGNMENT",
+        "path": ["PROBE", "build-nexus", "LOCATION"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [
+    "PROBE",
+    "LOCATION"
+  ],
+
+  "output": [
+    "NEW-ASSIGNMENT"
+  ]
+}

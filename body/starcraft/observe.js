@@ -1,15 +1,9 @@
+import { RESOURCES, clusterResources } from "./resources.js";
 
 const UNITS = {
   59: "nexus",
   60: "pylon",
   84: "probe"
-};
-const RESOURCES = { 
-  146: "mineral", 147: "mineral", 341: "mineral", 483: "mineral",
-  665: "mineral", 666: "mineral", 796: "mineral", 797: "mineral",
-  884: "mineral", 885: "mineral", 886: "mineral", 887: "mineral",
-  342: "vespene", 343: "vespene", 344: "vespene",
-  608: "vespene", 880: "vespene", 881: "vespene",
 };
 
 export default async function(node, client) {
@@ -21,6 +15,8 @@ export default async function(node, client) {
   node.set("foodCap", observation.playerCommon.foodCap);
 
   const nexus = observation.rawData.units.find(unit => unit.unitType === 59);
+
+  clusterResources(node, observation);
 
   observeChat(node, client);
   observeResources(node, observation.rawData.units, nexus);

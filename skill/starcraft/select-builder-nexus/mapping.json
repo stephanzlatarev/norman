@@ -1,0 +1,33 @@
+{
+  "label": "select builder nexus",
+  "goal": "build a nexus",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": {},
+      "PROBE": { "unitType": "probe" }
+    },
+
+    "paths": [
+      { "path": ["GOAL", "location", "LOCATION"] },
+      {
+        "label": "SELECT-PROBE",
+        "path": ["GOAL", "builder", "PROBE"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [
+    "LOCATION/x",
+    "LOCATION/y"
+  ],
+
+  "output": [
+    "SELECT-PROBE"
+  ]
+}

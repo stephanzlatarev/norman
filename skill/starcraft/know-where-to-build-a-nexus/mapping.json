@@ -1,0 +1,37 @@
+{
+  "label": "know where to build a nexus",
+  "goal": "build a nexus",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": { "type": "resources" },
+      "NEXUS": { "unitType": "nexus" }
+    },
+
+    "paths": [
+      {
+        "path": ["NEXUS"]
+      },
+      {
+        "label": "SET-LOCATION",
+        "path": ["GOAL", "location", "LOCATION"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [
+    "LOCATION/x",
+    "LOCATION/y",
+    "NEXUS/x",
+    "NEXUS/y"
+  ],
+
+  "output": [
+    "SET-LOCATION"
+  ]
+}

@@ -7,7 +7,13 @@ export default class Probe extends Unit {
   }
 
   async tock() {
-    if (this.node.get("build-pylon")) {
+    if (this.node.get("build-nexus")) {
+      const location = this.node.get("build-nexus");
+      const x = location.get("x");
+      const y = location.get("y");
+
+      super.command(16, null, { x: x, y: y }, "build-nexus");
+    } else if (this.node.get("build-pylon")) {
       const location = this.node.get("build-pylon");
       const x = location.get("x");
       const y = location.get("y");
