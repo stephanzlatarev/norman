@@ -24,23 +24,16 @@
         "label": "NEW-ASSIGNMENT",
         "path": ["PROBE", "build-pylon", "LOCATION"],
         "provisional": true
-      },
-      {
-        "path": ["PYLON"],
-        "optional": true
       }
     ]
   },
 
   "input": [
-    "PYLON/x",
-    "PYLON/y",
-    "LOCATION/x",
-    "LOCATION/y"
+    "PROBE",
+    "LOCATION"
   ],
 
   "output": [
-    "GOAL",
     "NEW-ASSIGNMENT"
   ]
 }

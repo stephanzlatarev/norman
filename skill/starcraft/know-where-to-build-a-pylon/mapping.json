@@ -24,7 +24,8 @@
 
   "input": [
     "NEXUS/x",
-    "NEXUS/y"
+    "NEXUS/y",
+    "stats/pylon"
   ],
 
   "output": [

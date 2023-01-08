@@ -61,6 +61,8 @@ function observeResources(node, resources, nexus) {
 }
 
 function observeUnits(node, client, units) {
+  const count = {};
+
   for (const unitInReality of units) {
     const unitType = UNITS[unitInReality.unitType];
     if (!unitType) continue;
@@ -78,9 +80,20 @@ function observeUnits(node, client, units) {
     if (unitInReality.orders.length) {
       unitInMemory.set("orderAbilityId", unitInReality.orders[0].abilityId);
       unitInMemory.set("orderTargetUnitTag", unitInReality.orders[0].targetUnitTag);
+
+      if (unitInReality.orders[0].abilityId === 881) {
+        count["pylon"] = count["pylon"] ? count["pylon"] + 1 : 1;
+      }
     }
 
     unitInMemory.set("x", unitInReality.pos.x);
     unitInMemory.set("y", unitInReality.pos.y);
+
+    count[unitType] = count[unitType] ? count[unitType] + 1 : 1;
+  }
+
+  const stats = node.memory.get(node.path + "/stats");
+  for (const unitType in count) {
+    stats.set(unitType, count[unitType]);
   }
 }

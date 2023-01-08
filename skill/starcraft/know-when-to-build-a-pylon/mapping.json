@@ -22,7 +22,7 @@
 
   "input": [
     "foodUsed",
-    "foodCap",
+    "stats/pylon",
     "minerals"
   ],
 
