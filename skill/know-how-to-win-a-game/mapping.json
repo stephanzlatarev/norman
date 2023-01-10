@@ -15,7 +15,8 @@
       {
         "label": "LETS-BUILD-STRENGTH",
         "path": ["GOAL", "build-strength", "BUILD-STRENGTH"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       }
     ]
   },

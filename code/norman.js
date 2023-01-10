@@ -1,6 +1,6 @@
 import Body from "./body.js";
 import Goal from "./goal.js";
-import Memory from "./memory.js";
+import Memory from "./memory/memory.js";
 
 export default class Norman {
 

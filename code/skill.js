@@ -1,4 +1,5 @@
 import fs from "fs";
+import layers from "./memory/layers.js";
 
 export default class Skill {
 
@@ -24,8 +25,10 @@ export default class Skill {
   async perform(goal, skill, body) {
     const layer = skill.get("memory");
     if (layer) {
-      const layers = this.node.memory.layers(goal, body, layer);
-      for (const one of layers) {
+      const pattern = { ...layer };
+      pattern.nodes = { ...layer.nodes, GOAL: goal, BODY: body };
+
+      for (const one of layers(goal.memory, pattern)) {
         await performOnce(skill, one);
       }
     } else {
