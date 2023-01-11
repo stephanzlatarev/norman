@@ -3,6 +3,16 @@
 ============= MILESTONE 1 - Upgrade skills to work with memory
 
 - add skill to expand base
+  v select cluster for new base
+  v start moving probe to cluster already at 300 minerals
+  v at each step select free cluster closest to probe
+  - when probe is at cluster location select the location to build the nexus - hard-code the locations for DATA-C map
+  v then build the nexus
+  - then remove the accomplished goal "build a nexus"
+  - make sure the probe returns to harvesting
+  - make sure the skill can build a 2nd, 3rd, etc nexus
+
+- add skill "Plan economy" which monitors stats, manages quotas, and creates build goals.
 
 - add skill to build gateway
 - add skill to train zealot
@@ -47,7 +57,7 @@
 - when detaching the game make related goals disappear
 - remove memory nodes for detached bodies
 - when a goal completes and is removed, then remove all its memory traces
-- split memory.js to classes
-
+- optional and provisional paths for memory layers should tell which part is optional or provisional, e.g. { path: [GOAL, has, SUBGOAL], provision: [has, SUBGOAL] } to provision a node and link to it but { path: [PROBE, go, DIRECTION], provision: [go] } to provision link to an existing node.
 - see if check for unchanged memory for skill pattern will speed up skill "assign-probe-to-mineral-field"
   or check if can replace it with "know when to manage probes"?
+- when a new nexus is created, take the probes which harvest distant mineral fields and redirect them to harvest the closest mineral fields of the new nexus

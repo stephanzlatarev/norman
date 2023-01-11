@@ -2,26 +2,26 @@
 export default class BuildANexusBrain {
 
   react(input) {
-    const builderX = input[0];
-    const builderY = input[1];
-    const directionX = input[2];
-    const directionY = input[3];
-    const location = input[4];
+    const minerals = input[0];
+    const builderX = input[1];
+    const builderY = input[2];
+    const directionX = input[3];
+    const directionY = input[4];
+    const location = input[5];
 
     if (builderX && builderY) {
       if (location) {
         // We have the builder and the exact location. Build the nexus!
-        console.log("Ready to build nexus!");
-        return [-1, -1, 1];
+        if (minerals >= 400) {
+          return [-1, -1, 1];
+        }
       } else if (directionX && directionY) {
         if (isClose(builderX, builderY, directionX, directionY)) {
           // We have the builder approaching the cluster. Select the exact location!
-          console.log("Builder approaching cluster!");
           return [0, 1, 0];
         }
 
         // The builder is still away from the cluster. Move in the direction!
-        console.log("Builder moving to cluster...");
         return [1, 0, 0];
       }
     }

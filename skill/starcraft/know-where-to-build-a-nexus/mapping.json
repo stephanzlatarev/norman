@@ -9,7 +9,9 @@
   "memory": {
     "nodes": {
       "DIRECTION": { "type": "resources" },
-      "NEXUS": { "unitType": "nexus" }
+      "ALTERNATIVE": { "type": "resources" },
+      "NEXUS": { "unitType": "nexus" },
+      "BUILDER": { "unitType": "probe" }
     },
 
     "paths": [
@@ -20,9 +22,17 @@
         "path": ["NEXUS"]
       },
       {
+        "path": ["GOAL", "direction", "ALTERNATIVE"],
+        "optional": true
+      },
+      {
         "label": "SET-DIRECTION",
         "path": ["GOAL", "direction", "DIRECTION"],
         "provisional": true
+      },
+      {
+        "path": ["GOAL", "builder", "BUILDER"],
+        "optional": true
       }
     ]
   },
@@ -30,6 +40,10 @@
   "input": [
     "DIRECTION/x",
     "DIRECTION/y",
+    "ALTERNATIVE/x",
+    "ALTERNATIVE/y",
+    "BUILDER/x",
+    "BUILDER/y",
     "NEXUS/x",
     "NEXUS/y"
   ],
