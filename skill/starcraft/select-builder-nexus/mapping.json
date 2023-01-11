@@ -8,12 +8,13 @@
 
   "memory": {
     "nodes": {
-      "LOCATION": {},
+      "DIRECTION": { "type": "resources" },
       "PROBE": { "unitType": "probe" }
     },
 
     "paths": [
-      { "path": ["GOAL", "location", "LOCATION"] },
+      { "path": ["PROBE"] },
+      { "path": ["GOAL", "direction", "DIRECTION"] },
       {
         "label": "SELECT-PROBE",
         "path": ["GOAL", "builder", "PROBE"],
@@ -23,8 +24,8 @@
   },
 
   "input": [
-    "LOCATION/x",
-    "LOCATION/y"
+    "DIRECTION/x",
+    "DIRECTION/y"
   ],
 
   "output": [

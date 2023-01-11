@@ -8,30 +8,33 @@
 
   "memory": {
     "nodes": {
-      "LOCATION": { "type": "resources" },
+      "DIRECTION": { "type": "resources" },
       "NEXUS": { "unitType": "nexus" }
     },
 
     "paths": [
       {
+        "path": ["DIRECTION"]
+      },
+      {
         "path": ["NEXUS"]
       },
       {
-        "label": "SET-LOCATION",
-        "path": ["GOAL", "location", "LOCATION"],
+        "label": "SET-DIRECTION",
+        "path": ["GOAL", "direction", "DIRECTION"],
         "provisional": true
       }
     ]
   },
 
   "input": [
-    "LOCATION/x",
-    "LOCATION/y",
+    "DIRECTION/x",
+    "DIRECTION/y",
     "NEXUS/x",
     "NEXUS/y"
   ],
 
   "output": [
-    "SET-LOCATION"
+    "SET-DIRECTION"
   ]
 }

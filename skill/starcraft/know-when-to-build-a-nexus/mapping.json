@@ -2,6 +2,8 @@
   "label": "know when to build a nexus",
   "goal": "build strength",
 
+  "comment": "Build a new nexus when approaching the limit of probes for the existing nexuses",
+
   "body": {
     "is-game": true
   },
@@ -15,7 +17,8 @@
       {
         "label": "LETS-BUILD-A-NEXUS",
         "path": ["GOAL", "build-a-nexus", "BUILD-A-NEXUS"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       }
     ]
   },

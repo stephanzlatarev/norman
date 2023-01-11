@@ -1,0 +1,36 @@
+{
+  "label": "select location for a nexus",
+  "goal": "select location for a nexus",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "BUILD": { "type": "goal" },
+      "LOCATION": { "type": "location" }
+    },
+
+    "paths": [
+      {
+        "path": ["BUILD", "*", "GOAL"]
+      },
+      {
+        "label": "SELECT-LOCATION",
+        "path": ["BUILD", "location", "LOCATION"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+  ],
+
+  "output": [
+    "SELECT-LOCATION",
+    "LOCATION/x",
+    "LOCATION/y"
+  ]
+}

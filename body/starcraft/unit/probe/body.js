@@ -12,13 +12,19 @@ export default class Probe extends Unit {
       const x = location.get("x");
       const y = location.get("y");
 
-      super.command(16, null, { x: x, y: y }, "build-nexus");
+      super.command(880, null, { x: x, y: y }, "build-nexus");
     } else if (this.node.get("build-pylon")) {
       const location = this.node.get("build-pylon");
       const x = location.get("x");
       const y = location.get("y");
 
       super.command(881, null, { x: x, y: y }, "build-pylon");
+    } else if (this.node.get("move")) {
+      const location = this.node.get("move");
+      const x = location.get("x");
+      const y = location.get("y");
+
+      super.command(16, null, { x: x, y: y }, "move");
     } else if (this.node.get("harvest")) {
       const orders = this.node.get("orders");
       const currentAbilityId = (orders && orders.length) ? orders[0].abilityId : -1;

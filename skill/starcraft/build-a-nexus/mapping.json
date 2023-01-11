@@ -8,19 +8,36 @@
 
   "memory": {
     "nodes": {
-      "LOCATION": {},
-      "PROBE": { "unitType": "probe" }
+      "PROBE": { "unitType": "probe" },
+      "DIRECTION": { "type": "resources" },
+      "LOCATION": { "type": "location" },
+      "SELECT-LOCATION": { "label": "select location for a nexus", "type": "goal" }
     },
 
     "paths": [
       {
-        "path": ["GOAL", "location", "LOCATION"]
-      },
-      {
         "path": ["GOAL", "builder", "PROBE"]
       },
       {
-        "label": "NEW-ASSIGNMENT",
+        "path": ["GOAL", "direction", "DIRECTION"]
+      },
+      {
+        "label": "COMMAND-MOVE",
+        "path": ["PROBE", "move", "DIRECTION"],
+        "provisional": true
+      },
+      {
+        "label": "SELECT-LOCATION",
+        "path": ["GOAL", "select-location", "SELECT-LOCATION"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "path": ["GOAL", "location", "LOCATION"],
+        "optional": true
+      },
+      {
+        "label": "COMMAND-BUILD",
         "path": ["PROBE", "build-nexus", "LOCATION"],
         "provisional": true
       }
@@ -28,11 +45,16 @@
   },
 
   "input": [
-    "PROBE",
+    "PROBE/x",
+    "PROBE/y",
+    "DIRECTION/x",
+    "DIRECTION/y",
     "LOCATION"
   ],
 
   "output": [
-    "NEW-ASSIGNMENT"
+    "COMMAND-MOVE",
+    "SELECT-LOCATION",
+    "COMMAND-BUILD"
   ]
 }
