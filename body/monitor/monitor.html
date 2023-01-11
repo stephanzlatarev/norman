@@ -53,13 +53,19 @@
 
   function goalToItem(goal, level) {
     const item = $("<li>").addClass("list-group-item");
-    const icon = goal.props["code"] ? "bi-gear" : "bi-chat";
+
+    const type = ((goal.props["type"] === "goal") || (goal.props["type"] === "skill")) ? goal.props["type"] : "resource";
+    const icon = { goal: "bi-chat", skill: "bi-gear", resource: "bi-box" }[type];
 
     $("<i>").addClass(icon).css("margin-right", "0.5rem").appendTo(item);
     $("<span>").addClass("label-text").css("display", "inline-block").text(goal.label).appendTo(item);
 
     if (typeof(goal.props["stepTimeInMillis"]) === "number") {
       $("<span>").css("font-size", "75%").css("color", "gray").addClass("info-right").text(goal.props["stepTimeInMillis"] + " ms/step").appendTo(item);
+    }
+
+    if (type === "resource") {
+      $("<span>").text(JSON.stringify(goal.props)).appendTo(item);
     }
 
     if (goal.links && goal.links.length) {
