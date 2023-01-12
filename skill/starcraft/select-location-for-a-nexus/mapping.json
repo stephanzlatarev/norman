@@ -9,12 +9,16 @@
   "memory": {
     "nodes": {
       "BUILD": { "type": "goal" },
+      "DIRECTION": { "type": "resources" },
       "LOCATION": { "type": "location" }
     },
 
     "paths": [
       {
         "path": ["BUILD", "*", "GOAL"]
+      },
+      {
+        "path": ["BUILD", "direction", "DIRECTION"]
       },
       {
         "label": "SELECT-LOCATION",
@@ -26,6 +30,8 @@
   },
 
   "input": [
+    "DIRECTION/x",
+    "DIRECTION/y"
   ],
 
   "output": [
