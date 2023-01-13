@@ -2,29 +2,33 @@
 export default class Brain {
 
   react(input) {
-    const directionX = input[0];
-    const directionY = input[1];
-    const alternativeX = input[2];
-    const alternativeY = input[3];
-    const builderX = input[4];
-    const builderY = input[5];
-    const nexusX = input[6];
-    const nexusY = input[7];
+    const isDirectionOccupied = input[0];
 
-    if (distance(directionX, directionY, nexusX, nexusY) > 50) {
-      if (alternativeX && alternativeX) {
-        if (builderX && builderY) {
-          if (distance(directionX, directionY, builderX, builderY) < distance(alternativeX, alternativeY, builderX, builderY)) {
-            return [1];
-          }
-        } else if (nexusX && nexusY) {
-          if (distance(directionX, directionY, nexusX, nexusY) < distance(alternativeX, alternativeY, nexusX, nexusY)) {
-            return [1];
-          }
+    if (isDirectionOccupied) return;
+
+    const directionX = input[1];
+    const directionY = input[2];
+    const alternativeX = input[10] ? input[10] : input[3];
+    const alternativeY = input[11] ? input[11] : input[4];
+    const builderX = input[5];
+    const builderY = input[6];
+    const homebaseX = input[7];
+    const homebaseY = input[8];
+
+    if (alternativeX && alternativeX) {
+      if (builderX && builderY) {
+        if (distance(directionX, directionY, builderX, builderY) < distance(alternativeX, alternativeY, builderX, builderY)) {
+          // Prefer the direction which is closer to the builder
+          return [1, directionX, directionY];
         }
-      } else {
-        return [1];
+      } else if (homebaseX && homebaseY) {
+        if (distance(directionX, directionY, homebaseX, homebaseY) < distance(alternativeX, alternativeY, homebaseX, homebaseY)) {
+          // Prefer the direction which is closer to the homebase
+          return [1, directionX, directionY];
+        }
       }
+    } else {
+      return [1, directionX, directionY];
     }
   }
 

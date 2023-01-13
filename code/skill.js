@@ -28,8 +28,13 @@ export default class Skill {
       const pattern = { ...layer };
       pattern.nodes = { ...layer.nodes, GOAL: goal, BODY: body };
 
+      let cache;
       for (const one of layers(goal.memory, pattern)) {
-        await performOnce(skill, one);
+        const output = await performOnce(skill, one, cache);
+
+        if (output) {
+          cache = output;
+        }
       }
     } else {
       await performOnce(skill, body);
@@ -37,7 +42,7 @@ export default class Skill {
   }
 }
 
-async function performOnce(skill, layer) {
+async function performOnce(skill, layer, cache) {
   const sensor = [];
 
   for (const input of skill.get("input")) {
@@ -52,13 +57,23 @@ async function performOnce(skill, layer) {
     }
   }
 
+  if (cache) {
+    for (const one of cache) {
+      sensor.push(one);
+    }
+  }
+
   const motor = await skill.get("skill").react(sensor);
 
   if (motor) {
     for (let i = 0; i < skill.data.output.length; i++) {
-      layer.set(skill.data.output[i], motor[i]);
+      if (skill.data.output[i]) {
+        layer.set(skill.data.output[i], motor[i]);
+      }
     }
   }
+
+  return motor;
 }
 
 async function load(node) {

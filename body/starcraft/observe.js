@@ -24,8 +24,10 @@ export default async function(node, client) {
 
   if (!nexus) {
     node.set("over", true);
-  } else {
-    node.set("homebase", node.memory.get(node.path + "/" + nexus.tag));
+  } else if (!node.get("homebase")) {
+    const homebase = node.memory.get(node.path + "/" + nexus.tag);
+    node.set("homebase", homebase);
+    homebase.set("homebase", true)
   }
 }
 
@@ -38,8 +40,6 @@ function observeChat(node, client) {
 }
 
 function observeResources(node, resources, nexus) {
-  const nexusInMemory = node.memory.get(node.path + "/" + nexus.tag);
-
   for (const resourceInReality of resources) {
     const unitType = RESOURCES[resourceInReality.unitType];
     if (!unitType) continue;
@@ -48,10 +48,6 @@ function observeResources(node, resources, nexus) {
     if (!resourceInMemory.get("unitType")) {
       resourceInMemory.set("unitType", unitType).set("tag", resourceInReality.tag)
       .set("x", resourceInReality.pos.x).set("y", resourceInReality.pos.y);
-
-      if ((Math.abs(resourceInReality.pos.x - nexus.pos.x) <= 10) && (Math.abs(resourceInReality.pos.y - nexus.pos.y) <= 10)) {
-        resourceInMemory.set("nexus", nexusInMemory);
-      }
     }
   }
 }

@@ -10,25 +10,30 @@
     "nodes": {
       "DIRECTION": { "type": "resources" },
       "ALTERNATIVE": { "type": "resources" },
-      "NEXUS": { "unitType": "nexus" },
+      "HOMEBASE": { "unitType": "nexus", "homebase": true },
+      "NEXUS-OF-DIRECTION": { "unitType": "nexus" },
       "BUILDER": { "unitType": "probe" }
     },
 
     "paths": [
       {
+        "path": ["HOMEBASE"]
+      },
+      {
         "path": ["DIRECTION"]
-      },
-      {
-        "path": ["NEXUS"]
-      },
-      {
-        "path": ["GOAL", "direction", "ALTERNATIVE"],
-        "optional": true
       },
       {
         "label": "SET-DIRECTION",
         "path": ["GOAL", "direction", "DIRECTION"],
         "provisional": true
+      },
+      {
+        "path": ["DIRECTION", "nexus", "NEXUS-OF-DIRECTION"],
+        "optional": true
+      },
+      {
+        "path": ["GOAL", "direction", "ALTERNATIVE"],
+        "optional": true
       },
       {
         "path": ["GOAL", "builder", "BUILDER"],
@@ -38,17 +43,20 @@
   },
 
   "input": [
+    "NEXUS-OF-DIRECTION",
     "DIRECTION/x",
     "DIRECTION/y",
     "ALTERNATIVE/x",
     "ALTERNATIVE/y",
     "BUILDER/x",
     "BUILDER/y",
-    "NEXUS/x",
-    "NEXUS/y"
+    "HOMEBASE/x",
+    "HOMEBASE/y"
   ],
 
   "output": [
-    "SET-DIRECTION"
+    "SET-DIRECTION",
+    null,
+    null
   ]
 }

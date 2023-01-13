@@ -10,8 +10,33 @@ export const RESOURCES = {
 export function clusterResources(node, observation) {
   const clustersInMemory = node.memory.get(node.path + "/map/clusters");
 
-  if (clustersInMemory.links().length) return;
+  if (!clustersInMemory.links().length) {
+    createClustersInMemory(node, clustersInMemory, observation);
+  }
 
+  ensureNexusesAreLinkedToResources(node, clustersInMemory);
+}
+
+function ensureNexusesAreLinkedToResources(node, clustersInMemory) {
+  for (const nexus of node.links()) {
+    if ((nexus.get("unitType") === "nexus") && !nexus.get("resources")) {
+      const nexusX = nexus.get("x");
+      const nexusY = nexus.get("y");
+
+      for (const cluster of clustersInMemory.links()) {
+        const clusterX = cluster.get("x");
+        const clusterY = cluster.get("y");
+
+        if ((Math.abs(clusterX - nexusX) <= 10) && (Math.abs(clusterY - nexusY) <= 10)) {
+          cluster.set("nexus", nexus);
+          nexus.set("resources", cluster);
+        }
+      }
+    }
+  }
+}
+
+function createClustersInMemory(node, clustersInMemory, observation) {
   const resources = observation.rawData.units.filter(unit => RESOURCES[unit.unitType]);
   const clusters = findClusters(resources);
 
