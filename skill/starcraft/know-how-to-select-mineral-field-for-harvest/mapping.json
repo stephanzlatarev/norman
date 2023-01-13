@@ -8,8 +8,9 @@
 
   "memory": {
     "nodes": {
-      "MINERAL": { "unitType": "mineral" },
       "NEXUS": { "unitType": "nexus" },
+      "CLUSTER": { "type": "resources" },
+      "MINERAL": { "unitType": "mineral" },
       "PROBE-1": { "unitType": "probe" },
       "PROBE-2": { "unitType": "probe" },
       "HARVESTER": { "unitType": "probe" },
@@ -22,15 +23,10 @@
 
     "paths": [
       {
-        "path": ["MINERAL", "nexus", "NEXUS"]
+        "path": ["NEXUS", "resources", "CLUSTER"]
       },
       {
-        "path": ["PROBE-1", "harvest", "MINERAL"],
-        "optional": true
-      },
-      {
-        "path": ["PROBE-2", "harvest", "MINERAL"],
-        "optional": true
+        "path": ["CLUSTER", "*", "MINERAL"]
       },
       {
         "path": ["HARVEST", "harvester", "HARVESTER"]
@@ -42,6 +38,14 @@
         "label": "SELECT-MINERAL-FIELD",
         "path": ["HARVEST", "harvest", "MINERAL"],
         "provisional": true
+      },
+      {
+        "path": ["PROBE-1", "harvest", "MINERAL"],
+        "optional": true
+      },
+      {
+        "path": ["PROBE-2", "harvest", "MINERAL"],
+        "optional": true
       }
     ]
   },

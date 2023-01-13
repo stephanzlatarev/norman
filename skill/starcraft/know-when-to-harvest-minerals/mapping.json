@@ -27,17 +27,20 @@
       {
         "label": "LETS-HARVEST-MINERALS",
         "path": ["GOAL", "harvest a mineral field", "HARVEST"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       },
       {
         "label": "WITH-THIS-PROBE",
         "path": ["HARVEST", "harvester", "PROBE"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       },
       {
         "label": "SELECT-MINERAL-FIELD",
         "path": ["HARVEST", "select mineral field for harvest", "SELECT"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       }
     ]
   },

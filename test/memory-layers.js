@@ -56,6 +56,31 @@ describe("Memory layers", function() {
     });
   });
 
+  describe("matching required paths", function() {
+
+    it("wild-card pattern", function() {
+      const memory = getMemory("probe", 3, "mineral", 3);
+      const probe = memory.get("probe-2");
+      for (let i = 1; i <= 3; i++) probe.set("go-" + i, memory.get("mineral-" + i));
+
+      const PATTERN = {
+        nodes: {
+          PROBE: { label: "probe" },
+          MINERAL: { label: "mineral" },
+        },
+        paths: [
+          { path: ["PROBE", "*", "MINERAL"] }
+        ]
+      };
+
+      assertEqual(memory, layers(memory, PATTERN), [
+        { PROBE: probe.path, MINERAL: "mineral-1" },
+        { PROBE: probe.path, MINERAL: "mineral-2" },
+        { PROBE: probe.path, MINERAL: "mineral-3" },
+      ]);
+    });
+  });
+
   describe("matching optional paths", function() {
 
     const PATTERN = {
@@ -517,6 +542,58 @@ describe("Memory layers", function() {
         const layer = newLayers[0];
         layer.set("MOVE", 1);
         assert.equal(probe.links().length, 1, "Path is not provisioned!");
+      });
+    });
+
+    describe("chain of paths", function() {
+      const PATTERN = {
+        nodes: {
+          GOAL: { label: "goal" },
+          PROBE: { label: "probe" },
+          HARVEST: { label: "harvest" },
+        },
+        paths: [
+          { path: ["GOAL"] },
+          { path: ["PROBE"] },
+          { label: "LETS-HARVEST", path: ["GOAL", "to", "HARVEST"], provisional: true, unique: true },
+          { label: "WITH-PROBE", path: ["HARVEST", "to", "PROBE"], provisional: true, unique: true },
+        ]
+      };
+
+      it("when no path exists", function() {
+        const memory = getMemory("goal", 1, "probe", 1);
+        const goal = memory.get("goal-1");
+
+        const newLayers = layers(memory, PATTERN);
+        assertEqual(memory, newLayers, [
+          { GOAL: "goal-1", PROBE: "probe-1", HARVEST: { label: "harvest" } },
+        ]);
+        assert.equal(goal.links().length, 0, "Path is provisioned too early!");
+
+        const layer = newLayers[0];
+        layer.set("LETS-HARVEST", 1);
+        layer.set("WITH-PROBE", 1);
+        assert.equal(goal.links().length, 1, "Path is not provisioned!");
+      });
+
+      it("when the path exists", function() {
+        const memory = getMemory("goal", 1, "harvest", 1, "probe", 1);
+        const goal = memory.get("goal-1");
+        const harvest = memory.get("harvest-1");
+        const probe = memory.get("probe-1");
+        goal.set("to", harvest);
+        harvest.set("to", probe);
+
+        const newLayers = layers(memory, PATTERN);
+        assertEqual(memory, newLayers, [
+          { GOAL: "goal-1", HARVEST: "harvest-1", PROBE: "probe-1" },
+        ]);
+        assert.equal(goal.links().length, 1, "Path disappeared!");
+
+        const layer = newLayers[0];
+        layer.set("LETS-HARVEST", 1);
+        layer.set("WITH-PROBE", 1);
+        assert.equal(goal.links().length, 1, "Path is not provisioned!");
       });
     });
 

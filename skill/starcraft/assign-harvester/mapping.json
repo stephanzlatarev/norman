@@ -22,7 +22,8 @@
       {
         "label": "NEW-ASSIGNMENT",
         "path": ["PROBE", "harvest", "MINERAL"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       }
     ]
   },

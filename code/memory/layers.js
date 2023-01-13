@@ -28,8 +28,9 @@ export default function(memory, layer) {
     }
 
     if (!thisMatches || !thisMatches.length) {
+      if (TROUBLESHOOTING) console.log("No match for path:", JSON.stringify(one));
       return [];
-    } else if ((thisMatches.length === 1) && !one.optional && !one.provisional) {
+    } else if ((thisMatches.length === 1) && !one.optional && (!one.provisional || one.unique)) {
       const match = thisMatches[0];
       for (const label in match) {
         if (match[label] !== nodes[label]) {
@@ -86,7 +87,7 @@ function getProvisionalMatches(memory, nodes, labelRoot, _, labelLeaf, unique) {
     }
 
     // Also, add the possibility for no match
-    if ((!unique || !list.length) &&  !hasMatchForTemplate && (labelRoot !== labelLeaf)) {
+    if ((!unique || !list.length) && !hasMatchForTemplate && (labelRoot !== labelLeaf)) {
       addMatch(list, labelRoot, root, labelLeaf, templateToNode(leafTemplate));
     }
   }
@@ -99,10 +100,16 @@ function getOptionalMatches(memory, nodes, labelRoot, labelLink, labelLeaf) {
   const leaves = {};
 
   for (const root of getMatchingNodes(memory, nodes[labelRoot])) {
-    const leaf = getMatchingLinkedNode(nodes, root, labelLink, labelLeaf);
+    const matchingLeaves = getMatchingLinkedNodes(nodes, root, labelLink, labelLeaf);
 
-    if (leaf) leaves[leaf.ref] = true;
-    addMatch(list, labelRoot, root, labelLeaf, leaf ? leaf : null);
+    if (matchingLeaves) {
+      for (const leaf of matchingLeaves) {
+        leaves[leaf.ref] = true;
+        addMatch(list, labelRoot, root, labelLeaf, leaf);
+      }
+    } else {
+      addMatch(list, labelRoot, root, labelLeaf, null);
+    }
   }
 
   for (const leaf of getMatchingNodes(memory, nodes[labelLeaf])) {
@@ -118,10 +125,12 @@ function getRequiredMatches(memory, nodes, labelRoot, labelLink, labelLeaf) {
   const list = [];
 
   for (const root of getMatchingNodes(memory, nodes[labelRoot])) {
-    let leaf = getMatchingLinkedNode(nodes, root, labelLink, labelLeaf);
+    let matchingLeaves = getMatchingLinkedNodes(nodes, root, labelLink, labelLeaf);
 
-    if (leaf) {
-      addMatchIfAcceptable(nodes, list, labelRoot, root, labelLeaf, leaf);
+    if (matchingLeaves) {
+      for (const leaf of matchingLeaves) {
+        addMatchIfAcceptable(nodes, list, labelRoot, root, labelLeaf, leaf);
+      }
     }
   }
 
@@ -167,19 +176,25 @@ function isAcceptable(collection, label, node) {
   return (collection[label] === undefined) || isMatching(node, collection[label]);
 }
 
-function getMatchingLinkedNode(nodes, node, pathLink, pathChild) {
+function getMatchingLinkedNodes(nodes, node, pathLink, pathChild) {
   if (pathLink === "*") {
+    const matches = [];
     for (const label in node.data) {
-      const match = getMatchingLinkedNode(nodes, node, label, pathChild);
-      if (match) return match;
+      if (node.get(label) instanceof Node) {
+        const list = getMatchingLinkedNodes(nodes, node, label, pathChild);
+        if (list) {
+          for (const one of list) matches.push(one);
+        }
+      }
     }
+    return matches.length ? matches : null;
   } else {
     const match = node.get(pathLink);
 
     if (!match || !isMatching(match, nodes[pathChild])) return;
     if (!isAcceptable(nodes, pathChild, match)) return;
 
-    return match;
+    return [match];
   }
 }
 

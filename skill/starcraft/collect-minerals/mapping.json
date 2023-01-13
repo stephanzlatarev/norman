@@ -15,7 +15,8 @@
       {
         "label": "LETS-COLLECT-MINERALS",
         "path": ["GOAL", "collect-minerals", "COLLECT-MINERALS"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       }
     ]
   },
