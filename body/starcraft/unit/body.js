@@ -33,14 +33,20 @@ export default class Unit {
 
       if (isMatchingAny(orders, command.abilityId, command.targetUnitTag, command.targetWorldSpacePos)) {
         this.progressingCommands.push(command);
-        this.pendingCommands.splice(i, 1);
+      } else {
+        // The command has been executed immediately
+        if (command.memoryLabel) {
+          this.node.clear(command.memoryLabel);
+        }
       }
+
+      this.pendingCommands.splice(i, 1);
     }
   }
 
   command(abilityId, targetUnitTag, targetWorldSpacePos, memoryLabel) {
-    if (isMatchingAny(this.node.get("orders"), abilityId, targetUnitTag, targetWorldSpacePos) ||
-        isMatchingAny(this.pendingCommands, abilityId, targetUnitTag, targetWorldSpacePos)) return;
+    if (isMatchingAny(this.node.get("orders"), abilityId, targetUnitTag, targetWorldSpacePos)) return;
+    if (isMatchingAny(this.pendingCommands, abilityId, targetUnitTag, targetWorldSpacePos)) return;
 
     const command = {
       unitTags: [this.node.get("tag")],
@@ -64,7 +70,7 @@ export default class Unit {
   async tock() {
     const client = this.node.get("channel");
 
-    if (client) {
+    if (client && this.actions.length) {
       await client.action({ actions: this.actions });
 
       this.actions = [];
