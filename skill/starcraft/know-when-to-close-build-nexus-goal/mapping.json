@@ -1,0 +1,37 @@
+{
+  "label": "know when to close build nexus goal",
+  "goal": "build a nexus",
+
+  "comment": "Still not decided whether goals should be closed by outcomes or by skills...",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": { "type": "location" },
+      "NEXUS": { "unitType": "nexus" }
+    },
+
+    "paths": [
+      {
+        "path": ["GOAL", "location", "LOCATION"]
+      },
+      {
+        "path": ["NEXUS"]
+      }
+    ]
+  },
+
+  "input": [
+    "LOCATION/x",
+    "LOCATION/y",
+    "NEXUS/x",
+    "NEXUS/y"
+  ],
+
+  "output": [
+    "GOAL"
+  ]
+}

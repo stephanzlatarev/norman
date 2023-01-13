@@ -6,9 +6,9 @@
   v select cluster for new base
   v start moving probe to cluster already at 300 minerals
   v at each step select free cluster closest to probe
-  - when probe is at cluster location select the location to build the nexus - hard-code the locations for DATA-C map
+  v when probe is at cluster location select the location to build the nexus - hard-code the locations for DATA-C map
   v then build the nexus
-  - then remove the accomplished goal "build a nexus"
+  v then remove the accomplished goal "build a nexus"
   - make sure the probe returns to harvesting
   - make sure the skill can build a 2nd, 3rd, etc nexus
 
