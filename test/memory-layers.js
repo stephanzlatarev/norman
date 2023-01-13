@@ -175,9 +175,9 @@ describe("Memory layers", function() {
         memory.get("goal-3").set("location", memory.get("location-1"));
 
         assertEqual(memory, layers(memory, PATTERN), [
-          { PROBE: "probe-1", LOCATION: "location-1" },
-          { PROBE: "probe-2", LOCATION: "location-2" },
-          { PROBE: "probe-3", LOCATION: "location-2" },
+          { GOAL: "goal-1", PROBE: "probe-3", LOCATION: "location-2" },
+          { GOAL: "goal-2", PROBE: "probe-2", LOCATION: "location-2" },
+          { GOAL: "goal-3", PROBE: "probe-1", LOCATION: "location-1" },
         ]);
       });
     });
@@ -293,11 +293,11 @@ describe("Memory layers", function() {
 
         assertEqual(memory, layers(memory, getPattern(memory, 1)), [
           { "BODY": "probe-1", "NEW-MINERAL": "mineral-1", "OLD-MINERAL": null, "PROBE-1": "probe-2", "PROBE-2": "probe-2" },
+          { "BODY": "probe-1", "NEW-MINERAL": "mineral-2", "OLD-MINERAL": null, "PROBE-1": null, "PROBE-2": null },
+          { "BODY": "probe-1", "NEW-MINERAL": "mineral-3", "OLD-MINERAL": null, "PROBE-1": null, "PROBE-2": null },
           { "BODY": "probe-1", "NEW-MINERAL": "mineral-4", "OLD-MINERAL": null, "PROBE-1": "probe-3", "PROBE-2": "probe-4" },
           { "BODY": "probe-1", "NEW-MINERAL": "mineral-4", "OLD-MINERAL": null, "PROBE-1": "probe-3", "PROBE-2": "probe-5" },
           { "BODY": "probe-1", "NEW-MINERAL": "mineral-4", "OLD-MINERAL": null, "PROBE-1": "probe-4", "PROBE-2": "probe-5" },
-          { "BODY": "probe-1", "NEW-MINERAL": "mineral-2", "OLD-MINERAL": null, "PROBE-1": null, "PROBE-2": null },
-          { "BODY": "probe-1", "NEW-MINERAL": "mineral-3", "OLD-MINERAL": null, "PROBE-1": null, "PROBE-2": null },
           { "BODY": "probe-1", "NEW-MINERAL": "mineral-5", "OLD-MINERAL": null, "PROBE-1": null, "PROBE-2": null },
         ]);
       });
@@ -306,11 +306,11 @@ describe("Memory layers", function() {
         const memory = getSituation();
 
         assertEqual(memory, layers(memory, getPattern(memory, 2)), [
+          { "BODY": "probe-2", "NEW-MINERAL": "mineral-2", "OLD-MINERAL": "mineral-1", "PROBE-1": null, "PROBE-2": null },
+          { "BODY": "probe-2", "NEW-MINERAL": "mineral-3", "OLD-MINERAL": "mineral-1", "PROBE-1": null, "PROBE-2": null },
           { "BODY": "probe-2", "NEW-MINERAL": "mineral-4", "OLD-MINERAL": "mineral-1", "PROBE-1": "probe-3", "PROBE-2": "probe-4" },
           { "BODY": "probe-2", "NEW-MINERAL": "mineral-4", "OLD-MINERAL": "mineral-1", "PROBE-1": "probe-3", "PROBE-2": "probe-5" },
           { "BODY": "probe-2", "NEW-MINERAL": "mineral-4", "OLD-MINERAL": "mineral-1", "PROBE-1": "probe-4", "PROBE-2": "probe-5" },
-          { "BODY": "probe-2", "NEW-MINERAL": "mineral-2", "OLD-MINERAL": "mineral-1", "PROBE-1": null, "PROBE-2": null },
-          { "BODY": "probe-2", "NEW-MINERAL": "mineral-3", "OLD-MINERAL": "mineral-1", "PROBE-1": null, "PROBE-2": null },
           { "BODY": "probe-2", "NEW-MINERAL": "mineral-5", "OLD-MINERAL": "mineral-1", "PROBE-1": null, "PROBE-2": null },
         ]);
       });
@@ -347,6 +347,39 @@ describe("Memory layers", function() {
           { "BODY": "probe-5", "NEW-MINERAL": "mineral-5", "OLD-MINERAL": "mineral-4", "PROBE-1": null, "PROBE-2": null },
         ]);
       });
+    });
+  });
+
+  describe("matching many paths", function() {
+
+    const PATTERN = {
+      nodes: {
+        "GOAL": { "label": "goal" },
+        "DIRECTION": { "label": "resources" },
+        "ALTERNATIVE": { "label": "resources" },
+        "HOMEBASE": { "label": "homebase" },
+        "NEXUS-OF-DIRECTION": { "label": "nexus" },
+        "BUILDER": { "label": "probe" }
+      },
+      paths: [
+        { path: ["HOMEBASE"] },
+        { path: ["DIRECTION"] },
+        { path: ["GOAL", "direction", "DIRECTION"], provisional: true },
+        { path: ["DIRECTION", "nexus", "NEXUS-OF-DIRECTION"], optional: true },
+        { path: ["GOAL", "direction", "ALTERNATIVE"], optional: true },
+        { path: ["GOAL", "builder", "BUILDER"], optional: true }
+      ]
+    };
+
+    it("when reduced to very few memory layers", function() {
+      const memory = getMemory("goal", 1, "homebase", 1, "resources", 20, "probe", 20, "nexus", 1);
+
+      const expectedLayers = [];
+      for (let i = 1; i <= 20; i++) {
+        expectedLayers.push({ GOAL: "goal-1", DIRECTION: "resources-" + i });
+      }
+
+      assertEqual(memory, layers(memory, PATTERN), expectedLayers);
     });
   });
 

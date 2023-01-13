@@ -198,56 +198,67 @@ function templateToNode(template) {
 }
 
 function joinMatches(nodes, lists, constraints) {
+  let workingMatches = [{}];
+
+  // Populate starting match with the fixed nodes
+  for (const label in nodes) {
+    if (nodes[label] instanceof Node) {
+      workingMatches[0][label] = nodes[label];
+    }
+  }
+
+  for (const list of lists) {
+    const extendedMatches = [];
+
+    for (const match of workingMatches) {
+      for (const extension of getExtensions(match, list)) {
+        extendedMatches.push(getExtendedMatch(match, extension));
+      }
+    }
+
+    workingMatches = extendedMatches;
+  }
+
   const matches = [];
 
-  const index = [];
-  for (const _ in lists) index.push(0);
+  for (const match of workingMatches) {
+    if (isSatisfyingConstraints(match, constraints, lists)) {
+      matches.push(match);
+    }
+  }
 
-  const initialMatch = {};
-  for (const label in nodes) if (nodes[label] instanceof Node) initialMatch[label] = nodes[label];
+  return matches;
+}
 
-  while (true) {
-    let match = {...initialMatch};
+function getExtensions(match, list) {
+  const extensions = [];
 
-    for (let i = 0; i < index.length; i++) {
-      const list = lists[i];
-      const listMatch = list[index[i]];
-      const joinMatch = joinOneMatch(match, listMatch);
+  for (const one of list) {
+    let isMatching = true;
 
-      if (joinMatch) {
-        match = joinMatch;
-      } else {
-        match = null;
+    for (const label in one) {
+      if (!isAcceptable(match, label, one[label])) {
+        isMatching = false;
         break;
       }
     }
 
-    if (match && isSatisfyingConstraints(match, constraints, lists)) {
-      matches.push(match);
-    }
-
-    // Increment index
-    for (let i = 0; i < index.length; i++) {
-      index[i]++;
-      if (index[i] < lists[i].length) break;
-      index[i] = 0;
-      if (i === index.length - 1) return matches;
+    if (isMatching) {
+      extensions.push(one);
     }
   }
+
+  return extensions;
 }
 
-function joinOneMatch(a, b) {
-  const ab = {...a};
+function getExtendedMatch(match, extension) {
+  const result = {...match};
 
-  for (const key in b) {
-    if (!isAcceptable(a, key, b[key])) {
-      return null;
-    }
-
-    ab[key] = b[key];
+  for (const label in extension) {
+    result[label] = extension[label];
   }
 
-  return ab;
+  return result;
 }
 
 function isSatisfyingConstraints(match, constraints, lists) {
