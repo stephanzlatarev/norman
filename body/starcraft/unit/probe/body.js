@@ -25,7 +25,7 @@ export default class Probe extends Unit {
       const y = location.get("y");
 
       super.command(16, null, { x: x, y: y }, "move");
-    } else if (this.node.get("harvest")) {
+    } else if (this.node.get("harvest") && !this.node.get("busy")) {
       const orders = this.node.get("orders");
       const currentAbilityId = (orders && orders.length) ? orders[0].abilityId : -1;
       const currentTargetUnitTag = (orders && orders.length) ? orders[0].targetUnitTag : -1;

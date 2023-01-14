@@ -1,11 +1,11 @@
 
-export default class SelectBuilderBrain {
+export default class Brain {
 
   react(input) {
-    const locationX = input[0];
-    const locationY = input[1];
+    const builderProbe = input[0];
+    const thisProbeBusy = input[1];
 
-    if (locationX && locationY) {
+    if (!builderProbe && !thisProbeBusy) {
       return [1];
     }
   }

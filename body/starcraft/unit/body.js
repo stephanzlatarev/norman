@@ -42,6 +42,8 @@ export default class Unit {
 
       this.pendingCommands.splice(i, 1);
     }
+
+    this.node.set("busy", (this.pendingCommands.length + this.progressingCommands.length + this.completedCommands.length) > 0);
   }
 
   command(abilityId, targetUnitTag, targetWorldSpacePos, memoryLabel) {
@@ -65,6 +67,7 @@ export default class Unit {
 
     this.actions.push({ actionRaw: { unitCommand: command } });
     this.pendingCommands.push(command);
+    this.node.set("busy", true);
   }
 
   async tock() {

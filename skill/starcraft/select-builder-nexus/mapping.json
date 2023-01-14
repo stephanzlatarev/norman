@@ -9,6 +9,7 @@
   "memory": {
     "nodes": {
       "DIRECTION": { "type": "resources" },
+      "BUILDER": { "unitType": "probe" },
       "PROBE": { "unitType": "probe" }
     },
 
@@ -16,16 +17,21 @@
       { "path": ["PROBE"] },
       { "path": ["GOAL", "direction", "DIRECTION"] },
       {
+        "path": ["GOAL", "builder", "BUILDER"],
+        "optional": true
+      },
+      {
         "label": "SELECT-PROBE",
         "path": ["GOAL", "builder", "PROBE"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       }
     ]
   },
 
   "input": [
-    "DIRECTION/x",
-    "DIRECTION/y"
+    "BUILDER",
+    "PROBE/busy"
   ],
 
   "output": [

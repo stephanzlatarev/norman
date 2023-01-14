@@ -8,7 +8,8 @@
 
   "memory": {
     "nodes": {
-      "LOCATION": {},
+      "LOCATION": { "type": "location" },
+      "BUILDER": { "unitType": "probe" },
       "PROBE": { "unitType": "probe" }
     },
 
@@ -16,16 +17,21 @@
       { "path": ["PROBE"] },
       { "path": ["GOAL", "location", "LOCATION"] },
       {
+        "path": ["GOAL", "builder", "BUILDER"],
+        "optional": true
+      },
+      {
         "label": "SELECT-PROBE",
         "path": ["GOAL", "builder", "PROBE"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       }
     ]
   },
 
   "input": [
-    "LOCATION/x",
-    "LOCATION/y"
+    "BUILDER",
+    "PROBE/busy"
   ],
 
   "output": [
