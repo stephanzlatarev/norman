@@ -1,11 +1,12 @@
 
-export default class TrainProbeBrain {
+export default class Brain {
 
   react(input) {
-    const orders = input[0];
-    const minerals = input[1];
+    const isOperational = input[0];
+    const orders = input[1];
+    const minerals = input[2];
 
-    if ((orders === 0) && (minerals >= 50)) {
+    if (isOperational && (orders === 0) && (minerals >= 50)) {
       return [1, minerals - 50];
     }
   }

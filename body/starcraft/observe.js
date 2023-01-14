@@ -19,7 +19,7 @@ export default async function(node, client) {
   clusterResources(node, observation);
 
   observeChat(node, client);
-  observeResources(node, observation.rawData.units, nexus);
+  observeResources(node, observation.rawData.units);
   observeUnits(node, client, observation.rawData.units);
 
   if (!nexus) {
@@ -39,7 +39,7 @@ function observeChat(node, client) {
   }
 }
 
-function observeResources(node, resources, nexus) {
+function observeResources(node, resources) {
   for (const resourceInReality of resources) {
     const unitType = RESOURCES[resourceInReality.unitType];
     if (!unitType) continue;
@@ -66,6 +66,7 @@ function observeUnits(node, client, units) {
       .set("channel", client).set("game", node);
     }
 
+    unitInMemory.set("operational", unitInReality.buildProgress >= 1);
     unitInMemory.set("energy", unitInReality.energy);
 
     unitInMemory.set("orders", unitInReality.orders);
