@@ -75,6 +75,9 @@ function observeUnits(node, client, units) {
       unitInMemory.set("orderAbilityId", unitInReality.orders[0].abilityId);
       unitInMemory.set("orderTargetUnitTag", unitInReality.orders[0].targetUnitTag);
 
+      if (unitInReality.orders[0].abilityId === 880) {
+        count["nexus"] = count["nexus"] ? count["nexus"] + 1 : 1;
+      }
       if (unitInReality.orders[0].abilityId === 881) {
         count["pylon"] = count["pylon"] ? count["pylon"] + 1 : 1;
       }

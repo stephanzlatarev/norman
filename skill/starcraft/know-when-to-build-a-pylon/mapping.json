@@ -21,9 +21,10 @@
   },
 
   "input": [
+    "minerals",
     "foodUsed",
-    "stats/pylon",
-    "minerals"
+    "stats/nexus",
+    "stats/pylon"
   ],
 
   "output": [
