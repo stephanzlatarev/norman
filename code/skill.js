@@ -1,5 +1,6 @@
 import fs from "fs";
 import layers from "./memory/layers.js";
+import Node from "./memory/node.js";
 
 export default class Skill {
 
@@ -50,7 +51,9 @@ async function performOnce(skill, layer, cache) {
 
     if (typeof(node) === "number") {
       sensor.push(node);
-    } else if (node && node.ref) {
+    } else if (typeof(node) === "boolean") {
+      sensor.push(node ? 1 : 0);
+    } else if (node instanceof Node) {
       sensor.push(node.ref);
     } else {
       sensor.push(0);
