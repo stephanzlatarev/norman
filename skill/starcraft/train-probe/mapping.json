@@ -9,7 +9,9 @@
   "input": [
     "operational",
     "ordersCount",
-    "game/minerals"
+    "game/minerals",
+    "game/foodUsed",
+    "game/foodCap"
   ],
 
   "output": [
