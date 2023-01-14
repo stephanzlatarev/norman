@@ -53,16 +53,13 @@ export default class Node {
   get(label) {
     const path = label.split("/");
     const firstLabel = path[0];
+    const firstNode = this.data[firstLabel];
 
-    if (this.data[firstLabel]) {
-      const firstNode = this.data[firstLabel];
-
-      if (path.length === 1) {
-        return firstNode;
-      } else {
-        const nextLabels = label.substring(firstLabel.length + 1);
-        return firstNode.get(nextLabels);
-      }
+    if (path.length === 1) {
+      return firstNode;
+    } else if (firstNode) {
+      const nextLabels = label.substring(firstLabel.length + 1);
+      return firstNode.get(nextLabels);
     }
   }
 

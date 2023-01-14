@@ -6,7 +6,7 @@ describe("Memory layers", function() {
 
   describe("matching nodes", function() {
 
-    describe("by property", function() {
+    describe("by text property", function() {
       const PATTERN = {
         nodes: { OBJECT: { label: "object" } },
         paths: [{ path: ["OBJECT"] }]
@@ -34,6 +34,43 @@ describe("Memory layers", function() {
           { OBJECT: "object-2" },
           { OBJECT: "object-3" },
         ]);
+      });
+    });
+
+    describe("by boolean property", function() {
+
+      describe("when matching false", function() {
+        const PATTERN = {
+          nodes: { OBJECT: { label: "object", "busy": false } },
+          paths: [{ path: ["OBJECT"] }]
+        };
+
+        it("when there are no matches", function() {
+          const memory = getMemory("object", 3);
+
+          assertEqual(memory, layers(memory, PATTERN), []);
+        });
+
+        it("when there is a match", function() {
+          const memory = getMemory("object", 3);
+          memory.get("object-2").set("busy", false);
+          memory.get("object-3").set("busy", true);
+
+          assertEqual(memory, layers(memory, PATTERN), [
+            { OBJECT: "object-2" },
+          ]);
+        });
+
+        it("when there are multiple matches", function() {
+          const memory = getMemory("object", 3);
+          memory.get("object-2").set("busy", false);
+          memory.get("object-3").set("busy", false);
+
+          assertEqual(memory, layers(memory, PATTERN), [
+            { OBJECT: "object-2" },
+            { OBJECT: "object-3" },
+          ]);
+        });
       });
     });
 
