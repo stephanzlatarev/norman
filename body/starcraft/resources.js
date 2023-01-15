@@ -1,3 +1,4 @@
+import { linkNexusToCluster } from "./structures.js";
 
 export const RESOURCES = { 
   146: "mineral", 147: "mineral", 341: "mineral", 483: "mineral",
@@ -32,7 +33,7 @@ function ensureNexusesAreLinkedToResources(node, clustersInMemory) {
 
         if ((Math.abs(clusterX - nexusX) <= 10) && (Math.abs(clusterY - nexusY) <= 10)) {
           cluster.set("nexus", nexus);
-          nexus.set("resources", cluster);
+          linkNexusToCluster(nexus, cluster);
         }
       }
     }

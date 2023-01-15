@@ -25,7 +25,9 @@
   "input": [
     "NEXUS/x",
     "NEXUS/y",
-    "stats/pylon"
+    "NEXUS/faceSector",
+    "NEXUS/faceSide",
+    "NEXUS/pylons"
   ],
 
   "output": [
