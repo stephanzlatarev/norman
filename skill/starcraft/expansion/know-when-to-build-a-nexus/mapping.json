@@ -24,7 +24,9 @@
   },
 
   "input": [
-    "minerals"
+    "minerals",
+    "stats/nexus",
+    "stats/pylon"
   ],
 
   "output": [
