@@ -15,14 +15,17 @@
       {
         "label": "LETS-BUILD-A-GATEWAY",
         "path": ["GOAL", "build-a-gateway", "BUILD-A-GATEWAY"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       }
     ]
   },
 
   "input": [
+    "stats/gatewayBuilding",
     "minerals",
     "stats/nexus",
+    "stats/nexusBuilding",
     "stats/pylon",
     "stats/gateway"
   ],

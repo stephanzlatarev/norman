@@ -2,6 +2,8 @@
 
 ============= MILESTONE 1 - Upgrade skills to work with memory
 
+- structures.js to count "gateways" and "gatewaysBuilding" so that skill to build a gateway should choose location without blocking. Same for pylons.
+
 - add skill to scout with zealots. Send one zealot to each resource cluster
 - add skill to attack with army
 

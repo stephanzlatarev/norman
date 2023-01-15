@@ -19,7 +19,7 @@ function countPylonsOfNexuses(node, observation) {
 }
 
 function near(pylon, x, y) {
-  return (Math.abs(pylon.pos.x - x) <= 5) && (Math.abs(pylon.pos.y - y) <= 5);
+  return (Math.abs(pylon.pos.x - x) <= 10) && (Math.abs(pylon.pos.y - y) <= 10);
 }
 
 export function linkNexusToCluster(nexus, cluster) {

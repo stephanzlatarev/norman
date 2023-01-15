@@ -56,11 +56,15 @@ function observeResources(node, resources) {
 }
 
 function observeUnits(node, client, units) {
-  const count = {};
+  const count = {
+    nexus: 0, nexusBuilding: 0,
+    pylon: 0, pylonBuilding: 0,
+    gateway: 0, gatewayBuilding: 0,
+  };
 
   for (const unitInReality of units) {
     const unitType = UNITS[unitInReality.unitType];
-    if (!unitType) continue;
+    if (!unitType || !unitInReality.buildProgress) continue;
 
     const unitInMemory = node.memory.get(node.path + "/" + unitInReality.tag);
     if (!unitInMemory.get("code")) {
@@ -79,17 +83,21 @@ function observeUnits(node, client, units) {
       unitInMemory.set("orderTargetUnitTag", unitInReality.orders[0].targetUnitTag);
 
       if (unitInReality.orders[0].abilityId === 880) {
-        count["nexus"] = count["nexus"] ? count["nexus"] + 1 : 1;
+        count["nexusBuilding"]++;
       }
       if (unitInReality.orders[0].abilityId === 881) {
-        count["pylon"] = count["pylon"] ? count["pylon"] + 1 : 1;
+        count["pylonBuilding"]++;
+      }
+      if (unitInReality.orders[0].abilityId === 883) {
+        count["gatewayBuilding"]++;
       }
     }
 
     unitInMemory.set("x", unitInReality.pos.x);
     unitInMemory.set("y", unitInReality.pos.y);
 
-    count[unitType] = count[unitType] ? count[unitType] + 1 : 1;
+    const statType = unitType + ((unitInReality.buildProgress < 1) ? "Building" : "");
+    count[statType] = count[statType] ? count[statType] + 1 : 1;
   }
 
   const stats = node.memory.get(node.path + "/stats");
