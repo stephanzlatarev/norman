@@ -13,7 +13,6 @@
       "MINERAL": { "unitType": "mineral" },
       "PROBE-1": { "unitType": "probe" },
       "PROBE-2": { "unitType": "probe" },
-      "HARVESTER": { "unitType": "probe" },
       "HARVEST": { "type": "goal" }
     },
 
@@ -29,15 +28,13 @@
         "path": ["CLUSTER", "*", "MINERAL"]
       },
       {
-        "path": ["HARVEST", "harvester", "HARVESTER"]
-      },
-      {
         "path": ["HARVEST", "*", "GOAL"]
       },
       {
         "label": "SELECT-MINERAL-FIELD",
         "path": ["HARVEST", "harvest", "MINERAL"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       },
       {
         "path": ["PROBE-1", "harvest", "MINERAL"],
