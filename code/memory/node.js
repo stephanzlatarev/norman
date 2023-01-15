@@ -83,4 +83,8 @@ export default class Node {
     }
   }
 
+  remove() {
+    this.memory.remove(this);
+  }
+
 }

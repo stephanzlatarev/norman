@@ -48,7 +48,7 @@ export default class Layer {
       const path = label.split("/");
       if (path.length === 1) {
         if (value === -1) {
-          removeNode(this.layer[label]);
+          this.layer[label].remove();
         }
       } else if (path.length === 2) {
         this.layer[path[0]].set(path[1], value);
@@ -72,18 +72,6 @@ export default class Layer {
       } else {
         console.log(key + ":\t-");
       }
-    }
-  }
-}
-
-function removeNode(node) {
-  const index = node.memory.nodes.indexOf(node);
-
-  if (index >= 0) {
-    node.memory.nodes.splice(index, 1);
-
-    for (const one of node.memory.nodes) {
-      one.unlink(node);
     }
   }
 }

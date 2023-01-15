@@ -33,6 +33,18 @@ export default class Memory {
     return node;
   }
 
+  remove(node) {
+    const index = this.nodes.indexOf(node);
+
+    if (index >= 0) {
+      this.nodes.splice(index, 1);
+
+      for (const one of this.nodes) {
+        one.unlink(node);
+      }
+    }
+  }
+
   // TODO: Remove ref(ref)
   ref(ref) {
     return this.refs[ref];
