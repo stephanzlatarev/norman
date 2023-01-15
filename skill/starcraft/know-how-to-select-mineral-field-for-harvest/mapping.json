@@ -55,6 +55,8 @@
     "MINERAL/x",
     "MINERAL/y",
     "NEXUS/operational",
+    "NEXUS/x",
+    "NEXUS/y",
     "HARVESTER/x",
     "HARVESTER/y",
     "PROBE-1",

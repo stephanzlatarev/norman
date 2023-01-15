@@ -5,36 +5,49 @@ export default class KnowHowToSelectMineralFieldForHarvestBrain {
     const mineralX = input[0];
     const mineralY = input[1];
     const mineralNexusIsOperational = input[2];
-    const harvesterX = input[3];
-    const harvesterY = input[4];
-    const probe1 = input[5];
-    const probe2 = input[6];
+    const mineralNexusX = input[3];
+    const mineralNexusY = input[4];
+    const harvesterX = input[5];
+    const harvesterY = input[6];
+    const probe1 = input[7];
+    const probe2 = input[8];
 
-    const previousSelection = input[7];
-    const previousMineralX = input[8];
-    const previousMineralY = input[9];
-    const previousNexusIsOperational = input[10];
+    const previousSelection = input[9];
+    const previousMineralX = input[10];
+    const previousMineralY = input[11];
+    const previousNexusIsOperational = input[12];
+    const previousNexusX = input[13];
+    const previousNexusY = input[14];
 
     if (!probe1 || !probe2 || (probe1 === probe2)) {
       if (!previousSelection) {
         // This is our first choice
-        return [1, mineralX, mineralY, mineralNexusIsOperational];
+        return [1, mineralX, mineralY, mineralNexusIsOperational, mineralNexusX, mineralNexusY];
       }
 
       if (!previousNexusIsOperational && mineralNexusIsOperational) {
         // We prefer operational nexuses
-        return [1, mineralX, mineralY, mineralNexusIsOperational];
+        return [1, mineralX, mineralY, mineralNexusIsOperational, mineralNexusX, mineralNexusY];
       }
-      if (previousNexusIsOperational && !mineralNexusIsOperational) {
+      if (previousNexusIsOperational && !mineralNexusIsOperational, mineralNexusX, mineralNexusY) {
         // We prefer operational nexuses
         return;
       }
 
-      const mineralDistance = distance(harvesterX, harvesterY, mineralX, mineralY);
-      const previousDistance = distance(harvesterX, harvesterY, previousMineralX, previousMineralY);
-      if (mineralDistance < previousDistance) {
+      const mineralNexusDistance = distance(harvesterX, harvesterY, mineralNexusX, mineralNexusY);
+      const previousNexusDistance = distance(harvesterX, harvesterY, previousNexusX, previousNexusY);
+
+      if (mineralNexusDistance < previousNexusDistance) {
         // We prefer mineral fields which are closer to the harvester
-        return [1, mineralX, mineralY, mineralNexusIsOperational];
+        return [1, mineralX, mineralY, mineralNexusIsOperational, mineralNexusX, mineralNexusY];
+      }
+
+      const mineralFieldDistance = distance(mineralX, mineralY, mineralNexusX, mineralNexusY);
+      const previousFieldDistance = distance(previousMineralX, previousMineralY, previousNexusX, previousNexusY);
+
+      if (mineralFieldDistance < previousFieldDistance) {
+        // We prefer mineral fields which are closer to the nexus
+        return [1, mineralX, mineralY, mineralNexusIsOperational, mineralNexusX, mineralNexusY];
       }
 
     }
