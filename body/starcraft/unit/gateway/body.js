@@ -7,6 +7,11 @@ export default class Gateway extends Unit {
   }
 
   async tock() {
+    if (this.node.get("build-zealot")) {
+      super.command(916, null, null, "build-zealot");
+    }
+
+    await super.tock();
   }
 
 }

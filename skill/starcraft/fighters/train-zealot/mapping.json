@@ -1,0 +1,20 @@
+{
+  "label": "train zealot",
+  "goal": "build strength",
+
+  "body": {
+    "code": "body/starcraft/unit/gateway"
+  },
+
+  "input": [
+    "operational",
+    "ordersCount",
+    "game/minerals",
+    "game/foodUsed",
+    "game/foodCap"
+  ],
+
+  "output": [
+    "build-zealot"
+  ]
+}
