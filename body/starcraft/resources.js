@@ -7,6 +7,8 @@ export const RESOURCES = {
   608: "vespene", 880: "vespene", 881: "vespene",
 };
 
+const knowns = {};
+
 export function clusterResources(node, observation) {
   const clustersInMemory = node.memory.get(node.path + "/map/clusters");
 
@@ -14,10 +16,11 @@ export function clusterResources(node, observation) {
     createClustersInMemory(node, clustersInMemory, observation);
   }
 
-  ensureNexusesAreLinkedToResources(node, observation, clustersInMemory);
+  refreshResourcesInMemory(observation, clustersInMemory);
+  ensureNexusesAreLinkedToResources(node, clustersInMemory);
 }
 
-function ensureNexusesAreLinkedToResources(node, observation, clustersInMemory) {
+function ensureNexusesAreLinkedToResources(node, clustersInMemory) {
   for (const nexus of node.links()) {
     if ((nexus.get("unitType") === "nexus") && !nexus.get("resources")) {
       const nexusX = nexus.get("x");
@@ -30,14 +33,21 @@ function ensureNexusesAreLinkedToResources(node, observation, clustersInMemory) 
         if ((Math.abs(clusterX - nexusX) <= 10) && (Math.abs(clusterY - nexusY) <= 10)) {
           cluster.set("nexus", nexus);
           nexus.set("resources", cluster);
-          refreshResourcesInMemory(observation, cluster);
         }
       }
     }
   }
 }
 
-function refreshResourcesInMemory(observation, cluster) {
+function refreshResourcesInMemory(observation, clustersInMemory) {
+  if (observation.rawData.units.find(unit => RESOURCES[unit.unitType] && !knowns[unit.tag])) {
+    for (const cluster of clustersInMemory.links()) {
+      refreshClusterInMemory(observation, cluster);
+    }
+  }
+}
+
+function refreshClusterInMemory(observation, cluster) {
   for (const resource of cluster.links()) {
     const x = resource.get("x");
     const y = resource.get("y");
@@ -54,6 +64,8 @@ function refreshResourcesInMemory(observation, cluster) {
 function createClustersInMemory(node, clustersInMemory, observation) {
   const resources = observation.rawData.units.filter(unit => RESOURCES[unit.unitType]);
   const clusters = findClusters(resources);
+
+  for (const resource of resources) knowns[resource.tag] = true;
 
   for (let i = 0; i < clusters.length; i++) {
     const cluster = clusters[i];
