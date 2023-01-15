@@ -2,20 +2,16 @@
 
 ============= MILESTONE 1 - Upgrade skills to work with memory
 
-- improve skill to build pylons to work on 2nd, 3rd nexus - build pylons relative to RESOURCES+NEXUS
-
-- add skill to build gateway
-- add skill to train zealot
-
-- add skill to scout with zealots
+- add skill to scout with zealots. Send one zealot to each resource cluster
 - add skill to attack with army
 
-- add skill to defend nexus with probes when facing worker rush
+- add skill to defend nexus with probes when facing worker rush. Probes will attack only if an enemy unit attacks their nexus or them. Always attack with two probes against one enemy unit
 
 fix:
   - chronoboost doesn't work the second time. Check if command is properly queued
   - pylon location is changed during command. Check if command is properly queued. Check why issue more than one command.
   - probe building pylon doesn't always go back to harvesting. Check why
+  - "build probe" skill sets "game/minerals" to nexuses
 
 check list:
   - probes are built when enough free psi and when there are less than 16 per nexus. probes cannot be more than 16 x 4 = 64
