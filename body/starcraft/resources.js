@@ -14,10 +14,10 @@ export function clusterResources(node, observation) {
     createClustersInMemory(node, clustersInMemory, observation);
   }
 
-  ensureNexusesAreLinkedToResources(node, clustersInMemory);
+  ensureNexusesAreLinkedToResources(node, observation, clustersInMemory);
 }
 
-function ensureNexusesAreLinkedToResources(node, clustersInMemory) {
+function ensureNexusesAreLinkedToResources(node, observation, clustersInMemory) {
   for (const nexus of node.links()) {
     if ((nexus.get("unitType") === "nexus") && !nexus.get("resources")) {
       const nexusX = nexus.get("x");
@@ -30,8 +30,23 @@ function ensureNexusesAreLinkedToResources(node, clustersInMemory) {
         if ((Math.abs(clusterX - nexusX) <= 10) && (Math.abs(clusterY - nexusY) <= 10)) {
           cluster.set("nexus", nexus);
           nexus.set("resources", cluster);
+          refreshResourcesInMemory(observation, cluster);
         }
       }
+    }
+  }
+}
+
+function refreshResourcesInMemory(observation, cluster) {
+  for (const resource of cluster.links()) {
+    const x = resource.get("x");
+    const y = resource.get("y");
+    const raw = observation.rawData.units.find(one => (one.pos.x === x) && (one.pos.y === y));
+
+    if (!raw) {
+      resource.remove();
+    } else if (raw.tag !== resource.get("tag")) {
+      resource.set("tag", raw.tag);
     }
   }
 }
