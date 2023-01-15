@@ -10,7 +10,7 @@
     "nodes": {
       "BUILD": { "type": "goal" },
       "DIRECTION": { "type": "resources" },
-      "LOCATION": { "type": "location" }
+      "LOCATION": { "type": "location", "purpose": "nexus" }
     },
 
     "paths": [

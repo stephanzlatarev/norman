@@ -1,6 +1,6 @@
 {
-  "label": "know where to build a pylon",
-  "goal": "build a pylon",
+  "label": "know where to build a gateway",
+  "goal": "build a gateway",
 
   "body": {
     "is-game": true
@@ -8,7 +8,7 @@
 
   "memory": {
     "nodes": {
-      "LOCATION": { "type": "location", "purpose": "pylon" },
+      "LOCATION": { "type": "location", "purpose": "gateway" },
       "NEXUS": { "unitType": "nexus" }
     },
 
@@ -27,7 +27,7 @@
     "NEXUS/y",
     "NEXUS/faceSector",
     "NEXUS/faceSide",
-    "NEXUS/pylons"
+    "NEXUS/gateways"
   ],
 
   "output": [

@@ -8,9 +8,12 @@ function countPylonsOfNexuses(node, observation) {
     if (nexus.get("unitType") === "nexus") {
       const x = nexus.get("x");
       const y = nexus.get("y");
-      const pylons = observation.rawData.units.filter(pylon => (pylon.unitType === 60) && (pylon.buildProgress >= 1) && near(pylon, x, y));
 
+      const pylons = observation.rawData.units.filter(pylon => (pylon.unitType === 60) && (pylon.buildProgress >= 1) && near(pylon, x, y));
       nexus.set("pylons", pylons.length);
+
+      const gateways = observation.rawData.units.filter(gateway => (gateway.unitType === 62) && (gateway.buildProgress >= 1) && near(gateway, x, y));
+      nexus.set("gateways", gateways.length);
     }
   }
 }

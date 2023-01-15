@@ -4,6 +4,7 @@ import { observeStructures } from "./structures.js";
 const UNITS = {
   59: "nexus",
   60: "pylon",
+  62: "gateway",
   84: "probe"
 };
 
