@@ -11,6 +11,7 @@
       "NEXUS": { "unitType": "nexus" },
       "CLUSTER": { "type": "resources" },
       "MINERAL": { "unitType": "mineral" },
+      "HARVESTER": { "unitType": "probe" },
       "PROBE-1": { "unitType": "probe" },
       "PROBE-2": { "unitType": "probe" },
       "HARVEST": { "type": "goal" }
@@ -31,6 +32,9 @@
         "path": ["HARVEST", "*", "GOAL"]
       },
       {
+        "path": ["HARVEST", "harvester", "HARVESTER"]
+      },
+      {
         "label": "SELECT-MINERAL-FIELD",
         "path": ["HARVEST", "harvest", "MINERAL"],
         "provisional": true,
@@ -48,6 +52,11 @@
   },
 
   "input": [
+    "MINERAL/x",
+    "MINERAL/y",
+    "NEXUS/operational",
+    "HARVESTER/x",
+    "HARVESTER/y",
     "PROBE-1",
     "PROBE-2"
   ],
