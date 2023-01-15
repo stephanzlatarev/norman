@@ -1,4 +1,5 @@
 import { RESOURCES, clusterResources } from "./resources.js";
+import { observeStructures } from "./structures.js";
 
 const UNITS = {
   59: "nexus",
@@ -17,6 +18,7 @@ export default async function(node, client) {
   const nexus = observation.rawData.units.find(unit => unit.unitType === 59);
 
   clusterResources(node, observation);
+  observeStructures(node, observation);
 
   observeChat(node, client);
   observeResources(node, observation.rawData.units);

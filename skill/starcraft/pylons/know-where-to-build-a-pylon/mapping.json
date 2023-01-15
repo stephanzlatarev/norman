@@ -13,7 +13,7 @@
     },
 
     "paths": [
-      { "path": ["BODY", "homebase", "NEXUS"] },
+      { "path": ["GOAL", "nexus", "NEXUS"] },
       {
         "label": "SET-LOCATION",
         "path": ["GOAL", "location", "LOCATION"],

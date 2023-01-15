@@ -1,0 +1,40 @@
+{
+  "label": "select nexus for pylon",
+  "goal": "build a pylon",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "NEXUS": { "unitType": "nexus" },
+      "ALTERNATIVE": { "unitType": "nexus" }
+    },
+
+    "paths": [
+      { "path": ["NEXUS"] },
+      {
+        "path": ["GOAL", "nexus", "ALTERNATIVE"],
+        "optional": true
+      },
+      {
+        "label": "SELECT-NEXUS",
+        "path": ["GOAL", "nexus", "NEXUS"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "NEXUS",
+    "NEXUS/pylons",
+    "ALTERNATIVE",
+    "ALTERNATIVE/pylons"
+  ],
+
+  "output": [
+    "SELECT-NEXUS"
+  ]
+}
