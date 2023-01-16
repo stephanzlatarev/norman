@@ -26,6 +26,7 @@
     "minerals",
     "foodUsed",
     "stats/nexus",
+    "stats/nexusBuilding",
     "stats/pylon"
   ],
 
