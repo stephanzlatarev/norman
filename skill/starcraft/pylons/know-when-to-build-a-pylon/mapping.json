@@ -27,6 +27,8 @@
     "foodUsed",
     "stats/nexus",
     "stats/nexusBuilding",
+    "stats/gateway",
+    "stats/gatewayBuilding",
     "stats/pylon"
   ],
 

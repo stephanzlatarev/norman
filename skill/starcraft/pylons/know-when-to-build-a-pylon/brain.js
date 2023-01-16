@@ -11,11 +11,13 @@ export default class Brain {
     const foodUsed = input[2];
     const nexusCount = input[3];
     const nexusBuilding = input[4];
-    const pylonCount = input[5];
+    const gatewayCount = input[5];
+    const gatewayBuilding = input[6];
+    const pylonCount = input[7];
     const foodThreshold = nexusCount * 15 + pylonCount * 8 - 5;
 
-    if (pylonCount && (nexusCount + nexusBuilding < 2)) {
-      // Don't build a second pylon before the second nexus is started
+    if (pylonCount && ((nexusCount + nexusBuilding < 2) || (gatewayCount + gatewayBuilding < 1))) {
+      // Don't build a second pylon before the second nexus and first gateway are started
       return;
     }
 
