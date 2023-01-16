@@ -1,9 +1,9 @@
 
 export function observeStructures(node, observation) {
-  countPylonsOfNexuses(node, observation);
+  countStructuresOfNexuses(node, observation);
 }
 
-function countPylonsOfNexuses(node, observation) {
+function countStructuresOfNexuses(node, observation) {
   for (const nexus of node.links()) {
     if (nexus.get("unitType") === "nexus") {
       const x = nexus.get("x");
@@ -14,12 +14,15 @@ function countPylonsOfNexuses(node, observation) {
 
       const gateways = observation.rawData.units.filter(gateway => (gateway.unitType === 62) && (gateway.buildProgress >= 1) && near(gateway, x, y));
       nexus.set("gateways", gateways.length);
+      for (const gateway of gateways) {
+        nexus.set(gateway.tag, node.memory.get(node.path + "/" + gateway.tag));
+      }
     }
   }
 }
 
-function near(pylon, x, y) {
-  return (Math.abs(pylon.pos.x - x) <= 10) && (Math.abs(pylon.pos.y - y) <= 10);
+function near(structure, x, y) {
+  return (Math.abs(structure.pos.x - x) <= 10) && (Math.abs(structure.pos.y - y) <= 10);
 }
 
 export function linkNexusToCluster(nexus, cluster) {

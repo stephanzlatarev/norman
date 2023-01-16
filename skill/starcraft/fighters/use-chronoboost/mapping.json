@@ -1,5 +1,5 @@
 {
-  "label": "use chronoboost",
+  "label": "use chronoboost on gateway",
   "goal": "build strength",
 
   "body": {
@@ -7,10 +7,17 @@
   },
 
   "memory": {
+    "nodes": {
+      "GATEWAY": { "unitType": "gateway" }
+    },
+
     "paths": [
       {
+        "path": ["BODY", "*", "GATEWAY"]
+      },
+      {
         "label": "CHRONOBOOST",
-        "path": ["BODY", "chronoboost", "BODY"],
+        "path": ["BODY", "chronoboost", "GATEWAY"],
         "provisional": true
       }
     ]
@@ -19,7 +26,7 @@
   "input": [
     "operational",
     "energy",
-    "gateways"
+    "GATEWAY"
   ],
 
   "output": [
