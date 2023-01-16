@@ -91,7 +91,14 @@ function isMatchingAny(commands, abilityId, targetUnitTag, targetWorldSpacePos) 
 function isMatchingOne(command, abilityId, targetUnitTag, targetWorldSpacePos) {
   if (command.abilityId !== abilityId) return false;
   if ((command.targetUnitTag || targetUnitTag) && (command.targetUnitTag !== targetUnitTag)) return false;
-  if ((command.targetWorldSpacePos || targetWorldSpacePos) &&
-      ((command.targetWorldSpacePos.x !== targetWorldSpacePos.x) || (command.targetWorldSpacePos.y !== targetWorldSpacePos.y))) return false;
+  if (!isMatchingPos(command.targetWorldSpacePos, targetWorldSpacePos)) return false;
+  return true;
+}
+
+function isMatchingPos(a, b) {
+  if (!a !== !b) return false;
+  if (!a && !b) return true;
+  if (Math.abs(a.x - b.x) > 1) return false;
+  if (Math.abs(a.y - b.y) > 1) return false;
   return true;
 }
