@@ -8,12 +8,16 @@
 
   "memory": {
     "nodes": {
+      "STATS": { "code": "body/starcraft/unit/army" },
       "LOCATION": { "type": "resources" },
       "ALTERNATIVE": { "type": "resources" },
       "PARTNER": { "unitType": "zealot" }
     },
 
     "paths": [
+      {
+        "path": ["STATS"]
+      },
       {
         "path": ["LOCATION"]
       },
@@ -35,9 +39,11 @@
   },
 
   "input": [
+    "LOCATION",
     "ALTERNATIVE",
     "BODY",
-    "PARTNER"
+    "PARTNER",
+    "STATS/enemyCount"
   ],
 
   "output": [

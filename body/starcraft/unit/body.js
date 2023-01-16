@@ -50,8 +50,10 @@ export default class Unit {
     if (isMatchingAny(this.node.get("orders"), abilityId, targetUnitTag, targetWorldSpacePos)) return;
     if (isMatchingAny(this.pendingCommands, abilityId, targetUnitTag, targetWorldSpacePos)) return;
 
+    const unitTag = this.node.get("tag");
+    const unitTags = Array.isArray(unitTag) ? unitTag : [unitTag];
     const command = {
-      unitTags: [this.node.get("tag")],
+      unitTags: unitTags,
       abilityId: abilityId,
       queueCommand: !!this.actions.length,
       memoryLabel: memoryLabel,

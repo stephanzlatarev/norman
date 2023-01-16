@@ -1,0 +1,45 @@
+{
+  "label": "fight",
+  "goal": "build strength",
+
+  "body": {
+    "code": "body/starcraft/unit/army"
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": { "type": "location", "purpose": "fight" }
+    },
+
+    "paths": [
+      {
+        "label": "RALLY",
+        "path": ["BODY", "rally", "LOCATION"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "ATTACK",
+        "path": ["BODY", "attack", "LOCATION"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "armyCount",
+    "armyX",
+    "armyY",
+    "enemyCount",
+    "enemyX",
+    "enemyY"
+  ],
+
+  "output": [
+    "RALLY",
+    "ATTACK",
+    "LOCATION/x",
+    "LOCATION/y"
+  ]
+}

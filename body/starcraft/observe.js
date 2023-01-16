@@ -28,7 +28,7 @@ export default async function(node, client) {
   observeResources(node, observation.rawData.units);
   observeUnits(node, client, observation.rawData.units);
 
-  observeMilitary(node, observation);
+  observeMilitary(node, client, observation);
 
   if (!nexus) {
     node.set("over", true);
