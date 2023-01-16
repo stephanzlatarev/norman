@@ -1,5 +1,6 @@
 import { RESOURCES, clusterResources } from "./resources.js";
 import { observeStructures } from "./structures.js";
+import { observeMilitary } from "./military.js";
 
 const UNITS = {
   59: "nexus",
@@ -11,13 +12,14 @@ const UNITS = {
 
 export default async function(node, client) {
   const observation = (await client.observation()).observation;
+  const nexus = observation.rawData.units.find(unit => unit.unitType === 59);
+
+  await observePlayers(node, client, observation, nexus);
 
   node.set("time", observation.gameLoop);
   node.set("minerals", observation.playerCommon.minerals);
   node.set("foodUsed", observation.playerCommon.foodUsed);
   node.set("foodCap", observation.playerCommon.foodCap);
-
-  const nexus = observation.rawData.units.find(unit => unit.unitType === 59);
 
   clusterResources(node, observation);
   observeStructures(node, observation);
@@ -26,12 +28,30 @@ export default async function(node, client) {
   observeResources(node, observation.rawData.units);
   observeUnits(node, client, observation.rawData.units);
 
+  observeMilitary(node, observation);
+
   if (!nexus) {
     node.set("over", true);
   } else if (!node.get("homebase")) {
     const homebase = node.memory.get(node.path + "/" + nexus.tag);
     node.set("homebase", homebase);
     homebase.set("homebase", true)
+  }
+}
+
+async function observePlayers(node, client, observation, nexus) {
+  if (!node.get("owner")) {
+    const gameInfo = await client.gameInfo();
+
+    const owner = nexus.owner;
+    node.set("owner", owner);
+
+    for (const player of gameInfo.playerInfo) {
+      if (owner !== player.playerId) {
+        node.set("enemy", player.playerId);
+        break;
+      }
+    }
   }
 }
 
