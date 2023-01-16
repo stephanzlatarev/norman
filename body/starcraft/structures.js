@@ -1,5 +1,13 @@
 
 export function observeStructures(node, observation) {
+  if (!node.get("homebase")) {
+    const nexus = observation.rawData.units.find(unit => unit.unitType === 59);
+    const homebase = node.memory.get(node.path + "/" + nexus.tag);
+
+    node.set("homebase", homebase);
+    homebase.set("homebase", true);
+  }
+
   countStructuresOfNexuses(node, observation);
 }
 
@@ -9,10 +17,10 @@ function countStructuresOfNexuses(node, observation) {
       const x = nexus.get("x");
       const y = nexus.get("y");
 
-      const pylons = observation.rawData.units.filter(pylon => (pylon.unitType === 60) && (pylon.buildProgress >= 1) && near(pylon, x, y));
+      const pylons = observation.ownUnits.filter(pylon => (pylon.unitType === 60) && (pylon.buildProgress >= 1) && near(pylon, x, y));
       nexus.set("pylons", pylons.length);
 
-      const gateways = observation.rawData.units.filter(gateway => (gateway.unitType === 62) && (gateway.buildProgress >= 1) && near(gateway, x, y));
+      const gateways = observation.ownUnits.filter(gateway => (gateway.unitType === 62) && (gateway.buildProgress >= 1) && near(gateway, x, y));
       nexus.set("gateways", gateways.length);
       for (const gateway of gateways) {
         nexus.set(gateway.tag, node.memory.get(node.path + "/" + gateway.tag));

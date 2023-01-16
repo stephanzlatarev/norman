@@ -14,7 +14,7 @@ export function observeMilitary(node, client, observation) {
 }
 
 function observeArmy(army, observation) {
-  const armyUnits = observation.rawData.units.filter(unit => (unit.unitType === 73));
+  const armyUnits = observation.ownUnits.filter(unit => (unit.unitType === 73));
 
   if (army.get("enemyCount") && armyUnits.length) {
     const leaderTag = army.get("leaderTag");
@@ -34,7 +34,7 @@ function observeArmy(army, observation) {
 
     army.set("leaderTag", leader.tag);
     army.set("tag", armyUnits.map(unit => unit.tag));
-    army.set("armyCount", armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 8)).length);
+    army.set("armyCount", armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10) || isFighting(unit)).length);
     army.set("armyX", leader.pos.x);
     army.set("armyY", leader.pos.y);
   } else {
@@ -50,7 +50,7 @@ function observeEnemy(game, army, homebase, observation) {
   const homebaseX = homebase.get("x");
   const homebaseY = homebase.get("y");
 
-  const enemyUnits = observation.rawData.units.filter(unit => (!unit.isFlying && unit.owner && (unit.owner === enemy)));
+  const enemyUnits = observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === enemy)));
   enemyUnits.sort((a, b) => {
     const da = (a.pos.x - homebaseX) * (a.pos.x - homebaseX) + (a.pos.y - homebaseY) * (a.pos.y - homebaseY);
     const db = (b.pos.x - homebaseX) * (b.pos.x - homebaseX) + (b.pos.y - homebaseY) * (b.pos.y - homebaseY);
@@ -68,6 +68,13 @@ function observeEnemy(game, army, homebase, observation) {
     army.clear("enemyX");
     army.clear("enemyY");
   }
+}
+
+function isFighting(unit) {
+  if (!unit.orders.length) return false;
+
+  const ability = unit.orders[0].abilityId;
+  return ((ability === 3674) || (ability === 23) || (ability === 2048));
 }
 
 function isLocationVisible(observation, owner, x, y) {

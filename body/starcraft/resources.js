@@ -10,7 +10,7 @@ export const RESOURCES = {
 
 const knowns = {};
 
-export function clusterResources(node, observation) {
+export function observeResources(node, observation) {
   const clustersInMemory = node.memory.get(node.path + "/map/clusters");
 
   if (!clustersInMemory.links().length) {

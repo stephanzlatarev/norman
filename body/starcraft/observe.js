@@ -1,4 +1,4 @@
-import { RESOURCES, clusterResources } from "./resources.js";
+import { observeResources } from "./resources.js";
 import { observeStructures } from "./structures.js";
 import { observeMilitary } from "./military.js";
 
@@ -12,38 +12,31 @@ const UNITS = {
 
 export default async function(node, client) {
   const observation = (await client.observation()).observation;
-  const nexus = observation.rawData.units.find(unit => unit.unitType === 59);
+  const owner = await observePlayers(node, client, observation);
 
-  await observePlayers(node, client, observation, nexus);
+  observation.ownUnits = observation.rawData.units.filter(unit => unit.owner === owner);
 
   node.set("time", observation.gameLoop);
   node.set("minerals", observation.playerCommon.minerals);
   node.set("foodUsed", observation.playerCommon.foodUsed);
   node.set("foodCap", observation.playerCommon.foodCap);
 
-  clusterResources(node, observation);
-  observeStructures(node, observation);
-
   observeChat(node, client);
-  observeResources(node, observation.rawData.units);
-  observeUnits(node, client, observation.rawData.units);
-
+  observeResources(node, observation);
+  observeStructures(node, observation);
+  observeUnits(node, client, observation.ownUnits);
   observeMilitary(node, client, observation);
 
-  if (!nexus) {
+  if (!node.get("homebase")) {
     node.set("over", true);
-  } else if (!node.get("homebase")) {
-    const homebase = node.memory.get(node.path + "/" + nexus.tag);
-    node.set("homebase", homebase);
-    homebase.set("homebase", true)
   }
 }
 
-async function observePlayers(node, client, observation, nexus) {
+async function observePlayers(node, client, observation) {
   if (!node.get("owner")) {
     const gameInfo = await client.gameInfo();
 
-    const owner = nexus.owner;
+    const owner = observation.rawData.units.find(unit => unit.unitType === 59).owner;
     node.set("owner", owner);
 
     for (const player of gameInfo.playerInfo) {
@@ -52,7 +45,11 @@ async function observePlayers(node, client, observation, nexus) {
         break;
       }
     }
+
+    return owner;
   }
+
+  return node.get("owner");
 }
 
 function observeChat(node, client) {
@@ -60,19 +57,6 @@ function observeChat(node, client) {
 
   if (!chat.get("code")) {
     chat.set("code", "body/starcraft/chat").set("channel", client).set("game", node);
-  }
-}
-
-function observeResources(node, resources) {
-  for (const resourceInReality of resources) {
-    const unitType = RESOURCES[resourceInReality.unitType];
-    if (!unitType) continue;
-
-    const resourceInMemory = node.memory.get(node.path + "/" + resourceInReality.tag);
-    if (!resourceInMemory.get("unitType")) {
-      resourceInMemory.set("unitType", unitType).set("tag", resourceInReality.tag)
-      .set("x", resourceInReality.pos.x).set("y", resourceInReality.pos.y);
-    }
   }
 }
 
