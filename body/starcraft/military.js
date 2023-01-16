@@ -9,30 +9,34 @@ export function observeMilitary(node, client, observation) {
 
   if (homebase) {
     observeEnemy(node, army, homebase, observation);
-    observeArmy(army, homebase, observation);
+    observeArmy(army, observation);
   }
 }
 
-function observeArmy(army, homebase, observation) {
+function observeArmy(army, observation) {
   const armyUnits = observation.rawData.units.filter(unit => (unit.unitType === 73));
 
   if (army.get("enemyCount") && armyUnits.length) {
-    const homebaseX = homebase.get("x");
-    const homebaseY = homebase.get("y");
-    const midX = (homebaseX + army.get("enemyX") * 3) / 4;
-    const midY = (homebaseY + army.get("enemyY") * 3) / 4;
+    const leaderTag = army.get("leaderTag");
+    let leader = leaderTag ? armyUnits.find(unit => (unit.tag === leaderTag)) : null;
 
-    armyUnits.sort((a, b) => {
-      const da = (a.pos.x - midX) * (a.pos.x - midX) + (a.pos.y - midY) * (a.pos.y - midY);
-      const db = (b.pos.x - midX) * (b.pos.x - midX) + (b.pos.y - midY) * (b.pos.y - midY);
-      return da - db;
-    });
-    const midUnit = armyUnits[0];
+    if (!leader) {
+      const enemyX = army.set("enemyX");
+      const enemyY = army.set("enemyY");
+      const candidates = armyUnits.filter(unit => !near(unit, enemyX, enemyY, 24));
+      candidates.sort((a, b) => {
+        const da = (a.pos.x - enemyX) * (a.pos.x - enemyX) + (a.pos.y - enemyY) * (a.pos.y - enemyY);
+        const db = (b.pos.x - enemyX) * (b.pos.x - enemyX) + (b.pos.y - enemyY) * (b.pos.y - enemyY);
+        return da - db;
+      });
+      leader = candidates[0];
+    }
 
+    army.set("leaderTag", leader.tag);
     army.set("tag", armyUnits.map(unit => unit.tag));
-    army.set("armyCount", armyUnits.filter(unit => near(unit, midUnit.pos.x, midUnit.pos.y, 18)).length);
-    army.set("armyX", midUnit.pos.x);
-    army.set("armyY", midUnit.pos.y);
+    army.set("armyCount", armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 8)).length);
+    army.set("armyX", leader.pos.x);
+    army.set("armyY", leader.pos.y);
   } else {
     army.set("armyCount", 0);
     army.clear("armyX");
@@ -55,7 +59,8 @@ function observeEnemy(game, army, homebase, observation) {
   const enemyUnit = enemyUnits.length ? enemyUnits[0] : null;
 
   if (enemyUnit) {
-    army.set("enemyCount", enemyUnits.length);
+    const oldEnemyCount = army.get("enemyCount");
+    army.set("enemyCount", Math.max(enemyUnits.length, oldEnemyCount ? oldEnemyCount : 0));
     army.set("enemyX", enemyUnit.pos.x);
     army.set("enemyY", enemyUnit.pos.y);
   } else if (isLocationVisible(observation, owner, army.get("enemyX"), army.get("enemyY"))) {
