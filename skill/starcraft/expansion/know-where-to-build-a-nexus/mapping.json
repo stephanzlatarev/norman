@@ -55,8 +55,6 @@
   ],
 
   "output": [
-    "SET-DIRECTION",
-    null,
-    null
+    "SET-DIRECTION"
   ]
 }
