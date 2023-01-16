@@ -2,10 +2,11 @@
 
 ============= MILESTONE 1 - Upgrade skills to work with memory
 
-- add skill to scout with zealots. Send one zealot to each resource cluster
-- add skill to attack with army
+- add skill to attack with army. Detect enemy closest to homebase. When enemy is detected, even if not in sight, switch from "scout" to "attack" mode. When no enemy is in sight and the position of the last detected enemy is clear of enemies, switch to "scout" mode. Scout skill requires "scout" mode. When in "attack" mode and army (biggest group of zealots close together) is stronger than visible enemy, then attack it.  When in "attack" mode and army is weaker than visible enemy, then rally army to zealot with mean location.
 
 - add skill to defend nexus with probes when facing worker rush. Probes will attack only if an enemy unit attacks their nexus or them. Always attack with two probes against one enemy unit
+
+- add ownUnits to observe.js
 
 fix:
   - "build probe" skill sets "game/minerals" to nexuses
