@@ -1,0 +1,46 @@
+{
+  "label": "scout",
+  "goal": "build strength",
+
+  "body": {
+    "code": "body/starcraft/unit/zealot"
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": { "type": "resources" },
+      "ALTERNATIVE": { "type": "resources" },
+      "PARTNER": { "unitType": "zealot" }
+    },
+
+    "paths": [
+      {
+        "path": ["LOCATION"]
+      },
+      {
+        "path": ["PARTNER", "scout", "LOCATION"],
+        "optional": true
+      },
+      {
+        "path": ["BODY", "scout", "ALTERNATIVE"],
+        "optional": true
+      },
+      {
+        "label": "SCOUT",
+        "path": ["BODY", "scout", "LOCATION"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "ALTERNATIVE",
+    "BODY",
+    "PARTNER"
+  ],
+
+  "output": [
+    "SCOUT"
+  ]
+}
