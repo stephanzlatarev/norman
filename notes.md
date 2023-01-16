@@ -2,17 +2,12 @@
 
 ============= MILESTONE 1 - Upgrade skills to work with memory
 
-- structures.js to count "gateways" and "gatewaysBuilding" so that skill to build a gateway should choose location without blocking. Same for pylons.
-
 - add skill to scout with zealots. Send one zealot to each resource cluster
 - add skill to attack with army
 
 - add skill to defend nexus with probes when facing worker rush. Probes will attack only if an enemy unit attacks their nexus or them. Always attack with two probes against one enemy unit
 
 fix:
-  - chronoboost doesn't work the second time. Check if command is properly queued
-  - pylon location is changed during command. Check if command is properly queued. Check why issue more than one command.
-  - probe building pylon doesn't always go back to harvesting. Check why
   - "build probe" skill sets "game/minerals" to nexuses
 
 check list:
