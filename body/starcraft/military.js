@@ -21,8 +21,8 @@ function observeArmy(army, observation) {
     let leader = leaderTag ? armyUnits.find(unit => (unit.tag === leaderTag)) : null;
 
     if (!leader) {
-      const enemyX = army.set("enemyX");
-      const enemyY = army.set("enemyY");
+      const enemyX = army.get("enemyX");
+      const enemyY = army.get("enemyY");
       const candidates = armyUnits.filter(unit => !near(unit, enemyX, enemyY, 24));
       candidates.sort((a, b) => {
         const da = (a.pos.x - enemyX) * (a.pos.x - enemyX) + (a.pos.y - enemyY) * (a.pos.y - enemyY);
@@ -39,6 +39,7 @@ function observeArmy(army, observation) {
     army.set("armyY", leader.pos.y);
   } else {
     army.set("armyCount", 0);
+    army.clear("leaderTag");
     army.clear("armyX");
     army.clear("armyY");
   }

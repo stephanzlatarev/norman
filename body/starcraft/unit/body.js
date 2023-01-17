@@ -22,7 +22,7 @@ export default class Unit {
     for (let i = this.progressingCommands.length - 1; i >= 0; i--) {
       const command = this.progressingCommands[i];
 
-      if (!isMatchingAny(orders, command.abilityId, command.targetUnitTag, command.targetWorldSpacePos)) {
+      if (!isMatchingAny(orders, command.unitTags, command.abilityId, command.targetUnitTag, command.targetWorldSpacePos)) {
         this.completedCommands.push(command);
         this.progressingCommands.splice(i, 1);
       }
@@ -31,7 +31,7 @@ export default class Unit {
     for (let i = this.pendingCommands.length - 1; i >= 0; i--) {
       const command = this.pendingCommands[i];
 
-      if (isMatchingAny(orders, command.abilityId, command.targetUnitTag, command.targetWorldSpacePos)) {
+      if (isMatchingAny(orders, command.unitTags, command.abilityId, command.targetUnitTag, command.targetWorldSpacePos)) {
         this.progressingCommands.push(command);
       } else {
         // The command has been executed immediately
@@ -47,11 +47,12 @@ export default class Unit {
   }
 
   command(abilityId, targetUnitTag, targetWorldSpacePos, memoryLabel) {
-    if (isMatchingAny(this.node.get("orders"), abilityId, targetUnitTag, targetWorldSpacePos)) return;
-    if (isMatchingAny(this.pendingCommands, abilityId, targetUnitTag, targetWorldSpacePos)) return;
-
     const unitTag = this.node.get("tag");
     const unitTags = Array.isArray(unitTag) ? unitTag : [unitTag];
+
+    if (isMatchingAny(this.node.get("orders"), unitTags, abilityId, targetUnitTag, targetWorldSpacePos)) return;
+    if (isMatchingAny(this.pendingCommands, unitTags, abilityId, targetUnitTag, targetWorldSpacePos)) return;
+
     const command = {
       unitTags: unitTags,
       abilityId: abilityId,
@@ -84,14 +85,15 @@ export default class Unit {
 
 }
 
-function isMatchingAny(commands, abilityId, targetUnitTag, targetWorldSpacePos) {
+function isMatchingAny(commands, unitTags, abilityId, targetUnitTag, targetWorldSpacePos) {
   for (const command of commands) {
-    if (isMatchingOne(command, abilityId, targetUnitTag, targetWorldSpacePos)) return true;
+    if (isMatchingOne(command, unitTags, abilityId, targetUnitTag, targetWorldSpacePos)) return true;
   }
 }
 
-function isMatchingOne(command, abilityId, targetUnitTag, targetWorldSpacePos) {
+function isMatchingOne(command, unitTags, abilityId, targetUnitTag, targetWorldSpacePos) {
   if (command.abilityId !== abilityId) return false;
+  if (command.unitTags && !isMatchingArray(command.unitTags, unitTags)) return false;
   if ((command.targetUnitTag || targetUnitTag) && (command.targetUnitTag !== targetUnitTag)) return false;
   if (!isMatchingPos(command.targetWorldSpacePos, targetWorldSpacePos)) return false;
   return true;
@@ -103,4 +105,8 @@ function isMatchingPos(a, b) {
   if (Math.abs(a.x - b.x) > 1) return false;
   if (Math.abs(a.y - b.y) > 1) return false;
   return true;
+}
+
+function isMatchingArray(a, b) {
+  return JSON.stringify(a.sort()) === JSON.stringify(b.sort());
 }
