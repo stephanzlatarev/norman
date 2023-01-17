@@ -11,7 +11,8 @@
     "ordersCount",
     "game/minerals",
     "game/foodUsed",
-    "game/foodCap"
+    "game/foodCap",
+    "game/stats/probe"
   ],
 
   "output": [
