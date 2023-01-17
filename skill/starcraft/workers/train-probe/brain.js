@@ -9,7 +9,7 @@ export default class Brain {
     const foodCap = input[4];
 
     if (isOperational && (orders === 0) && (minerals >= 50) && (foodUsed < foodCap)) {
-      return [1, minerals - 50];
+      return [1];
     }
   }
 
