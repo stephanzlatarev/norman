@@ -25,6 +25,7 @@ export default async function(node, client) {
   observeResources(node, observation);
   observeStructures(node, observation);
   observeUnits(node, client, observation.ownUnits);
+  removeDeadUnits(node, observation);
   observeMilitary(node, client, observation);
 
   if (!node.get("homebase")) {
@@ -109,4 +110,21 @@ function observeUnits(node, client, units) {
   for (const unitType in count) {
     stats.set(unitType, count[unitType]);
   }
+}
+
+function removeDeadUnits(node, observation) {
+  for (const unitInMemory of node.links()) {
+    if (isUnitObserved(unitInMemory) && !isUnitPresent(observation, unitInMemory)) {
+      unitInMemory.remove();
+    }
+  }
+}
+
+function isUnitObserved(unitInMemory) {
+  return typeof(unitInMemory.get("tag")) === "string";
+}
+
+function isUnitPresent(observation, unitInMemory) {
+  const tag = unitInMemory.get("tag");
+  return !!observation.rawData.units.find(unit => unit.tag === tag);
 }
