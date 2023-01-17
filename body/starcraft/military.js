@@ -39,6 +39,7 @@ function observeArmy(army, observation) {
     army.set("armyY", leader.pos.y);
   } else {
     army.set("armyCount", 0);
+    army.set("tag", []);
     army.clear("leaderTag");
     army.clear("armyX");
     army.clear("armyY");
