@@ -1,0 +1,46 @@
+{
+  "label": "defend",
+  "goal": "build strength",
+
+  "body": {
+    "code": "body/starcraft/unit/probe"
+  },
+
+  "memory": {
+    "nodes": {
+      "HOMEBASE": { "unitType": "nexus", "homebase": true },
+      "MILITARY": { "code": "body/starcraft/unit/army" },
+      "ENEMY": { "type": "location", "purpose": "defend" }
+    },
+
+    "paths": [
+      {
+        "path": ["HOMEBASE"]
+      },
+      {
+        "path": ["MILITARY"]
+      },
+      {
+        "label": "ATTACK",
+        "path": ["BODY", "attack", "ENEMY"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "HOMEBASE/x",
+    "HOMEBASE/y",
+    "game/stats/zealot",
+    "MILITARY/enemyCount",
+    "MILITARY/enemyX",
+    "MILITARY/enemyY"
+  ],
+
+  "output": [
+    "ATTACK",
+    "ENEMY/x",
+    "ENEMY/y"
+  ]
+}

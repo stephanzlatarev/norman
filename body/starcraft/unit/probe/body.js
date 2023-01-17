@@ -7,7 +7,13 @@ export default class Probe extends Unit {
   }
 
   async tock() {
-    if (this.node.get("build-nexus")) {
+    if (this.node.get("attack")) {
+      const location = this.node.get("attack");
+      const locationX = location.get("x");
+      const locationY = location.get("y");
+
+      super.command(3674, null, { x: locationX, y: locationY }, "attack");
+    } else if (this.node.get("build-nexus")) {
       const location = this.node.get("build-nexus");
       const x = location.get("x");
       const y = location.get("y");
