@@ -10,15 +10,20 @@ const RESOURCES = {
   608: "vespene", 880: "vespene", 881: "vespene",
 };
 
-export const MAP = "HardwireAIE";
+export const MAP = "BerlingradAIE";
 
 export function read() {
   return JSON.parse(fs.readFileSync(MAPS_FILE));
 }
 
-export function resources() {
+export function minerals() {
   const data = read()[MAP];
-  return data.units.filter(unit => RESOURCES[unit.unitType]);
+  return data.units.filter(unit => (RESOURCES[unit.unitType] === "mineral"));
+}
+
+export function vespenes() {
+  const data = read()[MAP];
+  return data.units.filter(unit => (RESOURCES[unit.unitType] === "vespene"));
 }
 
 export function map(filter) {
@@ -120,8 +125,8 @@ export function prefix(map, x, y, w, h) {
     prefix.push(line);
   }
 
-  for (let row = maxy - 1; row >= miny; row--) {
-    for (let col = maxx - 1; col >= minx; col--) {
+  for (let row = Math.min(maxy - 1, map.length - 1); row >= Math.max(miny, 0); row--) {
+    for (let col = Math.min(maxx - 1, map[row].length - 1); col >= Math.max(minx, 0); col--) {
       if (map[row][col] !== " ") continue;
 
       const cell = prefix[row][col];
@@ -141,8 +146,8 @@ export function plot(prefix, width, height, minX, minY, maxX, maxY, centerX, cen
   let best = 1000000;
   let plot = { x:0, y: 0, w: 0, h: 0 };
 
-  for (let y = minY; y <= maxY; y++) {
-    for (let x = minX; x <= maxX; x++) {
+  for (let y = Math.max(minY, 0); y <= Math.min(maxY, prefix.length - 1); y++) {
+    for (let x = Math.max(minX, 0); x <= Math.min(maxX, prefix[y].length - 1); x++) {
       const cell = prefix[y][x];
 
       if ((cell.w >= width) && (cell.h >= height)) {
