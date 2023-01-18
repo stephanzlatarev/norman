@@ -8,12 +8,14 @@
 
   "memory": {
     "nodes": {
-      "LOCATION": { "type": "location", "purpose": "gateway" },
-      "NEXUS": { "unitType": "nexus" }
+      "DIRECTION": { "type": "resources" },
+      "NEXUS": { "unitType": "nexus" },
+      "LOCATION": { "type": "location", "purpose": "gateway" }
     },
 
     "paths": [
       { "path": ["GOAL", "nexus", "NEXUS"] },
+      { "path": ["DIRECTION", "nexus", "NEXUS"] },
       {
         "label": "SET-LOCATION",
         "path": ["GOAL", "location", "LOCATION"],
@@ -23,8 +25,8 @@
   },
 
   "input": [
-    "NEXUS/x",
-    "NEXUS/y",
+    "DIRECTION/baseX",
+    "DIRECTION/baseY",
     "NEXUS/gateways"
   ],
 

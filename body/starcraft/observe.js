@@ -21,8 +21,9 @@ export default async function(node, client) {
   node.set("foodUsed", observation.playerCommon.foodUsed);
   node.set("foodCap", observation.playerCommon.foodCap);
 
+  await observeResources(node, client, observation);
+
   observeChat(node, client);
-  observeResources(node, observation);
   observeStructures(node, observation);
   observeUnits(node, client, observation.ownUnits);
   removeDeadUnits(node, observation);

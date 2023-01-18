@@ -30,8 +30,8 @@
   },
 
   "input": [
-    "DIRECTION/x",
-    "DIRECTION/y"
+    "DIRECTION/nexusX",
+    "DIRECTION/nexusY"
   ],
 
   "output": [
