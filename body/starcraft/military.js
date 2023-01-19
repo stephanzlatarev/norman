@@ -34,6 +34,10 @@ function observeArmy(army, observation) {
       leader = candidates[0];
     }
 
+    if (!leader) {
+      leader = armyUnits[0];
+    }
+
     army.set("leaderTag", leader.tag);
     army.set("tag", armyUnits.map(unit => unit.tag));
     army.set("armyCount", armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10) || isFighting(unit)).length);
