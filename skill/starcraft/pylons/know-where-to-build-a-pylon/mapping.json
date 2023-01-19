@@ -8,25 +8,24 @@
 
   "memory": {
     "nodes": {
-      "DIRECTION": { "type": "resources" },
       "NEXUS": { "unitType": "nexus" },
       "LOCATION": { "type": "location", "purpose": "pylon" }
     },
 
     "paths": [
       { "path": ["GOAL", "nexus", "NEXUS"] },
-      { "path": ["DIRECTION", "nexus", "NEXUS"] },
       {
         "label": "SET-LOCATION",
         "path": ["GOAL", "location", "LOCATION"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       }
     ]
   },
 
   "input": [
-    "DIRECTION/baseX",
-    "DIRECTION/baseY",
+    "NEXUS/baseX",
+    "NEXUS/baseY",
     "NEXUS/pylons"
   ],
 

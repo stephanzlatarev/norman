@@ -1,5 +1,5 @@
 
-export default class BuildAPylonBrain {
+export default class Brain {
 
   react(input) {
     const builder = input[0];

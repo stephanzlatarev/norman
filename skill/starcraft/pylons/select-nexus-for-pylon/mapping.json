@@ -8,13 +8,11 @@
 
   "memory": {
     "nodes": {
-      "DIRECTION": { "type": "resources" },
       "NEXUS": { "unitType": "nexus" },
       "ALTERNATIVE": { "unitType": "nexus" }
     },
 
     "paths": [
-      { "path": ["DIRECTION", "nexus", "NEXUS"] },
       {
         "path": ["GOAL", "nexus", "ALTERNATIVE"],
         "optional": true
@@ -29,9 +27,9 @@
   },
 
   "input": [
-    "DIRECTION/baseX",
-    "DIRECTION/baseY",
     "NEXUS",
+    "NEXUS/baseX",
+    "NEXUS/baseY",
     "NEXUS/pylons",
     "ALTERNATIVE",
     "ALTERNATIVE/pylons"

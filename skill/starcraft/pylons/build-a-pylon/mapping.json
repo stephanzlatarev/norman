@@ -23,7 +23,8 @@
       {
         "label": "NEW-ASSIGNMENT",
         "path": ["PROBE", "build-pylon", "LOCATION"],
-        "provisional": true
+        "provisional": true,
+        "unique": true
       }
     ]
   },
