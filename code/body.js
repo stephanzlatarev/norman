@@ -33,7 +33,7 @@ export default class Body {
     await traverse(this.node, async function(node) {
       const body = node.get("body");
       if (body && body.tick) {
-        await body.tick(this.memory);
+        await body.tick();
       }
     }.bind(this));
   }
@@ -43,7 +43,7 @@ export default class Body {
     await traverse(this.node, async function(node) {
       const body = node.get("body");
       if (body && body.tock) {
-        await body.tock(this.memory);
+        await body.tock();
       }
     }.bind(this));
   }
