@@ -20,6 +20,12 @@ function countStructuresOfNexuses(node, observation) {
       const pylons = observation.ownUnits.filter(pylon => (pylon.unitType === 60) && (pylon.buildProgress >= 1) && near(pylon, x, y));
       nexus.set("pylons", pylons.length);
 
+      const assimilators = observation.ownUnits.filter(assimilator => (assimilator.unitType === 61) && (assimilator.buildProgress >= 1) && near(assimilator, x, y));
+      nexus.set("assimilators", assimilators.length);
+      for (const assimilator of assimilators) {
+        nexus.set(assimilator.tag, node.memory.get(node.path + "/" + assimilator.tag));
+      }
+
       const gateways = observation.ownUnits.filter(gateway => (gateway.unitType === 62) && (gateway.buildProgress >= 1) && near(gateway, x, y));
       nexus.set("gateways", gateways.length);
       for (const gateway of gateways) {

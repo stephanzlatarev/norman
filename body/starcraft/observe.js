@@ -5,6 +5,7 @@ import { observeMilitary } from "./military.js";
 const UNITS = {
   59: "nexus",
   60: "pylon",
+  61: "assimilator",
   62: "gateway",
   73: "zealot",
   84: "probe"
@@ -94,6 +95,9 @@ function observeUnits(node, client, units) {
       }
       if (unitInReality.orders[0].abilityId === 881) {
         count["pylonBuilding"]++;
+      }
+      if (unitInReality.orders[0].abilityId === 882) {
+        count["assimilatorBuilding"]++;
       }
       if (unitInReality.orders[0].abilityId === 883) {
         count["gatewayBuilding"]++;

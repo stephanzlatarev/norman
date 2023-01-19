@@ -1,0 +1,29 @@
+{
+  "label": "collect vespene",
+  "goal": "build strength",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "COLLECT-VESPENE": { "label": "collect vespene", "type": "goal" }
+    },
+
+    "paths": [
+      {
+        "label": "LETS-COLLECT-VESPENE",
+        "path": ["GOAL", "collect-vespene", "COLLECT-VESPENE"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [],
+
+  "output": [
+    "LETS-COLLECT-VESPENE"
+  ]
+}

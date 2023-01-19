@@ -1,0 +1,39 @@
+{
+  "label": "select nexus",
+  "goal": "build an assimilator",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "NEXUS": { "unitType": "nexus" },
+      "ALTERNATIVE": { "unitType": "nexus" }
+    },
+
+    "paths": [
+      {
+        "path": ["GOAL", "nexus", "ALTERNATIVE"],
+        "optional": true
+      },
+      {
+        "label": "SELECT-NEXUS",
+        "path": ["GOAL", "nexus", "NEXUS"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "NEXUS",
+    "NEXUS/assimilators",
+    "ALTERNATIVE",
+    "ALTERNATIVE/assimilators"
+  ],
+
+  "output": [
+    "SELECT-NEXUS"
+  ]
+}

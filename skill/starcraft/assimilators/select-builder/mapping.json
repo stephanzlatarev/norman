@@ -1,0 +1,40 @@
+{
+  "label": "select builder",
+  "goal": "build an assimilator",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "VESPENE": { "unitType": "vespene" },
+      "BUILDER": { "unitType": "probe" },
+      "PROBE": { "unitType": "probe" }
+    },
+
+    "paths": [
+      { "path": ["PROBE"] },
+      { "path": ["GOAL", "vespene", "VESPENE"] },
+      {
+        "path": ["GOAL", "builder", "BUILDER"],
+        "optional": true
+      },
+      {
+        "label": "SELECT-PROBE",
+        "path": ["GOAL", "builder", "PROBE"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "BUILDER",
+    "PROBE/busy"
+  ],
+
+  "output": [
+    "SELECT-PROBE"
+  ]
+}

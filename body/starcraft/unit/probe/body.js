@@ -25,6 +25,10 @@ export default class Probe extends Unit {
       const y = location.get("y");
 
       super.command(881, null, { x: x, y: y }, "build-pylon");
+    } else if (this.node.get("build-assimilator")) {
+      const vespene = this.node.get("build-assimilator").get("tag");
+
+      super.command(882, vespene, null, "build-assimilator");
     } else if (this.node.get("build-gateway")) {
       const location = this.node.get("build-gateway");
       const x = location.get("x");

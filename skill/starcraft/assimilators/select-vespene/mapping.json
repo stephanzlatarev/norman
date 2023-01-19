@@ -1,0 +1,36 @@
+{
+  "label": "select vespene",
+  "goal": "build an assimilator",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "NEXUS": { "unitType": "nexus" },
+      "RESOURCES": { "type": "resources" },
+      "VESPENE": { "unitType": "vespene" }
+    },
+
+    "paths": [
+      { "path": ["GOAL", "nexus", "NEXUS"] },
+      { "path": ["NEXUS", "resources", "RESOURCES"] },
+      { "path": ["RESOURCES", "*", "VESPENE"] },
+      {
+        "label": "SELECT",
+        "path": ["GOAL", "vespene", "VESPENE"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "VESPENE"
+  ],
+
+  "output": [
+    "SELECT"
+  ]
+}

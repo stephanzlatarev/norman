@@ -1,0 +1,33 @@
+{
+  "label": "know when to build an assimilator",
+  "goal": "collect vespene",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "BUILD-ASSIMILATOR": { "label": "build an assimilator", "type": "goal" }
+    },
+
+    "paths": [
+      {
+        "label": "LETS-BUILD-ASSIMILATOR",
+        "path": ["GOAL", "build-a-assimilator", "BUILD-ASSIMILATOR"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "stats/assimilatorBuilding",
+    "minerals"
+  ],
+
+  "output": [
+    "LETS-BUILD-ASSIMILATOR",
+    "minerals"
+  ]
+}
