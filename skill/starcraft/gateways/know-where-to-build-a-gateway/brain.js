@@ -1,5 +1,5 @@
 
-const LOCATIONS = [{ x: 3, y: 3 }, { x: -3, y: -3 }];
+const LOCATIONS = [{ x: 0.5, y: 2.5 }, { x: -0.5, y: -2.5 }];
 
 export default class Brain {
 
