@@ -10,16 +10,6 @@ export default class Brain {
     const homebaseY = input[5];
     const thisZealot = input[6];
     const partnerZealot = input[7];
-    const enemyCount = input[8];
-
-    if (enemyCount) {
-      // There are enemies to be fought
-      if ((locationX === alternativeX) && (locationY === alternativeY)) {
-        return [-1, locationX, locationY];
-      } else {
-        return;
-      }
-    }
 
     if (partnerZealot && (partnerZealot !== thisZealot)) {
       // This location is already scouted

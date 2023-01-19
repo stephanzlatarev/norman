@@ -1,6 +1,6 @@
 {
   "label": "scout",
-  "goal": "build strength",
+  "goal": "scout opponent",
 
   "body": {
     "code": "body/starcraft/unit/zealot"
@@ -8,7 +8,6 @@
 
   "memory": {
     "nodes": {
-      "STATS": { "code": "body/starcraft/unit/army" },
       "HOMEBASE": { "unitType": "nexus", "homebase": true },
       "LOCATION": { "type": "resources" },
       "ALTERNATIVE": { "type": "resources" },
@@ -18,9 +17,6 @@
     "paths": [
       {
         "path": ["HOMEBASE"]
-      },
-      {
-        "path": ["STATS"]
       },
       {
         "path": ["LOCATION"]
@@ -50,8 +46,7 @@
     "HOMEBASE/x",
     "HOMEBASE/y",
     "BODY",
-    "PARTNER",
-    "STATS/enemyCount"
+    "PARTNER"
   ],
 
   "output": [

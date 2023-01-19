@@ -1,6 +1,6 @@
 {
   "label": "fight",
-  "goal": "build strength",
+  "goal": "fight opponent",
 
   "body": {
     "code": "body/starcraft/unit/army"

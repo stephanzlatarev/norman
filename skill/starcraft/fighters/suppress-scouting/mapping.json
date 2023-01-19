@@ -1,0 +1,30 @@
+{
+  "label": "suppress scouting",
+  "goal": "fight opponent",
+
+  "body": {
+    "code": "body/starcraft/unit/zealot"
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": { "type": "resources" }
+    },
+
+    "paths": [
+      {
+        "label": "SCOUT",
+        "path": ["BODY", "scout", "LOCATION"]
+      }
+    ]
+  },
+
+  "input": [
+    "LOCATION/x",
+    "LOCATION/y"
+  ],
+
+  "output": [
+    "SCOUT"
+  ]
+}
