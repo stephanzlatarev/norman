@@ -1,0 +1,40 @@
+{
+  "label": "select builder",
+  "goal": "build a cybernetics core",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": { "type": "location" },
+      "BUILDER": { "unitType": "probe" },
+      "PROBE": { "unitType": "probe" }
+    },
+
+    "paths": [
+      { "path": ["PROBE"] },
+      { "path": ["GOAL", "location", "LOCATION"] },
+      {
+        "path": ["GOAL", "builder", "BUILDER"],
+        "optional": true
+      },
+      {
+        "label": "SELECT-PROBE",
+        "path": ["GOAL", "builder", "PROBE"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "BUILDER",
+    "PROBE/busy"
+  ],
+
+  "output": [
+    "SELECT-PROBE"
+  ]
+}

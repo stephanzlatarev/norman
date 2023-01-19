@@ -1,0 +1,33 @@
+{
+  "label": "select nexus for cybernetics core",
+  "goal": "build a cybernetics core",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "NEXUS": { "unitType": "nexus" }
+    },
+
+    "paths": [
+      {
+        "label": "SELECT",
+        "path": ["GOAL", "nexus", "NEXUS"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "NEXUS/baseX",
+    "NEXUS/baseY",
+    "NEXUS"
+  ],
+
+  "output": [
+    "SELECT"
+  ]
+}

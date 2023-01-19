@@ -7,6 +7,7 @@ const UNITS = {
   60: "pylon",
   61: "assimilator",
   62: "gateway",
+  72: "cybernetics",
   73: "zealot",
   84: "probe"
 };
@@ -101,6 +102,9 @@ function observeUnits(node, client, units) {
       }
       if (unitInReality.orders[0].abilityId === 883) {
         count["gatewayBuilding"]++;
+      }
+      if (unitInReality.orders[0].abilityId === 894) {
+        count["cyberneticsBuilding"]++;
       }
     }
 
