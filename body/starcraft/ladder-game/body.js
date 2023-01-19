@@ -2,8 +2,8 @@ import Game from "../game.js";
 
 export default class LadderGame extends Game {
 
-  constructor() {
-    super();
+  constructor(node) {
+    super(node);
     this.ladder = parseArguments(process.argv);
   }
 
