@@ -1,5 +1,5 @@
 {
-  "label": "assign harvester",
+  "label": "assign probe to mineral field",
   "goal": "harvest a mineral field",
 
   "body": {
