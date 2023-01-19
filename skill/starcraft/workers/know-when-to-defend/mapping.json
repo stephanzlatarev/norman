@@ -1,0 +1,38 @@
+{
+  "label": "know when to defend",
+  "goal": "win the game",
+
+  "body": {
+    "code": "body/starcraft/unit/army"
+  },
+
+  "memory": {
+    "nodes": {
+      "HOMEBASE": { "unitType": "nexus", "homebase": true },
+      "DEFEND": { "label": "defend the homebase", "type": "goal" }
+    },
+
+    "paths": [
+      { "path": ["HOMEBASE"] },
+      {
+        "label": "LETS-DEFEND",
+        "path": ["GOAL", "defend", "DEFEND"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "HOMEBASE/x",
+    "HOMEBASE/y",
+    "BODY/warriorCount",
+    "BODY/enemyCount",
+    "BODY/enemyX",
+    "BODY/enemyY"
+  ],
+
+  "output": [
+    "LETS-DEFEND"
+  ]
+}

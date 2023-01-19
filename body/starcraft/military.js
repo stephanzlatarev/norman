@@ -16,6 +16,8 @@ export function observeMilitary(node, client, observation) {
 function observeArmy(army, observation) {
   const armyUnits = observation.ownUnits.filter(unit => (unit.unitType === 73));
 
+  army.set("warriorCount", armyUnits.length);
+
   if (army.get("enemyCount") && armyUnits.length) {
     const leaderTag = army.get("leaderTag");
     let leader = leaderTag ? armyUnits.find(unit => (unit.tag === leaderTag)) : null;
