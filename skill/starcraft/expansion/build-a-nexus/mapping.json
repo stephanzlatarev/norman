@@ -48,8 +48,8 @@
     "minerals",
     "PROBE/x",
     "PROBE/y",
-    "DIRECTION/x",
-    "DIRECTION/y",
+    "DIRECTION/nexusX",
+    "DIRECTION/nexusY",
     "LOCATION"
   ],
 
