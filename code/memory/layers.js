@@ -7,7 +7,7 @@ export default function(memory, layer) {
   const paths = layer.paths ? [...layer.paths] : [];
 
   const matches = [];
-  const provisionalPaths = {};
+  const labeledPaths = {};
 
   for (const one of paths) {
     const path = one.path;
@@ -18,7 +18,6 @@ export default function(memory, layer) {
       thisMatches = getMatchingNodes(memory, nodes[path[0]]).map(node => createMatchWithOneLabel(path[0], node));
     } else if (path.length === 3) {
       if (one.provisional) {
-        provisionalPaths[one.label] = path;
         thisMatches = getProvisionalMatches(memory, nodes, ...path, one.unique);
       } else if (one.optional) {
         thisMatches = getOptionalMatches(memory, nodes, ...path);
@@ -39,13 +38,17 @@ export default function(memory, layer) {
       }
     }
 
+    if (one.label) {
+      labeledPaths[one.label] = path;
+    }
+
     matches.push(thisMatches);
   }
 
   const layers = [];
 
   for (const match of joinMatches(nodes, matches, constraints)) {
-    layers.push(new Layer(match, provisionalPaths));
+    layers.push(new Layer(match, labeledPaths));
   }
 
   showLayersWhenTroubleshooting(paths, matches, layers);
