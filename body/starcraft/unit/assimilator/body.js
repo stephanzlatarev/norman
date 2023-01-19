@@ -4,8 +4,6 @@ export default class Assimilator extends Unit {
 
   constructor(node) {
     super(node);
-
-    node.set("utilized", false);
   }
 
   async tock() {

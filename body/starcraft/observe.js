@@ -104,6 +104,11 @@ function observeUnits(node, client, units) {
       }
     }
 
+    if (unitType === "assimilator") {
+      unitInMemory.set("harvesters", unitInReality.assignedHarvesters);
+      unitInMemory.set("utilized", (unitInReality.assignedHarvesters >= 3));
+    }
+
     unitInMemory.set("x", unitInReality.pos.x);
     unitInMemory.set("y", unitInReality.pos.y);
 

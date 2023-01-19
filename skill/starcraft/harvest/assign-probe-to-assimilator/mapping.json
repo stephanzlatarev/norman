@@ -1,0 +1,33 @@
+{
+  "label": "assign probe to assimilator",
+  "goal": "use an assimilator",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "PROBE": { "unitType": "probe", "busy": false },
+      "ASSIMILATOR": { "unitType": "assimilator" }
+    },
+
+    "paths": [
+      {
+        "label": "ASSIGN",
+        "path": ["PROBE", "harvest", "ASSIMILATOR"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "PROBE"
+  ],
+
+  "output": [
+    "ASSIGN",
+    "GOAL"
+  ]
+}
