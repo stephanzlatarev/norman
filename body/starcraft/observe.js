@@ -9,6 +9,7 @@ const UNITS = {
   62: "gateway",
   72: "cybernetics",
   73: "zealot",
+  74: "stalker",
   84: "probe"
 };
 
