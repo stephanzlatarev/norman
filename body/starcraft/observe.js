@@ -71,6 +71,7 @@ function observeUnits(node, client, units) {
     nexus: 0, nexusBuilding: 0,
     pylon: 0, pylonBuilding: 0,
     gateway: 0, gatewayBuilding: 0,
+    cybernetics: 0, cyberneticsBuilding: 0,
   };
 
   for (const unitInReality of units) {

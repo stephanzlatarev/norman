@@ -14,7 +14,7 @@ export default class Brain {
     if (gateways && (cybernetics < 1) && (minerals >= 200)) {
       return [1, minerals - 200];
     } else {
-      return [-1, minerals]
+      return [-1, minerals];
     }
   }
 
