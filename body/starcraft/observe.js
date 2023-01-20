@@ -17,6 +17,11 @@ export default async function(node, client) {
   const observation = (await client.observation()).observation;
   const owner = await observePlayers(node, client, observation);
 
+  if (!observation.rawData.units.find(unit => (unit.owner === owner) && (unit.unitType === 59))) {
+    node.set("over", true);
+    return;
+  }
+
   observation.ownUnits = observation.rawData.units.filter(unit => unit.owner === owner);
 
   node.set("time", observation.gameLoop);
@@ -31,10 +36,6 @@ export default async function(node, client) {
   observeUnits(node, client, observation.ownUnits);
   removeDeadUnits(node, observation);
   observeMilitary(node, client, observation);
-
-  if (!node.get("homebase")) {
-    node.set("over", true);
-  }
 }
 
 async function observePlayers(node, client, observation) {
