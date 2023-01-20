@@ -1,0 +1,93 @@
+{
+  "label": "plan investments",
+  "goal": "build strength",
+
+  "comment": "Plan the structure and units to build with the available resources",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "ADVANCE-ECONOMY": { "label": "advance economy", "type": "goal" },
+      "ADVANCE-MILITARY": { "label": "advance military", "type": "goal" },
+      "BUILD-NEXUS": { "label": "build a nexus", "type": "goal" },
+      "BUILD-PYLON": { "label": "build a pylon", "type": "goal" },
+      "BUILD-ASSIMILATOR": { "label": "build an assimilator", "type": "goal" },
+      "BUILD-GATEWAY": { "label": "build a gateway", "type": "goal" },
+      "BUILD-CYBERNETICS": { "label": "build a cybernetics core", "type": "goal" }
+    },
+
+    "paths": [
+      {
+        "label": "LETS-ADVANCE-ECONOMY",
+        "path": ["GOAL", "advance-economy", "ADVANCE-ECONOMY"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-ADVANCE-MILITARY",
+        "path": ["GOAL", "advance-military", "ADVANCE-MILITARY"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-BUILD-NEXUS",
+        "path": ["ADVANCE-ECONOMY", "build-nexus", "BUILD-NEXUS"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-BUILD-PYLON",
+        "path": ["ADVANCE-ECONOMY", "build-pylon", "BUILD-PYLON"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-BUILD-ASSIMILATOR",
+        "path": ["ADVANCE-ECONOMY", "build-assimilator", "BUILD-ASSIMILATOR"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-BUILD-GATEWAY",
+        "path": ["ADVANCE-MILITARY", "build-gateway", "BUILD-GATEWAY"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-BUILD-CYBERNETICS",
+        "path": ["ADVANCE-MILITARY", "build-cybernetics", "BUILD-CYBERNETICS"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "minerals",
+    "vespene",
+    "foodUsed",
+    "stats/nexus",
+    "stats/nexusBuilding",
+    "stats/pylon",
+    "stats/pylonBuilding",
+    "stats/assimilator",
+    "stats/assimilatorBuilding",
+    "stats/gateway",
+    "stats/gatewayBuilding",
+    "stats/cybernetics",
+    "stats/cyberneticsBuilding"
+  ],
+
+  "output": [
+    "LETS-ADVANCE-ECONOMY",
+    "LETS-ADVANCE-MILITARY",
+    "LETS-BUILD-NEXUS",
+    "LETS-BUILD-PYLON",
+    "LETS-BUILD-ASSIMILATOR",
+    "LETS-BUILD-GATEWAY",
+    "LETS-BUILD-CYBERNETICS"
+  ]
+}

@@ -26,6 +26,7 @@ export default async function(node, client) {
 
   node.set("time", observation.gameLoop);
   node.set("minerals", observation.playerCommon.minerals);
+  node.set("vespene", observation.playerCommon.vespene);
   node.set("foodUsed", observation.playerCommon.foodUsed);
   node.set("foodCap", observation.playerCommon.foodCap);
 
@@ -39,12 +40,11 @@ export default async function(node, client) {
 }
 
 async function observePlayers(node, client, observation) {
-  if (!node.get("owner")) {
-    const gameInfo = await client.gameInfo();
-
-    const owner = observation.rawData.units.find(unit => unit.unitType === 59).owner;
+  if (node.get("owner") !== observation.playerCommon.playerId) {
+    const owner = observation.playerCommon.playerId;
     node.set("owner", owner);
 
+    const gameInfo = await client.gameInfo();
     for (const player of gameInfo.playerInfo) {
       if (owner !== player.playerId) {
         node.set("enemy", player.playerId);
