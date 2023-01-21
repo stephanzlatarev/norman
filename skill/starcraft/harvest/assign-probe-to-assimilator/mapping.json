@@ -9,12 +9,10 @@
   "memory": {
     "nodes": {
       "PROBE": { "unitType": "probe", "busy": false },
-      "ASSIMILATOR": { "unitType": "assimilator", "operational": true, "utilized": false },
-      "ALTERNATIVE": { "unitType": "assimilator", "operational": true }
+      "ASSIMILATOR": { "unitType": "assimilator", "operational": true, "utilized": false }
     },
 
     "paths": [
-      { "path": ["PROBE", "harvest", "ALTERNATIVE"], "optional": true },
       {
         "label": "ASSIGN",
         "path": ["PROBE", "harvest", "ASSIMILATOR"],
@@ -25,8 +23,7 @@
   },
 
   "input": [
-    "PROBE",
-    "ALTERNATIVE"
+    "PROBE"
   ],
 
   "output": [

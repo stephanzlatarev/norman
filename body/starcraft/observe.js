@@ -144,5 +144,9 @@ function isUnitObserved(unitInMemory) {
 
 function isUnitPresent(observation, unitInMemory) {
   const tag = unitInMemory.get("tag");
-  return !!observation.rawData.units.find(unit => unit.tag === tag);
+
+  const assimilator = unitInMemory.get("harvest");
+  const unitMayBeInAssimilator = assimilator ? (assimilator.get("unitType") === "assimilator") : false;
+
+  return unitMayBeInAssimilator || !!observation.rawData.units.find(unit => unit.tag === tag);
 }

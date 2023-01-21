@@ -2,11 +2,12 @@
 export default class Brain {
 
   react(input) {
-    const isEngaged = input[0];
+    const probe = input[0];
+    const alternative = input[3];
 
-    if (!isEngaged) {
+    if (!alternative) {
       // Assign the probe and complete the goal
-      return [1, -1];
+      return [1, -1, probe];
     }
   }
 

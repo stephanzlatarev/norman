@@ -6,6 +6,15 @@ export default class Probe extends Unit {
     super(node);
   }
 
+  async tick() {
+    await super.tick();
+
+    const harvest = this.node.get("harvest");
+    if (harvest && (harvest.get("unitType") === "assimilator")) {
+      this.node.set("busy", true);
+    }
+  }
+
   async tock() {
     if (this.node.get("attack")) {
       const location = this.node.get("attack");
