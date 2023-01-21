@@ -9,7 +9,8 @@
   "memory": {
     "nodes": {
       "PROBE": { "unitType": "probe", "busy": false },
-      "MINERAL": { "unitType": "mineral" }
+      "MINERAL": { "unitType": "mineral" },
+      "ALTERNATIVE": { "unitType": "assimilator", "operational": true }
     },
 
     "paths": [
@@ -19,8 +20,9 @@
       {
         "path": ["GOAL", "harvest", "MINERAL"]
       },
+      { "path": ["PROBE", "harvest", "ALTERNATIVE"], "optional": true },
       {
-        "label": "NEW-ASSIGNMENT",
+        "label": "ASSIGN",
         "path": ["PROBE", "harvest", "MINERAL"],
         "provisional": true,
         "unique": true
@@ -30,11 +32,12 @@
 
   "input": [
     "PROBE",
-    "MINERAL"
+    "MINERAL",
+    "ALTERNATIVE"
   ],
 
   "output": [
-    "GOAL",
-    "NEW-ASSIGNMENT"
+    "ASSIGN",
+    "GOAL"
   ]
 }
