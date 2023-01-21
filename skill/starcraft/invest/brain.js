@@ -80,6 +80,24 @@ export default class Brain {
       foodFree -= 1;
     }
 
+    // Next priority is stalkers
+    if ((progress.zealots + progress.stalkers < gateways - progress.gateways) && (minerals >= 125) && (vespene >= 50) && (foodFree >= 2)) {
+      order.stalkers = 0;
+      while ((progress.zealots + progress.stalkers + order.stalkers < gateways - progress.gateways) && (minerals >= 125) && (vespene >= 50) && (foodFree >= 2)) {
+        order.stalkers = 1;
+        minerals -= 125;
+        minerals -= 50;
+        foodFree -= 2;
+      }
+    }
+
+    // Next priority is stalkers
+    if ((progress.zealots + progress.stalkers < gateways - progress.gateways) && (minerals >= 100) && (foodFree >= 2)) {
+      order.zealots = 1;
+      minerals -= 100;
+      foodFree -= 2;
+    }
+
     return [
       1, 1,
       order.nexuses, order.pylons, order.assimilators,
