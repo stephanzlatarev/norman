@@ -11,6 +11,9 @@ export default class Brain {
     const assimilators = input[7] + input[8];
     const gateways = input[9] + input[10];
     const cybernetics = input[11] + input[12];
+    const zealots = input[13] + input[14];
+    const stalkers = input[15] + input[16];
+    const probes = input[17] + input[18];
 
     const progress = {
       nexuses: input[4],
@@ -18,6 +21,9 @@ export default class Brain {
       assimilators: input[8],
       gateways: input[10],
       cybernetics: input[12],
+      zealots: input[14],
+      stalkers: input[16],
+      probes: input[18],
     };
 
     const order = {
@@ -26,7 +32,12 @@ export default class Brain {
       assimilators: -1,
       gateways: -1,
       cybernetics: -1,
+      zealots: -1,
+      stalkers: -1,
+      probes: -1,
     };
+
+    let foodFree = (nexuses - progress.nexuses) * 15 + (pylons - progress.pylons) * 8 - foodUsed;
 
     // First priority is pylons
     const foodThreshold = nexuses * 15 + pylons * 8 - 10;
@@ -62,10 +73,18 @@ export default class Brain {
       minerals -= 200;
     }
 
+    // Next priority is probes
+    if ((progress.probes < nexuses - progress.nexuses) && (probes < 64) && (minerals >= 50) && foodFree) {
+      order.probes = 1;
+      minerals -= 50;
+      foodFree -= 1;
+    }
+
     return [
       1, 1,
       order.nexuses, order.pylons, order.assimilators,
       order.gateways, order.cybernetics,
+      order.zealots, order.stalkers, order.probes,
     ];
   }
 

@@ -1,6 +1,6 @@
 {
   "label": "train probe",
-  "goal": "build strength",
+  "goal": "train a probe",
 
   "body": {
     "code": "body/starcraft/unit/nexus"
@@ -8,11 +8,7 @@
 
   "input": [
     "operational",
-    "ordersCount",
-    "game/minerals",
-    "game/foodUsed",
-    "game/foodCap",
-    "game/stats/probe"
+    "ordersCount"
   ],
 
   "output": [

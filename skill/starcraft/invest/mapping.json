@@ -16,7 +16,10 @@
       "BUILD-PYLON": { "label": "build a pylon", "type": "goal" },
       "BUILD-ASSIMILATOR": { "label": "build an assimilator", "type": "goal" },
       "BUILD-GATEWAY": { "label": "build a gateway", "type": "goal" },
-      "BUILD-CYBERNETICS": { "label": "build a cybernetics core", "type": "goal" }
+      "BUILD-CYBERNETICS": { "label": "build a cybernetics core", "type": "goal" },
+      "TRAIN-ZEALOT": { "label": "train a zealot", "type": "goal" },
+      "TRAIN-STALKER": { "label": "train a stalker", "type": "goal" },
+      "TRAIN-PROBE": { "label": "train a probe", "type": "goal" }
     },
 
     "paths": [
@@ -61,6 +64,24 @@
         "path": ["ADVANCE-MILITARY", "build-cybernetics", "BUILD-CYBERNETICS"],
         "provisional": true,
         "unique": true
+      },
+      {
+        "label": "LETS-TRAIN-ZEALOT",
+        "path": ["ADVANCE-MILITARY", "build-zealot", "TRAIN-ZEALOT"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-TRAIN-STALKER",
+        "path": ["ADVANCE-MILITARY", "build-stalker", "TRAIN-STALKER"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-TRAIN-PROBE",
+        "path": ["ADVANCE-MILITARY", "build-probe", "TRAIN-PROBE"],
+        "provisional": true,
+        "unique": true
       }
     ]
   },
@@ -78,7 +99,13 @@
     "stats/gateway",
     "stats/gatewayBuilding",
     "stats/cybernetics",
-    "stats/cyberneticsBuilding"
+    "stats/cyberneticsBuilding",
+    "stats/zealot",
+    "stats/zealotBuilding",
+    "stats/stalker",
+    "stats/stalkerBuilding",
+    "stats/probe",
+    "stats/probeBuilding"
   ],
 
   "output": [
@@ -88,6 +115,9 @@
     "LETS-BUILD-PYLON",
     "LETS-BUILD-ASSIMILATOR",
     "LETS-BUILD-GATEWAY",
-    "LETS-BUILD-CYBERNETICS"
+    "LETS-BUILD-CYBERNETICS",
+    "LETS-TRAIN-ZEALOT",
+    "LETS-TRAIN-STALKER",
+    "LETS-TRAIN-PROBE"
   ]
 }
