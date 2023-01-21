@@ -3,9 +3,10 @@ export default class Brain {
 
   react(input) {
     const vespene = input[0];
-    const alternative = input[1];
+    const assimilator = input[1];
+    const alternative = input[2];
 
-    if (!alternative && vespene) {
+    if (!assimilator && !alternative) {
       return [1, vespene];
     }
   }

@@ -10,13 +10,15 @@
     "nodes": {
       "NEXUS": { "unitType": "nexus" },
       "RESOURCES": { "type": "resources" },
-      "VESPENE": { "unitType": "vespene" }
+      "VESPENE": { "unitType": "vespene" },
+      "ASSIMILATOR": { "unitType": "assimilator" }
     },
 
     "paths": [
       { "path": ["GOAL", "nexus", "NEXUS"] },
       { "path": ["NEXUS", "resources", "RESOURCES"] },
       { "path": ["RESOURCES", "*", "VESPENE"] },
+      { "path": ["ASSIMILATOR", "resources", "VESPENE"], "optional": true },
       {
         "label": "SELECT",
         "path": ["GOAL", "vespene", "VESPENE"],
@@ -27,7 +29,8 @@
   },
 
   "input": [
-    "VESPENE"
+    "VESPENE",
+    "ASSIMILATOR"
   ],
 
   "output": [

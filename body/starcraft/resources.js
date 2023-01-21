@@ -22,6 +22,7 @@ export async function observeResources(node, client, observation) {
 
   refreshResourcesInMemory(observation, clustersInMemory);
   ensureNexusesAreLinkedToResources(node, clustersInMemory);
+  ensureAssimilatorsAreLinkedToResources(node, clustersInMemory);
 }
 
 function ensureNexusesAreLinkedToResources(node, clustersInMemory) {
@@ -37,6 +38,26 @@ function ensureNexusesAreLinkedToResources(node, clustersInMemory) {
         if ((Math.abs(clusterX - nexusX) <= 10) && (Math.abs(clusterY - nexusY) <= 10)) {
           cluster.set("nexus", nexus);
           linkNexusToCluster(nexus, cluster);
+        }
+      }
+    }
+  }
+}
+
+function ensureAssimilatorsAreLinkedToResources(node, clustersInMemory) {
+  for (const assimilator of node.links()) {
+    if ((assimilator.get("unitType") === "assimilator") && !assimilator.get("resources")) {
+      const assimilatorX = assimilator.get("x");
+      const assimilatorY = assimilator.get("y");
+
+      for (const cluster of clustersInMemory.links()) {
+        for (const resource of cluster.links().filter(resource => resource.get("unitType") === "vespene")) {
+          const resourceX = resource.get("x");
+          const resourceY = resource.get("y");
+  
+          if ((Math.abs(resourceX - assimilatorX) <= 3) && (Math.abs(resourceY - assimilatorY) <= 3)) {
+            assimilator.set("resources", resource);
+          }
         }
       }
     }

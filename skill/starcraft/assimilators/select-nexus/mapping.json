@@ -8,8 +8,8 @@
 
   "memory": {
     "nodes": {
-      "NEXUS": { "unitType": "nexus" },
-      "ALTERNATIVE": { "unitType": "nexus" }
+      "NEXUS": { "unitType": "nexus", "operational": true },
+      "ALTERNATIVE": { "unitType": "nexus", "operational": true }
     },
 
     "paths": [
