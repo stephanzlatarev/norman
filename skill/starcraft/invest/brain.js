@@ -6,14 +6,16 @@ export default class Brain {
     let vespene = input[1];
     let foodUsed = input[2];
 
-    const nexuses = input[3] + input[4];
-    const pylons = input[5] + input[6];
-    const assimilators = input[7] + input[8];
-    const gateways = input[9] + input[10];
-    const cybernetics = input[11] + input[12];
-    const zealots = input[13] + input[14];
-    const stalkers = input[15] + input[16];
-    const probes = input[17] + input[18];
+    const complete = {
+      nexuses: input[3],
+      pylons: input[5],
+      assimilators: input[7],
+      gateways: input[9],
+      cybernetics: input[11],
+      zealots: input[13],
+      stalkers: input[15],
+      probes: input[17],
+    };
 
     const progress = {
       nexuses: input[4],
@@ -37,7 +39,16 @@ export default class Brain {
       probes: -1,
     };
 
-    let foodFree = (nexuses - progress.nexuses) * 15 + (pylons - progress.pylons) * 8 - foodUsed;
+    const nexuses = complete.nexuses + progress.nexuses;
+    const pylons = complete.pylons + progress.pylons;
+    const assimilators = complete.assimilators + progress.assimilators;
+    const gateways = complete.gateways + progress.gateways;
+    const cybernetics = complete.cybernetics + progress.cybernetics;
+    const zealots = complete.zealots + progress.zealots;
+    const stalkers = complete.stalkers + progress.stalkers;
+    const probes = complete.probes + progress.probes;
+
+    let foodFree = complete.nexuses * 15 + complete.pylons * 8 - foodUsed;
 
     // First priority is pylons
     const foodThreshold = nexuses * 15 + pylons * 8 - 10;
@@ -62,13 +73,13 @@ export default class Brain {
     }
 
     // Next priority is assimilators
-    if (!progress.assimilators && (minerals >= 75) && (gateways > 0) && (nexuses > 1) && (assimilators < (nexuses - progress.nexuses) * 2)) {
+    if (!progress.assimilators && (minerals >= 75) && (gateways > 0) && (nexuses > 1) && (assimilators < complete.nexuses * 2)) {
       order.assimilators = 1;
       minerals -= 75;
     }
 
     // Next priority is cybernetic cores
-    if (!cybernetics && !progress.cybernetics && (minerals >= 200) && gateways) {
+    if (!cybernetics && !progress.cybernetics && (minerals >= 200) && (complete.zealots > 1)) {
       order.cybernetics = 1;
       minerals -= 200;
     }
@@ -80,19 +91,26 @@ export default class Brain {
       foodFree -= 1;
     }
 
+    let reservations = 0;
+
     // Next priority is stalkers
-    if ((progress.zealots + progress.stalkers < gateways - progress.gateways) && (minerals >= 125) && (vespene >= 50) && (foodFree >= 2)) {
-      order.stalkers = 0;
-      while ((progress.zealots + progress.stalkers + order.stalkers < gateways - progress.gateways) && (minerals >= 125) && (vespene >= 50) && (foodFree >= 2)) {
-        order.stalkers = 1;
+    if (complete.cybernetics && (vespene >= 50)) {
+      while ((progress.zealots + progress.stalkers + order.stalkers + reservations < complete.gateways) && (vespene >= 50) && (foodFree >= 2)) {
+        if (minerals >= 125) {
+          order.stalkers = (order.stalkers > 0) ? order.stalkers + 1 : 1;
+        } else {
+          reservations++;
+        }
         minerals -= 125;
         minerals -= 50;
         foodFree -= 2;
+
+        if (reservations > 2) break;
       }
     }
 
     // Next priority is stalkers
-    if ((progress.zealots + progress.stalkers < gateways - progress.gateways) && (minerals >= 100) && (foodFree >= 2)) {
+    if ((progress.zealots + progress.stalkers + order.stalkers + reservations < complete.gateways) && (minerals >= 100) && (foodFree >= 2)) {
       order.zealots = 1;
       minerals -= 100;
       foodFree -= 2;
