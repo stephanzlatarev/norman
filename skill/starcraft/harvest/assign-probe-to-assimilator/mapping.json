@@ -9,7 +9,7 @@
   "memory": {
     "nodes": {
       "PROBE": { "unitType": "probe", "busy": false },
-      "ASSIMILATOR": { "unitType": "assimilator" }
+      "ASSIMILATOR": { "unitType": "assimilator", "operational": true, "utilized": false }
     },
 
     "paths": [
