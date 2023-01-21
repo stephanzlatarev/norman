@@ -35,13 +35,13 @@ export default class Brain {
       ((pylons < 1) || ((nexuses >= 2) && (gateways >= 1))) // Don't build a second pylon before the second nexus and first gateway are started 
     ) {
       order.pylons = 1;
-      minerals -= 300;
+      minerals -= 100;
     }
 
     // Next priority is nexuses
     if (!progress.nexuses && (minerals >= 300) && (nexuses <= pylons)) {
       order.nexuses = 1;
-      minerals -= 300;
+      minerals -= 400;
     }
 
     // Next priority is gateways
