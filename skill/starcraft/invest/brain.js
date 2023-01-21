@@ -51,7 +51,7 @@ export default class Brain {
     }
 
     // Next priority is assimilators
-    if (!progress.assimilators && (minerals >= 75) && (nexuses > 1) && (assimilators < nexuses * 2)) {
+    if (!progress.assimilators && (minerals >= 75) && (gateways > 0) && (nexuses > 1) && (assimilators < nexuses * 2)) {
       order.assimilators = 1;
       minerals -= 75;
     }
