@@ -81,25 +81,49 @@ async function performOnce(skill, layer, cache) {
 
 async function load(node) {
   const path = "./" + node.get("code") + "/";
+  const pathMapping = path + "mapping.json";
 
-  const mapping = JSON.parse(fs.readFileSync(path + "mapping.json"));
-  for (const key in mapping) {
-    node.set(key, mapping[key]);
-  }
+  if (fs.existsSync(pathMapping)) {
+    const mapping = JSON.parse(fs.readFileSync(pathMapping));
+    for (const key in mapping) {
+      node.set(key, mapping[key]);
+    }
 
-  if (fs.existsSync(path + "brain.js")) {
-    const module = await import("." + path + "brain.js");
-    node.set("skill", new module.default());
+    if (fs.existsSync(path + "brain.js")) {
+      const module = await import("." + path + "brain.js");
+      node.set("skill", new module.default());
+
+      console.log("Successfully loaded skill:", node.get("label"));
+    }
   }
 }
 
 async function loadAll(node) {
-  for (const skill of node.links()) {
-    if (skill.get("code")) {
-      await load(skill);
-    }
+  const skills = node.links();
 
-    await loadAll(skill);
+  if (skills.length) {
+    for (const skill of skills) {
+      if (skill.get("code")) {
+        await load(skill);
+      }
+
+      await loadAll(skill);
+    }
+  } else {
+    await loadFolder(node, "./skill");
+  }
+}
+
+async function loadFolder(node, folder) {
+  const subfolders = fs.readdirSync(folder, { withFileTypes: true }).filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
+
+  if (subfolders.length) {
+    for (const subfolder of subfolders) {
+      await loadFolder(node, folder + "/" + subfolder);
+    }
+  } else {
+    const path = node.path + "/" + folder.replace(/[/]/g, "-");
+    await load(node.memory.get(path).set("type", "skill").set("code", folder.substring(2)));
   }
 }
 
