@@ -13,6 +13,8 @@
     },
 
     "paths": [
+      { "path": ["PROBE"] },
+      { "path": ["ASSIMILATOR"] },
       {
         "label": "ASSIGN",
         "path": ["PROBE", "harvest", "ASSIMILATOR"],

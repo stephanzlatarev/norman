@@ -10,7 +10,7 @@
     "nodes": {
       "DIRECTION": { "type": "resources" },
       "NEXUS": { "unitType": "nexus" },
-      "LOCATION": { "type": "location", "purpose": "gateway" }
+      "LOCATION": { "type": "location", "purpose": "cybernetics" }
     },
 
     "paths": [

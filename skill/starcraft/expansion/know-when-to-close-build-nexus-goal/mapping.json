@@ -10,7 +10,7 @@
 
   "memory": {
     "nodes": {
-      "LOCATION": { "type": "location" },
+      "LOCATION": { "type": "location", "purpose": "nexus" },
       "NEXUS": { "unitType": "nexus" }
     },
 

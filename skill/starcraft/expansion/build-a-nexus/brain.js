@@ -13,16 +13,16 @@ export default class BuildANexusBrain {
       if (location) {
         // We have the builder and the exact location. Build the nexus!
         if (minerals >= 400) {
-          return [-1, -1, 1];
+          return [-1, -1, -1, 1];
         }
       } else if (directionX && directionY) {
         if (isClose(builderX, builderY, directionX, directionY)) {
           // We have the builder approaching the cluster. Select the exact location!
-          return [0, 1, 0];
+          return [0, 1, 1, 0];
         }
 
         // The builder is still away from the cluster. Move in the direction!
-        return [1, 0, 0];
+        return [1, 0, 0, 0];
       }
     }
   }

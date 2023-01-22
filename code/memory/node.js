@@ -84,7 +84,9 @@ export default class Node {
   }
 
   remove() {
-    this.memory.remove(this);
+    if (this.memory) {
+      this.memory.remove(this);
+    }
   }
 
 }

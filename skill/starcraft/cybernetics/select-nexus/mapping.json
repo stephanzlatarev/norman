@@ -12,6 +12,7 @@
     },
 
     "paths": [
+      { "path": ["NEXUS"] },
       {
         "label": "SELECT",
         "path": ["GOAL", "nexus", "NEXUS"],

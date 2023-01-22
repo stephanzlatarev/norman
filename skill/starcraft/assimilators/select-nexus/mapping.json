@@ -13,6 +13,7 @@
     },
 
     "paths": [
+      { "path": ["NEXUS"] },
       {
         "path": ["GOAL", "nexus", "ALTERNATIVE"],
         "optional": true

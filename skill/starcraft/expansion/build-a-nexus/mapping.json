@@ -10,8 +10,8 @@
     "nodes": {
       "PROBE": { "unitType": "probe" },
       "DIRECTION": { "type": "resources" },
-      "LOCATION": { "type": "location" },
-      "SELECT-LOCATION": { "label": "select location for a nexus", "type": "goal" }
+      "LOCATION": { "type": "location", "purpose": "nexus" },
+      "SELECTED-LOCATION": { "label": "select location for a nexus", "type": "goal" }
     },
 
     "paths": [
@@ -27,8 +27,8 @@
         "provisional": true
       },
       {
-        "label": "SELECT-LOCATION",
-        "path": ["GOAL", "select-location", "SELECT-LOCATION"],
+        "label": "SELECT",
+        "path": ["GOAL", "select-location", "SELECTED-LOCATION"],
         "provisional": true,
         "unique": true
       },
@@ -55,7 +55,8 @@
 
   "output": [
     "COMMAND-MOVE",
-    "SELECT-LOCATION",
+    "SELECT",
+    "SELECTED-LOCATION",
     "COMMAND-BUILD"
   ]
 }
