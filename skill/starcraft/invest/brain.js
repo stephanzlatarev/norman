@@ -51,8 +51,8 @@ export default class Brain {
     let foodFree = complete.nexuses * 15 + complete.pylons * 8 - foodUsed;
 
     // First priority is pylons
-    const foodThreshold = nexuses * 15 + pylons * 8 - 10;
-    if (!progress.nexuses &&
+    const foodThreshold = complete.nexuses * 15 + pylons * 8 - 10;
+    if (!progress.pylons &&
       (minerals >= 100) && (foodUsed >= foodThreshold) && (pylons < nexuses * 6) &&
       ((pylons < 1) || ((nexuses >= 2) && (gateways >= 1))) // Don't build a second pylon before the second nexus and first gateway are started 
     ) {
