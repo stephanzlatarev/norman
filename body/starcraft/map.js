@@ -77,7 +77,7 @@ export default class Map {
 
     if (this.bases && (!filter || filter.bases)) {
       for (const base of this.bases) {
-        if (base.x && base.y && base.w && base.h) {
+        if (base && base.x && base.y && base.w && base.h) {
           add(map, "|", base.x, base.y, base.w, base.h);
         }
       }
@@ -278,7 +278,9 @@ function findBasePlot(map, cluster) {
   const data = map.prefix(map.map({ nexuses: 1, units: 1 }), plotMinX, plotMinY, plotMaxW, plotMaxH);
   const slot = map.plot(data, 8, 8, plotMinX, plotMinY, plotMinX + plotMaxW, plotMinY + plotMaxH, nexusX, nexusY);
 
-  cluster.base = { x: slot.x + 4, y: slot.y + 4 };
+  if (slot && slot.x && slot.y) {
+    cluster.base = { x: slot.x + 4, y: slot.y + 4 };
+  }
 
   return slot;
 }
