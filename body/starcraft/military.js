@@ -1,4 +1,6 @@
 
+const STALK_RANGE_SQUARED = 81; // Squared range for stalking enemies
+
 export function observeMilitary(node, client, observation) {
   const homebase = node.get("homebase");
   const army = node.memory.get(node.path + "/army");
@@ -9,13 +11,15 @@ export function observeMilitary(node, client, observation) {
 
   if (homebase) {
     observeEnemy(node, army, homebase, observation);
-    observeArmy(army, observation);
+    observeArmy(army, homebase, observation);
   }
 }
 
-function observeArmy(army, observation) {
+function observeArmy(army, homebase, observation) {
   const armyUnits = observation.ownUnits.filter(unit => (unit.unitType === 73) || (unit.unitType === 74));
 
+  army.set("baseX", homebase.get("x"));
+  army.set("baseY", homebase.get("y"));
   army.set("warriorCount", armyUnits.length);
 
   if (army.get("enemyCount") && armyUnits.length) {
@@ -25,13 +29,23 @@ function observeArmy(army, observation) {
     if (!leader) {
       const enemyX = army.get("enemyX");
       const enemyY = army.get("enemyY");
-      const candidates = armyUnits.filter(unit => !near(unit, enemyX, enemyY, 24));
-      candidates.sort((a, b) => {
-        const da = (a.pos.x - enemyX) * (a.pos.x - enemyX) + (a.pos.y - enemyY) * (a.pos.y - enemyY);
-        const db = (b.pos.x - enemyX) * (b.pos.x - enemyX) + (b.pos.y - enemyY) * (b.pos.y - enemyY);
-        return da - db;
-      });
-      leader = candidates[0];
+      const baseX = homebase.get("x");
+      const baseY = homebase.get("y");
+      const baseTangence = tangence(baseX, baseY, enemyX, enemyY);
+
+      for (const unit of armyUnits) {
+        unit.squareDistanceToEnemy = squareDistance(unit.pos.x, unit.pos.y, enemyX, enemyY, baseTangence);
+      }
+
+      const order = armyUnits.sort((a, b) => (a.squareDistanceToEnemy - b.squareDistanceToEnemy));
+
+      for (const unit of order) {
+        if (unit.squareDistanceToEnemy <= STALK_RANGE_SQUARED) {
+          leader = unit;
+        } else {
+          break;
+        }
+      }
     }
 
     if (!leader) {
@@ -40,7 +54,7 @@ function observeArmy(army, observation) {
 
     army.set("leaderTag", leader.tag);
     army.set("tag", armyUnits.map(unit => unit.tag));
-    army.set("armyCount", armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10) || isFighting(unit)).length);
+    army.set("armyCount", armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10)).length);
     army.set("armyX", leader.pos.x);
     army.set("armyY", leader.pos.y);
   } else {
@@ -78,17 +92,22 @@ function observeEnemy(game, army, homebase, observation) {
   }
 }
 
-function isFighting(unit) {
-  if (!unit.orders.length) return false;
-
-  const ability = unit.orders[0].abilityId;
-  return ((ability === 3674) || (ability === 23) || (ability === 2048));
-}
-
 function isLocationVisible(observation, owner, x, y) {
   return !!observation.rawData.units.find(unit => ((unit.owner === owner) && near(unit, x, y, 5)));
 }
 
 function near(unit, x, y, distance) {
   return (Math.abs(unit.pos.x - x) <= distance) && (Math.abs(unit.pos.y - y) <= distance);
+}
+
+function tangence(baseX, baseY, enemyX, enemyY) {
+  return Math.atan2(baseY - enemyY, baseX - enemyX);
+}
+
+function squareDistance(unitX, unitY, enemyX, enemyY, baseTangence) {
+  const uex = (unitX - enemyX);
+  const uey = (unitY - enemyY);
+  const ued = uex * uex + uey * uey;
+  const uec = Math.cos(Math.atan2(uey, uex) - baseTangence);
+  return ued * uec * uec * Math.sign(uec);
 }

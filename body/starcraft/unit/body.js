@@ -50,8 +50,8 @@ export default class Unit {
     const unitTag = this.node.get("tag");
     const unitTags = Array.isArray(unitTag) ? unitTag : [unitTag];
 
-    if (isMatchingAny(this.node.get("orders"), unitTags, abilityId, targetUnitTag, targetWorldSpacePos)) return;
-    if (isMatchingAny(this.pendingCommands, unitTags, abilityId, targetUnitTag, targetWorldSpacePos)) return;
+    if (isMatchingAny(this.node.get("orders"), unitTags, abilityId, targetUnitTag, targetWorldSpacePos)) return false;
+    if (isMatchingAny(this.pendingCommands, unitTags, abilityId, targetUnitTag, targetWorldSpacePos)) return false;
 
     const command = {
       unitTags: unitTags,
@@ -71,6 +71,8 @@ export default class Unit {
     this.actions.push({ actionRaw: { unitCommand: command } });
     this.pendingCommands.push(command);
     this.node.set("busy", true);
+
+    return true;
   }
 
   async tock() {
@@ -102,8 +104,8 @@ function isMatchingOne(command, unitTags, abilityId, targetUnitTag, targetWorldS
 function isMatchingPos(a, b) {
   if (!a !== !b) return false;
   if (!a && !b) return true;
-  if (Math.abs(a.x - b.x) > 1) return false;
-  if (Math.abs(a.y - b.y) > 1) return false;
+  if (Math.abs(a.x - b.x) >= 1) return false;
+  if (Math.abs(a.y - b.y) >= 1) return false;
   return true;
 }
 

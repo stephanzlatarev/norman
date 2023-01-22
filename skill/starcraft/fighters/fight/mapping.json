@@ -28,6 +28,8 @@
   },
 
   "input": [
+    "baseX",
+    "baseY",
     "armyCount",
     "armyX",
     "armyY",
