@@ -118,9 +118,14 @@ export default class Brain {
 
     return [
       1, 1,
-      order.nexuses, order.pylons, order.assimilators,
-      order.gateways, order.cybernetics,
-      order.zealots, order.stalkers, order.probes,
+      order.nexuses, order.nexuses,
+      order.pylons, order.pylons,
+      order.assimilators, order.assimilators,
+      order.gateways, order.gateways,
+      order.cybernetics, order.cybernetics,
+      order.zealots, order.zealots,
+      order.stalkers, order.stalkers,
+      order.probes, order.probes,
     ];
   }
 
