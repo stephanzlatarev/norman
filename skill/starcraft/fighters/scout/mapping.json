@@ -39,10 +39,10 @@
   },
 
   "input": [
-    "LOCATION/x",
-    "LOCATION/y",
-    "ALTERNATIVE/x",
-    "ALTERNATIVE/y",
+    "LOCATION/nexusX",
+    "LOCATION/nexusY",
+    "ALTERNATIVE/nexusX",
+    "ALTERNATIVE/nexusY",
     "HOMEBASE/x",
     "HOMEBASE/y",
     "BODY",
