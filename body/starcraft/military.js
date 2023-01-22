@@ -93,7 +93,7 @@ function observeEnemy(game, army, homebase, observation) {
 }
 
 function isLocationVisible(observation, owner, x, y) {
-  return !!observation.rawData.units.find(unit => ((unit.owner === owner) && near(unit, x, y, 5)));
+  return !!observation.rawData.units.find(unit => ((unit.owner === owner) && near(unit, x, y, 1)));
 }
 
 function near(unit, x, y, distance) {
