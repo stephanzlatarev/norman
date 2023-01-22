@@ -30,8 +30,12 @@
   },
 
   "input": [
+    "DIRECTION/x",
+    "DIRECTION/y",
     "BUILDER",
-    "PROBE/busy"
+    "PROBE/busy",
+    "PROBE/x",
+    "PROBE/y"
   ],
 
   "output": [

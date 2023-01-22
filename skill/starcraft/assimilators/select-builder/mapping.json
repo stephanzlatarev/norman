@@ -30,8 +30,12 @@
   },
 
   "input": [
+    "VESPENE/x",
+    "VESPENE/y",
     "BUILDER",
-    "PROBE/busy"
+    "PROBE/busy",
+    "PROBE/x",
+    "PROBE/y"
   ],
 
   "output": [
