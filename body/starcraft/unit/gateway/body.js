@@ -11,6 +11,8 @@ export default class Gateway extends Unit {
       super.command(916, null, null, "build-zealot");
     } else if (this.node.get("build-stalker")) {
       super.command(917, null, null, "build-stalker");
+    } else if (this.node.get("build-sentry")) {
+      super.command(921, null, null, "build-sentry");
     }
 
     await super.tock();

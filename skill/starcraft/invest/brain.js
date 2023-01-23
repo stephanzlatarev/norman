@@ -14,7 +14,8 @@ export default class Brain {
       cybernetics: input[11],
       zealots: input[13],
       stalkers: input[15],
-      probes: input[17],
+      sentries: input[17],
+      probes: input[19],
     };
 
     const progress = {
@@ -25,7 +26,8 @@ export default class Brain {
       cybernetics: input[12],
       zealots: input[14],
       stalkers: input[16],
-      probes: input[18],
+      sentries: input[18],
+      probes: input[20],
     };
 
     const order = {
@@ -36,6 +38,7 @@ export default class Brain {
       cybernetics: -1,
       zealots: -1,
       stalkers: -1,
+      sentries: -1,
       probes: -1,
     };
 
@@ -46,6 +49,7 @@ export default class Brain {
     const cybernetics = complete.cybernetics + progress.cybernetics;
     const zealots = complete.zealots + progress.zealots;
     const stalkers = complete.stalkers + progress.stalkers;
+    const sentries = complete.sentries + progress.sentries;
     const probes = complete.probes + progress.probes;
 
     let foodFree = complete.nexuses * 15 + complete.pylons * 8 - foodUsed;
@@ -92,15 +96,28 @@ export default class Brain {
     }
 
     // Next priority is land combat units
-    if (complete.gateways && (progress.zealots + progress.stalkers < complete.gateways)) {
-      if (complete.cybernetics && complete.assimilators && (stalkers < zealots * 3)) {
+    if (complete.gateways && (progress.zealots + progress.stalkers + progress.sentries < complete.gateways)) {
+      const unit = selectGatewayUnit(
+        zealots, 2,
+        stalkers, (complete.cybernetics && complete.assimilators && (sentries >= 2)) ? 6 : 0,
+        sentries, (complete.cybernetics && complete.assimilators) ? 1 : 0,
+      );
+
+      if (unit === "stalker") {
         if ((minerals >= 125) && (vespene >= 50) && (foodFree >= 2)) {
           order.stalkers = 1;
           minerals -= 125;
           vespene -= 50;
           foodFree -= 2;
         }
-      } else {
+      } else if (unit === "sentry") {
+        if ((minerals >= 50) && (vespene >= 100) && (foodFree >= 2)) {
+          order.sentries = 1;
+          minerals -= 50;
+          vespene -= 100;
+          foodFree -= 2;
+        }
+      } else if (unit === "zealot") {
         if ((minerals >= 100) && (foodFree >= 2)) {
           order.zealots = 1;
           minerals -= 100;
@@ -118,8 +135,19 @@ export default class Brain {
       order.cybernetics, order.cybernetics,
       order.zealots, order.zealots,
       order.stalkers, order.stalkers,
+      order.sentries, order.sentries,
       order.probes, order.probes,
     ];
   }
 
+}
+
+function selectGatewayUnit(zealots, zealotsRatio, stalkers, stalkersRatio, sentries, sentriesRatio) {
+  if (stalkersRatio && (!zealotsRatio || (stalkers * zealotsRatio <= zealots * stalkersRatio)) && (!sentriesRatio || (stalkers * sentriesRatio <= sentries * stalkersRatio))) {
+    return "stalker";
+  } else if (sentriesRatio && (!zealotsRatio || (sentries * zealotsRatio <= zealots * sentriesRatio))) {
+    return "sentry";
+  } else {
+    return "zealot";
+  }
 }

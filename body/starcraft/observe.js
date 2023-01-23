@@ -10,6 +10,7 @@ const UNITS = {
   72: "cybernetics",
   73: "zealot",
   74: "stalker",
+  77: "sentry",
   84: "probe"
 };
 
@@ -75,6 +76,7 @@ function observeUnits(node, client, units) {
     cybernetics: 0, cyberneticsBuilding: 0,
     zealot: 0, zealotBuilding: 0,
     stalker: 0, stalkerBuilding: 0,
+    sentry: 0, sentryBuilding: 0,
     probe: 0, probeBuilding: 0,
   };
 
@@ -116,8 +118,11 @@ function observeUnits(node, client, units) {
       if (unitInReality.orders[0].abilityId === 916) {
         count["zealotBuilding"]++;
       }
-      if (unitInReality.orders[0].abilityId === 917) {
+      if (unitInReality.orders[0].abilityId === 921) {
         count["stalkerBuilding"]++;
+      }
+      if (unitInReality.orders[0].abilityId === 917) {
+        count["sentryBuilding"]++;
       }
       if (unitInReality.orders[0].abilityId === 1006) {
         count["probeBuilding"]++;
@@ -127,6 +132,10 @@ function observeUnits(node, client, units) {
     if (unitType === "assimilator") {
       unitInMemory.set("harvesters", unitInReality.assignedHarvesters);
       unitInMemory.set("utilized", (unitInReality.assignedHarvesters >= 3));
+    }
+
+    if (unitType === "sentry") {
+      unitInMemory.set("guardian-shield", !!unitInReality.buffIds.length);
     }
 
     unitInMemory.set("x", unitInReality.pos.x);

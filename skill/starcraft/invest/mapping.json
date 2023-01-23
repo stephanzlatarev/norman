@@ -19,6 +19,7 @@
       "BUILD-CYBERNETICS": { "label": "build a cybernetics core", "type": "goal" },
       "TRAIN-ZEALOT": { "label": "train a zealot", "type": "goal" },
       "TRAIN-STALKER": { "label": "train a stalker", "type": "goal" },
+      "TRAIN-SENTRY": { "label": "train a sentry", "type": "goal" },
       "TRAIN-PROBE": { "label": "train a probe", "type": "goal" }
     },
 
@@ -78,6 +79,12 @@
         "unique": true
       },
       {
+        "label": "LETS-TRAIN-SENTRY",
+        "path": ["ADVANCE-MILITARY", "build-sentry", "TRAIN-SENTRY"],
+        "provisional": true,
+        "unique": true
+      },
+      {
         "label": "LETS-TRAIN-PROBE",
         "path": ["ADVANCE-MILITARY", "build-probe", "TRAIN-PROBE"],
         "provisional": true,
@@ -104,6 +111,8 @@
     "stats/zealotBuilding",
     "stats/stalker",
     "stats/stalkerBuilding",
+    "stats/sentry",
+    "stats/sentryBuilding",
     "stats/probe",
     "stats/probeBuilding"
   ],
@@ -118,6 +127,7 @@
     "LETS-BUILD-CYBERNETICS", "BUILD-CYBERNETICS",
     "LETS-TRAIN-ZEALOT", "TRAIN-ZEALOT",
     "LETS-TRAIN-STALKER", "TRAIN-STALKER",
+    "LETS-TRAIN-SENTRY", "TRAIN-SENTRY",
     "LETS-TRAIN-PROBE", "TRAIN-PROBE"
   ]
 }

@@ -16,7 +16,7 @@ export function observeMilitary(node, client, observation) {
 }
 
 function observeArmy(army, homebase, observation) {
-  const armyUnits = observation.ownUnits.filter(unit => (unit.unitType === 73) || (unit.unitType === 74));
+  const armyUnits = observation.ownUnits.filter(unit => (unit.unitType === 73) || (unit.unitType === 74) || (unit.unitType === 77));
 
   army.set("baseX", homebase.get("x"));
   army.set("baseY", homebase.get("y"));

@@ -1,0 +1,31 @@
+{
+  "label": "use guardian shield",
+  "goal": "fight opponent",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "SENTRY": { "unitType": "sentry", "guardian-shield": false }
+    },
+
+    "paths": [
+      { "path": ["SENTRY"] },
+      {
+        "label": "USE-GUARDIAN-SHIELD",
+        "path": ["SENTRY", "use-guardian-shield", "SENTRY"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [
+    "SENTRY/energy"
+  ],
+
+  "output": [
+    "USE-GUARDIAN-SHIELD"
+  ]
+}
