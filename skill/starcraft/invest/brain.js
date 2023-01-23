@@ -70,6 +70,12 @@ export default class Brain {
       minerals -= 400;
     }
 
+    // Next priority is cybernetic cores
+    if (!cybernetics && (minerals >= 200) && (complete.zealots > 0)) {
+      order.cybernetics = 1;
+      minerals -= 200;
+    }
+
     // Next priority is gateways
     if (!progress.gateways && (nexuses > 1) && (minerals >= 150) && (gateways < nexuses * 2)) {
       order.gateways = 1;
@@ -80,12 +86,6 @@ export default class Brain {
     if (!progress.assimilators && (minerals >= 75) && (minerals > vespene) && (gateways > 0) && (nexuses > 1) && (assimilators < complete.nexuses * 2)) {
       order.assimilators = 1;
       minerals -= 75;
-    }
-
-    // Next priority is cybernetic cores
-    if (!cybernetics && !progress.cybernetics && (minerals >= 200) && (complete.zealots > 1)) {
-      order.cybernetics = 1;
-      minerals -= 200;
     }
 
     // Next priority is probes
