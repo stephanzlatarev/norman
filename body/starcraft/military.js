@@ -1,5 +1,5 @@
 
-const STALK_RANGE_SQUARED = 81; // Squared range for stalking enemies
+const STALK_RANGE_SQUARED = 14*14; // Squared range for stalking enemies - just outside range of tanks in siege mode
 
 export function observeMilitary(node, client, observation) {
   const homebase = node.get("homebase");

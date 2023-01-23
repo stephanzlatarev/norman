@@ -1,9 +1,10 @@
 
-const RED_LINE_SQUARED = 25 * 25;
+const RED_LINE_SQUARED = 40 * 40; // This is the closest an enemy can go to homebase before being attacked with everything
+
 const TOO_CLOSE_SQUARED = 7 * 7;
-const STALK_RANGE_SQUARED = 9 * 9; // Squared range for stalking enemies
-const FAR_SQUARED = 10 * 10;
-const TOO_FAR_SQUARED = 12 * 12;
+const STALK_RANGE_SQUARED = 13 * 13; // Squared range for stalking enemies
+const FAR_SQUARED = 15 * 15;
+const TOO_FAR_SQUARED = 17 * 17;
 
 export default class Brain {
 
