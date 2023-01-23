@@ -118,10 +118,10 @@ function observeUnits(node, client, units) {
       if (unitInReality.orders[0].abilityId === 916) {
         count["zealotBuilding"]++;
       }
-      if (unitInReality.orders[0].abilityId === 921) {
+      if (unitInReality.orders[0].abilityId === 917) {
         count["stalkerBuilding"]++;
       }
-      if (unitInReality.orders[0].abilityId === 917) {
+      if (unitInReality.orders[0].abilityId === 921) {
         count["sentryBuilding"]++;
       }
       if (unitInReality.orders[0].abilityId === 1006) {
