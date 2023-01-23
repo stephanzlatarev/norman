@@ -91,29 +91,22 @@ export default class Brain {
       foodFree -= 1;
     }
 
-    let reservations = 0;
-
-    // Next priority is stalkers
-    if (complete.cybernetics && (vespene >= 50)) {
-      while ((progress.zealots + progress.stalkers + order.stalkers + reservations < complete.gateways) && (vespene >= 50) && (foodFree >= 2)) {
-        if (minerals >= 125) {
-          order.stalkers = (order.stalkers > 0) ? order.stalkers + 1 : 1;
-        } else {
-          reservations++;
+    // Next priority is land combat units
+    if (complete.gateways && (progress.zealots + progress.stalkers < complete.gateways)) {
+      if (complete.cybernetics && complete.assimilators && (stalkers < zealots * 3)) {
+        if ((minerals >= 125) && (vespene >= 50) && (foodFree >= 2)) {
+          order.stalkers = 1;
+          minerals -= 125;
+          vespene -= 50;
+          foodFree -= 2;
         }
-        minerals -= 125;
-        minerals -= 50;
-        foodFree -= 2;
-
-        if (reservations > 2) break;
+      } else {
+        if ((minerals >= 100) && (foodFree >= 2)) {
+          order.zealots = 1;
+          minerals -= 100;
+          foodFree -= 2;
+        }
       }
-    }
-
-    // Next priority is stalkers
-    if ((progress.zealots + progress.stalkers + order.stalkers + reservations < complete.gateways) && (minerals >= 100) && (foodFree >= 2)) {
-      order.zealots = 1;
-      minerals -= 100;
-      foodFree -= 2;
     }
 
     return [
