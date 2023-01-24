@@ -89,7 +89,7 @@ export default class Brain {
     }
 
     // Next priority is probes
-    if ((progress.probes < nexuses - progress.nexuses) && (probes < 64) && (minerals >= 50) && foodFree) {
+    if ((progress.probes < nexuses - progress.nexuses) && (probes < 82) && (minerals >= 50) && foodFree) {
       order.probes = 1;
       minerals -= 50;
       foodFree -= 1;
