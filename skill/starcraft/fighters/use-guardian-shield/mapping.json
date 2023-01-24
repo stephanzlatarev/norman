@@ -8,11 +8,13 @@
 
   "memory": {
     "nodes": {
-      "SENTRY": { "unitType": "sentry", "guardian-shield": false }
+      "SENTRY": { "unitType": "sentry", "guardian-shield": false },
+      "MILITARY": { "code": "body/starcraft/unit/army" }
     },
 
     "paths": [
       { "path": ["SENTRY"] },
+      { "path": ["MILITARY"] },
       {
         "label": "USE-GUARDIAN-SHIELD",
         "path": ["SENTRY", "use-guardian-shield", "SENTRY"],
@@ -22,7 +24,11 @@
   },
 
   "input": [
-    "SENTRY/energy"
+    "SENTRY/energy",
+    "SENTRY/x",
+    "SENTRY/y",
+    "MILITARY/enemyX",
+    "MILITARY/enemyY"
   ],
 
   "output": [
