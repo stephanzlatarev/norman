@@ -1,4 +1,5 @@
 
+const ENEMY_ALERT_SQUARED = 40*40; // Squared distance which raises alert for enemies
 const STALK_RANGE_SQUARED = 14*14; // Squared range for stalking enemies - just outside range of tanks in siege mode
 
 export function observeMilitary(node, client, observation) {
@@ -17,9 +18,11 @@ export function observeMilitary(node, client, observation) {
 
 function observeArmy(army, homebase, observation) {
   const armyUnits = observation.ownUnits.filter(unit => (unit.unitType === 73) || (unit.unitType === 74) || (unit.unitType === 77));
+  const baseX = homebase.get("x");
+  const baseY = homebase.get("y");
 
-  army.set("baseX", homebase.get("x"));
-  army.set("baseY", homebase.get("y"));
+  army.set("baseX", baseX);
+  army.set("baseY", baseY);
   army.set("warriorCount", armyUnits.length);
 
   if (army.get("enemyCount") && armyUnits.length) {
@@ -29,12 +32,10 @@ function observeArmy(army, homebase, observation) {
     if (!leader) {
       const enemyX = army.get("enemyX");
       const enemyY = army.get("enemyY");
-      const baseX = homebase.get("x");
-      const baseY = homebase.get("y");
       const baseTangence = tangence(baseX, baseY, enemyX, enemyY);
 
       for (const unit of armyUnits) {
-        unit.squareDistanceToEnemy = squareDistance(unit.pos.x, unit.pos.y, enemyX, enemyY, baseTangence);
+        unit.squareDistanceToEnemy = squareDistanceInLine(unit.pos.x, unit.pos.y, enemyX, enemyY, baseTangence);
       }
 
       const order = armyUnits.sort((a, b) => (a.squareDistanceToEnemy - b.squareDistanceToEnemy));
@@ -57,12 +58,32 @@ function observeArmy(army, homebase, observation) {
     army.set("armyCount", armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10)).length);
     army.set("armyX", leader.pos.x);
     army.set("armyY", leader.pos.y);
+
+    const guardTag = army.get("guardTag");
+    let guard = guardTag ? armyUnits.find(unit => (unit.tag === guardTag)) : null;
+
+    if (!guard || (distance(guard.pos.x, guard.pos.y, baseX, baseY) > ENEMY_ALERT_SQUARED)) {
+      guard = armyUnits.find(unit => (distance(unit.pos.x, unit.pos.y, baseX, baseY) < ENEMY_ALERT_SQUARED));
+    }
+
+    if (guard) {
+      army.set("guardTag", guard.tag);
+      army.set("guardX", guard.pos.x);
+      army.set("guardY", guard.pos.y);
+    } else {
+      army.clear("guardTag");
+      army.clear("guardX");
+      army.clear("guardY");
+    }
   } else {
     army.set("armyCount", 0);
     army.set("tag", []);
     army.clear("leaderTag");
     army.clear("armyX");
     army.clear("armyY");
+    army.clear("guardTag");
+    army.clear("guardX");
+    army.clear("guardY");
   }
 }
 
@@ -73,20 +94,18 @@ function observeEnemy(game, army, homebase, observation) {
   const homebaseY = homebase.get("y");
 
   const enemyUnits = observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === enemy)));
-  enemyUnits.sort((a, b) => {
-    const da = (a.pos.x - homebaseX) * (a.pos.x - homebaseX) + (a.pos.y - homebaseY) * (a.pos.y - homebaseY);
-    const db = (b.pos.x - homebaseX) * (b.pos.x - homebaseX) + (b.pos.y - homebaseY) * (b.pos.y - homebaseY);
-    return da - db;
-  });
+  enemyUnits.sort((a, b) => (distance(a.pos.x, a.pos.y, homebaseX, homebaseY) - distance(b.pos.x, b.pos.y, homebaseX, homebaseY)));
   const enemyUnit = enemyUnits.length ? enemyUnits[0] : null;
 
   if (enemyUnit) {
     const oldEnemyCount = army.get("enemyCount");
+    army.set("enemyAlert", distance(enemyUnit.pos.x, enemyUnit.pos.y, homebaseX, homebaseY) <= ENEMY_ALERT_SQUARED);
     army.set("enemyCount", Math.max(enemyUnits.length, oldEnemyCount ? oldEnemyCount : 0));
     army.set("enemyX", enemyUnit.pos.x);
     army.set("enemyY", enemyUnit.pos.y);
   } else if (isLocationVisible(observation, owner, army.get("enemyX"), army.get("enemyY"))) {
     army.set("enemyCount", 0);
+    army.clear("enemyAlert");
     army.clear("enemyX");
     army.clear("enemyY");
   }
@@ -104,7 +123,11 @@ function tangence(baseX, baseY, enemyX, enemyY) {
   return Math.atan2(baseY - enemyY, baseX - enemyX);
 }
 
-function squareDistance(unitX, unitY, enemyX, enemyY, baseTangence) {
+function distance(x1, y1, x2, y2) {
+  return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+}
+
+function squareDistanceInLine(unitX, unitY, enemyX, enemyY, baseTangence) {
   const uex = (unitX - enemyX);
   const uey = (unitY - enemyY);
   const ued = uex * uex + uey * uey;

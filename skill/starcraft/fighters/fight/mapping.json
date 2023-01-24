@@ -28,8 +28,11 @@
   },
 
   "input": [
+    "enemyAlert",
     "baseX",
     "baseY",
+    "guardX",
+    "guardY",
     "armyCount",
     "armyX",
     "armyY",
