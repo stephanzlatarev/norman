@@ -97,6 +97,7 @@
     "minerals",
     "vespene",
     "foodUsed",
+    "stats/baseWithoutPower",
     "stats/nexus",
     "stats/nexusBuilding",
     "stats/pylon",

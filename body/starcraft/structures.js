@@ -14,8 +14,12 @@ export function observeStructures(node, observation) {
 function countStructuresOfNexuses(node, observation) {
   for (const nexus of node.links()) {
     if (nexus.get("unitType") === "nexus") {
-      const x = nexus.get("x");
-      const y = nexus.get("y");
+      const x = nexus.get("baseX");
+      const y = nexus.get("baseY");
+
+      if (!x || !y) continue;
+
+      nexus.set("baseNeedsPylon", !observation.ownUnits.find(pylon => (pylon.unitType === 60) && near(pylon, x, y)));
 
       const pylons = observation.ownUnits.filter(pylon => (pylon.unitType === 60) && (pylon.buildProgress >= 1) && near(pylon, x, y));
       nexus.set("pylons", pylons.length);

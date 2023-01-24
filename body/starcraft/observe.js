@@ -69,6 +69,7 @@ function observeChat(node, client) {
 
 function observeUnits(node, client, units) {
   const count = {
+    baseWithoutPower: 0,
     nexus: 0, nexusBuilding: 0,
     pylon: 0, pylonBuilding: 0,
     assimilator: 0, assimilatorBuilding: 0,
@@ -127,6 +128,10 @@ function observeUnits(node, client, units) {
       if (unitInReality.orders[0].abilityId === 1006) {
         count["probeBuilding"]++;
       }
+    }
+
+    if ((unitType === "nexus") && unitInMemory.get("baseNeedsPylon")) {
+      count["baseWithoutPower"]++;
     }
 
     if (unitType === "assimilator") {

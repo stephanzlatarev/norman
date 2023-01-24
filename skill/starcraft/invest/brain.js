@@ -6,19 +6,9 @@ export default class Brain {
     let vespene = input[1];
     let foodUsed = input[2];
 
-    const complete = {
-      nexuses: input[3],
-      pylons: input[5],
-      assimilators: input[7],
-      gateways: input[9],
-      cybernetics: input[11],
-      zealots: input[13],
-      stalkers: input[15],
-      sentries: input[17],
-      probes: input[19],
-    };
+    const baseWithoutPower = input[3];
 
-    const progress = {
+    const complete = {
       nexuses: input[4],
       pylons: input[6],
       assimilators: input[8],
@@ -28,6 +18,18 @@ export default class Brain {
       stalkers: input[16],
       sentries: input[18],
       probes: input[20],
+    };
+
+    const progress = {
+      nexuses: input[5],
+      pylons: input[7],
+      assimilators: input[9],
+      gateways: input[11],
+      cybernetics: input[13],
+      zealots: input[15],
+      stalkers: input[17],
+      sentries: input[19],
+      probes: input[21],
     };
 
     const order = {
@@ -60,6 +62,11 @@ export default class Brain {
       (minerals >= 100) && (foodUsed >= foodThreshold) && (pylons < nexuses * 6) &&
       ((pylons < 1) || ((nexuses >= 2) && (gateways >= 1))) // Don't build a second pylon before the second nexus and first gateway are started 
     ) {
+      // Build pylon to increase food for units
+      order.pylons = 1;
+      minerals -= 100;
+    } else if ((nexuses >= 3) && baseWithoutPower) {
+      // Build pylon to open the base for other structures
       order.pylons = 1;
       minerals -= 100;
     }
