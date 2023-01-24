@@ -9,7 +9,7 @@ export default class Brain {
     const enemyX = input[4];
     const enemyY = input[5];
 
-    return (enemies && !warriors && near(enemyX, enemyY, homeX, homeY, 10)) ? [1] : [-1];
+    return ((enemies > 1) && !warriors && near(enemyX, enemyY, homeX, homeY, 10)) ? [1] : [-1];
   }
 
 }
