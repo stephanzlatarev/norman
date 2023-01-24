@@ -12,6 +12,7 @@
   ],
 
   "output": [
-    "build-stalker"
+    "build-stalker",
+    "ordersCount"
   ]
 }

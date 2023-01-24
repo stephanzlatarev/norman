@@ -6,7 +6,7 @@ export default class Brain {
     const orders = input[1];
 
     if (isOperational && (orders === 0)) {
-      return [1];
+      return [1, orders - 1];
     }
   }
 

@@ -12,6 +12,7 @@
   ],
 
   "output": [
-    "build-sentry"
+    "build-sentry",
+    "ordersCount"
   ]
 }
