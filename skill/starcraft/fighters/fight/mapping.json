@@ -35,6 +35,7 @@
     "guardX",
     "guardY",
     "armyCount",
+    "engagedCount",
     "armyEnergy",
     "armyX",
     "armyY",

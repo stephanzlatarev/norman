@@ -67,6 +67,7 @@ function observeArmy(army, homebase, observation) {
 
     army.set("leaderTag", leader.tag);
     army.set("tag", armyUnits.map(unit => unit.tag));
+    army.set("engagedCount", armyPackUnits.filter(unit => (unit.engagedTargetTag !== "0")).length);
     army.set("armyCount", armyPackUnits.length);
     army.set("armyEnergy", armyEnergy);
     army.set("armyX", leader.pos.x);
@@ -92,6 +93,8 @@ function observeArmy(army, homebase, observation) {
     army.set("armyCount", 0);
     army.set("tag", []);
     army.clear("leaderTag");
+    army.clear("engagedCount");
+    army.clear("armyEnergy");
     army.clear("armyX");
     army.clear("armyY");
     army.clear("guardTag");
