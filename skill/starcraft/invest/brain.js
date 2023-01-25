@@ -13,11 +13,12 @@ export default class Brain {
       pylons: input[6],
       assimilators: input[8],
       gateways: input[10],
-      cybernetics: input[12],
-      zealots: input[14],
-      stalkers: input[16],
-      sentries: input[18],
-      probes: input[20],
+      forges: input[12],
+      cybernetics: input[14],
+      zealots: input[16],
+      stalkers: input[18],
+      sentries: input[20],
+      probes: input[22],
     };
 
     const progress = {
@@ -25,11 +26,12 @@ export default class Brain {
       pylons: input[7],
       assimilators: input[9],
       gateways: input[11],
-      cybernetics: input[13],
-      zealots: input[15],
-      stalkers: input[17],
-      sentries: input[19],
-      probes: input[21],
+      forges: input[13],
+      cybernetics: input[15],
+      zealots: input[17],
+      stalkers: input[19],
+      sentries: input[21],
+      probes: input[23],
     };
 
     const order = {
@@ -37,6 +39,7 @@ export default class Brain {
       pylons: -1,
       assimilators: -1,
       gateways: -1,
+      forges: -1,
       cybernetics: -1,
       zealots: -1,
       stalkers: -1,
@@ -48,6 +51,7 @@ export default class Brain {
     const pylons = complete.pylons + progress.pylons;
     const assimilators = complete.assimilators + progress.assimilators;
     const gateways = complete.gateways + progress.gateways;
+    const forges = complete.forges + progress.forges;
     const cybernetics = complete.cybernetics + progress.cybernetics;
     const zealots = complete.zealots + progress.zealots;
     const stalkers = complete.stalkers + progress.stalkers;
@@ -81,6 +85,12 @@ export default class Brain {
     if (!cybernetics && (minerals >= 200) && (complete.zealots > 0)) {
       order.cybernetics = 1;
       minerals -= 200;
+    }
+
+    // Next priority is forges
+    if (!forges && (minerals >= 150) && (zealots + sentries + stalkers > 10)) {
+      order.forges = 1;
+      minerals -= 150;
     }
 
     // Next priority is gateways
@@ -139,6 +149,7 @@ export default class Brain {
       order.pylons, order.pylons,
       order.assimilators, order.assimilators,
       order.gateways, order.gateways,
+      order.forges, order.forges,
       order.cybernetics, order.cybernetics,
       order.zealots, order.zealots,
       order.stalkers, order.stalkers,

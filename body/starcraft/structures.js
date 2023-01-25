@@ -37,6 +37,9 @@ function countStructuresOfNexuses(node, observation) {
       for (const gateway of gateways) {
         nexus.set(gateway.tag, node.memory.get(node.path + "/" + gateway.tag));
       }
+
+      const cybernetics = observation.ownUnits.filter(structure => (structure.unitType === 72) && (structure.buildProgress >= 1) && near(structure, baseX, baseY));
+      nexus.set("cybernetics", cybernetics.length);
     }
   }
 }

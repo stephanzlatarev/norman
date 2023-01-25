@@ -1,0 +1,44 @@
+{
+  "label": "select builder",
+  "goal": "build a forge",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": { "type": "location", "purpose": "forge" },
+      "BUILDER": { "unitType": "probe" },
+      "PROBE": { "unitType": "probe" }
+    },
+
+    "paths": [
+      { "path": ["PROBE"] },
+      { "path": ["GOAL", "location", "LOCATION"] },
+      {
+        "path": ["GOAL", "builder", "BUILDER"],
+        "optional": true
+      },
+      {
+        "label": "SELECT-PROBE",
+        "path": ["GOAL", "builder", "PROBE"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "LOCATION/x",
+    "LOCATION/y",
+    "BUILDER",
+    "PROBE/busy",
+    "PROBE/x",
+    "PROBE/y"
+  ],
+
+  "output": [
+    "SELECT-PROBE"
+  ]
+}

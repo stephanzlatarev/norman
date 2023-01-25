@@ -1,0 +1,39 @@
+{
+  "label": "build a forge",
+  "goal": "build a forge",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": { "type": "location", "purpose": "forge" },
+      "PROBE": { "unitType": "probe" }
+    },
+
+    "paths": [
+      {
+        "path": ["GOAL", "location", "LOCATION"]
+      },
+      {
+        "path": ["GOAL", "builder", "PROBE"]
+      },
+      {
+        "label": "ASSIGN",
+        "path": ["PROBE", "build-forge", "LOCATION"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "PROBE",
+    "LOCATION"
+  ],
+
+  "output": [
+    "ASSIGN"
+  ]
+}
