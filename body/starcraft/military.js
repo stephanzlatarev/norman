@@ -106,7 +106,9 @@ function observeEnemy(game, army, homebase, observation) {
   const homebaseX = homebase.get("x");
   const homebaseY = homebase.get("y");
 
-  const enemyUnits = observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === enemy)));
+  const enemyUnits = observation.rawData.units.find(unit => ((unit.unitType === 74) && (unit.owner === owner))) // One stalker allows to target flying units
+    ? observation.rawData.units.filter(unit => (unit.owner === enemy))
+    : observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === enemy)));
   enemyUnits.sort((a, b) => (distance(a.pos.x, a.pos.y, homebaseX, homebaseY) - distance(b.pos.x, b.pos.y, homebaseX, homebaseY)));
   const enemyUnit = enemyUnits.length ? enemyUnits[0] : null;
 
