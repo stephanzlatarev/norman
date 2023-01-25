@@ -4,6 +4,8 @@ const STALK_RANGE_SQUARED = 13 * 13; // Squared range for stalking enemies
 const FAR_SQUARED = 15 * 15;
 const TOO_FAR_SQUARED = 17 * 17;
 
+const ENERGY_TO_ATTACK = 10; // Accumulate this much energy before launching an attack
+
 export default class Brain {
 
   react(input) {
@@ -30,7 +32,7 @@ export default class Brain {
       return [0, -1, 1, enemyX, enemyY];
     }
 
-    if ((isRegrouping && (armyEnergy < 50)) || ((armyCount <= enemyCount) && (armyCount < 12))) {
+    if ((isRegrouping && (armyEnergy < ENERGY_TO_ATTACK)) || ((armyCount <= enemyCount) && (armyCount < 12))) {
       // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
       const location = stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY);
       return [1, 1, -1, location.x, location.y];

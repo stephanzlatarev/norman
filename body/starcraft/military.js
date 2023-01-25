@@ -108,9 +108,10 @@ function observeEnemy(game, army, homebase, observation) {
   const oldEnemyX = army.get("enemyX");
   const oldEnemyY = army.get("enemyY");
 
-  const enemyUnits = observation.rawData.units.find(unit => ((unit.unitType === 74) && (unit.owner === owner))) // One stalker allows to target flying units
-    ? observation.rawData.units.filter(unit => (unit.owner === enemy))
-    : observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === enemy)));
+//  const enemyUnits = observation.rawData.units.find(unit => ((unit.unitType === 74) && (unit.owner === owner))) // One stalker allows to target flying units
+//    ? observation.rawData.units.filter(unit => (unit.owner === enemy))
+//    : observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === enemy)));
+  const enemyUnits = observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === enemy)));
   for (const unit of enemyUnits) unit.distanceToHomebase = distance(unit.pos.x, unit.pos.y, homebaseX, homebaseY);
   enemyUnits.sort((a, b) => (a.distanceToHomebase - b.distanceToHomebase));
   const enemyUnit = enemyUnits.length ? enemyUnits[0] : null;
@@ -119,7 +120,10 @@ function observeEnemy(game, army, homebase, observation) {
     const oldEnemyCount = army.get("enemyCount");
     army.set("enemyCount", Math.max(enemyUnits.length, oldEnemyCount ? oldEnemyCount : 0));
 
-    if (!oldEnemyX || !oldEnemyY || (enemyUnit.distanceToHomebase < distance(oldEnemyX, oldEnemyY, homebaseX, homebaseY) - STALK_RANGE_SQUARED)) {
+    if (!oldEnemyX || !oldEnemyY
+      || isLocationVisible(observation, owner, oldEnemyX, oldEnemyY)
+      || (enemyUnit.distanceToHomebase < distance(oldEnemyX, oldEnemyY, homebaseX, homebaseY) - STALK_RANGE_SQUARED)
+    ) {
       // Switch attention to enemy which is closest to homebase
       army.set("enemyAlert", distance(enemyUnit.pos.x, enemyUnit.pos.y, homebaseX, homebaseY) <= ENEMY_ALERT_SQUARED);
       army.set("enemyX", enemyUnit.pos.x);
