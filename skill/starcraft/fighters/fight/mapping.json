@@ -28,12 +28,14 @@
   },
 
   "input": [
+    "regrouping",
     "enemyAlert",
     "baseX",
     "baseY",
     "guardX",
     "guardY",
     "armyCount",
+    "armyEnergy",
     "armyX",
     "armyY",
     "enemyCount",
@@ -42,6 +44,7 @@
   ],
 
   "output": [
+    "regrouping",
     "RALLY",
     "ATTACK",
     "LOCATION/x",

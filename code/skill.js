@@ -20,25 +20,39 @@ export default class Skill {
   // The skill takes two graph patterns - one for the input and one for the output.
   // It generates alternative memory layers for the matches of the input graph pattern and the memory.
   // It feeds all memory layers into the skill brain one by one.
-  // The skill brain produces output which is written in the memory following the output graph pattern.
+  // The skill brain produces output. The last output is written in the memory following the output graph pattern.
   //
   // The body will read the memory during tock phase and will issue motor commands accordingly.
   async perform(goal, skill, body) {
-    const layer = skill.get("memory");
+    let layer = skill.get("memory");
+    let memory;
+    let motor;
+
     if (layer) {
       const pattern = { ...layer };
       pattern.nodes = { ...layer.nodes, GOAL: goal, BODY: body };
 
-      let cache;
       for (const one of layers(goal.memory, pattern)) {
-        const output = await performOnce(skill, one, cache);
+        const output = await performOnce(skill, one, motor);
 
         if (output) {
-          cache = output;
+          memory = one;
+          motor = output;
         }
       }
     } else {
-      await performOnce(skill, body);
+      memory = body;
+      motor = await performOnce(skill, body);
+    }
+
+    if (memory && motor) {
+      const output = skill.data.output;
+
+      for (let i = 0; i < output.length; i++) {
+        if (output[i]) {
+          memory.set(output[i], motor[i]);
+        }
+      }
     }
   }
 }
@@ -66,17 +80,7 @@ async function performOnce(skill, layer, cache) {
     }
   }
 
-  const motor = await skill.get("skill").react(sensor);
-
-  if (motor) {
-    for (let i = 0; i < skill.data.output.length; i++) {
-      if (skill.data.output[i]) {
-        layer.set(skill.data.output[i], motor[i]);
-      }
-    }
-  }
-
-  return motor;
+  return await skill.get("skill").react(sensor);
 }
 
 async function load(node) {

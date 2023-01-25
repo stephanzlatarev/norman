@@ -7,33 +7,37 @@ const TOO_FAR_SQUARED = 17 * 17;
 export default class Brain {
 
   react(input) {
-    const enemyAlert = input[0];
-    const baseX = input[1];
-    const baseY = input[2];
-    const guardX = input[3];
-    const guardY = input[4];
-    const armyCount = input[5];
-    const armyX = input[6];
-    const armyY = input[7];
-    const enemyCount = input[8];
-    const enemyX = input[9];
-    const enemyY = input[10];
+    // When regrouping army will react to enemy alert but will not start attack until energy level and army count are at good levels
+    const isRegrouping = input[0];
 
-    if (!enemyX || !enemyY) return;
+    const enemyAlert = input[1];
+    const baseX = input[2];
+    const baseY = input[3];
+    const guardX = input[4];
+    const guardY = input[5];
+    const armyCount = input[6];
+    const armyEnergy = input[7];
+    const armyX = input[8];
+    const armyY = input[9];
+    const enemyCount = input[10];
+    const enemyX = input[11];
+    const enemyY = input[12];
+
+    if (!enemyX || !enemyY || !armyX || !armyY) return;
 
     if (enemyAlert) {
       // Defend base
-      return [-1, 1, enemyX, enemyY];
+      return [0, -1, 1, enemyX, enemyY];
     }
 
-    if (armyX && armyY && (armyCount <= enemyCount) && (armyCount < 12)) {
-      // Rally army
+    if ((isRegrouping && (armyEnergy < 50)) || ((armyCount <= enemyCount) && (armyCount < 12))) {
+      // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
       const location = stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY);
-      return [1, -1, location.x, location.y];
+      return [1, 1, -1, location.x, location.y];
     }
 
     // Attack enemy
-    return [-1, 1, enemyX, enemyY];
+    return [0, -1, 1, enemyX, enemyY];
   }
 
 }

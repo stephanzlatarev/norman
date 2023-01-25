@@ -53,9 +53,22 @@ function observeArmy(army, homebase, observation) {
       leader = armyUnits[0];
     }
 
+    // Only sentries count as energy units. We want to know the max energy level a unit in the army pack has
+    const armyPackUnits = armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10));
+    let armyEnergy = 0;
+    let countEnergyUnits = 0;
+    for (const unit of armyPackUnits) {
+      if (unit.unitType === 77) {
+        countEnergyUnits++;
+        armyEnergy = Math.max(armyEnergy, unit.energyMax ? Math.floor(100 * unit.energy / unit.energyMax) : 100);
+      }
+    }
+    if (!countEnergyUnits) armyEnergy = 100;
+
     army.set("leaderTag", leader.tag);
     army.set("tag", armyUnits.map(unit => unit.tag));
-    army.set("armyCount", armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10)).length);
+    army.set("armyCount", armyPackUnits.length);
+    army.set("armyEnergy", armyEnergy);
     army.set("armyX", leader.pos.x);
     army.set("armyY", leader.pos.y);
 
