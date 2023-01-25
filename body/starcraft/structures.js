@@ -14,23 +14,25 @@ export function observeStructures(node, observation) {
 function countStructuresOfNexuses(node, observation) {
   for (const nexus of node.links()) {
     if (nexus.get("unitType") === "nexus") {
-      const x = nexus.get("baseX");
-      const y = nexus.get("baseY");
+      const nexusX = nexus.get("x");
+      const nexusY = nexus.get("y");
+      const baseX = nexus.get("baseX");
+      const baseY = nexus.get("baseY");
 
-      if (!x || !y) continue;
-
-      nexus.set("baseNeedsPylon", !observation.ownUnits.find(pylon => (pylon.unitType === 60) && near(pylon, x, y)));
-
-      const pylons = observation.ownUnits.filter(pylon => (pylon.unitType === 60) && (pylon.buildProgress >= 1) && near(pylon, x, y));
-      nexus.set("pylons", pylons.length);
-
-      const assimilators = observation.ownUnits.filter(assimilator => (assimilator.unitType === 61) && (assimilator.buildProgress >= 1) && near(assimilator, x, y));
+      const assimilators = observation.ownUnits.filter(assimilator => (assimilator.unitType === 61) && (assimilator.buildProgress >= 1) && near(assimilator, nexusX, nexusY));
       nexus.set("assimilators", assimilators.length);
       for (const assimilator of assimilators) {
         nexus.set(assimilator.tag, node.memory.get(node.path + "/" + assimilator.tag));
       }
 
-      const gateways = observation.ownUnits.filter(gateway => (gateway.unitType === 62) && (gateway.buildProgress >= 1) && near(gateway, x, y));
+      if (!baseX || !baseY) continue;
+
+      nexus.set("baseNeedsPylon", !observation.ownUnits.find(pylon => (pylon.unitType === 60) && near(pylon, baseX, baseY)));
+
+      const pylons = observation.ownUnits.filter(pylon => (pylon.unitType === 60) && (pylon.buildProgress >= 1) && near(pylon, baseX, baseY));
+      nexus.set("pylons", pylons.length);
+
+      const gateways = observation.ownUnits.filter(gateway => (gateway.unitType === 62) && (gateway.buildProgress >= 1) && near(gateway, baseX, baseY));
       nexus.set("gateways", gateways.length);
       for (const gateway of gateways) {
         nexus.set(gateway.tag, node.memory.get(node.path + "/" + gateway.tag));
