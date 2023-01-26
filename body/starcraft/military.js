@@ -114,7 +114,7 @@ function observeEnemy(game, army, homebase, observation) {
 //  const enemyUnits = observation.rawData.units.find(unit => ((unit.unitType === 74) && (unit.owner === owner))) // One stalker allows to target flying units
 //    ? observation.rawData.units.filter(unit => (unit.owner === enemy))
 //    : observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === enemy)));
-  const enemyUnits = observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === enemy)));
+  const enemyUnits = observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === enemy) && (unit.unitType !== 13)));
   for (const unit of enemyUnits) unit.distanceToHomebase = distance(unit.pos.x, unit.pos.y, homebaseX, homebaseY);
   enemyUnits.sort((a, b) => (a.distanceToHomebase - b.distanceToHomebase));
   const enemyUnit = enemyUnits.length ? enemyUnits[0] : null;
@@ -124,7 +124,7 @@ function observeEnemy(game, army, homebase, observation) {
     const enemyMovingUnits = enemyUnits.filter(unit => ((unit.pos.x * 2) !== Math.floor(unit.pos.x * 2)) || ((unit.pos.y * 2) !== Math.floor(unit.pos.y * 2)));
     army.set("enemyCount", Math.max(enemyMovingUnits.length, oldEnemyCount ? oldEnemyCount : 1));
 
-    if (shouldSwitchAttention(oldEnemyX, oldEnemyY, enemyUnit, enemyUnits, homebaseX, homebaseY)) {
+    if (shouldSwitchAttention(oldEnemyX, oldEnemyY, enemyUnit, enemyUnits, homebaseX, homebaseY, army)) {
       // Switch attention to enemy which is closest to homebase
       army.set("enemyAlert", enemyUnit.distanceToHomebase <= ENEMY_ALERT_SQUARED);
       army.set("enemyX", enemyUnit.pos.x);
@@ -138,11 +138,18 @@ function observeEnemy(game, army, homebase, observation) {
   }
 }
 
-function shouldSwitchAttention(oldEnemyX, oldEnemyY, enemyUnit, enemyUnits, homebaseX, homebaseY) {
+function shouldSwitchAttention(oldEnemyX, oldEnemyY, enemyUnit, enemyUnits, homebaseX, homebaseY, army) {
   if (!oldEnemyX || !oldEnemyY) return true;
   if (enemyUnit.distanceToHomebase < distance(oldEnemyX, oldEnemyY, homebaseX, homebaseY) - STALK_RANGE_SQUARED) return true;
   if (near(enemyUnit, oldEnemyX, oldEnemyY, 14)) return true;
   if (!enemyUnits.find(unit => (Math.abs(unit.pos.x - oldEnemyX) <= 14) && (Math.abs(unit.pos.y - oldEnemyY) <= 14))) return true;
+
+  const armyX = army.get("armyX");
+  const armyY = army.get("armyY");
+  const armyIsAtOldEnemyLocation = (Math.abs(armyX - oldEnemyX) <= 5) && (Math.abs(armyY - oldEnemyY) <= 5);
+  const noEnemiesNearArmy = (!enemyUnits.find(unit => (Math.abs(unit.pos.x - armyX) <= 12) && (Math.abs(unit.pos.y - armyY) <= 12)));
+  if (armyIsAtOldEnemyLocation && noEnemiesNearArmy) return true;
+
   return false;
 }
 
