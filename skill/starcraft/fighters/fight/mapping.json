@@ -41,7 +41,9 @@
     "armyY",
     "enemyCount",
     "enemyX",
-    "enemyY"
+    "enemyY",
+    "LOCATION/x",
+    "LOCATION/y"
   ],
 
   "output": [

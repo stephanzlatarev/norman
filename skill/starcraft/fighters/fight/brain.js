@@ -1,8 +1,6 @@
 
-const TOO_CLOSE_SQUARED = 7 * 7;
-const STALK_RANGE_SQUARED = 13 * 13; // Squared range for stalking enemies
-const FAR_SQUARED = 15 * 15;
-const TOO_FAR_SQUARED = 17 * 17;
+const MIN_STALK_RANGE = 13 * 13;
+const MAX_STALK_RANGE = 15 * 15;
 
 const MAX_ARMY = 30;         // If we have that many units always attack
 const RATIO_TO_ATTACK = 1.5; // Have this ratio of own vs enemy units to launch an attack
@@ -27,6 +25,8 @@ export default class Brain {
     const enemyCount = input[11];
     const enemyX = input[12];
     const enemyY = input[13];
+    const moveX = input[14];
+    const moveY = input[15];
 
     if (!enemyX || !enemyY || !armyX || !armyY) return;
 
@@ -37,7 +37,7 @@ export default class Brain {
 
     if (shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyCount)) {
       // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
-      const location = stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY);
+      const location = stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY, moveX, moveY);
       return [1, 1, -1, location.x, location.y];
     }
 
@@ -73,21 +73,19 @@ function shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyC
 }
 
 // Try to keep the enemy in sight 
-function stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY) {
+function stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY, moveX, moveY) {
   const distx = enemyX - armyX;
   const disty = enemyY - armyY;
-  const squareDistance = distx * distx + disty * disty;
+  const distance = distx * distx + disty * disty;
 
-  if (squareDistance <= TOO_CLOSE_SQUARED) {
+  if (distance <= MIN_STALK_RANGE) {
     return (guardX && guardY) ? step(guardX, guardY, enemyX, enemyY) : { x: baseX, y: baseY };
-  } else if (squareDistance <= STALK_RANGE_SQUARED) {
-    // Step away from enemy towards base
-    return step(armyX, armyY, guardX, guardY);
-  } else if (squareDistance >= TOO_FAR_SQUARED) {
+  } else if (distance >= MAX_STALK_RANGE) {
     return { x: enemyX, y: enemyY };
-  } else if (squareDistance >= FAR_SQUARED) {
-    // Step closer to enemy
-    return step(armyX, armyY, enemyX, enemyY);
+  }
+
+  if (moveX && moveY && (Math.abs(moveX - armyX) > 2) && (Math.abs(moveY - armyY) > 2)) {
+    return step(armyX, armyY, moveX, moveY);
   }
 
   return { x: armyX, y: armyY };

@@ -124,11 +124,15 @@ function observeEnemy(game, army, homebase, observation) {
     army.set("enemyCount", Math.max(enemyUnits.length, oldEnemyCount ? oldEnemyCount : 0));
 
     if (!oldEnemyX || !oldEnemyY
-      || isLocationVisible(observation, owner, oldEnemyX, oldEnemyY)
+      || (isLocationVisible(observation, owner, oldEnemyX, oldEnemyY) && near(enemyUnit, oldEnemyX, oldEnemyY, 10))
       || (enemyUnit.distanceToHomebase < distance(oldEnemyX, oldEnemyY, homebaseX, homebaseY) - STALK_RANGE_SQUARED)
     ) {
       // Switch attention to enemy which is closest to homebase
-      army.set("enemyAlert", distance(enemyUnit.pos.x, enemyUnit.pos.y, homebaseX, homebaseY) <= ENEMY_ALERT_SQUARED);
+      army.set("enemyAlert", enemyUnit.distanceToHomebase <= ENEMY_ALERT_SQUARED);
+      army.set("enemyX", enemyUnit.pos.x);
+      army.set("enemyY", enemyUnit.pos.y);
+    } else if (oldEnemyX && oldEnemyY && near(enemyUnit, oldEnemyX, oldEnemyY, 10)) {
+      army.set("enemyAlert", enemyUnit.distanceToHomebase <= ENEMY_ALERT_SQUARED);
       army.set("enemyX", enemyUnit.pos.x);
       army.set("enemyY", enemyUnit.pos.y);
     }
