@@ -2,7 +2,7 @@
 const MIN_STALK_RANGE = 13 * 13;
 const MAX_STALK_RANGE = 15 * 15;
 
-const MAX_ARMY = 30;         // If we have that many units always attack
+const ENEMY_COUNT_CAP = 22;  // Even if enemies are more than this, we'll consider them as many to ensure we eventually attack
 const RATIO_TO_ATTACK = 1.5; // Have this ratio of own vs enemy units to launch an attack
 const ENERGY_TO_ATTACK = 10; // Accumulate this much energy before launching an attack
 
@@ -32,42 +32,50 @@ export default class Brain {
 
     if (enemyAlert) {
       // Defend base
+      this.mode = "defend";
       return [0, -1, 1, enemyX, enemyY];
     }
 
     if (shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyCount)) {
       // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
       const location = stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY, moveX, moveY);
+
+      this.mode = "stalk";
+      this.inertia = 10;
       return [1, 1, -1, location.x, location.y];
     }
 
+    if ((this.mode === "stalk") && (this.inertia > 0)) {
+      this.inertia--;
+      return;
+    }
+
     // Attack enemy
+    this.mode = "attack";
     return [0, -1, 1, enemyX, enemyY];
   }
 
 }
 
 function shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyCount) {
+  const cappedEnemyCount = Math.min(enemyCount, ENEMY_COUNT_CAP);
+
   if (isRegrouping) {
     // We are retreating
 
     // If we don't have enough energy we won't launch an attack
     if (armyEnergy < ENERGY_TO_ATTACK) return true;
 
-    if (armyCount >= MAX_ARMY) return false;
-
     // If we haven't gathered enough own units we won't launch an attack
-    return (armyCount <= enemyCount * RATIO_TO_ATTACK);
+    return (armyCount <= cappedEnemyCount * RATIO_TO_ATTACK);
   } else {
-    if (armyCount >= MAX_ARMY) return false;
-
     // We are advancing
     if (engagedCount) {
       // We already fight. We should stop only if we see we are losing units
-      return (armyCount * RATIO_TO_ATTACK <= enemyCount);
+      return (armyCount * RATIO_TO_ATTACK <= cappedEnemyCount);
     } else {
       // We haven't started yet. We can still go back if we see there are too many enemy units
-      return (armyCount <= enemyCount * RATIO_TO_ATTACK);
+      return (armyCount <= cappedEnemyCount * RATIO_TO_ATTACK);
     }
   }
 }

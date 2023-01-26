@@ -121,17 +121,11 @@ function observeEnemy(game, army, homebase, observation) {
 
   if (enemyUnit) {
     const oldEnemyCount = army.get("enemyCount");
-    army.set("enemyCount", Math.max(enemyUnits.length, oldEnemyCount ? oldEnemyCount : 0));
+    const enemyMovingUnits = enemyUnits.filter(unit => ((unit.pos.x * 2) !== Math.floor(unit.pos.x * 2)) || ((unit.pos.y * 2) !== Math.floor(unit.pos.y * 2)));
+    army.set("enemyCount", Math.max(enemyMovingUnits.length, oldEnemyCount ? oldEnemyCount : 1));
 
-    if (!oldEnemyX || !oldEnemyY
-      || (isLocationVisible(observation, owner, oldEnemyX, oldEnemyY) && near(enemyUnit, oldEnemyX, oldEnemyY, 10))
-      || (enemyUnit.distanceToHomebase < distance(oldEnemyX, oldEnemyY, homebaseX, homebaseY) - STALK_RANGE_SQUARED)
-    ) {
+    if (shouldSwitchAttention(oldEnemyX, oldEnemyY, enemyUnit, enemyUnits, homebaseX, homebaseY)) {
       // Switch attention to enemy which is closest to homebase
-      army.set("enemyAlert", enemyUnit.distanceToHomebase <= ENEMY_ALERT_SQUARED);
-      army.set("enemyX", enemyUnit.pos.x);
-      army.set("enemyY", enemyUnit.pos.y);
-    } else if (oldEnemyX && oldEnemyY && near(enemyUnit, oldEnemyX, oldEnemyY, 10)) {
       army.set("enemyAlert", enemyUnit.distanceToHomebase <= ENEMY_ALERT_SQUARED);
       army.set("enemyX", enemyUnit.pos.x);
       army.set("enemyY", enemyUnit.pos.y);
@@ -142,6 +136,14 @@ function observeEnemy(game, army, homebase, observation) {
     army.clear("enemyX");
     army.clear("enemyY");
   }
+}
+
+function shouldSwitchAttention(oldEnemyX, oldEnemyY, enemyUnit, enemyUnits, homebaseX, homebaseY) {
+  if (!oldEnemyX || !oldEnemyY) return true;
+  if (enemyUnit.distanceToHomebase < distance(oldEnemyX, oldEnemyY, homebaseX, homebaseY) - STALK_RANGE_SQUARED) return true;
+  if (near(enemyUnit, oldEnemyX, oldEnemyY, 14)) return true;
+  if (!enemyUnits.find(unit => (Math.abs(unit.pos.x - oldEnemyX) <= 14) && (Math.abs(unit.pos.y - oldEnemyY) <= 14))) return true;
+  return false;
 }
 
 function isLocationVisible(observation, owner, x, y) {
