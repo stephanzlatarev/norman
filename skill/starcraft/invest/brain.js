@@ -89,7 +89,7 @@ export default class Brain {
     }
 
     // Next priority is forges
-    if (!forges && (minerals >= 150) && (zealots + sentries + stalkers > 10)) {
+    if (!forges && (minerals >= 150) && cybernetics && (zealots + sentries + stalkers > 10)) {
       order.forges = 1;
       minerals -= 150;
     }
