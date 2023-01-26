@@ -45,6 +45,7 @@ export default class Brain {
       stalkers: -1,
       sentries: -1,
       probes: -1,
+      upgradeGroundUnits: - 1,
     };
 
     const nexuses = complete.nexuses + progress.nexuses;
@@ -143,6 +144,13 @@ export default class Brain {
       }
     }
 
+    // Next priority is upgrade of units
+    if ((minerals >= 100) && (vespene >= 100)) {
+      order.upgradeGroundUnits = 1;
+      minerals -= 100;
+      vespene -= 100;
+    }
+
     return [
       1, 1,
       order.nexuses, order.nexuses,
@@ -155,6 +163,7 @@ export default class Brain {
       order.stalkers, order.stalkers,
       order.sentries, order.sentries,
       order.probes, order.probes,
+      order.upgradeGroundUnits,
     ];
   }
 

@@ -1,0 +1,22 @@
+{
+  "label": "upgrade ground units",
+  "goal": "upgrade ground units",
+
+  "body": {
+    "code": "body/starcraft/unit/forge"
+  },
+
+  "input": [
+    "operational",
+    "armor-level",
+    "weapons-level",
+    "shields-level",
+    "ordersCount"
+  ],
+
+  "output": [
+    "research-armor",
+    "research-weapons",
+    "research-shields"
+  ]
+}
