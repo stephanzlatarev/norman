@@ -1,10 +1,13 @@
 
-const MIN_STALK_RANGE = 13 * 13;
-const MAX_STALK_RANGE = 15 * 15;
+const MIN_STALK_RANGE = 20 * 20;
+const MAX_STALK_RANGE = 25 * 25;
+const MIN_GUARD_RANGE = 36*36;
 
 const ENEMY_COUNT_CAP = 22;  // Even if enemies are more than this, we'll consider them as many to ensure we eventually attack
 const RATIO_TO_ATTACK = 1.5; // Have this ratio of own vs enemy units to launch an attack
 const ENERGY_TO_ATTACK = 10; // Accumulate this much energy before launching an attack
+
+const TROUBLESHOOTING = false;
 
 export default class Brain {
 
@@ -32,6 +35,7 @@ export default class Brain {
 
     if (enemyAlert) {
       // Defend base
+      trace(this.mode, "defend", input, enemyX, enemyY);
       this.mode = "defend";
       return [0, -1, 1, enemyX, enemyY];
     }
@@ -40,6 +44,7 @@ export default class Brain {
       // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
       const location = stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY, moveX, moveY);
 
+      trace(this.mode, "stalk", input, location.x, location.y);
       this.mode = "stalk";
       this.inertia = 10;
       return [1, 1, -1, location.x, location.y];
@@ -47,10 +52,12 @@ export default class Brain {
 
     if ((this.mode === "stalk") && (this.inertia > 0)) {
       this.inertia--;
+      trace(this.mode, "stalking " + this.inertia, input);
       return;
     }
 
     // Attack enemy
+    trace(this.mode, "attack", input, enemyX, enemyY);
     this.mode = "attack";
     return [0, -1, 1, enemyX, enemyY];
   }
@@ -87,7 +94,15 @@ function stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, b
   const distance = distx * distx + disty * disty;
 
   if (distance <= MIN_STALK_RANGE) {
-    return (guardX && guardY) ? step(guardX, guardY, enemyX, enemyY) : { x: baseX, y: baseY };
+    if (guardX && guardY) {
+      if (distanceBetween(guardX, guardY, baseX, baseY) < MIN_GUARD_RANGE) {
+        return step(guardX, guardY, enemyX, enemyY);
+      } else {
+        return { x: guardX, y: guardY };
+      }
+    }
+
+    return { x: baseX, y: baseY };
   } else if (distance >= MAX_STALK_RANGE) {
     return { x: enemyX, y: enemyY };
   }
@@ -99,6 +114,10 @@ function stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, b
   return { x: armyX, y: armyY };
 }
 
+function distanceBetween(x1, y1, x2, y2) {
+  return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+}
+
 function step(fromX, fromY, toX, toY) {
   const distx = toX - fromX;
   const absdistx = Math.abs(distx);
@@ -108,4 +127,34 @@ function step(fromX, fromY, toX, toY) {
   const deltay = (absdistx < absdisty) ?  Math.sign(disty) : disty / (absdistx + absdisty);
 
   return { x: fromX + deltax, y: fromY + deltay };
+}
+
+function trace(modeBefore, modeNow, input, x, y) {
+  if (!TROUBLESHOOTING) return;
+
+  const line = [modeBefore, ">>", modeNow];
+  if (x && y) {
+    line.push(x.toFixed(1));
+    line.push(y.toFixed(1));
+  }
+  line.push("|");
+  for (const i of input) {
+    if (i) {
+      line.push(i.toFixed(1));
+    } else {
+      line.push("-");
+    }
+  }
+
+  const armyX = input[9];
+  const armyY = input[10];
+  const enemyX = input[12];
+  const enemyY = input[13];
+  const distx = enemyX - armyX;
+  const disty = enemyY - armyY;
+  const distance = Math.sqrt(distx * distx + disty * disty);
+  line.push("|");
+  line.push(distance ? distance.toFixed(1) : "???");
+
+  console.log(line.join(" "));
 }
