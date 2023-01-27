@@ -141,8 +141,11 @@ function observeEnemy(game, army, homebase, observation) {
 function shouldSwitchAttention(oldEnemyX, oldEnemyY, enemyUnit, enemyUnits, homebaseX, homebaseY, army) {
   // Check if the new enemy is a bigger threat
   if (!oldEnemyX || !oldEnemyY) return true;
-  if (enemyUnit.distanceToHomebase < distance(oldEnemyX, oldEnemyY, homebaseX, homebaseY) - STALK_RANGE_SQUARED) {
-    return true;
+  const oldFrontLine = distance(oldEnemyX, oldEnemyY, homebaseX, homebaseY) - STALK_RANGE_SQUARED;
+  if (enemyUnit.distanceToHomebase < oldFrontLine) {
+    // Only switch attention if visible new enemies are more than visible old enemies
+    const countVisibleNewEnemies = enemyUnits.filter(unit => unit.distanceToHomebase < oldFrontLine).length;
+    return (countVisibleNewEnemies > enemyUnits.length - countVisibleNewEnemies);
   }
 
   // Check if old enemy is no longer a threat
