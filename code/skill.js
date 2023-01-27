@@ -135,8 +135,15 @@ function find(node, goal, output) {
   if (!output) output = [];
 
   for (const skill of node.links()) {
-    if (skill.get("goal") === goal) {
+    const skillGoals = skill.get("goal");
+    if (skillGoals === goal) {
       output.push(skill);
+    } else if (Array.isArray(skillGoals)) {
+      for (const one of skillGoals) {
+        if (one === goal) {
+          output.push(skill);
+        }
+      }
     }
 
     find(skill, goal, output);

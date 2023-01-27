@@ -8,7 +8,7 @@
 
   "memory": {
     "nodes": {
-      "LOCATION": { "type": "location", "purpose": "forge" },
+      "LOCATION": { "type": "location", "purpose": "build" },
       "PROBE": { "unitType": "probe" }
     },
 

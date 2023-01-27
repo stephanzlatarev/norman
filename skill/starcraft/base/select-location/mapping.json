@@ -1,0 +1,48 @@
+{
+  "label": "select location",
+  "goal": [
+    "build a cybernetics core",
+    "build a forge",
+    "build a gateway"
+  ],
+
+  "comment": "Selects a free slot in the base of a nexus",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+
+    "nodes": {
+      "NEXUS": { "unitType": "nexus" },
+      "LOCATION": { "type": "location", "purpose": "build" }
+    },
+
+    "paths": [
+      { "path": ["NEXUS"] },
+      {
+        "path": ["GOAL", "location", "LOCATION"],
+        "optional": true
+      },
+      {
+        "label": "SELECT",
+        "path": ["GOAL", "location", "LOCATION"],
+        "provisional": true
+      }
+    ]
+  },
+
+  "input": [
+    "NEXUS/baseX",
+    "NEXUS/baseY",
+    "NEXUS/pylons",
+    "NEXUS/structures"
+  ],
+
+  "output": [
+    "SELECT",
+    "LOCATION/x",
+    "LOCATION/y"
+  ]
+}

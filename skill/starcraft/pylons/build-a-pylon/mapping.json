@@ -8,7 +8,7 @@
 
   "memory": {
     "nodes": {
-      "LOCATION": { "type": "location", "purpose": "pylon" },
+      "LOCATION": { "type": "location", "purpose": "build" },
       "PROBE": { "unitType": "probe" },
       "PYLON": { "unitType": "pylon" }
     },

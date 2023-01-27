@@ -1,6 +1,13 @@
 {
   "label": "select builder",
-  "goal": "build a gateway",
+  "goal": [
+    "build a cybernetics core",
+    "build a forge",
+    "build a gateway",
+    "build a pylon"
+  ],
+
+  "comment": "Selects a builder close to the location",
 
   "body": {
     "is-game": true
@@ -8,8 +15,7 @@
 
   "memory": {
     "nodes": {
-      "LOCATION": { "type": "location", "purpose": "gateway" },
-      "BUILDER": { "unitType": "probe" },
+      "LOCATION": { "type": "location", "purpose": "build" },
       "PROBE": { "unitType": "probe" }
     },
 
@@ -17,11 +23,7 @@
       { "path": ["PROBE"] },
       { "path": ["GOAL", "location", "LOCATION"] },
       {
-        "path": ["GOAL", "builder", "BUILDER"],
-        "optional": true
-      },
-      {
-        "label": "SELECT-PROBE",
+        "label": "SELECT",
         "path": ["GOAL", "builder", "PROBE"],
         "provisional": true,
         "unique": true
@@ -32,13 +34,12 @@
   "input": [
     "LOCATION/x",
     "LOCATION/y",
-    "BUILDER",
     "PROBE/busy",
     "PROBE/x",
     "PROBE/y"
   ],
 
   "output": [
-    "SELECT-PROBE"
+    "SELECT"
   ]
 }

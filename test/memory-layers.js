@@ -286,6 +286,48 @@ describe("Memory layers", function() {
         ]);
       });
     });
+
+    describe("matching a path with new node", function() {
+      const PATTERN = {
+        nodes: {
+          GOAL: { label: "goal", test: true },
+          LOCATION: { label: "location" },
+        },
+        paths: [
+          { path: ["GOAL", "location", "LOCATION"], optional: true },
+          { path: ["GOAL", "location", "LOCATION"], provisional: true }
+        ]
+      };
+
+      it("when there is no existing node", function() {
+        const memory = getMemory("goal", 3, "location", 0);
+        memory.get("goal-2").set("test", true);
+
+        assertEqual(memory, layers(memory, PATTERN), [
+          { GOAL: "goal-2", LOCATION: { key: undefined } }
+        ]);
+      });
+
+      it("when there is an existing node", function() {
+        const memory = getMemory("goal", 3, "location", 3);
+        memory.get("goal-2").set("test", true);
+        memory.get("goal-3").set("test", false).set("location", memory.get("location-3"));
+
+        assertEqual(memory, layers(memory, PATTERN), [
+          { GOAL: "goal-2", LOCATION: { key: undefined } }
+        ]);
+      });
+
+      it("when already matched", function() {
+        const memory = getMemory("goal", 3, "location", 3);
+        memory.get("goal-2").set("test", true);
+        memory.get("goal-2").set("location", memory.get("location-3"));
+
+        assertEqual(memory, layers(memory, PATTERN), [
+          { GOAL: "goal-2", LOCATION: { key: "location-3" } }
+        ]);
+      });
+    });
   });
 
   describe("matching with constraints", function() {
@@ -681,7 +723,8 @@ function getMemory(...labels) {
     const label = labels[i];
     const count = labels[i + 1]
     for (let j = 0; j < count; j++) {
-      memory.get(label + "-" + (j + 1)).set("label", label);
+      const path = label + "-" + (j + 1);
+      memory.get(path).set("label", label).set("key", path);
     }
   }
   return memory;
@@ -702,7 +745,7 @@ function assertEqual(memory, actualLayers, expectedLayers) {
         const expected = expectedLayer[key];
 
         for (const label in expected) {
-          assert.equal(actual.get("label"), expected[label], key + "/" + label + " in memory layer #" + i + " expected to be " + expected[label] + " but was " + actual.get("label"));
+          assert.equal(actual.get(label), expected[label], key + "/" + label + " in memory layer #" + i + " expected to be " + expected[label] + " but was " + actual.get(label));
         }
       } else {
         const expected = expectedLayer[key] ? memory.get(expectedLayer[key]) : null;
