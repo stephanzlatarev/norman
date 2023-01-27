@@ -139,8 +139,13 @@ function observeEnemy(game, army, homebase, observation) {
 }
 
 function shouldSwitchAttention(oldEnemyX, oldEnemyY, enemyUnit, enemyUnits, homebaseX, homebaseY, army) {
+  // Check if the new enemy is a bigger threat
   if (!oldEnemyX || !oldEnemyY) return true;
-  if (enemyUnit.distanceToHomebase < distance(oldEnemyX, oldEnemyY, homebaseX, homebaseY) - STALK_RANGE_SQUARED) return true;
+  if (enemyUnit.distanceToHomebase < distance(oldEnemyX, oldEnemyY, homebaseX, homebaseY) - STALK_RANGE_SQUARED) {
+    return true;
+  }
+
+  // Check if old enemy is no longer a threat
   if (near(enemyUnit, oldEnemyX, oldEnemyY, 14)) return true;
   if (!enemyUnits.find(unit => (Math.abs(unit.pos.x - oldEnemyX) <= 14) && (Math.abs(unit.pos.y - oldEnemyY) <= 14))) return true;
 
@@ -150,6 +155,7 @@ function shouldSwitchAttention(oldEnemyX, oldEnemyY, enemyUnit, enemyUnits, home
   const noEnemiesNearArmy = (!enemyUnits.find(unit => (Math.abs(unit.pos.x - armyX) <= 12) && (Math.abs(unit.pos.y - armyY) <= 12)));
   if (armyIsAtOldEnemyLocation && noEnemiesNearArmy) return true;
 
+  // Otherwise, keep attention to old enemy
   return false;
 }
 
