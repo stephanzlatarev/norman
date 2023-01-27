@@ -1,9 +1,34 @@
 
-============= MILESTONE 3 - Event-based memory
+============= MILESTONE 2 - Reach ELO 1600 in StarCraft II
 
-- military.js should switch attention between two enemies only if second one is at least 10 closer to homebase
-
+- add observers to army
+  - when available use observers and zealots for scouting
+- add air units to "fleet" body
+  - train carriers
+  - train void rays
+  - move fleet independently of army
+  - skill "plan investments" to gradually switch army:fleet ratio as warrior count increases. When reached level of total attack we should build only air units.
+- add a "guard" body to help defending the base
+  - the guard line should be a walking path close to all own nexuses
+  - the guard line will be pylons and cannons which secure end-to-end visibility
+  - the guard line is used to rally army when stalking
+  - enemy attacking a guard triggers "enemy alert"
+- add skill "manage military operations" with goals "defend", "stalk", "push", "attack"
+  - split combat units among "guard", "scouts", "army", "fleet"
+  - total attack should consider strength of units - one carrier is better than one zealot
+- add skill "plan upgrades" to fix issue with forge
+  - for some reason ground weapons do not upgrade
+  - forge starts all upgrades at once. It's better to start upgrade only when the forge has no other orders
+- add skill "plan boosts" to use chronoboost from a nexus with energy to a non-boosted structure that has a running priority operation. This way nexuses without structures will use chronoboost 
+- sometimes army rallies to a stalking point at the side of the enemy (maybe because there is own unit there) but the rest of the units need to walk pass the enemy to get there. Make sure stalking location is always in the direction of the base, so it is always in a path between the base and the enemy.
 - more than one sentry uses guardian shield because when distance is smaller the new choice uses the shield but the old one still uses the shield too.
+- in local ladder game gateways build more than one unit at a time
+- a nexus built at the place of a destroyed nexus should reconnect to left-over structures
+- make a map to test harvesting
+  - when a vespene geyser is depleted its assimilator should be abandoned and harvesters should be freed for other tasks
+  - when mineral fields in a base are depleted the probes should go harvest at the newer bases
+
+============= MILESTONE 3 - Event-based memory
 
 - body/monitor to show count of memory nodes/neurons, and count by type (goal, skill, body)
 
