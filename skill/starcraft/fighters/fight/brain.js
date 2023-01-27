@@ -3,9 +3,10 @@ const MIN_STALK_RANGE = 20 * 20;
 const MAX_STALK_RANGE = 25 * 25;
 const MIN_GUARD_RANGE = 36*36;
 
-const ENEMY_COUNT_CAP = 22;  // Even if enemies are more than this, we'll consider them as many to ensure we eventually attack
-const RATIO_TO_ATTACK = 1.5; // Have this ratio of own vs enemy units to launch an attack
-const ENERGY_TO_ATTACK = 10; // Accumulate this much energy before launching an attack
+const TOTAL_ATTACK_THRESHOLD = 40; // When own units are over this number, go for total attack
+const ENEMY_COUNT_CAP = 22;        // Even if enemies are more than this, we'll consider them as many to ensure we eventually attack
+const RATIO_TO_ATTACK = 1.5;       // Have this ratio of own vs enemy units to launch an attack
+const ENERGY_TO_ATTACK = 10;       // Accumulate this much energy before launching an attack
 
 const TROUBLESHOOTING = false;
 
@@ -30,6 +31,7 @@ export default class Brain {
     const enemyY = input[13];
     const moveX = input[14];
     const moveY = input[15];
+    const warriorCount = input[16];
 
     if (!enemyX || !enemyY || !armyX || !armyY) return;
 
@@ -37,6 +39,13 @@ export default class Brain {
       // Defend base
       trace(this.mode, "defend", input, enemyX, enemyY);
       this.mode = "defend";
+      return [0, -1, 1, enemyX, enemyY];
+    }
+
+    if (warriorCount >= TOTAL_ATTACK_THRESHOLD) {
+      // Total attack
+      trace(this.mode, "kill", input, enemyX, enemyY);
+      this.mode = "kill";
       return [0, -1, 1, enemyX, enemyY];
     }
 
