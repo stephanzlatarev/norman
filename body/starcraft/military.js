@@ -17,7 +17,12 @@ export function observeMilitary(node, client, observation) {
 }
 
 function observeArmy(army, homebase, observation) {
-  const armyUnits = observation.ownUnits.filter(unit => (unit.unitType === 73) || (unit.unitType === 74) || (unit.unitType === 77));
+  let armyUnits = observation.ownUnits.filter(unit => (unit.unitType === 73) || (unit.unitType === 74) || (unit.unitType === 77) || (unit.unitType === 82));
+  army.set("tag", armyUnits.map(unit => unit.tag));
+
+  // Observers are not counted as warriors. They cannot lead or guard.
+  armyUnits = armyUnits.filter(unit => (unit.unitType !== 82));
+
   const baseX = homebase.get("x");
   const baseY = homebase.get("y");
 
@@ -66,7 +71,6 @@ function observeArmy(army, homebase, observation) {
     if (!countEnergyUnits) armyEnergy = 100;
 
     army.set("leaderTag", leader.tag);
-    army.set("tag", armyUnits.map(unit => unit.tag));
     army.set("engagedCount", armyPackUnits.filter(unit => (unit.engagedTargetTag !== "0")).length);
     army.set("armyCount", armyPackUnits.length);
     army.set("armyEnergy", armyEnergy);
