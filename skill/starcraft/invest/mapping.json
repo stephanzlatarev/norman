@@ -17,6 +17,7 @@
       "BUILD-ASSIMILATOR": { "label": "build an assimilator", "type": "goal" },
       "BUILD-GATEWAY": { "label": "build a gateway", "type": "goal" },
       "BUILD-FORGE": { "label": "build a forge", "type": "goal" },
+      "BUILD-STARGATE": { "label": "build a stargate", "type": "goal" },
       "BUILD-CYBERNETICS": { "label": "build a cybernetics core", "type": "goal" },
       "BUILD-ROBOTICS": { "label": "build a robotics facility", "type": "goal" },
       "TRAIN-ZEALOT": { "label": "train a zealot", "type": "goal" },
@@ -67,6 +68,12 @@
       {
         "label": "LETS-BUILD-FORGE",
         "path": ["ADVANCE-MILITARY", "build-forge", "BUILD-FORGE"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-BUILD-STARGATE",
+        "path": ["ADVANCE-MILITARY", "build-stargate", "BUILD-STARGATE"],
         "provisional": true,
         "unique": true
       },
@@ -136,6 +143,8 @@
     "stats/gatewayBuilding",
     "stats/forge",
     "stats/forgeBuilding",
+    "stats/stargate",
+    "stats/stargateBuilding",
     "stats/cybernetics",
     "stats/cyberneticsBuilding",
     "stats/robotics",
@@ -160,6 +169,7 @@
     "LETS-BUILD-ASSIMILATOR", "BUILD-ASSIMILATOR",
     "LETS-BUILD-GATEWAY", "BUILD-GATEWAY",
     "LETS-BUILD-FORGE", "BUILD-FORGE",
+    "LETS-BUILD-STARGATE", "BUILD-STARGATE",
     "LETS-BUILD-CYBERNETICS", "BUILD-CYBERNETICS",
     "LETS-BUILD-ROBOTICS", "BUILD-ROBOTICS",
     "LETS-TRAIN-ZEALOT", "TRAIN-ZEALOT",

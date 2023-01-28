@@ -8,6 +8,7 @@ const UNITS = {
   61: "assimilator",
   62: "gateway",
   63: "forge",
+  67: "stargate",
   71: "robotics",
   72: "cybernetics",
   73: "zealot",
@@ -78,6 +79,7 @@ function observeUnits(node, client, units) {
     assimilator: 0, assimilatorBuilding: 0,
     gateway: 0, gatewayBuilding: 0,
     forge: 0, forgeBuilding: 0,
+    stargate: 0, stargateBuilding: 0,
     robotics: 0, roboticsBuilding: 0,
     cybernetics: 0, cyberneticsBuilding: 0,
     zealot: 0, zealotBuilding: 0,
@@ -121,6 +123,9 @@ function observeUnits(node, client, units) {
       }
       if (unitInReality.orders[0].abilityId === 884) {
         count["forgeBuilding"]++;
+      }
+      if (unitInReality.orders[0].abilityId === 889) {
+        count["stargateBuilding"]++;
       }
       if (unitInReality.orders[0].abilityId === 893) {
         count["roboticsBuilding"]++;

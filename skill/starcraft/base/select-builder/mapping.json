@@ -5,7 +5,8 @@
     "build a forge",
     "build a gateway",
     "build a pylon",
-    "build a robotics facility"
+    "build a robotics facility",
+    "build a stargate"
   ],
 
   "comment": "Selects a builder close to the location",

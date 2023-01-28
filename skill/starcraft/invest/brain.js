@@ -14,13 +14,14 @@ export default class Brain {
       assimilators: input[8],
       gateways: input[10],
       forges: input[12],
-      cybernetics: input[14],
-      robotics: input[16],
-      zealots: input[18],
-      stalkers: input[20],
-      sentries: input[22],
-      observers: input[24],
-      probes: input[26],
+      stargates: input[14],
+      cybernetics: input[16],
+      robotics: input[18],
+      zealots: input[20],
+      stalkers: input[22],
+      sentries: input[24],
+      observers: input[26],
+      probes: input[28],
     };
 
     const progress = {
@@ -29,13 +30,14 @@ export default class Brain {
       assimilators: input[9],
       gateways: input[11],
       forges: input[13],
-      cybernetics: input[15],
-      robotics: input[17],
-      zealots: input[19],
-      stalkers: input[21],
-      sentries: input[23],
-      observers: input[25],
-      probes: input[27],
+      stargates: input[15],
+      cybernetics: input[17],
+      robotics: input[19],
+      zealots: input[21],
+      stalkers: input[23],
+      sentries: input[25],
+      observers: input[27],
+      probes: input[29],
     };
 
     const order = {
@@ -44,6 +46,7 @@ export default class Brain {
       assimilators: -1,
       gateways: -1,
       forges: -1,
+      stargates: -1,
       cybernetics: -1,
       robotics: -1,
       zealots: -1,
@@ -59,6 +62,7 @@ export default class Brain {
     const assimilators = complete.assimilators + progress.assimilators;
     const gateways = complete.gateways + progress.gateways;
     const forges = complete.forges + progress.forges;
+    const stargates = complete.stargates + progress.stargates;
     const cybernetics = complete.cybernetics + progress.cybernetics;
     const robotics = complete.robotics + progress.robotics;
     const zealots = complete.zealots + progress.zealots;
@@ -110,9 +114,16 @@ export default class Brain {
     }
 
     // Next priority is gateways
-    if (!progress.gateways && (nexuses > 1) && (minerals >= 150) && (gateways < nexuses * 2)) {
+    if (!progress.gateways && (nexuses > 1) && (minerals >= 150) && (gateways < 6)) {
       order.gateways = 1;
       minerals -= 150;
+    }
+
+    // Next priority is stargates
+    if (!progress.stargates && cybernetics && (gateways >= 6) && (stargates + gateways < nexuses * 2) && (minerals >= 150) && (vespene >= 150)) {
+      order.stargates = 1;
+      minerals -= 150;
+      vespene -= 150;
     }
 
     // Next priority is assimilators
@@ -184,6 +195,7 @@ export default class Brain {
       order.assimilators, order.assimilators,
       order.gateways, order.gateways,
       order.forges, order.forges,
+      order.stargates, order.stargates,
       order.cybernetics, order.cybernetics,
       order.robotics, order.robotics,
       order.zealots, order.zealots,
