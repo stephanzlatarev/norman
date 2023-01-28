@@ -17,11 +17,13 @@ export function observeMilitary(node, client, observation) {
 }
 
 function observeArmy(army, homebase, observation) {
-  let armyUnits = observation.ownUnits.filter(unit => (unit.unitType === 73) || (unit.unitType === 74) || (unit.unitType === 77) || (unit.unitType === 82));
+  let armyUnits = observation.ownUnits.filter(unit => (
+    (unit.unitType === 73) || (unit.unitType === 74) || (unit.unitType === 77) || (unit.unitType === 78) || (unit.unitType === 82)
+  ));
   army.set("tag", armyUnits.map(unit => unit.tag));
 
-  // Observers are not counted as warriors. They cannot lead or guard.
-  armyUnits = armyUnits.filter(unit => (unit.unitType !== 82));
+  // Observers and phoenixes are not counted as warriors. They cannot lead or guard.
+  armyUnits = armyUnits.filter(unit => (unit.unitType !== 78) && (unit.unitType !== 82));
 
   const baseX = homebase.get("x");
   const baseY = homebase.get("y");

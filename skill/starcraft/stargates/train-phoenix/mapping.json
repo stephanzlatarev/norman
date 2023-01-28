@@ -1,0 +1,18 @@
+{
+  "label": "train phoenix",
+  "goal": "train a phoenix",
+
+  "body": {
+    "code": "body/starcraft/unit/stargate"
+  },
+
+  "input": [
+    "operational",
+    "ordersCount"
+  ],
+
+  "output": [
+    "build-phoenix",
+    "ordersCount"
+  ]
+}

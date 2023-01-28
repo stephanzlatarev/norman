@@ -20,8 +20,9 @@ export default class Brain {
       zealots: input[20],
       stalkers: input[22],
       sentries: input[24],
-      observers: input[26],
-      probes: input[28],
+      phoenixes: input[26],
+      observers: input[28],
+      probes: input[30],
     };
 
     const progress = {
@@ -36,8 +37,9 @@ export default class Brain {
       zealots: input[21],
       stalkers: input[23],
       sentries: input[25],
-      observers: input[27],
-      probes: input[29],
+      phoenixes: input[27],
+      observers: input[29],
+      probes: input[31],
     };
 
     const order = {
@@ -52,6 +54,7 @@ export default class Brain {
       zealots: -1,
       stalkers: -1,
       sentries: -1,
+      phoenixes: -1,
       observers: -1,
       probes: -1,
       upgradeGroundUnits: - 1,
@@ -68,6 +71,7 @@ export default class Brain {
     const zealots = complete.zealots + progress.zealots;
     const stalkers = complete.stalkers + progress.stalkers;
     const sentries = complete.sentries + progress.sentries;
+    const phoenixes = complete.phoenixes + progress.phoenixes;
     const observers = complete.observers + progress.observers;
     const probes = complete.probes + progress.probes;
 
@@ -181,6 +185,16 @@ export default class Brain {
       }
     }
 
+    // Next priority is stargate units
+    if ((phoenixes < 4) && complete.stargates && (progress.phoenixes < complete.stargates)) {
+      if ((minerals >= 150) && (vespene >= 100) && (foodFree >= 2)) {
+        order.phoenixes = 1;
+        minerals -= 150;
+        vespene -= 100;
+        foodFree -= 2;
+      }
+    }
+
     // Next priority is upgrade of units
     if ((minerals >= 100) && (vespene >= 100)) {
       order.upgradeGroundUnits = 1;
@@ -201,6 +215,7 @@ export default class Brain {
       order.zealots, order.zealots,
       order.stalkers, order.stalkers,
       order.sentries, order.sentries,
+      order.phoenixes, order.phoenixes,
       order.observers, order.observers,
       order.probes, order.probes,
       order.upgradeGroundUnits,
