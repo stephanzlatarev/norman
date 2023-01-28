@@ -1,24 +1,30 @@
 {
-  "label": "know where to build a pylon",
+  "label": "select location",
   "goal": "build a pylon",
+
+  "comment": "Selects a free slot in the base of a nexus",
 
   "body": {
     "is-game": true
   },
 
   "memory": {
+
     "nodes": {
       "NEXUS": { "unitType": "nexus" },
       "LOCATION": { "type": "location", "purpose": "pylon" }
     },
 
     "paths": [
-      { "path": ["GOAL", "nexus", "NEXUS"] },
+      { "path": ["NEXUS"] },
       {
-        "label": "SET-LOCATION",
         "path": ["GOAL", "location", "LOCATION"],
-        "provisional": true,
-        "unique": true
+        "optional": true
+      },
+      {
+        "label": "SELECT",
+        "path": ["GOAL", "location", "LOCATION"],
+        "provisional": true
       }
     ]
   },
@@ -30,7 +36,7 @@
   ],
 
   "output": [
-    "SET-LOCATION",
+    "SELECT",
     "LOCATION/x",
     "LOCATION/y"
   ]
