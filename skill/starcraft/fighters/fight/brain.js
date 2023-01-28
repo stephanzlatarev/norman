@@ -1,6 +1,9 @@
 
-const MIN_STALK_RANGE = 20 * 20;
-const MAX_STALK_RANGE = 25 * 25;
+const HARD_MIN_STALK_RANGE = 21 * 21;
+const SOFT_MIN_STALK_RANGE = 22 * 22;
+const SOFT_MAX_STALK_RANGE = 23 * 23;
+const HARD_MAX_STALK_RANGE = 24 * 24;
+
 const MIN_GUARD_RANGE = 36*36;
 
 const MIN_TOTAL_ATTACK = 30; // When own units are below this number, don't go for total attack
@@ -31,9 +34,7 @@ export default class Brain {
     const enemyCount = input[11];
     const enemyX = input[12];
     const enemyY = input[13];
-    const moveX = input[14];
-    const moveY = input[15];
-    const warriorCount = input[16];
+    const warriorCount = input[14];
 
     if (!enemyX || !enemyY || !armyX || !armyY) return;
 
@@ -53,7 +54,7 @@ export default class Brain {
 
     if (shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyCount)) {
       // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
-      const location = stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY, moveX, moveY);
+      const location = stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY);
 
       trace(this.mode, "stalk", input, location.x, location.y);
       this.mode = "stalk";
@@ -99,12 +100,12 @@ function shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyC
 }
 
 // Try to keep the enemy in sight 
-function stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY, moveX, moveY) {
+function stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY) {
   const distx = enemyX - armyX;
   const disty = enemyY - armyY;
   const distance = distx * distx + disty * disty;
 
-  if (distance <= MIN_STALK_RANGE) {
+  if (distance <= HARD_MIN_STALK_RANGE) {
     if (guardX && guardY) {
       if (distanceBetween(guardX, guardY, baseX, baseY) < MIN_GUARD_RANGE) {
         return step(guardX, guardY, enemyX, enemyY);
@@ -114,12 +115,12 @@ function stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, b
     }
 
     return { x: baseX, y: baseY };
-  } else if (distance >= MAX_STALK_RANGE) {
+  } else if (distance <= SOFT_MIN_STALK_RANGE) {
+    return step(armyX, armyY, baseX, baseY);
+  } else if (distance >= HARD_MAX_STALK_RANGE) {
     return { x: enemyX, y: enemyY };
-  }
-
-  if (moveX && moveY && (Math.abs(moveX - armyX) > 2) && (Math.abs(moveY - armyY) > 2)) {
-    return step(armyX, armyY, moveX, moveY);
+  } else if (distance >= SOFT_MAX_STALK_RANGE) {
+    return step(armyX, armyY, enemyX, enemyY);
   }
 
   return { x: armyX, y: armyY };
