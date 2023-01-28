@@ -1,6 +1,6 @@
 {
-  "label": "build a pylon",
-  "goal": "build a pylon",
+  "label": "build a robotics facility",
+  "goal": "build a robotics facility",
 
   "body": {
     "is-game": true
@@ -8,9 +8,8 @@
 
   "memory": {
     "nodes": {
-      "LOCATION": { "type": "location", "purpose": "pylon" },
-      "PROBE": { "unitType": "probe" },
-      "PYLON": { "unitType": "pylon" }
+      "LOCATION": { "type": "location", "purpose": "build" },
+      "PROBE": { "unitType": "probe" }
     },
 
     "paths": [
@@ -21,8 +20,8 @@
         "path": ["GOAL", "builder", "PROBE"]
       },
       {
-        "label": "NEW-ASSIGNMENT",
-        "path": ["PROBE", "build-pylon", "LOCATION"],
+        "label": "ASSIGN",
+        "path": ["PROBE", "build-robotics", "LOCATION"],
         "provisional": true,
         "unique": true
       }
@@ -35,6 +34,6 @@
   ],
 
   "output": [
-    "NEW-ASSIGNMENT"
+    "ASSIGN"
   ]
 }

@@ -4,7 +4,8 @@
     "build a cybernetics core",
     "build a forge",
     "build a gateway",
-    "build a pylon"
+    "build a pylon",
+    "build a robotics facility"
   ],
 
   "comment": "Selects a builder close to the location",
@@ -15,7 +16,7 @@
 
   "memory": {
     "nodes": {
-      "LOCATION": { "type": "location", "purpose": "build" },
+      "LOCATION": { "type": "location" },
       "PROBE": { "unitType": "probe" }
     },
 

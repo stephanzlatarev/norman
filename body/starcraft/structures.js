@@ -38,11 +38,14 @@ function countStructuresOfNexuses(node, observation) {
         nexus.set(gateway.tag, node.memory.get(node.path + "/" + gateway.tag));
       }
 
+      const robotics = observation.ownUnits.filter(structure => (structure.unitType === 71) && (structure.buildProgress >= 1) && near(structure, baseX, baseY));
+      nexus.set("robotics", robotics.length);
+
       const cybernetics = observation.ownUnits.filter(structure => (structure.unitType === 72) && (structure.buildProgress >= 1) && near(structure, baseX, baseY));
       nexus.set("cybernetics", cybernetics.length);
 
       const structures = observation.ownUnits.filter(structure => (
-        (structure.unitType === 62) || (structure.unitType === 63) || (structure.unitType === 72)
+        (structure.unitType === 62) || (structure.unitType === 63) || (structure.unitType === 71) || (structure.unitType === 72)
       ) && near(structure, baseX, baseY));
       nexus.set("structures", structures.length);
     }

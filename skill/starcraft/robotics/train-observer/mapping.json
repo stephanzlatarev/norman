@@ -1,0 +1,18 @@
+{
+  "label": "train observer",
+  "goal": "train an observer",
+
+  "body": {
+    "code": "body/starcraft/unit/robotics"
+  },
+
+  "input": [
+    "operational",
+    "ordersCount"
+  ],
+
+  "output": [
+    "build-observer",
+    "ordersCount"
+  ]
+}

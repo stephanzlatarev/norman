@@ -8,10 +8,12 @@ const UNITS = {
   61: "assimilator",
   62: "gateway",
   63: "forge",
+  71: "robotics",
   72: "cybernetics",
   73: "zealot",
   74: "stalker",
   77: "sentry",
+  82: "observer",
   84: "probe"
 };
 
@@ -76,10 +78,12 @@ function observeUnits(node, client, units) {
     assimilator: 0, assimilatorBuilding: 0,
     gateway: 0, gatewayBuilding: 0,
     forge: 0, forgeBuilding: 0,
+    robotics: 0, roboticsBuilding: 0,
     cybernetics: 0, cyberneticsBuilding: 0,
     zealot: 0, zealotBuilding: 0,
     stalker: 0, stalkerBuilding: 0,
     sentry: 0, sentryBuilding: 0,
+    observer: 0, observerBuilding: 0,
     probe: 0, probeBuilding: 0,
   };
 
@@ -118,6 +122,9 @@ function observeUnits(node, client, units) {
       if (unitInReality.orders[0].abilityId === 884) {
         count["forgeBuilding"]++;
       }
+      if (unitInReality.orders[0].abilityId === 893) {
+        count["roboticsBuilding"]++;
+      }
       if (unitInReality.orders[0].abilityId === 894) {
         count["cyberneticsBuilding"]++;
       }
@@ -129,6 +136,9 @@ function observeUnits(node, client, units) {
       }
       if (unitInReality.orders[0].abilityId === 921) {
         count["sentryBuilding"]++;
+      }
+      if (unitInReality.orders[0].abilityId === 977) {
+        count["observerBuilding"]++;
       }
       if (unitInReality.orders[0].abilityId === 1006) {
         count["probeBuilding"]++;

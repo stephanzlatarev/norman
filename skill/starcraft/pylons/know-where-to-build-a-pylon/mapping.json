@@ -9,7 +9,7 @@
   "memory": {
     "nodes": {
       "NEXUS": { "unitType": "nexus" },
-      "LOCATION": { "type": "location", "purpose": "build" }
+      "LOCATION": { "type": "location", "purpose": "pylon" }
     },
 
     "paths": [

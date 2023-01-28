@@ -3,7 +3,8 @@
   "goal": [
     "build a cybernetics core",
     "build a forge",
-    "build a gateway"
+    "build a gateway",
+    "build a robotics facility"
   ],
 
   "comment": "Selects a free slot in the base of a nexus",

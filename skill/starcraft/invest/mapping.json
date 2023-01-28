@@ -18,9 +18,11 @@
       "BUILD-GATEWAY": { "label": "build a gateway", "type": "goal" },
       "BUILD-FORGE": { "label": "build a forge", "type": "goal" },
       "BUILD-CYBERNETICS": { "label": "build a cybernetics core", "type": "goal" },
+      "BUILD-ROBOTICS": { "label": "build a robotics facility", "type": "goal" },
       "TRAIN-ZEALOT": { "label": "train a zealot", "type": "goal" },
       "TRAIN-STALKER": { "label": "train a stalker", "type": "goal" },
       "TRAIN-SENTRY": { "label": "train a sentry", "type": "goal" },
+      "TRAIN-OBSERVER": { "label": "train an observer", "type": "goal" },
       "TRAIN-PROBE": { "label": "train a probe", "type": "goal" },
       "UPGRADE-GROUND-UNITS": { "label": "upgrade ground units", "type": "goal" }
     },
@@ -75,6 +77,12 @@
         "unique": true
       },
       {
+        "label": "LETS-BUILD-ROBOTICS",
+        "path": ["ADVANCE-MILITARY", "build-robotics", "BUILD-ROBOTICS"],
+        "provisional": true,
+        "unique": true
+      },
+      {
         "label": "LETS-TRAIN-ZEALOT",
         "path": ["ADVANCE-MILITARY", "build-zealot", "TRAIN-ZEALOT"],
         "provisional": true,
@@ -89,6 +97,12 @@
       {
         "label": "LETS-TRAIN-SENTRY",
         "path": ["ADVANCE-MILITARY", "build-sentry", "TRAIN-SENTRY"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-TRAIN-OBSERVER",
+        "path": ["ADVANCE-MILITARY", "build-observer", "TRAIN-OBSERVER"],
         "provisional": true,
         "unique": true
       },
@@ -124,12 +138,16 @@
     "stats/forgeBuilding",
     "stats/cybernetics",
     "stats/cyberneticsBuilding",
+    "stats/robotics",
+    "stats/roboticsBuilding",
     "stats/zealot",
     "stats/zealotBuilding",
     "stats/stalker",
     "stats/stalkerBuilding",
     "stats/sentry",
     "stats/sentryBuilding",
+    "stats/observer",
+    "stats/observerBuilding",
     "stats/probe",
     "stats/probeBuilding"
   ],
@@ -143,9 +161,11 @@
     "LETS-BUILD-GATEWAY", "BUILD-GATEWAY",
     "LETS-BUILD-FORGE", "BUILD-FORGE",
     "LETS-BUILD-CYBERNETICS", "BUILD-CYBERNETICS",
+    "LETS-BUILD-ROBOTICS", "BUILD-ROBOTICS",
     "LETS-TRAIN-ZEALOT", "TRAIN-ZEALOT",
     "LETS-TRAIN-STALKER", "TRAIN-STALKER",
     "LETS-TRAIN-SENTRY", "TRAIN-SENTRY",
+    "LETS-TRAIN-OBSERVER", "TRAIN-OBSERVER",
     "LETS-TRAIN-PROBE", "TRAIN-PROBE",
     "LETS-UPGRADE-GROUND-UNITS"
   ]

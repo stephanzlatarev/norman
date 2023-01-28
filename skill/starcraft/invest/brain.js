@@ -15,10 +15,12 @@ export default class Brain {
       gateways: input[10],
       forges: input[12],
       cybernetics: input[14],
-      zealots: input[16],
-      stalkers: input[18],
-      sentries: input[20],
-      probes: input[22],
+      robotics: input[16],
+      zealots: input[18],
+      stalkers: input[20],
+      sentries: input[22],
+      observers: input[24],
+      probes: input[26],
     };
 
     const progress = {
@@ -28,10 +30,12 @@ export default class Brain {
       gateways: input[11],
       forges: input[13],
       cybernetics: input[15],
-      zealots: input[17],
-      stalkers: input[19],
-      sentries: input[21],
-      probes: input[23],
+      robotics: input[17],
+      zealots: input[19],
+      stalkers: input[21],
+      sentries: input[23],
+      observers: input[25],
+      probes: input[27],
     };
 
     const order = {
@@ -41,9 +45,11 @@ export default class Brain {
       gateways: -1,
       forges: -1,
       cybernetics: -1,
+      robotics: -1,
       zealots: -1,
       stalkers: -1,
       sentries: -1,
+      observers: -1,
       probes: -1,
       upgradeGroundUnits: - 1,
     };
@@ -54,9 +60,11 @@ export default class Brain {
     const gateways = complete.gateways + progress.gateways;
     const forges = complete.forges + progress.forges;
     const cybernetics = complete.cybernetics + progress.cybernetics;
+    const robotics = complete.robotics + progress.robotics;
     const zealots = complete.zealots + progress.zealots;
     const stalkers = complete.stalkers + progress.stalkers;
     const sentries = complete.sentries + progress.sentries;
+    const observers = complete.observers + progress.observers;
     const probes = complete.probes + progress.probes;
 
     let foodFree = complete.nexuses * 15 + complete.pylons * 8 - foodUsed;
@@ -88,6 +96,13 @@ export default class Brain {
       minerals -= 200;
     }
 
+    // Next priority is robitcs facilities
+    if (!robotics && complete.cybernetics && (minerals >= 150) && (vespene >= 100)) {
+      order.robotics = 1;
+      minerals -= 150;
+      vespene -= 100;
+    }
+
     // Next priority is forges
     if (!forges && (minerals >= 150) && cybernetics && (zealots + sentries + stalkers > 10)) {
       order.forges = 1;
@@ -114,7 +129,7 @@ export default class Brain {
       foodFree -= 1;
     }
 
-    // Next priority is land combat units
+    // Next priority is gateway units
     if (complete.gateways && (progress.zealots + progress.stalkers + progress.sentries < complete.gateways)) {
       const unit = selectGatewayUnit(
         zealots, 2,
@@ -145,6 +160,16 @@ export default class Brain {
       }
     }
 
+    // Next priority is robotics facility units
+    if ((observers < 3) && complete.robotics && (progress.observers < complete.robotics)) {
+      if ((minerals >= 25) && (vespene >= 75) && (foodFree >= 1)) {
+        order.observers = 1;
+        minerals -= 25;
+        vespene -= 75;
+        foodFree -= 1;
+      }
+    }
+
     // Next priority is upgrade of units
     if ((minerals >= 100) && (vespene >= 100)) {
       order.upgradeGroundUnits = 1;
@@ -160,9 +185,11 @@ export default class Brain {
       order.gateways, order.gateways,
       order.forges, order.forges,
       order.cybernetics, order.cybernetics,
+      order.robotics, order.robotics,
       order.zealots, order.zealots,
       order.stalkers, order.stalkers,
       order.sentries, order.sentries,
+      order.observers, order.observers,
       order.probes, order.probes,
       order.upgradeGroundUnits,
     ];
