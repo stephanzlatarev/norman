@@ -8,6 +8,7 @@
 
   "memory": {
     "nodes": {
+      "GAME": { "is-game": true },
       "HOMEBASE": { "unitType": "nexus", "homebase": true },
       "DEFEND": { "label": "defend the homebase", "type": "goal" }
     },
@@ -29,7 +30,8 @@
     "BODY/warriorCount",
     "BODY/enemyCount",
     "BODY/enemyX",
-    "BODY/enemyY"
+    "BODY/enemyY",
+    "GAME/stats/nexus"
   ],
 
   "output": [
