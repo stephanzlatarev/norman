@@ -8,12 +8,17 @@ export default class Brain {
 
     const directionX = input[1];
     const directionY = input[2];
-    const alternativeX = input[10] ? input[10] : input[3];
-    const alternativeY = input[11] ? input[11] : input[4];
+    const alternativeX = input[12] ? input[12] : input[3];
+    const alternativeY = input[13] ? input[13] : input[4];
     const builderX = input[5];
     const builderY = input[6];
     const homebaseX = input[7];
     const homebaseY = input[8];
+
+    const directionBaseX = input[9];
+    const directionBaseY = input[10];
+
+    if (!directionBaseX || !directionBaseY) return;
 
     if (alternativeX && alternativeX) {
       if (builderX && builderY) {
