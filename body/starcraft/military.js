@@ -117,10 +117,8 @@ function observeEnemy(game, army, homebase, observation) {
   const oldEnemyX = army.get("enemyX");
   const oldEnemyY = army.get("enemyY");
 
-//  const enemyUnits = observation.rawData.units.find(unit => ((unit.unitType === 74) && (unit.owner === owner))) // One stalker allows to target flying units
-//    ? observation.rawData.units.filter(unit => (unit.owner === enemy))
-//    : observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === enemy)));
-  const enemyUnits = observation.rawData.units.filter(unit => (!unit.isFlying && (unit.owner === enemy) && (unit.displayType === 1) && (unit.unitType !== 13)));
+  const combatFlyingUnits = observation.rawData.units.find(unit => ((unit.unitType === 74) && (unit.owner === owner))); // One stalker allows to target flying units
+  const enemyUnits = observation.rawData.units.filter(unit => isValidTarget(unit, enemy, combatFlyingUnits));
   for (const unit of enemyUnits) unit.distanceToHomebase = distance(unit.pos.x, unit.pos.y, homebaseX, homebaseY);
   enemyUnits.sort((a, b) => (a.distanceToHomebase - b.distanceToHomebase));
   const enemyUnit = enemyUnits.length ? enemyUnits[0] : null;
@@ -142,6 +140,14 @@ function observeEnemy(game, army, homebase, observation) {
     army.clear("enemyX");
     army.clear("enemyY");
   }
+}
+
+function isValidTarget(unit, enemy, combatFlyingUnits) {
+  if (!combatFlyingUnits && unit.isFlying) return false;
+
+  if (unit.unitType === 13) return false; // Ignore changelings
+
+  return (unit.owner === enemy) && (unit.displayType === 1);
 }
 
 function shouldSwitchAttention(oldEnemyX, oldEnemyY, enemyUnit, enemyUnits, homebaseX, homebaseY, army) {
