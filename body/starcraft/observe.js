@@ -74,8 +74,8 @@ function observeChat(node, client) {
 
 function observeUnits(node, client, units) {
   const count = {
-    baseWithoutPower: 0,
     nexus: 0, nexusBuilding: 0,
+    base: 0, baseBuilding: 0,
     pylon: 0, pylonBuilding: 0,
     assimilator: 0, assimilatorBuilding: 0,
     gateway: 0, gatewayBuilding: 0,
@@ -155,8 +155,12 @@ function observeUnits(node, client, units) {
       }
     }
 
-    if ((unitType === "nexus") && unitInMemory.get("baseNeedsPylon")) {
-      count["baseWithoutPower"]++;
+    if ((unitType === "nexus") && unitInMemory.get("baseX") && unitInMemory.get("baseY")) {
+      if (unitInMemory.get("baseNeedsPylon")) {
+        count["baseBuilding"]++;
+      } else {
+        count["base"]++;
+      }
     }
 
     if (unitType === "assimilator") {

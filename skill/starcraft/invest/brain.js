@@ -1,235 +1,213 @@
 
+const INPUT = [
+  "nexuses", "bases", "pylons", "assimilators", "gateways", "forges", "stargates", "cybernetics", "robotics",
+  "zealots", "stalkers", "sentries", "phoenixes", "observers", "probes",
+  "upgradeGroundUnits"
+];
+
+const PRIO = [
+  "pylons", "nexuses", "assimilators", "probes",
+  "cybernetics",
+  "robotics", "observers",
+  "gateways","stalkers", "sentries", "zealots",
+  "stargates", "phoenixes",
+  "forges","upgradeGroundUnits"
+];
+
+const PREORDER_MINERALS = {
+  nexuses: 300,
+};
+
+const MINERALS = {
+  nexuses: 400,
+  pylons: 100,
+  assimilators: 75,
+  gateways: 150,
+  forges: 150,
+  stargates: 150,
+  cybernetics: 200,
+  robotics: 150,
+  zealots: 100,
+  stalkers: 125,
+  sentries: 50,
+  phoenixes: 150,
+  observers: 25,
+  probes: 50,
+  upgradeGroundUnits: 100,
+};
+
+const VESPENE = {
+  stargates: 150,
+  robotics: 100,
+  stalkers: 50,
+  sentries: 100,
+  phoenixes: 100,
+  observers: 75,
+  upgradeGroundUnits: 100,
+};
+
+const FOOD = {
+  zealots: 2,
+  stalkers: 2,
+  sentries: 2,
+  phoenixes: 2,
+  observers: 1,
+  probes: 1,
+};
+
+const CONDITION = {
+  pylons: (situation) => (
+    (situation.total.pylons < 1)                                      // Power the first base
+    || ((situation.resources.food < 10) && situation.total.gateways)  // Build for food (after first gateway)
+    || (situation.progress.bases && (situation.complete.nexuses >= 2))   // Power new bases (after the second complete nexus)
+  ),
+  assimilators: (situation) => (situation.total.gateways && (!situation.total.assimilators || situation.total.cybernetics)),
+  gateways: (situation) => (situation.total.nexuses > 1),
+  forges: (situation) => (situation.total.zealots + situation.total.sentries + situation.total.stalkers > 10),
+  stargates: (situation) => (situation.complete.cybernetics),
+  cybernetics: (situation) => (situation.complete.zealots),
+  robotics: (situation) => (situation.complete.cybernetics),
+  stalkers: (situation) => (situation.complete.cybernetics && situation.complete.assimilators && (situation.total.sentries >= 2)),
+  sentries: (situation) => (situation.complete.cybernetics && situation.complete.assimilators),
+  phoenixes: (situation) => (situation.complete.stargates),
+  observers: (situation) => (situation.complete.robotics),
+};
+
+const LIMIT = {
+  nexuses: (situation) => (situation.total.probes / 12),
+  pylons: (situation) => (situation.total.nexuses * 6),
+  assimilators: (situation) => (situation.complete.nexuses * 2),
+  gateways: (situation) => (situation.total.bases * 2 - situation.total.stargates),
+  forges: 1,
+  stargates: 0, // (situation) => (situation.total.bases * 2 - situation.total.gateways),
+  cybernetics: 1,
+  robotics: 1,
+  phoenixes: 4,
+  observers: 3,
+  probes: 82,
+  upgradeGroundUnits: (situation) => (situation.complete.forges),
+};
+
+const PARALLEL = {
+  nexuses: 1,
+  pylons: 1,
+  assimilators: 1,
+  gateways: 1,
+  stargates: 1,
+  zealots: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
+  stalkers: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
+  sentries: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
+  phoenixes: (situation) => (situation.complete.stargates - situation.progress.phoenixes),
+  observers: (situation) => (situation.complete.robotics - situation.progress.observers),
+  probes: (situation) => (situation.complete.nexuses - situation.progress.probes),
+  upgradeGroundUnits: (situation) => (situation.complete.forges),
+};
+
+const RATIO = {
+  zealots: 2,
+  stalkers: 6,
+  sentries: 1,
+  phoenixes: Infinity,
+  observers: Infinity,
+};
+
 export default class Brain {
 
   react(input) {
-    let minerals = input[0];
-    let vespene = input[1];
-    let foodUsed = input[2];
-
-    const baseWithoutPower = input[3];
-
-    const complete = {
-      nexuses: input[4],
-      pylons: input[6],
-      assimilators: input[8],
-      gateways: input[10],
-      forges: input[12],
-      stargates: input[14],
-      cybernetics: input[16],
-      robotics: input[18],
-      zealots: input[20],
-      stalkers: input[22],
-      sentries: input[24],
-      phoenixes: input[26],
-      observers: input[28],
-      probes: input[30],
-    };
-
-    const progress = {
-      nexuses: input[5],
-      pylons: input[7],
-      assimilators: input[9],
-      gateways: input[11],
-      forges: input[13],
-      stargates: input[15],
-      cybernetics: input[17],
-      robotics: input[19],
-      zealots: input[21],
-      stalkers: input[23],
-      sentries: input[25],
-      phoenixes: input[27],
-      observers: input[29],
-      probes: input[31],
-    };
-
-    const order = {
-      nexuses: -1,
-      pylons: -1,
-      assimilators: -1,
-      gateways: -1,
-      forges: -1,
-      stargates: -1,
-      cybernetics: -1,
-      robotics: -1,
-      zealots: -1,
-      stalkers: -1,
-      sentries: -1,
-      phoenixes: -1,
-      observers: -1,
-      probes: -1,
-      upgradeGroundUnits: - 1,
-    };
-
-    const nexuses = complete.nexuses + progress.nexuses;
-    const pylons = complete.pylons + progress.pylons;
-    const assimilators = complete.assimilators + progress.assimilators;
-    const gateways = complete.gateways + progress.gateways;
-    const forges = complete.forges + progress.forges;
-    const stargates = complete.stargates + progress.stargates;
-    const cybernetics = complete.cybernetics + progress.cybernetics;
-    const robotics = complete.robotics + progress.robotics;
-    const zealots = complete.zealots + progress.zealots;
-    const stalkers = complete.stalkers + progress.stalkers;
-    const sentries = complete.sentries + progress.sentries;
-    const phoenixes = complete.phoenixes + progress.phoenixes;
-    const observers = complete.observers + progress.observers;
-    const probes = complete.probes + progress.probes;
-
-    let foodFree = complete.nexuses * 15 + complete.pylons * 8 - foodUsed;
-
-    // First priority is pylons
-    const foodThreshold = complete.nexuses * 15 + pylons * 8 - 10;
-    if (!progress.pylons &&
-      (minerals >= 100) && (foodUsed >= foodThreshold) && (pylons < nexuses * 6) &&
-      ((pylons < 1) || ((nexuses >= 2) && (gateways >= 1))) // Don't build a second pylon before the second nexus and first gateway are started 
-    ) {
-      // Build pylon to increase food for units
-      order.pylons = 1;
-      minerals -= 100;
-    } else if ((nexuses >= 3) && baseWithoutPower) {
-      // Build pylon to open the base for other structures
-      order.pylons = 1;
-      minerals -= 100;
+    const situation = {
+      resources: { minerals: 0, vespene: 0, food: 0 },
+      complete: { nexuses: 0, pylons: 0 },
+      progress: {},
+      total: {},
+      ratio: {},
+      order: {},
     }
 
-    // Next priority is nexuses
-    if (!progress.nexuses && (minerals >= 300) && (nexuses <= pylons)) {
-      order.nexuses = 1;
-      minerals -= 400;
+    let index = 3;
+    for (const i of INPUT) {
+      situation.complete[i] = input[index];
+      situation.progress[i] = input[index + 1];
+      situation.total[i] = situation.complete[i] + situation.progress[i];
+      situation.order[i] = -1;
+      index += 2;
     }
 
-    // Next priority is cybernetic cores
-    if (!cybernetics && (minerals >= 200) && (complete.zealots > 0)) {
-      order.cybernetics = 1;
-      minerals -= 200;
+    situation.resources.minerals = input[0];
+    situation.resources.vespene = input[1];
+    situation.resources.food = situation.complete.nexuses * 15 + situation.complete.pylons * 8 - input[2];
+
+    for (const one of PRIO) {
+      if (CONDITION[one] && !CONDITION[one](situation)) continue;
+      if (RATIO[one]) situation.ratio[one] = RATIO[one];
     }
 
-    // Next priority is robitcs facilities
-    if (!robotics && complete.cybernetics && (minerals >= 150) && (vespene >= 100)) {
-      order.robotics = 1;
-      minerals -= 150;
-      vespene -= 100;
-    }
+    for (const one of PRIO) {
+      let order = 0;
 
-    // Next priority is forges
-    if (!forges && (minerals >= 150) && cybernetics && (zealots + sentries + stalkers > 10)) {
-      order.forges = 1;
-      minerals -= 150;
-    }
+      while (true) {
+        // Check if limit of instances is reached
+        if (situation.total[one] >= threshold(LIMIT, one, situation)) break;
 
-    // Next priority is gateways
-    if (!progress.gateways && (nexuses > 1) && (minerals >= 150) && (gateways < 6)) {
-      order.gateways = 1;
-      minerals -= 150;
-    }
+        // Check if limit of parallel builds is reached
+        if (situation.progress[one] >= threshold(PARALLEL, one, situation)) break;
 
-    // Next priority is stargates
-    if (!progress.stargates && cybernetics && (gateways >= 6) && (stargates + gateways < nexuses * 2) && (minerals >= 150) && (vespene >= 150)) {
-      order.stargates = 1;
-      minerals -= 150;
-      vespene -= 150;
-    }
+        // Check if available resources are sufficient
+        if (PREORDER_MINERALS[one]) {
+          if (situation.resources.minerals < PREORDER_MINERALS[one]) break;
+        } else if (MINERALS[one] && (situation.resources.minerals < MINERALS[one])) break;
+        if (VESPENE[one] && (situation.resources.vespene < VESPENE[one])) break;
+        if (FOOD[one] && (situation.resources.food < FOOD[one])) break;
 
-    // Next priority is assimilators
-    if (!progress.assimilators && (minerals >= 75) && (minerals > vespene) && (assimilators < complete.nexuses * 2)
-        && (gateways > 0) && (nexuses > 1) && (!assimilators || complete.cybernetics)) {
-      order.assimilators = 1;
-      minerals -= 75;
-    }
+        // Check if other conditions are not met
+        if (CONDITION[one] && !CONDITION[one](situation)) break;
 
-    // Next priority is probes
-    if ((progress.probes < nexuses - progress.nexuses) && (probes < 82) && (minerals >= 50) && foodFree) {
-      order.probes = 1;
-      minerals -= 50;
-      foodFree -= 1;
-    }
+        // Check if capped by ratio
+        if (RATIO[one] && isCappedByRatio(one, situation)) break;
 
-    // Next priority is gateway units
-    if (complete.gateways && (progress.zealots + progress.stalkers + progress.sentries < complete.gateways)) {
-      const unit = selectGatewayUnit(
-        zealots, 2,
-        stalkers, (complete.cybernetics && complete.assimilators && (sentries >= 2)) ? 6 : 0,
-        sentries, (complete.cybernetics && complete.assimilators) ? 1 : 0,
-      );
+        // Add one instance to order
+        order++;
+        situation.progress[one]++;
+        situation.resources.minerals -= MINERALS[one] ? MINERALS[one] : 0;
+        situation.resources.vespene -= VESPENE[one] ? VESPENE[one] : 0;
+        situation.resources.food -= FOOD[one] ? FOOD[one] : 0;
+      }
 
-      if (unit === "stalker") {
-        if ((minerals >= 125) && (vespene >= 50) && (foodFree >= 2)) {
-          order.stalkers = 1;
-          minerals -= 125;
-          vespene -= 50;
-          foodFree -= 2;
-        }
-      } else if (unit === "sentry") {
-        if ((minerals >= 50) && (vespene >= 100) && (foodFree >= 2)) {
-          order.sentries = 1;
-          minerals -= 50;
-          vespene -= 100;
-          foodFree -= 2;
-        }
-      } else if (unit === "zealot") {
-        if ((minerals >= 100) && (foodFree >= 2)) {
-          order.zealots = 1;
-          minerals -= 100;
-          foodFree -= 2;
-        }
+      if (order > 0) {
+        situation.order[one] = order;
       }
     }
 
-    // Next priority is robotics facility units
-    if ((observers < 3) && complete.robotics && (progress.observers < complete.robotics)) {
-      if ((minerals >= 25) && (vespene >= 75) && (foodFree >= 1)) {
-        order.observers = 1;
-        minerals -= 25;
-        vespene -= 75;
-        foodFree -= 1;
-      }
+    const output = [1, 1];
+    for (const one of INPUT) {
+      output.push(situation.order[one]);
+      output.push(situation.order[one]);
     }
 
-    // Next priority is stargate units
-    if ((phoenixes < 4) && complete.stargates && (progress.phoenixes < complete.stargates)) {
-      if ((minerals >= 150) && (vespene >= 100) && (foodFree >= 2)) {
-        order.phoenixes = 1;
-        minerals -= 150;
-        vespene -= 100;
-        foodFree -= 2;
-      }
-    }
-
-    // Next priority is upgrade of units
-    if ((minerals >= 100) && (vespene >= 100)) {
-      order.upgradeGroundUnits = 1;
-      minerals -= 100;
-      vespene -= 100;
-    }
-
-    return [
-      1, 1,
-      order.nexuses, order.nexuses,
-      order.pylons, order.pylons,
-      order.assimilators, order.assimilators,
-      order.gateways, order.gateways,
-      order.forges, order.forges,
-      order.stargates, order.stargates,
-      order.cybernetics, order.cybernetics,
-      order.robotics, order.robotics,
-      order.zealots, order.zealots,
-      order.stalkers, order.stalkers,
-      order.sentries, order.sentries,
-      order.phoenixes, order.phoenixes,
-      order.observers, order.observers,
-      order.probes, order.probes,
-      order.upgradeGroundUnits,
-    ];
+    return output;
   }
 
 }
 
-function selectGatewayUnit(zealots, zealotsRatio, stalkers, stalkersRatio, sentries, sentriesRatio) {
-  if (stalkersRatio && (!zealotsRatio || (stalkers * zealotsRatio <= zealots * stalkersRatio)) && (!sentriesRatio || (stalkers * sentriesRatio <= sentries * stalkersRatio))) {
-    return "stalker";
-  } else if (sentriesRatio && (!zealotsRatio || (sentries * zealotsRatio <= zealots * sentriesRatio))) {
-    return "sentry";
-  } else {
-    return "zealot";
+function threshold(data, unit, situation) {
+  const threshold = data[unit];
+
+  if (typeof(threshold) === "number") {
+    return threshold;
+  } else if (typeof(threshold) === "function") {
+    return threshold(situation);
   }
+
+  return Infinity;
+}
+
+function isCappedByRatio(unit, situation) {
+  for (const other in situation.ratio) {
+    if (other !== unit) {
+      if (situation.total[other] >= threshold(LIMIT, other, situation)) continue; // The other unit reached its limit, so it cannot cap others
+      if (situation.progress[other] >= threshold(PARALLEL, other, situation)) continue; // The other unit is producing at its limit, so it cannot cap others
+      if (situation.total[unit] * situation.ratio[other] > situation.total[other] * situation.ratio[unit]) return true;
+    }
+  }
+
+  return false;
 }
