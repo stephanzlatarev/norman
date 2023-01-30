@@ -101,6 +101,8 @@ function observeUnits(node, client, observation) {
     groundWeapons: getUpgradeLevel(observation, 39, 40, 41), groundWeaponsBuilding: 0,
     groundArmor: getUpgradeLevel(observation, 42, 43, 44), groundArmorBuilding: 0,
     shields: getUpgradeLevel(observation, 45, 46, 47), shieldsBuilding: 0,
+    airWeapons: getUpgradeLevel(observation, 78, 79, 80), airWeaponsBuilding: 0,
+    airArmor: getUpgradeLevel(observation, 81, 82, 83), airArmorBuilding: 0,
   };
 
   for (const unitInReality of units) {
@@ -176,6 +178,12 @@ function observeUnits(node, client, observation) {
       }
       if (unitInReality.orders[0].abilityId === 1006) {
         count["probeBuilding"]++;
+      }
+      if (unitInReality.orders[0].abilityId === 3692) {
+        count["airArmorBuilding"]++;
+      }
+      if (unitInReality.orders[0].abilityId === 3693) {
+        count["airWeaponsBuilding"]++;
       }
       if (unitInReality.orders[0].abilityId === 3694) {
         count["groundArmorBuilding"]++;

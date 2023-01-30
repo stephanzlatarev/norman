@@ -2,12 +2,12 @@
 const INPUT = [
   "nexuses", "bases", "pylons", "assimilators", "gateways", "forges", "beacons", "stargates", "cybernetics", "robotics",
   "motherships", "zealots", "stalkers", "sentries", "phoenixes", "carriers", "voidrays", "observers", "probes",
-  "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields"
+  "upgradeAirWeapons", "upgradeAirArmor", "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields"
 ];
 
 const PRIO = [
   "pylons", "nexuses", "assimilators", "probes",
-  "gateways", "cybernetics", "stalkers", "sentries", "zealots",
+  "gateways", "cybernetics", "stalkers", "sentries", "zealots", "upgradeAirWeapons", "upgradeAirArmor",
   "robotics", "observers",
   "stargates", "beacons", "motherships", "carriers", "voidrays", "phoenixes",
   "forges", "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields"
@@ -36,6 +36,8 @@ const MINERALS = {
   voidrays: 250,
   observers: 25,
   probes: 50,
+  upgradeAirWeapons: 100,
+  upgradeAirArmor: 100,
   upgradeGroundWeapons: 100,
   upgradeGroundArmor: 100,
   upgradeShields: 100,
@@ -52,6 +54,8 @@ const VESPENE = {
   carriers: 250,
   voidrays: 150,
   observers: 75,
+  upgradeAirWeapons: 100,
+  upgradeAirArmor: 100,
   upgradeGroundWeapons: 100,
   upgradeGroundArmor: 100,
   upgradeShields: 100,
@@ -89,6 +93,8 @@ const CONDITION = {
   carriers: (situation) => (situation.complete.stargates && situation.complete.beacons),
   voidrays: (situation) => (situation.complete.stargates),
   observers: (situation) => (situation.complete.robotics),
+  upgradeAirWeapons: (situation) => (situation.complete.cybernetics),
+  upgradeAirArmor: (situation) => (situation.complete.cybernetics),
   upgradeGroundWeapons: (situation) => (situation.complete.forges),
   upgradeGroundArmor: (situation) => (situation.complete.forges),
   upgradeShields: (situation) => (situation.complete.forges),
@@ -107,6 +113,8 @@ const LIMIT = {
   motherships: 1,
   observers: 3,
   probes: 82,
+  upgradeAirWeapons: 1,
+  upgradeAirArmor: 1,
   upgradeGroundWeapons: 1,
   upgradeGroundArmor: 1,
   upgradeShields: 1,
@@ -126,6 +134,8 @@ const PARALLEL = {
   voidrays: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays - situation.progress.carriers),
   observers: (situation) => (situation.complete.robotics - situation.progress.observers),
   probes: (situation) => (situation.complete.nexuses - situation.progress.probes),
+  upgradeAirWeapons: (situation) => (situation.complete.cybernetics - situation.progress.upgradeAirWeapons - situation.progress.upgradeAirArmor),
+  upgradeAirArmor: (situation) => (situation.complete.cybernetics - situation.progress.upgradeAirWeapons - situation.progress.upgradeAirArmor),
   upgradeGroundWeapons: (situation) => (situation.complete.forges - situation.progress.upgradeGroundWeapons - situation.progress.upgradeGroundArmor - situation.progress.upgradeShields),
   upgradeGroundArmor: (situation) => (situation.complete.forges - situation.progress.upgradeGroundWeapons - situation.progress.upgradeGroundArmor - situation.progress.upgradeShields),
   upgradeShields: (situation) => (situation.complete.forges - situation.progress.upgradeGroundWeapons - situation.progress.upgradeGroundArmor - situation.progress.upgradeShields),

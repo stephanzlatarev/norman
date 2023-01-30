@@ -1,0 +1,17 @@
+{
+  "label": "upgrade air armor",
+  "goal": "upgrade air armor",
+
+  "body": {
+    "code": "body/starcraft/unit/cybernetics"
+  },
+
+  "input": [
+    "operational",
+    "ordersCount"
+  ],
+
+  "output": [
+    "research-armor"
+  ]
+}

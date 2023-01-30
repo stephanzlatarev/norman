@@ -1,0 +1,17 @@
+{
+  "label": "upgrade air weapons",
+  "goal": "upgrade air weapons",
+
+  "body": {
+    "code": "body/starcraft/unit/cybernetics"
+  },
+
+  "input": [
+    "operational",
+    "ordersCount"
+  ],
+
+  "output": [
+    "research-weapons"
+  ]
+}

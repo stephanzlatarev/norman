@@ -30,6 +30,8 @@
       "TRAIN-VOIDRAY": { "label": "train a void ray", "type": "goal" },
       "TRAIN-OBSERVER": { "label": "train an observer", "type": "goal" },
       "TRAIN-PROBE": { "label": "train a probe", "type": "goal" },
+      "UPGRADE-AIR-WEAPONS": { "label": "upgrade air weapons", "type": "goal" },
+      "UPGRADE-AIR-ARMOR": { "label": "upgrade air armor", "type": "goal" },
       "UPGRADE-GROUND-WEAPONS": { "label": "upgrade ground weapons", "type": "goal" },
       "UPGRADE-GROUND-ARMOR": { "label": "upgrade ground armor", "type": "goal" },
       "UPGRADE-SHIELDS": { "label": "upgrade shields", "type": "goal" }
@@ -157,6 +159,18 @@
         "unique": true
       },
       {
+        "label": "LETS-UPGRADE-AIR-WEAPONS",
+        "path": ["ADVANCE-MILITARY", "upgrade-air-weapons", "UPGRADE-AIR-WEAPONS"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-UPGRADE-AIR-ARMOR",
+        "path": ["ADVANCE-MILITARY", "upgrade-air-armor", "UPGRADE-AIR-ARMOR"],
+        "provisional": true,
+        "unique": true
+      },
+      {
         "label": "LETS-UPGRADE-GROUND-WEAPONS",
         "path": ["ADVANCE-MILITARY", "upgrade-ground-weapons", "UPGRADE-GROUND-WEAPONS"],
         "provisional": true,
@@ -198,6 +212,8 @@
     "stats/voidray", "stats/voidrayBuilding",
     "stats/observer", "stats/observerBuilding",
     "stats/probe", "stats/probeBuilding",
+    "stats/airWeapons", "stats/airWeaponsBuilding",
+    "stats/airArmor", "stats/airArmorBuilding",
     "stats/groundWeapons", "stats/groundWeaponsBuilding",
     "stats/groundArmor", "stats/groundArmorBuilding",
     "stats/shields", "stats/shieldsBuilding"
@@ -225,6 +241,8 @@
     "LETS-TRAIN-VOIDRAY", "TRAIN-VOIDRAY",
     "LETS-TRAIN-OBSERVER", "TRAIN-OBSERVER",
     "LETS-TRAIN-PROBE", "TRAIN-PROBE",
+    "LETS-UPGRADE-AIR-WEAPONS", "UPGRADE-AIR-WEAPONS",
+    "LETS-UPGRADE-AIR-ARMOR", "UPGRADE-AIR-ARMOR",
     "LETS-UPGRADE-GROUND-WEAPONS", "UPGRADE-GROUND-WEAPONS",
     "LETS-UPGRADE-GROUND-ARMOR", "UPGRADE-GROUND-ARMOR",
     "LETS-UPGRADE-SHIELDS", "UPGRADE-SHIELDS"
