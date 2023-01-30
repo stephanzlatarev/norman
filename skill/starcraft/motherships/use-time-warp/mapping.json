@@ -1,0 +1,39 @@
+{
+  "label": "use time warp",
+  "goal": "fight opponent",
+
+  "body": {
+    "code": "body/starcraft/unit/mothership"
+  },
+
+  "memory": {
+    "nodes": {
+      "MILITARY": { "code": "body/starcraft/unit/army" },
+      "LOCATION": { "type": "location", "purpose": "time-warp" }
+    },
+
+    "paths": [
+      { "path": ["MILITARY"] },
+      {
+        "label": "USE-TIME-WARP",
+        "path": ["BODY", "time-warp", "LOCATION"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "energy",
+    "x",
+    "y",
+    "MILITARY/enemyX",
+    "MILITARY/enemyY"
+  ],
+
+  "output": [
+    "USE-TIME-WARP",
+    "LOCATION/x",
+    "LOCATION/y"
+  ]
+}
