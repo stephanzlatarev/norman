@@ -1,0 +1,17 @@
+{
+  "label": "upgrade shields",
+  "goal": "upgrade shields",
+
+  "body": {
+    "code": "body/starcraft/unit/forge"
+  },
+
+  "input": [
+    "operational",
+    "ordersCount"
+  ],
+
+  "output": [
+    "research-shields"
+  ]
+}

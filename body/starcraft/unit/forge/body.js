@@ -8,17 +8,14 @@ export default class Forge extends Unit {
 
   async tock() {
     if (this.node.get("research-armor")) {
-      if (super.command(3694, null, null, "research-armor")) {
-        this.node.set("armor-level", 1);
-      }
+      super.command(3694, null, null, "research-armor");
+      this.node.clear("research-armor");
     } else if (this.node.get("research-weapons")) {
-      if (super.command(3695, null, null, "research-weapons")) {
-        this.node.set("weapons-level", 1);
-      }
+      super.command(3695, null, null, "research-weapons");
+      this.node.clear("research-weapons");
     } else if (this.node.get("research-shields")) {
-      if (super.command(3696, null, null, "build-shields")) {
-        this.node.set("shields-level", 1);
-      }
+      super.command(3696, null, null, "build-shields");
+      this.node.clear("research-shields");
     }
 
     await super.tock();

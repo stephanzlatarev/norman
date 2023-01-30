@@ -1,0 +1,17 @@
+{
+  "label": "upgrade ground armor",
+  "goal": "upgrade ground armor",
+
+  "body": {
+    "code": "body/starcraft/unit/forge"
+  },
+
+  "input": [
+    "operational",
+    "ordersCount"
+  ],
+
+  "output": [
+    "research-armor"
+  ]
+}

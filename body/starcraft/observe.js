@@ -44,7 +44,7 @@ export default async function(node, client) {
 
   observeChat(node, client);
   observeStructures(node, observation);
-  observeUnits(node, client, observation.ownUnits);
+  observeUnits(node, client, observation);
   removeDeadUnits(node, observation);
   observeMilitary(node, client, observation);
 }
@@ -76,7 +76,8 @@ function observeChat(node, client) {
   }
 }
 
-function observeUnits(node, client, units) {
+function observeUnits(node, client, observation) {
+  const units = observation.ownUnits;
   const count = {
     mothership: 0, mothershipBuilding: 0,
     nexus: 0, nexusBuilding: 0,
@@ -97,6 +98,9 @@ function observeUnits(node, client, units) {
     voidray: 0, voidrayBuilding: 0,
     observer: 0, observerBuilding: 0,
     probe: 0, probeBuilding: 0,
+    groundWeapons: getUpgradeLevel(observation, 39, 40, 41), groundWeaponsBuilding: 0,
+    groundArmor: getUpgradeLevel(observation, 42, 43, 44), groundArmorBuilding: 0,
+    shields: getUpgradeLevel(observation, 45, 46, 47), shieldsBuilding: 0,
   };
 
   for (const unitInReality of units) {
@@ -173,6 +177,15 @@ function observeUnits(node, client, units) {
       if (unitInReality.orders[0].abilityId === 1006) {
         count["probeBuilding"]++;
       }
+      if (unitInReality.orders[0].abilityId === 3694) {
+        count["groundArmorBuilding"]++;
+      }
+      if (unitInReality.orders[0].abilityId === 3695) {
+        count["groundWeaponsBuilding"]++;
+      }
+      if (unitInReality.orders[0].abilityId === 3696) {
+        count["shieldsBuilding"]++;
+      }
     }
 
     if ((unitType === "nexus") && unitInMemory.get("baseX") && unitInMemory.get("baseY")) {
@@ -224,4 +237,12 @@ function isUnitPresent(observation, unitInMemory) {
   const unitMayBeInAssimilator = assimilator ? (assimilator.get("unitType") === "assimilator") : false;
 
   return unitMayBeInAssimilator || !!observation.rawData.units.find(unit => unit.tag === tag);
+}
+
+function getUpgradeLevel(observation, level1, level2, level3) {
+  const levels = observation.rawData.player.upgradeIds;
+  if (levels.indexOf(level3) >= 0) return 3;
+  if (levels.indexOf(level2) >= 0) return 2;
+  if (levels.indexOf(level1) >= 0) return 1;
+  return 0;
 }

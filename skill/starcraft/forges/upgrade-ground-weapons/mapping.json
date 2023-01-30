@@ -1,0 +1,17 @@
+{
+  "label": "upgrade ground weapons",
+  "goal": "upgrade ground weapons",
+
+  "body": {
+    "code": "body/starcraft/unit/forge"
+  },
+
+  "input": [
+    "operational",
+    "ordersCount"
+  ],
+
+  "output": [
+    "research-weapons"
+  ]
+}

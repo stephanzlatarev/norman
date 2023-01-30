@@ -30,7 +30,9 @@
       "TRAIN-VOIDRAY": { "label": "train a void ray", "type": "goal" },
       "TRAIN-OBSERVER": { "label": "train an observer", "type": "goal" },
       "TRAIN-PROBE": { "label": "train a probe", "type": "goal" },
-      "UPGRADE-GROUND-UNITS": { "label": "upgrade ground units", "type": "goal" }
+      "UPGRADE-GROUND-WEAPONS": { "label": "upgrade ground weapons", "type": "goal" },
+      "UPGRADE-GROUND-ARMOR": { "label": "upgrade ground armor", "type": "goal" },
+      "UPGRADE-SHIELDS": { "label": "upgrade shields", "type": "goal" }
     },
 
     "paths": [
@@ -155,8 +157,20 @@
         "unique": true
       },
       {
-        "label": "LETS-UPGRADE-GROUND-UNITS",
-        "path": ["ADVANCE-MILITARY", "upgrade-ground-units", "UPGRADE-GROUND-UNITS"],
+        "label": "LETS-UPGRADE-GROUND-WEAPONS",
+        "path": ["ADVANCE-MILITARY", "upgrade-ground-weapons", "UPGRADE-GROUND-WEAPONS"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-UPGRADE-GROUND-ARMOR",
+        "path": ["ADVANCE-MILITARY", "upgrade-ground-armor", "UPGRADE-GROUND-ARMOR"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-UPGRADE-SHIELDS",
+        "path": ["ADVANCE-MILITARY", "upgrade-shields", "UPGRADE-SHIELDS"],
         "provisional": true,
         "unique": true
       }
@@ -183,7 +197,10 @@
     "stats/carrier", "stats/carrierBuilding",
     "stats/voidray", "stats/voidrayBuilding",
     "stats/observer", "stats/observerBuilding",
-    "stats/probe", "stats/probeBuilding"
+    "stats/probe", "stats/probeBuilding",
+    "stats/groundWeapons", "stats/groundWeaponsBuilding",
+    "stats/groundArmor", "stats/groundArmorBuilding",
+    "stats/shields", "stats/shieldsBuilding"
   ],
 
   "output": [
@@ -208,6 +225,8 @@
     "LETS-TRAIN-VOIDRAY", "TRAIN-VOIDRAY",
     "LETS-TRAIN-OBSERVER", "TRAIN-OBSERVER",
     "LETS-TRAIN-PROBE", "TRAIN-PROBE",
-    "LETS-UPGRADE-GROUND-UNITS"
+    "LETS-UPGRADE-GROUND-WEAPONS", "UPGRADE-GROUND-WEAPONS",
+    "LETS-UPGRADE-GROUND-ARMOR", "UPGRADE-GROUND-ARMOR",
+    "LETS-UPGRADE-SHIELDS", "UPGRADE-SHIELDS"
   ]
 }
