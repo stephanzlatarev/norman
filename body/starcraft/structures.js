@@ -41,6 +41,9 @@ function countStructuresOfNexuses(node, observation) {
       const forges = observation.ownUnits.filter(structure => (structure.unitType === 63) && (structure.buildProgress >= 1) && near(structure, baseX, baseY));
       nexus.set("forges", forges.length);
 
+      const beacons = observation.ownUnits.filter(structure => (structure.unitType === 64) && (structure.buildProgress >= 1) && near(structure, baseX, baseY));
+      nexus.set("beacons", beacons.length);
+
       const stargates = observation.ownUnits.filter(structure => (structure.unitType === 67) && (structure.buildProgress >= 1) && near(structure, baseX, baseY));
       nexus.set("stargates", stargates.length);
 
@@ -51,7 +54,8 @@ function countStructuresOfNexuses(node, observation) {
       nexus.set("cybernetics", cybernetics.length);
 
       const structures = observation.ownUnits.filter(structure => (
-        (structure.unitType === 62) || (structure.unitType === 63) || (structure.unitType === 67) || (structure.unitType === 71) || (structure.unitType === 72)
+        (structure.unitType === 62) || (structure.unitType === 63) || (structure.unitType === 64) || (structure.unitType === 67) ||
+        (structure.unitType === 71) || (structure.unitType === 72)
       ) && near(structure, baseX, baseY));
       nexus.set("structures", structures.length);
     }

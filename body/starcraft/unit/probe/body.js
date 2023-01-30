@@ -50,6 +50,12 @@ export default class Probe extends Unit {
       const y = location.get("y");
 
       super.command(884, null, { x: x, y: y }, "build-forge");
+    } else if (this.node.get("build-beacon")) {
+      const location = this.node.get("build-beacon");
+      const x = location.get("x");
+      const y = location.get("y");
+
+      super.command(885, null, { x: x, y: y }, "build-beacon");
     } else if (this.node.get("build-stargate")) {
       const location = this.node.get("build-stargate");
       const x = location.get("x");

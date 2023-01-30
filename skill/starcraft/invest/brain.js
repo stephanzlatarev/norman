@@ -1,16 +1,15 @@
 
 const INPUT = [
-  "nexuses", "bases", "pylons", "assimilators", "gateways", "forges", "stargates", "cybernetics", "robotics",
+  "nexuses", "bases", "pylons", "assimilators", "gateways", "forges", "beacons", "stargates", "cybernetics", "robotics",
   "zealots", "stalkers", "sentries", "phoenixes", "voidrays", "observers", "probes",
   "upgradeGroundUnits"
 ];
 
 const PRIO = [
   "pylons", "nexuses", "assimilators", "probes",
-  "cybernetics",
+  "gateways", "cybernetics", "stalkers", "sentries", "zealots",
   "robotics", "observers",
-  "gateways","stalkers", "sentries", "zealots",
-  "stargates", "phoenixes", "voidrays",
+  "stargates", "beacons", "voidrays", "phoenixes",
   "forges","upgradeGroundUnits"
 ];
 
@@ -24,6 +23,7 @@ const MINERALS = {
   assimilators: 75,
   gateways: 150,
   forges: 150,
+  beacons: 300,
   stargates: 150,
   cybernetics: 200,
   robotics: 150,
@@ -38,6 +38,7 @@ const MINERALS = {
 };
 
 const VESPENE = {
+  beacons: 200,
   stargates: 150,
   robotics: 100,
   stalkers: 50,
@@ -67,6 +68,7 @@ const CONDITION = {
   assimilators: (situation) => (situation.total.gateways && (!situation.total.assimilators || situation.total.cybernetics)),
   gateways: (situation) => (situation.total.nexuses > 1),
   forges: (situation) => (situation.total.zealots + situation.total.sentries + situation.total.stalkers > 10),
+  beacons: (situation) => (situation.complete.stargates),
   stargates: (situation) => (situation.complete.cybernetics && (situation.total.stalkers > 10)),
   cybernetics: (situation) => (situation.complete.zealots),
   robotics: (situation) => (situation.complete.cybernetics),
@@ -83,6 +85,7 @@ const LIMIT = {
   assimilators: (situation) => (situation.complete.nexuses * 2),
   gateways: (situation) => (situation.total.bases * 2 - situation.total.stargates),
   forges: 1,
+  beacons: 1,
   stargates: (situation) => (situation.total.bases * 2 - situation.total.gateways),
   cybernetics: 1,
   robotics: 1,
