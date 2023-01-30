@@ -10,6 +10,9 @@ export default class Stargate extends Unit {
     if (this.node.get("build-phoenix")) {
       super.command(946, null, null, "build-phoenix");
       this.node.clear("build-phoenix");
+    } else if (this.node.get("build-carrier")) {
+      super.command(948, null, null, "build-carrier");
+      this.node.clear("build-carrier");
     } else if (this.node.get("build-voidray")) {
       super.command(950, null, null, "build-voidray");
       this.node.clear("build-voidray");

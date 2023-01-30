@@ -25,6 +25,7 @@
       "TRAIN-STALKER": { "label": "train a stalker", "type": "goal" },
       "TRAIN-SENTRY": { "label": "train a sentry", "type": "goal" },
       "TRAIN-PHOENIX": { "label": "train a phoenix", "type": "goal" },
+      "TRAIN-CARRIER": { "label": "train a carrier", "type": "goal" },
       "TRAIN-VOIDRAY": { "label": "train a void ray", "type": "goal" },
       "TRAIN-OBSERVER": { "label": "train an observer", "type": "goal" },
       "TRAIN-PROBE": { "label": "train a probe", "type": "goal" },
@@ -123,6 +124,12 @@
         "unique": true
       },
       {
+        "label": "LETS-TRAIN-CARRIER",
+        "path": ["ADVANCE-MILITARY", "build-carrier", "TRAIN-CARRIER"],
+        "provisional": true,
+        "unique": true
+      },
+      {
         "label": "LETS-TRAIN-VOIDRAY",
         "path": ["ADVANCE-MILITARY", "build-voidray", "TRAIN-VOIDRAY"],
         "provisional": true,
@@ -165,6 +172,7 @@
     "stats/stalker", "stats/stalkerBuilding",
     "stats/sentry", "stats/sentryBuilding",
     "stats/phoenix", "stats/phoenixBuilding",
+    "stats/carrier", "stats/carrierBuilding",
     "stats/voidray", "stats/voidrayBuilding",
     "stats/observer", "stats/observerBuilding",
     "stats/probe", "stats/probeBuilding"
@@ -187,6 +195,7 @@
     "LETS-TRAIN-STALKER", "TRAIN-STALKER",
     "LETS-TRAIN-SENTRY", "TRAIN-SENTRY",
     "LETS-TRAIN-PHOENIX", "TRAIN-PHOENIX",
+    "LETS-TRAIN-CARRIER", "TRAIN-CARRIER",
     "LETS-TRAIN-VOIDRAY", "TRAIN-VOIDRAY",
     "LETS-TRAIN-OBSERVER", "TRAIN-OBSERVER",
     "LETS-TRAIN-PROBE", "TRAIN-PROBE",

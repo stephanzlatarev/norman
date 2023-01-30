@@ -1,0 +1,18 @@
+{
+  "label": "train carrier",
+  "goal": "train a carrier",
+
+  "body": {
+    "code": "body/starcraft/unit/stargate"
+  },
+
+  "input": [
+    "operational",
+    "ordersCount"
+  ],
+
+  "output": [
+    "build-carrier",
+    "ordersCount"
+  ]
+}

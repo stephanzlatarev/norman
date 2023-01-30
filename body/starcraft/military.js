@@ -7,6 +7,7 @@ const WARRIORS = {
   74: "stalker",
   77: "sentry",
   78: "phoenix",
+  79: "carrier",
   80: "voidray",
   82: "observer",
 };
@@ -21,6 +22,7 @@ const CAN_HIT_AIR = {
   74: "stalker",
   77: "sentry",
   78: "phoenix",
+  79: "carrier",
   80: "voidray",
 };
 

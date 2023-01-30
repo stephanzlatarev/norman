@@ -1,7 +1,7 @@
 
 const INPUT = [
   "nexuses", "bases", "pylons", "assimilators", "gateways", "forges", "beacons", "stargates", "cybernetics", "robotics",
-  "zealots", "stalkers", "sentries", "phoenixes", "voidrays", "observers", "probes",
+  "zealots", "stalkers", "sentries", "phoenixes", "carriers", "voidrays", "observers", "probes",
   "upgradeGroundUnits"
 ];
 
@@ -9,7 +9,7 @@ const PRIO = [
   "pylons", "nexuses", "assimilators", "probes",
   "gateways", "cybernetics", "stalkers", "sentries", "zealots",
   "robotics", "observers",
-  "stargates", "beacons", "voidrays", "phoenixes",
+  "stargates", "beacons", "carriers", "voidrays", "phoenixes",
   "forges","upgradeGroundUnits"
 ];
 
@@ -31,6 +31,7 @@ const MINERALS = {
   stalkers: 125,
   sentries: 50,
   phoenixes: 150,
+  carriers: 350,
   voidrays: 250,
   observers: 25,
   probes: 50,
@@ -44,6 +45,7 @@ const VESPENE = {
   stalkers: 50,
   sentries: 100,
   phoenixes: 100,
+  carriers: 250,
   voidrays: 150,
   observers: 75,
   upgradeGroundUnits: 100,
@@ -54,6 +56,7 @@ const FOOD = {
   stalkers: 2,
   sentries: 2,
   phoenixes: 2,
+  carriers: 6,
   voidrays: 4,
   observers: 1,
   probes: 1,
@@ -75,6 +78,7 @@ const CONDITION = {
   stalkers: (situation) => (situation.complete.cybernetics && situation.complete.assimilators && (situation.total.sentries >= 2)),
   sentries: (situation) => (situation.complete.cybernetics && situation.complete.assimilators),
   phoenixes: (situation) => (situation.complete.stargates),
+  carriers: (situation) => (situation.complete.stargates && situation.complete.beacons),
   voidrays: (situation) => (situation.complete.stargates),
   observers: (situation) => (situation.complete.robotics),
 };
@@ -103,8 +107,9 @@ const PARALLEL = {
   zealots: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
   stalkers: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
   sentries: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
-  phoenixes: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays),
-  voidrays: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays),
+  phoenixes: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays - situation.progress.carriers),
+  carriers: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays - situation.progress.carriers),
+  voidrays: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays - situation.progress.carriers),
   observers: (situation) => (situation.complete.robotics - situation.progress.observers),
   probes: (situation) => (situation.complete.nexuses - situation.progress.probes),
   upgradeGroundUnits: (situation) => (situation.complete.forges),
@@ -115,6 +120,7 @@ const RATIO = {
   stalkers: 6,
   sentries: 1,
   phoenixes: 2,
+  carriers: 6,
   voidrays: 2,
   observers: Infinity,
 };

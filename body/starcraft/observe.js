@@ -16,6 +16,7 @@ const UNITS = {
   74: "stalker",
   77: "sentry",
   78: "phoenix",
+  79: "carrier",
   80: "voidray",
   82: "observer",
   84: "probe"
@@ -90,6 +91,7 @@ function observeUnits(node, client, units) {
     stalker: 0, stalkerBuilding: 0,
     sentry: 0, sentryBuilding: 0,
     phoenix: 0, phoenixBuilding: 0,
+    carrier: 0, carrierBuilding: 0,
     voidray: 0, voidrayBuilding: 0,
     observer: 0, observerBuilding: 0,
     probe: 0, probeBuilding: 0,
@@ -153,6 +155,9 @@ function observeUnits(node, client, units) {
       }
       if (unitInReality.orders[0].abilityId === 946) {
         count["phoenixBuilding"]++;
+      }
+      if (unitInReality.orders[0].abilityId === 948) {
+        count["carrierBuilding"]++;
       }
       if (unitInReality.orders[0].abilityId === 950) {
         count["voidrayBuilding"]++;
