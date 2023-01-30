@@ -3,6 +3,7 @@ import { observeStructures } from "./structures.js";
 import { observeMilitary } from "./military.js";
 
 const UNITS = {
+  10: "mothership",
   59: "nexus",
   60: "pylon",
   61: "assimilator",
@@ -77,6 +78,7 @@ function observeChat(node, client) {
 
 function observeUnits(node, client, units) {
   const count = {
+    mothership: 0, mothershipBuilding: 0,
     nexus: 0, nexusBuilding: 0,
     base: 0, baseBuilding: 0,
     pylon: 0, pylonBuilding: 0,
@@ -117,6 +119,9 @@ function observeUnits(node, client, units) {
       unitInMemory.set("orderAbilityId", unitInReality.orders[0].abilityId);
       unitInMemory.set("orderTargetUnitTag", unitInReality.orders[0].targetUnitTag);
 
+      if (unitInReality.orders[0].abilityId === 110) {
+        count["mothershipBuilding"]++;
+      }
       if (unitInReality.orders[0].abilityId === 880) {
         count["nexusBuilding"]++;
       }

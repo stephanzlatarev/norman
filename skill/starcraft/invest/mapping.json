@@ -21,6 +21,7 @@
       "BUILD-STARGATE": { "label": "build a stargate", "type": "goal" },
       "BUILD-CYBERNETICS": { "label": "build a cybernetics core", "type": "goal" },
       "BUILD-ROBOTICS": { "label": "build a robotics facility", "type": "goal" },
+      "TRAIN-MOTHERSHIP": { "label": "train a mothership", "type": "goal" },
       "TRAIN-ZEALOT": { "label": "train a zealot", "type": "goal" },
       "TRAIN-STALKER": { "label": "train a stalker", "type": "goal" },
       "TRAIN-SENTRY": { "label": "train a sentry", "type": "goal" },
@@ -100,6 +101,12 @@
         "unique": true
       },
       {
+        "label": "LETS-TRAIN-MOTHERSHIP",
+        "path": ["ADVANCE-MILITARY", "build-mothership", "TRAIN-MOTHERSHIP"],
+        "provisional": true,
+        "unique": true
+      },
+      {
         "label": "LETS-TRAIN-ZEALOT",
         "path": ["ADVANCE-MILITARY", "build-zealot", "TRAIN-ZEALOT"],
         "provisional": true,
@@ -168,6 +175,7 @@
     "stats/stargate", "stats/stargateBuilding",
     "stats/cybernetics", "stats/cyberneticsBuilding",
     "stats/robotics", "stats/roboticsBuilding",
+    "stats/mothership", "stats/mothershipBuilding",
     "stats/zealot", "stats/zealotBuilding",
     "stats/stalker", "stats/stalkerBuilding",
     "stats/sentry", "stats/sentryBuilding",
@@ -191,6 +199,7 @@
     "LETS-BUILD-STARGATE", "BUILD-STARGATE",
     "LETS-BUILD-CYBERNETICS", "BUILD-CYBERNETICS",
     "LETS-BUILD-ROBOTICS", "BUILD-ROBOTICS",
+    "LETS-TRAIN-MOTHERSHIP", "TRAIN-MOTHERSHIP",
     "LETS-TRAIN-ZEALOT", "TRAIN-ZEALOT",
     "LETS-TRAIN-STALKER", "TRAIN-STALKER",
     "LETS-TRAIN-SENTRY", "TRAIN-SENTRY",

@@ -1,0 +1,17 @@
+{
+  "label": "train mothership",
+  "goal": "train a mothership",
+
+  "body": {
+    "code": "body/starcraft/unit/nexus"
+  },
+
+  "input": [
+    "operational",
+    "ordersCount"
+  ],
+
+  "output": [
+    "build-mothership"
+  ]
+}

@@ -1,7 +1,7 @@
 
 const INPUT = [
   "nexuses", "bases", "pylons", "assimilators", "gateways", "forges", "beacons", "stargates", "cybernetics", "robotics",
-  "zealots", "stalkers", "sentries", "phoenixes", "carriers", "voidrays", "observers", "probes",
+  "motherships", "zealots", "stalkers", "sentries", "phoenixes", "carriers", "voidrays", "observers", "probes",
   "upgradeGroundUnits"
 ];
 
@@ -9,7 +9,7 @@ const PRIO = [
   "pylons", "nexuses", "assimilators", "probes",
   "gateways", "cybernetics", "stalkers", "sentries", "zealots",
   "robotics", "observers",
-  "stargates", "beacons", "carriers", "voidrays", "phoenixes",
+  "stargates", "beacons", "motherships", "carriers", "voidrays", "phoenixes",
   "forges","upgradeGroundUnits"
 ];
 
@@ -27,6 +27,7 @@ const MINERALS = {
   stargates: 150,
   cybernetics: 200,
   robotics: 150,
+  motherships: 400,
   zealots: 100,
   stalkers: 125,
   sentries: 50,
@@ -42,6 +43,7 @@ const VESPENE = {
   beacons: 200,
   stargates: 150,
   robotics: 100,
+  motherships: 400,
   stalkers: 50,
   sentries: 100,
   phoenixes: 100,
@@ -52,6 +54,7 @@ const VESPENE = {
 };
 
 const FOOD = {
+  motherships: 8,
   zealots: 2,
   stalkers: 2,
   sentries: 2,
@@ -75,6 +78,7 @@ const CONDITION = {
   stargates: (situation) => (situation.complete.cybernetics && (situation.total.stalkers > 10)),
   cybernetics: (situation) => (situation.complete.zealots),
   robotics: (situation) => (situation.complete.cybernetics),
+  motherships: (situation) => (situation.complete.stargates && situation.complete.beacons),
   stalkers: (situation) => (situation.complete.cybernetics && situation.complete.assimilators && (situation.total.sentries >= 2)),
   sentries: (situation) => (situation.complete.cybernetics && situation.complete.assimilators),
   phoenixes: (situation) => (situation.complete.stargates),
@@ -93,6 +97,7 @@ const LIMIT = {
   stargates: (situation) => (situation.total.bases * 2 - situation.total.gateways),
   cybernetics: 1,
   robotics: 1,
+  motherships: 1,
   observers: 3,
   probes: 82,
   upgradeGroundUnits: (situation) => (situation.complete.forges),
@@ -122,7 +127,6 @@ const RATIO = {
   phoenixes: 2,
   carriers: 6,
   voidrays: 2,
-  observers: Infinity,
 };
 
 export default class Brain {

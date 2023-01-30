@@ -3,6 +3,7 @@ const ENEMY_ALERT_SQUARED = 40*40; // Squared distance which raises alert for en
 const STALK_RANGE_SQUARED = 14*14; // Squared range for stalking enemies - just outside range of tanks in siege mode
 
 const WARRIORS = {
+  10: "mothership",
   73: "zealot",
   74: "stalker",
   77: "sentry",
@@ -12,13 +13,16 @@ const WARRIORS = {
   82: "observer",
 };
 const LEADERS = {
+  10: "mothership",
   73: "zealot",
   74: "stalker",
 };
 const USES_ENERGY = {
+  10: "mothership",
   77: "sentry",
 };
 const CAN_HIT_AIR = {
+  10: "mothership",
   74: "stalker",
   77: "sentry",
   78: "phoenix",
