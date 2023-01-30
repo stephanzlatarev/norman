@@ -2,6 +2,28 @@
 const ENEMY_ALERT_SQUARED = 40*40; // Squared distance which raises alert for enemies
 const STALK_RANGE_SQUARED = 14*14; // Squared range for stalking enemies - just outside range of tanks in siege mode
 
+const WARRIORS = {
+  73: "zealot",
+  74: "stalker",
+  77: "sentry",
+  78: "phoenix",
+  80: "voidray",
+  82: "observer",
+};
+const LEADERS = {
+  73: "zealot",
+  74: "stalker",
+};
+const USES_ENERGY = {
+  77: "sentry",
+};
+const CAN_HIT_AIR = {
+  74: "stalker",
+  77: "sentry",
+  78: "phoenix",
+  80: "voidray",
+};
+
 export function observeMilitary(node, client, observation) {
   const homebase = node.get("homebase");
   const army = node.memory.get(node.path + "/army");
@@ -17,13 +39,8 @@ export function observeMilitary(node, client, observation) {
 }
 
 function observeArmy(army, homebase, observation) {
-  let armyUnits = observation.ownUnits.filter(unit => (
-    (unit.unitType === 73) || (unit.unitType === 74) || (unit.unitType === 77) || (unit.unitType === 78) || (unit.unitType === 82)
-  ));
+  const armyUnits = observation.ownUnits.filter(unit => WARRIORS[unit.unitType]);
   army.set("tag", armyUnits.map(unit => unit.tag));
-
-  // Observers and phoenixes are not counted as warriors. They cannot lead or guard.
-  armyUnits = armyUnits.filter(unit => (unit.unitType !== 78) && (unit.unitType !== 82));
 
   const baseX = homebase.get("x");
   const baseY = homebase.get("y");
@@ -32,20 +49,22 @@ function observeArmy(army, homebase, observation) {
   army.set("baseY", baseY);
   army.set("warriorCount", armyUnits.length);
 
-  if (army.get("enemyCount") && armyUnits.length) {
+  const leaderUnits = armyUnits.filter(unit => LEADERS[unit.unitType]);
+
+  if (army.get("enemyCount") && leaderUnits.length) {
     const leaderTag = army.get("leaderTag");
-    let leader = leaderTag ? armyUnits.find(unit => (unit.tag === leaderTag)) : null;
+    let leader = leaderTag ? leaderUnits.find(unit => (unit.tag === leaderTag)) : null;
 
     if (!leader) {
       const enemyX = army.get("enemyX");
       const enemyY = army.get("enemyY");
       const baseTangence = tangence(baseX, baseY, enemyX, enemyY);
 
-      for (const unit of armyUnits) {
+      for (const unit of leaderUnits) {
         unit.squareDistanceToEnemy = squareDistanceInLine(unit.pos.x, unit.pos.y, enemyX, enemyY, baseTangence);
       }
 
-      const order = armyUnits.sort((a, b) => (a.squareDistanceToEnemy - b.squareDistanceToEnemy));
+      const order = leaderUnits.sort((a, b) => (a.squareDistanceToEnemy - b.squareDistanceToEnemy));
 
       for (const unit of order) {
         if (unit.squareDistanceToEnemy <= STALK_RANGE_SQUARED) {
@@ -57,15 +76,16 @@ function observeArmy(army, homebase, observation) {
     }
 
     if (!leader) {
-      leader = armyUnits[0];
+      leader = leaderUnits[0];
     }
 
-    // Only sentries count as energy units. We want to know the max energy level a unit in the army pack has
     const armyPackUnits = armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10));
+
+    // We want to know the max energy level a unit in the army pack has
     let armyEnergy = 0;
     let countEnergyUnits = 0;
     for (const unit of armyPackUnits) {
-      if (unit.unitType === 77) {
+      if (USES_ENERGY[unit.unitType]) {
         countEnergyUnits++;
         armyEnergy = Math.max(armyEnergy, unit.energyMax ? Math.floor(100 * unit.energy / unit.energyMax) : 100);
       }
@@ -80,10 +100,10 @@ function observeArmy(army, homebase, observation) {
     army.set("armyY", leader.pos.y);
 
     const guardTag = army.get("guardTag");
-    let guard = guardTag ? armyUnits.find(unit => (unit.tag === guardTag)) : null;
+    let guard = guardTag ? leaderUnits.find(unit => (unit.tag === guardTag)) : null;
 
     if (!guard || (distance(guard.pos.x, guard.pos.y, baseX, baseY) > ENEMY_ALERT_SQUARED)) {
-      guard = armyUnits.find(unit => (distance(unit.pos.x, unit.pos.y, baseX, baseY) < ENEMY_ALERT_SQUARED));
+      guard = leaderUnits.find(unit => (distance(unit.pos.x, unit.pos.y, baseX, baseY) < ENEMY_ALERT_SQUARED));
     }
 
     if (guard) {
@@ -117,7 +137,7 @@ function observeEnemy(game, army, homebase, observation) {
   const oldEnemyX = army.get("enemyX");
   const oldEnemyY = army.get("enemyY");
 
-  const combatFlyingUnits = observation.rawData.units.find(unit => ((unit.unitType === 74) && (unit.owner === owner))); // One stalker allows to target flying units
+  const combatFlyingUnits = observation.rawData.units.find(unit => (CAN_HIT_AIR[unit.unitType] && (unit.owner === owner)));
   const enemyUnits = observation.rawData.units.filter(unit => isValidTarget(unit, enemy, combatFlyingUnits));
   for (const unit of enemyUnits) unit.distanceToHomebase = distance(unit.pos.x, unit.pos.y, homebaseX, homebaseY);
   enemyUnits.sort((a, b) => (a.distanceToHomebase - b.distanceToHomebase));

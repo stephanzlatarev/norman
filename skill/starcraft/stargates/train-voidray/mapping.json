@@ -1,0 +1,18 @@
+{
+  "label": "train void ray",
+  "goal": "train a void ray",
+
+  "body": {
+    "code": "body/starcraft/unit/stargate"
+  },
+
+  "input": [
+    "operational",
+    "ordersCount"
+  ],
+
+  "output": [
+    "build-voidray",
+    "ordersCount"
+  ]
+}

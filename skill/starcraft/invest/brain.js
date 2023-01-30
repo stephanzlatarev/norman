@@ -1,7 +1,7 @@
 
 const INPUT = [
   "nexuses", "bases", "pylons", "assimilators", "gateways", "forges", "stargates", "cybernetics", "robotics",
-  "zealots", "stalkers", "sentries", "phoenixes", "observers", "probes",
+  "zealots", "stalkers", "sentries", "phoenixes", "voidrays", "observers", "probes",
   "upgradeGroundUnits"
 ];
 
@@ -10,7 +10,7 @@ const PRIO = [
   "cybernetics",
   "robotics", "observers",
   "gateways","stalkers", "sentries", "zealots",
-  "stargates", "phoenixes",
+  "stargates", "phoenixes", "voidrays",
   "forges","upgradeGroundUnits"
 ];
 
@@ -31,6 +31,7 @@ const MINERALS = {
   stalkers: 125,
   sentries: 50,
   phoenixes: 150,
+  voidrays: 250,
   observers: 25,
   probes: 50,
   upgradeGroundUnits: 100,
@@ -42,6 +43,7 @@ const VESPENE = {
   stalkers: 50,
   sentries: 100,
   phoenixes: 100,
+  voidrays: 150,
   observers: 75,
   upgradeGroundUnits: 100,
 };
@@ -51,6 +53,7 @@ const FOOD = {
   stalkers: 2,
   sentries: 2,
   phoenixes: 2,
+  voidrays: 4,
   observers: 1,
   probes: 1,
 };
@@ -64,12 +67,13 @@ const CONDITION = {
   assimilators: (situation) => (situation.total.gateways && (!situation.total.assimilators || situation.total.cybernetics)),
   gateways: (situation) => (situation.total.nexuses > 1),
   forges: (situation) => (situation.total.zealots + situation.total.sentries + situation.total.stalkers > 10),
-  stargates: (situation) => (situation.complete.cybernetics),
+  stargates: (situation) => (situation.complete.cybernetics && (situation.total.stalkers > 10)),
   cybernetics: (situation) => (situation.complete.zealots),
   robotics: (situation) => (situation.complete.cybernetics),
   stalkers: (situation) => (situation.complete.cybernetics && situation.complete.assimilators && (situation.total.sentries >= 2)),
   sentries: (situation) => (situation.complete.cybernetics && situation.complete.assimilators),
   phoenixes: (situation) => (situation.complete.stargates),
+  voidrays: (situation) => (situation.complete.stargates),
   observers: (situation) => (situation.complete.robotics),
 };
 
@@ -79,10 +83,9 @@ const LIMIT = {
   assimilators: (situation) => (situation.complete.nexuses * 2),
   gateways: (situation) => (situation.total.bases * 2 - situation.total.stargates),
   forges: 1,
-  stargates: 0, // (situation) => (situation.total.bases * 2 - situation.total.gateways),
+  stargates: (situation) => (situation.total.bases * 2 - situation.total.gateways),
   cybernetics: 1,
   robotics: 1,
-  phoenixes: 4,
   observers: 3,
   probes: 82,
   upgradeGroundUnits: (situation) => (situation.complete.forges),
@@ -97,7 +100,8 @@ const PARALLEL = {
   zealots: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
   stalkers: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
   sentries: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
-  phoenixes: (situation) => (situation.complete.stargates - situation.progress.phoenixes),
+  phoenixes: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays),
+  voidrays: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays),
   observers: (situation) => (situation.complete.robotics - situation.progress.observers),
   probes: (situation) => (situation.complete.nexuses - situation.progress.probes),
   upgradeGroundUnits: (situation) => (situation.complete.forges),
@@ -107,7 +111,8 @@ const RATIO = {
   zealots: 2,
   stalkers: 6,
   sentries: 1,
-  phoenixes: Infinity,
+  phoenixes: 2,
+  voidrays: 2,
   observers: Infinity,
 };
 
