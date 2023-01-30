@@ -1,13 +1,18 @@
 
 ============= MILESTONE 2 - Reach ELO 1600 in StarCraft II
 
-- add observers to army
-  - when available use observers and zealots for scouting
-- add air units to "fleet" body
-  - train carriers
-  - train void rays
-  - move fleet independently of army
-  - skill "plan investments" to gradually switch army:fleet ratio as warrior count increases. When reached level of total attack we should build only air units.
+- optimize investment
+  - count harvesting capacity in resources per minute (minerals per 100 frames, vespene per 100 frames) and army production capacity in resources per minute (minerals per 100 frames, vespene per 100 frames).
+  - balance harvesting capacity and production capacity to prevent idle factories.
+  - use expansions when returns exceeds costs. must maximize production capacity in the long run.
+  - use upgrades when returns exceeds costs. must maximize hit points per army value.
+- skill "plan investments" to gradually switch army:fleet ratio as warrior count increases. When reached level of total attack we should build only air units.
+  - move fleet independently of army?
+- military.js to count army unit strength so that 15 carriers can go for an attack, although 15 zealots cannot.
+- more than one sentry uses guardian shield because when distance is smaller the new choice uses the shield but the old one still uses the shield too.
+- add skill "plan boosts" to use chronoboost from a nexus with energy to a non-boosted structure that has a running priority operation. This way nexuses without structures will use chronoboost
+- probes are not counted properly because some hide in assimilators. Use gameInfo to count them.
+- add 2nd and 3rd level air weapons and armor upgrades
 - add a "guard" body to help defending the base
   - the guard line should be a walking path close to all own nexuses
   - the guard line will be pylons and cannons which secure end-to-end visibility
@@ -16,12 +21,7 @@
 - add skill "manage military operations" with goals "defend", "stalk", "push", "attack"
   - split combat units among "guard", "scouts", "army", "fleet"
   - total attack should consider strength of units - one carrier is better than one zealot
-- add skill "plan upgrades" to fix issue with forge
-  - for some reason ground weapons do not upgrade
-  - forge starts all upgrades at once. It's better to start upgrade only when the forge has no other orders
-- add skill "plan boosts" to use chronoboost from a nexus with energy to a non-boosted structure that has a running priority operation. This way nexuses without structures will use chronoboost 
 - sometimes army rallies to a stalking point at the side of the enemy (maybe because there is own unit there) but the rest of the units need to walk pass the enemy to get there. Make sure stalking location is always in the direction of the base, so it is always in a path between the base and the enemy.
-- more than one sentry uses guardian shield because when distance is smaller the new choice uses the shield but the old one still uses the shield too.
 - in local ladder game gateways build more than one unit at a time
 - a nexus built at the place of a destroyed nexus should reconnect to left-over structures
 - make a map to test harvesting
@@ -53,6 +53,7 @@ When so, extract samples of failure and add them to the learning set. It can ask
 
 ============= FIXES & IMPROVEMENTS
 
+- use observers, zealots and probes for scouting
 - check for range of enemy and stay away from that range when stalking
 - military.js to observe alpha (leader, x, y) and bravo (leader, x, y) army where alpha is between homebase and enemy and bravo is on the other side of the enemy. Rally units accordingly. Attack with alpha and bravo at the same time
 - add DEBUG and INFO log option for starcraft/unit
@@ -65,5 +66,3 @@ When so, extract samples of failure and add them to the learning set. It can ask
 - when a new nexus is created, take the probes which harvest distant mineral fields and redirect them to harvest the closest mineral fields of the new nexus
 - improve skill "know how to select mineral field for harvest" to select the mineral field that is closest to nexus and then closest to probe
 - improve skill "build a pylon" with goal sequence "Select nexus", "Map area around nexus", "Select location", "Select builder"
-- add skill to balance quotas for units - probes, zealots, stalkers
-- refactor skills "select nexus" to "select base"
