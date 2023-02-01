@@ -9,7 +9,6 @@
   "memory": {
     "nodes": {
       "VESPENE": { "unitType": "vespene" },
-      "BUILDER": { "unitType": "probe" },
       "PROBE": { "unitType": "probe" }
     },
 
@@ -17,11 +16,7 @@
       { "path": ["PROBE"] },
       { "path": ["GOAL", "vespene", "VESPENE"] },
       {
-        "path": ["GOAL", "builder", "BUILDER"],
-        "optional": true
-      },
-      {
-        "label": "SELECT-PROBE",
+        "label": "SELECT",
         "path": ["GOAL", "builder", "PROBE"],
         "provisional": true,
         "unique": true
@@ -32,13 +27,12 @@
   "input": [
     "VESPENE/x",
     "VESPENE/y",
-    "BUILDER",
     "PROBE/busy",
     "PROBE/x",
     "PROBE/y"
   ],
 
   "output": [
-    "SELECT-PROBE"
+    "SELECT"
   ]
 }

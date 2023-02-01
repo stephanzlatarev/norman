@@ -8,17 +8,15 @@
 
   "memory": {
     "nodes": {
-      "NEXUS": { "unitType": "nexus" },
+      "NEXUS": { "unitType": "nexus", "operational": true },
       "RESOURCES": { "type": "resources" },
-      "VESPENE": { "unitType": "vespene" },
-      "ASSIMILATOR": { "unitType": "assimilator" }
+      "VESPENE": { "unitType": "vespene", "harvested": false }
     },
 
     "paths": [
-      { "path": ["GOAL", "nexus", "NEXUS"] },
+      { "path": ["NEXUS"] },
       { "path": ["NEXUS", "resources", "RESOURCES"] },
       { "path": ["RESOURCES", "*", "VESPENE"] },
-      { "path": ["ASSIMILATOR", "resources", "VESPENE"], "optional": true },
       {
         "label": "SELECT",
         "path": ["GOAL", "vespene", "VESPENE"],
@@ -29,8 +27,7 @@
   },
 
   "input": [
-    "VESPENE",
-    "ASSIMILATOR"
+    "VESPENE"
   ],
 
   "output": [

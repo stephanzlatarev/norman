@@ -4,17 +4,23 @@ export default class Brain {
   react(input) {
     const locationX = input[0];
     const locationY = input[1];
-    const builderProbe = input[2];
-    const thisProbeBusy = input[3];
-    const thisProbeX = input[4];
-    const thisProbeY = input[5];
+    const thisProbeBusy = input[2];
+    const thisProbeX = input[3];
+    const thisProbeY = input[4];
 
-    if (builderProbe || thisProbeBusy) return;
+    if (thisProbeBusy) return;
 
-    const selectedProbeX = input[7];
-    const selectedProbeY = input[8];
+    const selectedProbeX = input[6];
+    const selectedProbeY = input[7];
 
-    if (!selectedProbeX || (distance(thisProbeX, thisProbeY, locationX, locationY) < distance(selectedProbeX, selectedProbeY, locationX, locationY))) {
+    if (!selectedProbeX) {
+      return [1, thisProbeX, thisProbeY];
+    }
+
+    const distanceThisProbe = distance(thisProbeX, thisProbeY, locationX, locationY);
+    const distanceSelectedProbe = distance(selectedProbeX, selectedProbeY, locationX, locationY);
+
+    if (distanceThisProbe < distanceSelectedProbe) {
       return [1, thisProbeX, thisProbeY];
     }
   }

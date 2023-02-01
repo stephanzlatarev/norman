@@ -55,8 +55,9 @@ function ensureAssimilatorsAreLinkedToResources(node, clustersInMemory) {
           const resourceX = resource.get("x");
           const resourceY = resource.get("y");
   
-          if ((Math.abs(resourceX - assimilatorX) <= 3) && (Math.abs(resourceY - assimilatorY) <= 3)) {
+          if ((Math.abs(resourceX - assimilatorX) <= 1) && (Math.abs(resourceY - assimilatorY) <= 1)) {
             assimilator.set("resources", resource);
+            resource.set("harvested", true);
           }
         }
       }
@@ -112,5 +113,5 @@ function createClustersInMemory(node, clustersInMemory, clusters) {
 }
 
 function toNode(node, resource) {
-  return node.memory.get(node.path + "/" + resource.tag).set("unitType", resource.type).set("tag", resource.tag).set("x", resource.x).set("y", resource.y);
+  return node.memory.get(node.path + "/" + resource.tag).set("unitType", resource.type).set("tag", resource.tag).set("x", resource.x).set("y", resource.y).set("harvested", false);
 }
