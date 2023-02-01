@@ -13,10 +13,6 @@ const PRIO = [
   "forges", "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields"
 ];
 
-const PREORDER_MINERALS = {
-  nexuses: 300,
-};
-
 const MINERALS = {
   nexuses: 400,
   pylons: 100,
@@ -73,21 +69,12 @@ const FOOD = {
   probes: 1,
 };
 
-const CONDITION = {
-  pylons: (situation) => (
-    (situation.total.pylons < 1)                                      // Power the first base
-    || ((situation.resources.food < 10) && situation.total.gateways)  // Build for food (after first gateway)
-    || (situation.progress.bases && (situation.complete.nexuses >= 2))   // Power new bases (after the second complete nexus)
-  ),
-  assimilators: (situation) => (situation.total.gateways && (!situation.total.assimilators || situation.total.cybernetics)),
-  gateways: (situation) => (situation.total.nexuses > 1),
-  forges: (situation) => (situation.total.zealots + situation.total.sentries + situation.total.stalkers > 10),
+const PREREQUISITE = {
   beacons: (situation) => (situation.complete.stargates),
-  stargates: (situation) => (situation.complete.cybernetics && (situation.total.stalkers > 10)),
-  cybernetics: (situation) => (situation.complete.zealots),
+  cybernetics: (situation) => (situation.complete.gateways),
   robotics: (situation) => (situation.complete.cybernetics),
-  motherships: (situation) => (situation.complete.stargates && situation.complete.beacons),
-  stalkers: (situation) => (situation.complete.cybernetics && situation.complete.assimilators && (situation.total.sentries >= 2)),
+  motherships: (situation) => (!situation.total.motherships && situation.complete.beacons),
+  stalkers: (situation) => (situation.complete.cybernetics && situation.complete.assimilators),
   sentries: (situation) => (situation.complete.cybernetics && situation.complete.assimilators),
   phoenixes: (situation) => (situation.complete.stargates),
   carriers: (situation) => (situation.complete.stargates && situation.complete.beacons),
@@ -100,11 +87,20 @@ const CONDITION = {
   upgradeShields: (situation) => (situation.complete.forges),
 };
 
+const CONDITION = {
+  pylons: (situation) => ((situation.progress.bases) || (situation.resources.food < 10)),
+  gateways: (situation) => ((situation.total.gateways < 2) || situation.total.cybernetics),
+  assimilators: (situation) => (situation.total.gateways && (!situation.total.assimilators || situation.total.cybernetics)),
+  forges: (situation) => (situation.total.zealots + situation.total.sentries + situation.total.stalkers > 10),
+  stargates: (situation) => (situation.complete.cybernetics && (situation.complete.gateways >= 6)),
+  probes: (situation) => (situation.total.pylons || (situation.total.probes <= 12)),
+};
+
 const LIMIT = {
   nexuses: (situation) => (situation.total.probes / 12),
-  pylons: (situation) => (situation.total.nexuses * 6),
+  pylons: (situation) => (situation.total.bases * 4),
   assimilators: (situation) => (situation.complete.nexuses * 2),
-  gateways: (situation) => (situation.total.bases * 2 - situation.total.stargates),
+  gateways: 6,
   forges: 1,
   beacons: 1,
   stargates: (situation) => (situation.total.bases * 2 - situation.total.gateways),
@@ -124,7 +120,7 @@ const PARALLEL = {
   nexuses: 1,
   pylons: 1,
   assimilators: 1,
-  gateways: 1,
+  gateways: 2,
   stargates: 1,
   zealots: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
   stalkers: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
@@ -142,8 +138,8 @@ const PARALLEL = {
 };
 
 const RATIO = {
-  zealots: 2,
-  stalkers: 6,
+  zealots: 1,
+  stalkers: 4,
   sentries: 1,
   phoenixes: 2,
   carriers: 6,
@@ -190,10 +186,11 @@ export default class Brain {
         // Check if limit of parallel builds is reached
         if (situation.progress[one] >= threshold(PARALLEL, one, situation)) break;
 
+        // Check if pre-requisites are not met
+        if (PREREQUISITE[one] && !PREREQUISITE[one](situation)) break;
+
         // Check if available resources are sufficient
-        if (PREORDER_MINERALS[one]) {
-          if (situation.resources.minerals < PREORDER_MINERALS[one]) break;
-        } else if (MINERALS[one] && (situation.resources.minerals < MINERALS[one])) break;
+        if (MINERALS[one] && (situation.resources.minerals < MINERALS[one])) break;
         if (VESPENE[one] && (situation.resources.vespene < VESPENE[one])) break;
         if (FOOD[one] && (situation.resources.food < FOOD[one])) break;
 
