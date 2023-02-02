@@ -186,6 +186,8 @@ function observeUnits(node, client, observation) {
   for (const unit in progress) {
     stats.set(unit + "Building", progress[unit]);
   }
+
+  stats.set("probe", observation.playerCommon.foodWorkers - progress["probe"]);
 }
 
 function addUniqueBuildingLocation(locations, type, pos) {
