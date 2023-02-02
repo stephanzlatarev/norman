@@ -88,7 +88,7 @@ const PREREQUISITE = {
 };
 
 const CONDITION = {
-  pylons: (situation) => ((situation.progress.bases) || (situation.resources.food < 10)),
+  pylons: (situation) => ((situation.progress.bases) || (situation.total.gateways && (situation.resources.food < 10))),
   gateways: (situation) => ((situation.total.gateways < 2) || situation.total.cybernetics),
   assimilators: (situation) => (situation.total.gateways && (!situation.total.assimilators || situation.total.cybernetics)),
   forges: (situation) => (situation.total.zealots + situation.total.sentries + situation.total.stalkers > 10),
