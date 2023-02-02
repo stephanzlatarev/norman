@@ -183,7 +183,7 @@ function observeUnits(node, client, observation) {
     stats.set(unit + "Building", progress[unit]);
   }
 
-  stats.set("probe", observation.playerCommon.foodWorkers - progress["probe"]);
+  stats.set("probe", observation.playerCommon.foodWorkers);
 }
 
 function getOrderLocation(observation, order) {
