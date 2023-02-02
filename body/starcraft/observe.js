@@ -23,6 +23,31 @@ const UNITS = {
   84: "probe"
 };
 
+const ORDERS = {
+  110: "mothership",
+  880: "nexus",
+  881: "pylon",
+  882: "assimilator",
+  883: "gateway",
+  884: "forge",
+  885: "beacon",
+  889: "stargate",
+  893: "robotics",
+  894: "cybernetics",
+  916: "zealot",
+  917: "stalker",
+  921: "sentry",
+  946: "phoenix",
+  948: "carrier",
+  950: "voidray",
+  1006: "probe",
+  3692: "airArmor",
+  3693: "airWeapons",
+  3694: "groundArmor",
+  3695: "groundWeapons",
+  3696: "shields",
+};
+
 export default async function(node, client) {
   const observation = (await client.observation()).observation;
   const owner = await observePlayers(node, client, observation);
@@ -78,32 +103,21 @@ function observeChat(node, client) {
 
 function observeUnits(node, client, observation) {
   const units = observation.ownUnits;
-  const count = {
-    mothership: 0, mothershipBuilding: 0,
-    nexus: 0, nexusBuilding: 0,
-    base: 0, baseBuilding: 0,
-    pylon: 0, pylonBuilding: 0,
-    assimilator: 0, assimilatorBuilding: 0,
-    gateway: 0, gatewayBuilding: 0,
-    forge: 0, forgeBuilding: 0,
-    beacon: 0, beaconBuilding: 0,
-    stargate: 0, stargateBuilding: 0,
-    robotics: 0, roboticsBuilding: 0,
-    cybernetics: 0, cyberneticsBuilding: 0,
-    zealot: 0, zealotBuilding: 0,
-    stalker: 0, stalkerBuilding: 0,
-    sentry: 0, sentryBuilding: 0,
-    phoenix: 0, phoenixBuilding: 0,
-    carrier: 0, carrierBuilding: 0,
-    voidray: 0, voidrayBuilding: 0,
-    observer: 0, observerBuilding: 0,
-    probe: 0, probeBuilding: 0,
-    groundWeapons: getUpgradeLevel(observation, 39, 40, 41), groundWeaponsBuilding: 0,
-    groundArmor: getUpgradeLevel(observation, 42, 43, 44), groundArmorBuilding: 0,
-    shields: getUpgradeLevel(observation, 45, 46, 47), shieldsBuilding: 0,
-    airWeapons: getUpgradeLevel(observation, 78, 79, 80), airWeaponsBuilding: 0,
-    airArmor: getUpgradeLevel(observation, 81, 82, 83), airArmorBuilding: 0,
+
+  const complete = {
+    base: 0,
+    groundWeapons: getUpgradeLevel(observation, 39, 40, 41),
+    groundArmor: getUpgradeLevel(observation, 42, 43, 44),
+    shields: getUpgradeLevel(observation, 45, 46, 47),
+    airWeapons: getUpgradeLevel(observation, 78, 79, 80),
+    airArmor: getUpgradeLevel(observation, 81, 82, 83),
   };
+  for (const unit in UNITS) complete[UNITS[unit]] = 0;
+
+  const progress = { base: 0 };
+  for (const unit in ORDERS) progress[ORDERS[unit]] = 0;
+
+  const buildingLocation = {};
 
   for (const unitInReality of units) {
     const unitType = UNITS[unitInReality.unitType];
@@ -122,85 +136,25 @@ function observeUnits(node, client, observation) {
     unitInMemory.set("orders", unitInReality.orders);
     unitInMemory.set("ordersCount", unitInReality.orders.length);
     if (unitInReality.orders.length) {
-      unitInMemory.set("orderAbilityId", unitInReality.orders[0].abilityId);
-      unitInMemory.set("orderTargetUnitTag", unitInReality.orders[0].targetUnitTag);
+      const order = unitInReality.orders[0];
+      unitInMemory.set("orderAbilityId", order.abilityId);
+      unitInMemory.set("orderTargetUnitTag", order.targetUnitTag);
 
-      if (unitInReality.orders[0].abilityId === 110) {
-        count["mothershipBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 880) {
-        count["nexusBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 881) {
-        count["pylonBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 882) {
-        count["assimilatorBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 883) {
-        count["gatewayBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 884) {
-        count["forgeBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 885) {
-        count["beaconBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 889) {
-        count["stargateBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 893) {
-        count["roboticsBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 894) {
-        count["cyberneticsBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 916) {
-        count["zealotBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 917) {
-        count["stalkerBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 921) {
-        count["sentryBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 946) {
-        count["phoenixBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 948) {
-        count["carrierBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 950) {
-        count["voidrayBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 977) {
-        count["observerBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 1006) {
-        count["probeBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 3692) {
-        count["airArmorBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 3693) {
-        count["airWeaponsBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 3694) {
-        count["groundArmorBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 3695) {
-        count["groundWeaponsBuilding"]++;
-      }
-      if (unitInReality.orders[0].abilityId === 3696) {
-        count["shieldsBuilding"]++;
+      const orderType = ORDERS[order.abilityId];
+      if (orderType) {
+        const orderLocation = unitInReality.orders[0].targetWorldSpacePos;
+
+        if (addUniqueBuildingLocation(buildingLocation, orderType, orderLocation)) {
+          progress[orderType]++;
+        }
       }
     }
 
     if ((unitType === "nexus") && unitInMemory.get("baseX") && unitInMemory.get("baseY")) {
       if (unitInMemory.get("baseNeedsPylon")) {
-        count["baseBuilding"]++;
+        progress.base++;
       } else {
-        count["base"]++;
+        complete.base++;
       }
     }
 
@@ -216,14 +170,39 @@ function observeUnits(node, client, observation) {
     unitInMemory.set("x", unitInReality.pos.x);
     unitInMemory.set("y", unitInReality.pos.y);
 
-    const statType = unitType + ((unitInReality.buildProgress < 1) ? "Building" : "");
-    count[statType] = count[statType] ? count[statType] + 1 : 1;
+    if (unitInReality.buildProgress < 1) {
+      if (addUniqueBuildingLocation(buildingLocation, unitType, unitInReality.pos)) {
+        progress[unitType]++;
+      }
+    } else {
+      complete[unitType]++;
+    }
   }
 
   const stats = node.memory.get(node.path + "/stats");
-  for (const unitType in count) {
-    stats.set(unitType, count[unitType]);
+  for (const unit in complete) {
+    stats.set(unit, complete[unit]);
   }
+  for (const unit in progress) {
+    stats.set(unit + "Building", progress[unit]);
+  }
+}
+
+function addUniqueBuildingLocation(locations, type, pos) {
+  if (!pos) return true;
+  if (!locations[type]) locations[type] = [];
+
+  let isDuplicate = false;
+  for (const location of locations[type]) {
+    if ((Math.abs(pos.x - location.x) <= 1) && (Math.abs(pos.y - location.y) <= 1)) {
+      isDuplicate = true;
+      break;
+    }
+  }
+
+  if (!isDuplicate) locations[type].push(pos);
+
+  return !isDuplicate;
 }
 
 function removeDeadUnits(node, observation) {
