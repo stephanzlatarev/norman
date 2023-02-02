@@ -141,12 +141,8 @@ function observeUnits(node, client, observation) {
       unitInMemory.set("orderTargetUnitTag", order.targetUnitTag);
 
       const orderType = ORDERS[order.abilityId];
-      if (orderType) {
-        const orderLocation = unitInReality.orders[0].targetWorldSpacePos;
-
-        if (addUniqueBuildingLocation(buildingLocation, orderType, orderLocation)) {
-          progress[orderType]++;
-        }
+      if (orderType && addUniqueBuildingLocation(buildingLocation, orderType, getOrderLocation(observation, order))) {
+        progress[orderType]++;
       }
     }
 
@@ -188,6 +184,15 @@ function observeUnits(node, client, observation) {
   }
 
   stats.set("probe", observation.playerCommon.foodWorkers - progress["probe"]);
+}
+
+function getOrderLocation(observation, order) {
+  if (order.targetWorldSpacePos) {
+    return order.targetWorldSpacePos;
+  } else if (order.targetUnitTag) {
+    const unit = observation.rawData.units.find(unit => unit.tag === order.targetUnitTag);
+    return unit ? unit.pos : null;
+  }
 }
 
 function addUniqueBuildingLocation(locations, type, pos) {
