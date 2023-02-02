@@ -219,6 +219,8 @@ export default class Brain {
       output.push(situation.order[one]);
     }
 
+    log(situation);
+
     return output;
   }
 
@@ -246,4 +248,43 @@ function isCappedByRatio(unit, situation) {
   }
 
   return false;
+}
+
+///////////////////////////////////////////
+
+const TROUBLESHOOTING = false;
+const previously = {};
+const buildorder = [];
+let time = -1;
+
+function log(situation) {
+  if (!TROUBLESHOOTING) return;
+
+  time++;
+
+  const seconds = time / 22.4;
+  let neworders = false;
+  for (const unit in situation.total) {
+    const count = situation.total[unit];
+
+    if (!count) continue;
+
+    if (!previously[unit]) {
+      buildorder.push(count + " " + unit + " (" + Math.floor(seconds / 60) + ":" + twodigits(seconds % 60) + ")");
+      neworders = true;
+    } else if (count > previously[unit]) {
+      buildorder.push((count - previously[unit]) + " " + unit + " (" + Math.floor(seconds / 60) + ":" + twodigits(seconds % 60) + ")");
+      neworders = true;
+    }
+
+    previously[unit] = count;
+  }
+
+  if (neworders) {
+    console.log(buildorder.join(", "));
+  }
+}
+
+function twodigits(number) {
+  return (number >= 10) ? Math.floor(number) : "0" + Math.floor(number);
 }
