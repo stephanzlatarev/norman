@@ -29,7 +29,7 @@ export default class KnowHowToSelectMineralFieldForHarvestBrain {
         // We prefer operational nexuses
         return [1, mineralX, mineralY, mineralNexusIsOperational, mineralNexusX, mineralNexusY];
       }
-      if (previousNexusIsOperational && !mineralNexusIsOperational, mineralNexusX, mineralNexusY) {
+      if (previousNexusIsOperational && !mineralNexusIsOperational) {
         // We prefer operational nexuses
         return;
       }
