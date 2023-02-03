@@ -270,7 +270,7 @@ function isCappedByRatio(unit, situation) {
   for (const other in situation.ratio) {
     if (other !== unit) {
       if (situation.total[other] >= threshold(LIMIT, other, situation)) continue; // The other unit reached its limit, so it cannot cap others
-      if (situation.progress[other] >= threshold(PARALLEL, other, situation)) continue; // The other unit is producing at its limit, so it cannot cap others
+      if (threshold(PARALLEL, other, situation) <= 0) continue; // The factories for the other unit is producing at their limit, so it cannot cap others
       if (situation.total[unit] * situation.ratio[other] > situation.total[other] * situation.ratio[unit]) return true;
     }
   }
