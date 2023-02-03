@@ -90,9 +90,9 @@ const PREREQUISITE = {
 
 const BUILDORDER = [
   "probes", "pylons", "probes", "gateways", "probes", "assimilators", "probes",
-  "gateways", "probes", "cybernetics", "probes", "zealots", "pylons", "gateways",
+  "gateways", "probes", "probes", "cybernetics", "zealots", "pylons", "gateways",
   "assimilators", "zealots",
-  "pylons", "probes", "stalkers", "sentries", "stalkers",
+  "pylons", "probes", "sentries", "stalkers", "stalkers",
   "pylons", "probes", "stalkers", "sentries", "probes", "stalkers",
 ];
 const buildorder = { nexuses: 1, probes: 12 };
