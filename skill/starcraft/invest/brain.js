@@ -71,6 +71,7 @@ const FOOD = {
 
 const PREREQUISITE = {
   beacons: (situation) => (situation.complete.stargates),
+  stargates: (situation) => (situation.complete.cybernetics),
   cybernetics: (situation) => (situation.complete.gateways),
   robotics: (situation) => (situation.complete.cybernetics),
   motherships: (situation) => (!situation.total.motherships && situation.complete.beacons),
@@ -87,28 +88,36 @@ const PREREQUISITE = {
   upgradeShields: (situation) => (situation.complete.forges),
 };
 
+const BUILDORDER = [
+  "probes", "pylons", "probes", "gateways", "probes", "assimilators", "probes",
+  "gateways", "probes", "cybernetics", "probes", "zealots", "pylons", "gateways",
+  "assimilators", "zealots",
+  "pylons", "probes", "stalkers", "sentries", "stalkers",
+  "pylons", "probes", "stalkers", "sentries", "probes", "stalkers",
+];
+const buildorder = { nexuses: 1, probes: 12 };
+buildorder[BUILDORDER[0]] = buildorder[BUILDORDER[0]] ? buildorder[BUILDORDER[0]] + 1 : 1;
+
 const CONDITION = {
-  pylons: (situation) => ((situation.progress.bases) || (situation.total.gateways && (situation.resources.food < 10))),
-  gateways: (situation) => ((situation.total.gateways < 2) || situation.total.cybernetics),
-  assimilators: (situation) => (situation.total.gateways && (!situation.total.assimilators || situation.total.cybernetics)),
-  forges: (situation) => (situation.total.zealots + situation.total.sentries + situation.total.stalkers > 10),
+  pylons: (situation) => (situation.progress.bases || (situation.resources.food < 10)),
+  forges: (situation) => (situation.inventory.zealots + situation.inventory.sentries + situation.inventory.stalkers > 10),
   stargates: (situation) => (situation.complete.cybernetics && (situation.complete.gateways >= 6)),
-  probes: (situation) => (situation.total.pylons || (situation.total.probes <= 12)),
+  probes: (situation) => (situation.inventory.pylons || (situation.total.probes <= 12)),
 };
 
 const LIMIT = {
-  nexuses: (situation) => (situation.total.probes / 12),
-  pylons: (situation) => (situation.total.bases * 4),
+  nexuses: (situation) => (situation.inventory.probes / 12),
+  pylons: (situation) => (situation.inventory.bases * 4),
   assimilators: (situation) => (situation.complete.nexuses * 2),
   gateways: 6,
   forges: 1,
   beacons: 1,
-  stargates: (situation) => (situation.total.bases * 2 - situation.total.gateways),
+  stargates: (situation) => (situation.inventory.bases * 2 - situation.inventory.gateways),
   cybernetics: 1,
   robotics: 1,
   motherships: 1,
   observers: 3,
-  probes: 82,
+  probes: (situation) => Math.min(situation.inventory.nexuses * 22, 82),
   upgradeAirWeapons: 1,
   upgradeAirArmor: 1,
   upgradeGroundWeapons: 1,
@@ -153,6 +162,8 @@ export default class Brain {
       resources: { minerals: 0, vespene: 0, food: 0 },
       complete: { nexuses: 0, pylons: 0 },
       progress: {},
+      inventory: {},
+      ordered: {},
       total: {},
       ratio: {},
       order: {},
@@ -162,14 +173,23 @@ export default class Brain {
     for (const i of INPUT) {
       situation.complete[i] = input[index];
       situation.progress[i] = input[index + 1];
-      situation.total[i] = situation.complete[i] + situation.progress[i];
+      situation.inventory[i] = situation.complete[i] + situation.progress[i];
+      situation.ordered[i] = input[index + 2];
+      situation.total[i] = situation.inventory[i] + situation.ordered[i];
       situation.order[i] = -1;
-      index += 2;
+      index += 3;
     }
 
     situation.resources.minerals = input[0];
     situation.resources.vespene = input[1];
     situation.resources.food = situation.complete.nexuses * 15 + situation.complete.pylons * 8 - input[2];
+
+    while (BUILDORDER.length && (situation.inventory[BUILDORDER[0]] >= buildorder[BUILDORDER[0]])) {
+      BUILDORDER.splice(0, 1);
+      if (BUILDORDER.length) {
+        buildorder[BUILDORDER[0]] = buildorder[BUILDORDER[0]] ? buildorder[BUILDORDER[0]] + 1 : 1;
+      }
+    }
 
     for (const one of PRIO) {
       if (CONDITION[one] && !CONDITION[one](situation)) continue;
@@ -179,13 +199,9 @@ export default class Brain {
     for (const one of PRIO) {
       let order = 0;
 
+      if (BUILDORDER.length && (BUILDORDER[0] !== one)) continue;
+
       while (true) {
-        // Check if limit of instances is reached
-        if (situation.total[one] >= threshold(LIMIT, one, situation)) break;
-
-        // Check if limit of parallel builds is reached
-        if (situation.progress[one] >= threshold(PARALLEL, one, situation)) break;
-
         // Check if pre-requisites are not met
         if (PREREQUISITE[one] && !PREREQUISITE[one](situation)) break;
 
@@ -194,11 +210,19 @@ export default class Brain {
         if (VESPENE[one] && (situation.resources.vespene < VESPENE[one])) break;
         if (FOOD[one] && (situation.resources.food < FOOD[one])) break;
 
-        // Check if other conditions are not met
-        if (CONDITION[one] && !CONDITION[one](situation)) break;
+        if (!BUILDORDER.length) {
+          // Check if limit of instances is reached
+          if (situation.total[one] >= threshold(LIMIT, one, situation)) break;
 
-        // Check if capped by ratio
-        if (RATIO[one] && isCappedByRatio(one, situation)) break;
+          // Check if limit of parallel builds is reached
+          if (situation.progress[one] >= threshold(PARALLEL, one, situation)) break;
+
+          // Check if other conditions are not met
+          if (!BUILDORDER.length && CONDITION[one] && !CONDITION[one](situation)) break;
+
+          // Check if capped by ratio
+          if (RATIO[one] && isCappedByRatio(one, situation)) break;
+        }
 
         // Add one instance to order
         order++;
@@ -254,7 +278,7 @@ function isCappedByRatio(unit, situation) {
 
 const TROUBLESHOOTING = false;
 const previously = {};
-const buildorder = [];
+const logs = [];
 let time = -1;
 
 function log(situation) {
@@ -264,16 +288,16 @@ function log(situation) {
 
   const seconds = time / 22.4;
   let neworders = false;
-  for (const unit in situation.total) {
-    const count = situation.total[unit];
+  for (const unit in situation.inventory) {
+    const count = situation.inventory[unit];
 
     if (!count) continue;
 
     if (!previously[unit]) {
-      buildorder.push(count + " " + unit + " (" + Math.floor(seconds / 60) + ":" + twodigits(seconds % 60) + ")");
+      logs.push(count + " " + unit + " (" + Math.floor(seconds / 60) + ":" + twodigits(seconds % 60) + ")");
       neworders = true;
     } else if (count > previously[unit]) {
-      buildorder.push((count - previously[unit]) + " " + unit + " (" + Math.floor(seconds / 60) + ":" + twodigits(seconds % 60) + ")");
+      logs.push((count - previously[unit]) + " " + unit + " (" + Math.floor(seconds / 60) + ":" + twodigits(seconds % 60) + ")");
       neworders = true;
     }
 
@@ -281,7 +305,7 @@ function log(situation) {
   }
 
   if (neworders) {
-    console.log(buildorder.join(", "));
+    console.log(logs.join(", "));
   }
 }
 

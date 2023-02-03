@@ -115,7 +115,11 @@ function observeUnits(node, client, observation) {
   for (const unit in UNITS) complete[UNITS[unit]] = 0;
 
   const progress = { base: 0 };
-  for (const unit in ORDERS) progress[ORDERS[unit]] = 0;
+  const ordered = { base: 0 };
+  for (const unit in ORDERS) {
+    progress[ORDERS[unit]] = 0;
+    ordered[ORDERS[unit]] = 0;
+  }
 
   const buildingLocation = {};
 
@@ -141,8 +145,14 @@ function observeUnits(node, client, observation) {
       unitInMemory.set("orderTargetUnitTag", order.targetUnitTag);
 
       const orderType = ORDERS[order.abilityId];
-      if (orderType && addUniqueBuildingLocation(buildingLocation, orderType, getOrderLocation(observation, order))) {
-        progress[orderType]++;
+      if (orderType) {
+        if (unitType === "probe") {
+          if (addUniqueBuildingLocation(buildingLocation, orderType, getOrderLocation(observation, order))) {
+            ordered[orderType]++;
+          }
+        } else {
+          progress[orderType]++;
+        }
       }
     }
 
@@ -167,9 +177,10 @@ function observeUnits(node, client, observation) {
     unitInMemory.set("y", unitInReality.pos.y);
 
     if (unitInReality.buildProgress < 1) {
-      if (addUniqueBuildingLocation(buildingLocation, unitType, unitInReality.pos)) {
-        progress[unitType]++;
+      if (!addUniqueBuildingLocation(buildingLocation, unitType, unitInReality.pos)) {
+        ordered[unitType]--;
       }
+      progress[unitType]++;
     } else {
       complete[unitType]++;
     }
@@ -181,6 +192,9 @@ function observeUnits(node, client, observation) {
   }
   for (const unit in progress) {
     stats.set(unit + "Building", progress[unit]);
+  }
+  for (const unit in ordered) {
+    stats.set(unit + "Ordered", ordered[unit]);
   }
 
   stats.set("probe", observation.playerCommon.foodWorkers);
