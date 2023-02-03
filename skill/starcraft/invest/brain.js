@@ -190,6 +190,8 @@ export default class Brain {
       BUILDORDER.splice(0, 1);
       if (BUILDORDER.length) {
         buildorder[BUILDORDER[0]] = buildorder[BUILDORDER[0]] ? buildorder[BUILDORDER[0]] + 1 : 1;
+      } else {
+        console.log("Initial build order is complete.");
       }
     }
 
