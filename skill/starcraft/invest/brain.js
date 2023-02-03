@@ -94,6 +94,8 @@ const BUILDORDER = [
   "assimilators", "zealots",
   "pylons", "probes", "sentries", "stalkers", "stalkers",
   "pylons", "probes", "stalkers", "sentries", "probes", "stalkers",
+  "stalkers", "stalkers", "stalkers", "stalkers",
+  "nexuses", "pylons",
 ];
 const buildorder = { nexuses: 1, probes: 12 };
 buildorder[BUILDORDER[0]] = buildorder[BUILDORDER[0]] ? buildorder[BUILDORDER[0]] + 1 : 1;
