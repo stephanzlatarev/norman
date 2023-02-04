@@ -101,6 +101,7 @@ const buildorder = { nexuses: 1, probes: 12 };
 buildorder[BUILDORDER[0]] = buildorder[BUILDORDER[0]] ? buildorder[BUILDORDER[0]] + 1 : 1;
 
 const CONDITION = {
+  nexuses: (situation) => ((situation.total.nexuses < situation.inventory.probes / 12) || (situation.resources.minerals >= 2000)),
   pylons: (situation) => (situation.progress.bases || (situation.resources.food < 10)),
   assimilators: (situation) => (situation.resources.minerals > situation.resources.vespene),
   forges: (situation) => (situation.inventory.zealots + situation.inventory.sentries + situation.inventory.stalkers > 10),
@@ -109,7 +110,6 @@ const CONDITION = {
 };
 
 const LIMIT = {
-  nexuses: (situation) => (situation.inventory.probes / 12),
   pylons: (situation) => (situation.inventory.bases * 6),
   assimilators: (situation) => (situation.complete.nexuses * 2),
   gateways: (situation) => Math.min(situation.inventory.bases * 2, 4),
