@@ -6,8 +6,11 @@ const HARD_MAX_STALK_RANGE = 24 * 24;
 
 const MIN_GUARD_RANGE = 36*36;
 
-const MIN_TOTAL_ATTACK = 30; // When own units are below this number, don't go for total attack
-const MAX_TOTAL_ATTACK = 40; // When own units are over this number, go for total attack
+const MIN_TOTAL_ATTACK = 165; // When unit limit is below this number, don't go for total attack
+const MAX_TOTAL_ATTACK = 195; // When unit limit is over this number, go for total attack
+
+const MIN_WARRIOR_TOTAL_ATTACK = 30; // When own units are below this number, don't go for total attack
+const MAX_WARRIOR_TOTAL_ATTACK = 40; // When own units are over this number, go for total attack
 
 const ENEMY_COUNT_CAP = 22;  // Even if enemies are more than this, we'll consider them as many to ensure we eventually attack
 const RATIO_TO_ATTACK = 1.5; // Have this ratio of own vs enemy units to launch an attack
@@ -35,6 +38,7 @@ export default class Brain {
     const enemyX = input[12];
     const enemyY = input[13];
     const warriorCount = input[14];
+    const totalCount = input[15];
 
     if (!enemyX || !enemyY || !armyX || !armyY) return;
 
@@ -45,7 +49,14 @@ export default class Brain {
       return [0, -1, 1, enemyX, enemyY];
     }
 
-    if ((warriorCount >= MAX_TOTAL_ATTACK) || ((this.mode === "kill") && (warriorCount >= MIN_TOTAL_ATTACK))) {
+    if ((totalCount >= MAX_TOTAL_ATTACK) || ((this.mode === "kill") && (totalCount >= MIN_TOTAL_ATTACK))) {
+      // Total attack
+      trace(this.mode, "kill", input, enemyX, enemyY);
+      this.mode = "kill";
+      return [0, -1, 1, enemyX, enemyY];
+    }
+
+    if ((warriorCount >= MAX_WARRIOR_TOTAL_ATTACK) || ((this.mode === "kill") && (warriorCount >= MIN_WARRIOR_TOTAL_ATTACK))) {
       // Total attack
       trace(this.mode, "kill", input, enemyX, enemyY);
       this.mode = "kill";

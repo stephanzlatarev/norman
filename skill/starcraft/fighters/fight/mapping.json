@@ -42,7 +42,8 @@
     "enemyCount",
     "enemyX",
     "enemyY",
-    "warriorCount"
+    "warriorCount",
+    "totalCount"
   ],
 
   "output": [

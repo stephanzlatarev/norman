@@ -54,6 +54,7 @@ function observeArmy(army, homebase, observation) {
   army.set("baseX", baseX);
   army.set("baseY", baseY);
   army.set("warriorCount", armyUnits.length);
+  army.set("totalCount", observation.playerCommon.foodUsed);
 
   const leaderUnits = armyUnits.filter(unit => LEADERS[unit.unitType]);
 
