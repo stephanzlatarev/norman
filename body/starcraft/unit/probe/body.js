@@ -1,5 +1,22 @@
 import Unit from "../body.js";
 
+const ABILITY_ON_POINT = {
+  "attack": 3674,
+  "build-nexus": 880,
+  "build-pylon": 881,
+  "build-gateway": 883,
+  "build-forge": 884,
+  "build-beacon": 885,
+  "build-stargate": 889,
+  "build-robotics": 893,
+  "build-cybernetics": 894,
+  "move": 16,
+};
+
+const ABILITY_ON_UNIT = {
+  "build-assimilator": 882,
+};
+
 export default class Probe extends Unit {
 
   constructor(node) {
@@ -16,71 +33,36 @@ export default class Probe extends Unit {
   }
 
   async tock() {
-    if (this.node.get("attack")) {
-      const location = this.node.get("attack");
-      const locationX = location.get("x");
-      const locationY = location.get("y");
+    let isCommandIssued = false;
 
-      super.command(3674, null, { x: locationX, y: locationY }, "attack");
-    } else if (this.node.get("build-nexus")) {
-      const location = this.node.get("build-nexus");
-      const x = location.get("x");
-      const y = location.get("y");
+    for (const command in ABILITY_ON_POINT) {
+      const location = this.node.get(command);
 
-      super.command(880, null, { x: x, y: y }, "build-nexus");
-    } else if (this.node.get("build-pylon")) {
-      const location = this.node.get("build-pylon");
-      const x = location.get("x");
-      const y = location.get("y");
+      if (location) {
+        const locationX = location.get("x");
+        const locationY = location.get("y");
 
-      super.command(881, null, { x: x, y: y }, "build-pylon");
-    } else if (this.node.get("build-assimilator")) {
-      const vespene = this.node.get("build-assimilator").get("tag");
+        super.command(ABILITY_ON_POINT[command], null, { x: locationX, y: locationY }, command);
 
-      super.command(882, vespene, null, "build-assimilator");
-    } else if (this.node.get("build-gateway")) {
-      const location = this.node.get("build-gateway");
-      const x = location.get("x");
-      const y = location.get("y");
+        isCommandIssued = true;
+        this.node.clear("harvest");
+      }
+    }
 
-      super.command(883, null, { x: x, y: y }, "build-gateway");
-    } else if (this.node.get("build-forge")) {
-      const location = this.node.get("build-forge");
-      const x = location.get("x");
-      const y = location.get("y");
+    if (!isCommandIssued) {
+      for (const command in ABILITY_ON_UNIT) {
+        const unit = this.node.get(command);
 
-      super.command(884, null, { x: x, y: y }, "build-forge");
-    } else if (this.node.get("build-beacon")) {
-      const location = this.node.get("build-beacon");
-      const x = location.get("x");
-      const y = location.get("y");
+        if (unit) {
+          super.command(ABILITY_ON_UNIT[command], unit.get("tag"), null, command);
 
-      super.command(885, null, { x: x, y: y }, "build-beacon");
-    } else if (this.node.get("build-stargate")) {
-      const location = this.node.get("build-stargate");
-      const x = location.get("x");
-      const y = location.get("y");
+          isCommandIssued = true;
+          this.node.clear("harvest");
+        }
+      }
+    }
 
-      super.command(889, null, { x: x, y: y }, "build-stargate");
-    } else if (this.node.get("build-robotics")) {
-      const location = this.node.get("build-robotics");
-      const x = location.get("x");
-      const y = location.get("y");
-
-      super.command(893, null, { x: x, y: y }, "build-robotics");
-    } else if (this.node.get("build-cybernetics")) {
-      const location = this.node.get("build-cybernetics");
-      const x = location.get("x");
-      const y = location.get("y");
-
-      super.command(894, null, { x: x, y: y }, "build-cybernetics");
-    } else if (this.node.get("move")) {
-      const location = this.node.get("move");
-      const x = location.get("x");
-      const y = location.get("y");
-
-      super.command(16, null, { x: x, y: y }, "move");
-    } else if (this.node.get("harvest") && !this.node.get("busy")) {
+    if (!isCommandIssued && this.node.get("harvest") && !this.node.get("busy")) {
       const orders = this.node.get("orders");
       const currentAbilityId = (orders && orders.length) ? orders[0].abilityId : -1;
       const currentTargetUnitTag = (orders && orders.length) ? orders[0].targetUnitTag : -1;
