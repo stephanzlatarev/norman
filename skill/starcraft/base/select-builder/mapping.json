@@ -19,12 +19,14 @@
   "memory": {
     "nodes": {
       "LOCATION": { "type": "location" },
-      "PROBE": { "unitType": "probe" }
+      "PROBE": { "unitType": "probe" },
+      "SELECTION": { "unitType": "probe" }
     },
 
     "paths": [
       { "path": ["PROBE"] },
       { "path": ["GOAL", "location", "LOCATION"] },
+      { "path": ["GOAL", "builder", "SELECTION"], "optional": true },
       {
         "label": "SELECT",
         "path": ["GOAL", "builder", "PROBE"],
@@ -37,6 +39,7 @@
   "input": [
     "LOCATION/x",
     "LOCATION/y",
+    "SELECTION",
     "PROBE/busy",
     "PROBE/x",
     "PROBE/y"

@@ -9,12 +9,14 @@
   "memory": {
     "nodes": {
       "VESPENE": { "unitType": "vespene" },
-      "PROBE": { "unitType": "probe" }
+      "PROBE": { "unitType": "probe" },
+      "SELECTION": { "unitType": "probe" }
     },
 
     "paths": [
       { "path": ["PROBE"] },
       { "path": ["GOAL", "vespene", "VESPENE"] },
+      { "path": ["GOAL", "builder", "SELECTION"], "optional": true },
       {
         "label": "SELECT",
         "path": ["GOAL", "builder", "PROBE"],
@@ -27,6 +29,7 @@
   "input": [
     "VESPENE/x",
     "VESPENE/y",
+    "SELECTION",
     "PROBE/busy",
     "PROBE/x",
     "PROBE/y"

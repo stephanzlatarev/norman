@@ -4,16 +4,21 @@ export default class Brain {
   react(input) {
     const locationX = input[0];
     const locationY = input[1];
-    const thisProbeBusy = input[2];
-    const thisProbeX = input[3];
-    const thisProbeY = input[4];
+    let selectedProbe = input[2];
+
+    if (selectedProbe) return;
+
+    const thisProbeBusy = input[3];
+    const thisProbeX = input[4];
+    const thisProbeY = input[5];
 
     if (thisProbeBusy) return;
 
-    const selectedProbeX = input[6];
-    const selectedProbeY = input[7];
+    selectedProbe = input[6];
+    const selectedProbeX = input[7];
+    const selectedProbeY = input[8];
 
-    if (!selectedProbeX) {
+    if (!selectedProbe) {
       return [1, thisProbeX, thisProbeY];
     }
 
