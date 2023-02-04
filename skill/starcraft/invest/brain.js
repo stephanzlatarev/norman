@@ -109,7 +109,7 @@ const CONDITION = {
 
 const LIMIT = {
   nexuses: (situation) => (situation.inventory.probes / 12),
-  pylons: (situation) => (situation.inventory.bases * 4),
+  pylons: (situation) => (situation.inventory.bases * 6),
   assimilators: (situation) => (situation.complete.nexuses * 2),
   gateways: 6,
   forges: 1,
