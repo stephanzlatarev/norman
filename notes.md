@@ -11,7 +11,6 @@
 - military.js to count army unit strength so that 15 carriers can go for an attack, although 15 zealots cannot.
 - more than one sentry uses guardian shield because when distance is smaller the new choice uses the shield but the old one still uses the shield too.
 - add skill "plan boosts" to use chronoboost from a nexus with energy to a non-boosted structure that has a running priority operation. This way nexuses without structures will use chronoboost
-- probes are not counted properly because some hide in assimilators. Use gameInfo to count them.
 - add 2nd and 3rd level air weapons and armor upgrades
 - add a "guard" body to help defending the base
   - the guard line should be a walking path close to all own nexuses
