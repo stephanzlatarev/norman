@@ -1,19 +1,21 @@
 
 const LOCATIONS = [
-  { x: 0, y: 1 }, { x: 0, y: -1 },
-  { x: 0, y: -3 }, { x: 0, y: 3 },
   { x: 2, y: 0 }, { x: -2, y: 0 },
+  { x: 0, y: 3 }, { x: 0, y: 1 },
+  { x: 0, y: -1 }, { x: 0, y: -3 },
 ];
 
 export default class Brain {
 
   react(input) {
-    const baseX = input[0];
-    const baseY = input[1];
-    const pylons = input[2];
+    const nexusX = input[0];
+    const nexusY = input[1];
+    const baseX = input[2];
+    const baseY = input[3];
+    const pylons = input[4];
 
-    const selectedLocation = input[3];
-    const pylonsAtSelectedLocation = input[6];
+    const selectedLocation = input[5];
+    const pylonsAtSelectedLocation = input[8];
 
     if (!baseX || !baseY) {
       // This nexus has no base for structures
@@ -26,9 +28,39 @@ export default class Brain {
     }
 
     if (!selectedLocation || (pylons < pylonsAtSelectedLocation)) {
-      const location = LOCATIONS[pylons];
-      return [1, baseX + location.x, baseY + location.y, pylons];
+      const point = location(nexusX, nexusY, baseX, baseY, pylons);
+      return [1, point.x, point.y, pylons];
     }
   }
 
+}
+
+// Build pylons in order from nexus away to other side of base
+function location(nexusX, nexusY, baseX, baseY, pylons) {
+  const location = LOCATIONS[pylons];
+  const point = { x: 0, y: 0 };
+
+  if (Math.abs(nexusY - baseY) >= Math.abs(nexusX - baseX)) {
+    if (nexusY >= baseY) {
+      // Nexus is above base
+      point.x = baseX + location.x;
+      point.y = baseY + location.y;
+    } else {
+      // Nexus is below base
+      point.x = baseX + location.x;
+      point.y = baseY - location.y;
+    }
+  } else {
+    if (nexusX >= baseX) {
+      // Nexus is right of base
+      point.x = baseX + location.y;
+      point.y = baseY + location.x;
+    } else {
+      // Nexus is left of base
+      point.x = baseX - location.y;
+      point.y = baseY + location.x;
+    }
+  }
+
+  return point;
 }

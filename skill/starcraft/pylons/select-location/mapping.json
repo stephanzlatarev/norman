@@ -30,6 +30,8 @@
   },
 
   "input": [
+    "NEXUS/x",
+    "NEXUS/y",
     "NEXUS/baseX",
     "NEXUS/baseY",
     "NEXUS/pylons"
