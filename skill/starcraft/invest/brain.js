@@ -102,6 +102,7 @@ buildorder[BUILDORDER[0]] = buildorder[BUILDORDER[0]] ? buildorder[BUILDORDER[0]
 
 const CONDITION = {
   pylons: (situation) => (situation.progress.bases || (situation.resources.food < 10)),
+  assimilators: (situation) => (situation.resources.minerals > situation.resources.vespene),
   forges: (situation) => (situation.inventory.zealots + situation.inventory.sentries + situation.inventory.stalkers > 10),
   stargates: (situation) => (situation.complete.cybernetics && (situation.inventory.gateways >= 4)),
   probes: (situation) => (situation.inventory.pylons || (situation.total.probes <= 12)),
