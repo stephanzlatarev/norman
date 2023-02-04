@@ -103,7 +103,7 @@ buildorder[BUILDORDER[0]] = buildorder[BUILDORDER[0]] ? buildorder[BUILDORDER[0]
 const CONDITION = {
   pylons: (situation) => (situation.progress.bases || (situation.resources.food < 10)),
   forges: (situation) => (situation.inventory.zealots + situation.inventory.sentries + situation.inventory.stalkers > 10),
-  stargates: (situation) => (situation.complete.cybernetics && (situation.complete.gateways >= 6)),
+  stargates: (situation) => (situation.complete.cybernetics && (situation.inventory.gateways >= 4)),
   probes: (situation) => (situation.inventory.pylons || (situation.total.probes <= 12)),
 };
 
@@ -111,10 +111,10 @@ const LIMIT = {
   nexuses: (situation) => (situation.inventory.probes / 12),
   pylons: (situation) => (situation.inventory.bases * 6),
   assimilators: (situation) => (situation.complete.nexuses * 2),
-  gateways: 6,
+  gateways: (situation) => Math.min(situation.inventory.bases * 2, 4),
   forges: 1,
   beacons: 1,
-  stargates: (situation) => (situation.inventory.bases * 2 - situation.inventory.gateways),
+  stargates: (situation) => Math.min(situation.inventory.bases * 2, 4),
   cybernetics: 1,
   robotics: 1,
   motherships: 1,
@@ -129,10 +129,10 @@ const LIMIT = {
 
 const PARALLEL = {
   nexuses: 1,
-  pylons: 1,
+  pylons: 2,
   assimilators: 1,
   gateways: 2,
-  stargates: 1,
+  stargates: 2,
   zealots: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
   stalkers: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
   sentries: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
@@ -222,7 +222,7 @@ export default class Brain {
           if (situation.progress[one] >= threshold(PARALLEL, one, situation)) break;
 
           // Check if other conditions are not met
-          if (!BUILDORDER.length && CONDITION[one] && !CONDITION[one](situation)) break;
+          if (CONDITION[one] && !CONDITION[one](situation)) break;
 
           // Check if capped by ratio
           if (RATIO[one] && isCappedByRatio(one, situation)) break;
