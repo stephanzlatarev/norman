@@ -5,6 +5,7 @@ export const RESOURCES = {
   146: "mineral", 147: "mineral", 341: "mineral", 483: "mineral",
   665: "mineral", 666: "mineral", 796: "mineral", 797: "mineral",
   884: "mineral", 885: "mineral", 886: "mineral", 887: "mineral",
+  1996: "mineral", 1997: "mineral", 1998: "mineral",
   342: "vespene", 343: "vespene", 344: "vespene",
   608: "vespene", 880: "vespene", 881: "vespene",
 };

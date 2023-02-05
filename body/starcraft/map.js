@@ -1,5 +1,25 @@
 import { RESOURCES } from "./resources.js";
 
+const DIMENSIONS = {
+  149: { w: 2, h: 2 }, // Xel'Naga Tower
+  364: { w: 4, h: 4 },
+  365: { w: 6, h: 6 },
+  372: { w: 4, h: 4 },
+  377: { w: 4, h: 4 },
+  472: { w: 4, h: 4 },
+  629: { w: 6, h: 6 },
+  638: { w: 14, h: 4 },
+  639: { w: 16, h: 6 },
+  640: { w: 4, h: 4 },
+  643: { w: 10, h: 2 },
+  472: { w: 4, h: 4 },
+  474: { w: 4, h: 4 },
+};
+const NEUTRAL_MOVING_UNIT = {
+  336: "dog",
+  612: "bot",
+};
+
 export default class Map {
 
   constructor(gameInfo, observation) {
@@ -62,6 +82,7 @@ export default class Map {
     if (this.units && (!filter || filter.units)) {
       for (const unit of this.units) {
         const type = RESOURCES[unit.unitType];
+        const dimensions = DIMENSIONS[unit.unitType];
         const x = Math.floor(unit.x);
         const y = Math.floor(unit.y);
 
@@ -69,7 +90,9 @@ export default class Map {
           add(map, "M", x - 1, y, 2, 1);
         } else if (type === "vespene") {
           add(map, "M", x - 1, y - 1, 3, 3);
-        } else {
+        } else if (dimensions) {
+          add(map, "X", Math.floor(x - dimensions.w / 2), Math.floor(y - dimensions.h / 2), dimensions.w, dimensions.h);
+        } else if (!NEUTRAL_MOVING_UNIT[unit.unitType]) {
           add(map, "?", x - 2, y - 2, 4, 4);
         }
       }
@@ -172,6 +195,8 @@ function clusterResources(clusters) {
   let index = 1;
 
   for (const cluster of clusters) {
+    if (cluster.length < 6) continue;
+
     let minX = 1000;
     let minY = 1000;
     let maxX = 0;
