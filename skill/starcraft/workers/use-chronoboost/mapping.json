@@ -18,8 +18,7 @@
 
   "input": [
     "operational",
-    "energy",
-    "gateways"
+    "energy"
   ],
 
   "output": [
