@@ -18,12 +18,12 @@
   "memory": {
 
     "nodes": {
-      "NEXUS": { "unitType": "nexus" },
+      "BASE": { "type": "base", "powered": true },
       "LOCATION": { "type": "location", "purpose": "build" }
     },
 
     "paths": [
-      { "path": ["NEXUS"] },
+      { "path": ["BASE"] },
       {
         "path": ["GOAL", "location", "LOCATION"],
         "optional": true
@@ -37,10 +37,10 @@
   },
 
   "input": [
-    "NEXUS/baseX",
-    "NEXUS/baseY",
-    "NEXUS/pylons",
-    "NEXUS/structures"
+    "BASE/x",
+    "BASE/y",
+    "BASE/distance",
+    "BASE/structures"
   ],
 
   "output": [

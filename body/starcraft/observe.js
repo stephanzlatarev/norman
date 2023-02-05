@@ -105,7 +105,6 @@ function observeUnits(node, client, observation) {
   const units = observation.ownUnits;
 
   const complete = {
-    base: 0,
     groundWeapons: getUpgradeLevel(observation, 39, 40, 41),
     groundArmor: getUpgradeLevel(observation, 42, 43, 44),
     shields: getUpgradeLevel(observation, 45, 46, 47),
@@ -114,8 +113,8 @@ function observeUnits(node, client, observation) {
   };
   for (const unit in UNITS) complete[UNITS[unit]] = 0;
 
-  const progress = { base: 0 };
-  const ordered = { base: 0 };
+  const progress = {};
+  const ordered = {};
   for (const unit in ORDERS) {
     progress[ORDERS[unit]] = 0;
     ordered[ORDERS[unit]] = 0;
@@ -153,14 +152,6 @@ function observeUnits(node, client, observation) {
         } else {
           progress[orderType]++;
         }
-      }
-    }
-
-    if ((unitType === "nexus") && unitInMemory.get("baseX") && unitInMemory.get("baseY")) {
-      if (unitInMemory.get("baseNeedsPylon")) {
-        progress.base++;
-      } else {
-        complete.base++;
       }
     }
 

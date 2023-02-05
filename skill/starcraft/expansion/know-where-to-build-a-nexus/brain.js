@@ -15,11 +15,6 @@ export default class Brain {
     const homebaseX = input[7];
     const homebaseY = input[8];
 
-    const directionBaseX = input[9];
-    const directionBaseY = input[10];
-
-    if (!directionBaseX || !directionBaseY) return;
-
     if (alternativeX && alternativeX) {
       if (builderX && builderY) {
         if (distance(directionX, directionY, builderX, builderY) < distance(alternativeX, alternativeY, builderX, builderY)) {

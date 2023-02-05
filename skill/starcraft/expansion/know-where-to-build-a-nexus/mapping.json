@@ -51,9 +51,7 @@
     "BUILDER/x",
     "BUILDER/y",
     "HOMEBASE/x",
-    "HOMEBASE/y",
-    "DIRECTION/baseX",
-    "DIRECTION/baseY"
+    "HOMEBASE/y"
   ],
 
   "output": [

@@ -1,9 +1,8 @@
 
 const LOCATIONS = [
-  { x: -2.5, y:  2.5 },
-  { x:  2.5, y: -2.5 },
-  { x: -2.5, y: -2.5 },
-  { x:  2.5, y:  2.5 },
+  { x: -1.5, y: -1.5 },
+  { x: -1.5, y:  1.5 },
+  { x:  1.5, y: -1.5 },
 ];
 
 export default class Brain {
@@ -11,30 +10,20 @@ export default class Brain {
   react(input) {
     const baseX = input[0];
     const baseY = input[1];
-    const pylons = input[2];
+    const baseDistance = input[2];
     const structures = input[3];
 
     const selectedLocation = input[4];
-    const structuresAtSelectedLocation = input[7];
-
-    if (!baseX || !baseY) {
-      // This nexus has no base for structures
-      return;
-    }
-
-    if (!pylons) {
-      // The base of this nexus is not powered yet
-      return;
-    }
+    const distanceAtSelectedLocation = input[7];
 
     if (structures >= LOCATIONS.length) {
-      // The base of this nexus is already full
+      // This base is already full
       return;
     }
 
-    if (!selectedLocation || (structures < structuresAtSelectedLocation)) {
+    if (!selectedLocation || (baseDistance < distanceAtSelectedLocation)) {
       const location = LOCATIONS[structures];
-      return [1, baseX + location.x, baseY + location.y, structures];
+      return [1, baseX + location.x, baseY + location.y, baseDistance];
     }
   }
 

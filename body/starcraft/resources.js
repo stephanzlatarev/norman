@@ -13,11 +13,13 @@ const knowns = {};
 
 export async function observeResources(node, client, observation) {
   const clustersInMemory = node.memory.get(node.path + "/map/clusters");
+  const basesInMemory = node.memory.get(node.path + "/map/bases");
 
   if (!clustersInMemory.links().length) {
     const map = new Map(await client.gameInfo(), observation);
 
     createClustersInMemory(node, clustersInMemory, map.clusters);
+    createBasesInMemory(node, basesInMemory, map.bases);
   }
 
   refreshResourcesInMemory(observation, clustersInMemory);
@@ -94,7 +96,8 @@ function createClustersInMemory(node, clustersInMemory, clusters) {
     for (const resource of cluster.resources) {
       knowns[resource.tag] = true;
 
-      clusterInMemory.set(resource.tag, toNode(node, resource));
+      clusterInMemory.set(resource.tag, node.memory.get(node.path + "/" + resource.tag).set("unitType", resource.type)
+        .set("tag", resource.tag).set("x", resource.x).set("y", resource.y).set("harvested", false));
     }
 
     clusterInMemory.set("x", cluster.x);
@@ -104,14 +107,11 @@ function createClustersInMemory(node, clustersInMemory, clusters) {
       clusterInMemory.set("nexusX", cluster.nexus.x);
       clusterInMemory.set("nexusY", cluster.nexus.y);
     }
-
-    if (cluster.base) {
-      clusterInMemory.set("baseX", cluster.base.x);
-      clusterInMemory.set("baseY", cluster.base.y);
-    }
   }
 }
 
-function toNode(node, resource) {
-  return node.memory.get(node.path + "/" + resource.tag).set("unitType", resource.type).set("tag", resource.tag).set("x", resource.x).set("y", resource.y).set("harvested", false);
+function createBasesInMemory(node, basesInMemory, bases) {
+  for (const base of bases) {
+    node.memory.get(basesInMemory.path + "/" + base.index).set("type", "base").set("x", base.x + base.w / 2).set("y", base.y + base.h / 2);
+  }
 }

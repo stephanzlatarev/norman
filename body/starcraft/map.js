@@ -275,7 +275,7 @@ function findBasePlots(map, size) {
   for (let y = 0; y < board.length - size; y += size) {
     for (let x = 0; x < board[y].length - size; x += size) {
       const data = map.prefix(board, x, y, size + size, size + size);
-      const plot = findPlot(data, x, y, x + size + size, y + size + size, size, size);
+      const plot = findPlot(plots.length, data, x, y, x + size + size, y + size + size, size, size);
 
       if (plot) {
         plots.push(plot);
@@ -287,13 +287,13 @@ function findBasePlots(map, size) {
   return plots;
 }
 
-function findPlot(prefix, startX, startY, endX, endY, width, height) {
+function findPlot(index, prefix, startX, startY, endX, endY, width, height) {
   for (let y = startY; y < Math.min(endY, prefix.length - 1); y++) {
     for (let x = startX; x < Math.min(endX, prefix[y].length - 1); x++) {
       const cell = prefix[y][x];
 
       if (cell && (cell.w >= width) && (cell.h >= height)) {
-        return { x: x, y: y, w: width, h: height };
+        return { index: index, x: x, y: y, w: width, h: height };
       }
     }
   }
