@@ -1,5 +1,10 @@
-import { map } from "./maps.js";
+import { MAP, map } from "./maps.js";
 
-for (const line of map()) {
+const it = map();
+
+for (const line of it.map()) {
   console.log(line);
 }
+
+console.log();
+console.log("Map", MAP, "with", it.clusters.length, "clusters", it.nexuses.length, "nexuses", it.bases.length, "bases");

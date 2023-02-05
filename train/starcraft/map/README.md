@@ -10,6 +10,5 @@ Then call:
 
 ```
 node ./train/starcraft/map/maps-read.js
-node ./train/starcraft/map/maps-bases.js
 node ./train/starcraft/map/maps-show.js
 ```

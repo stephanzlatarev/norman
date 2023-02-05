@@ -5,7 +5,7 @@ import Map from "../../../body/starcraft/map.js";
 const GAME_CONFIG = {
   localMap: { mapPath: "BerlingradAIE.SC2Map" },
   path: "C:\\games\\StarCraft II",
-  version: "Base89165",
+  version: "Base89720",
   realtime: false,
   playerSetup: [
     { type: 1, race: 3 },

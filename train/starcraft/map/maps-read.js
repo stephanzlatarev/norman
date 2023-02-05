@@ -4,7 +4,7 @@ import { MAP, store } from "./maps.js";
 
 const GAME_CONFIG = {
   path: "C:\\games\\StarCraft II",
-  version: "Base89165",
+  version: "Base89720",
   realtime: false,
   localMap: { mapPath: MAP + ".SC2Map" },
   playerSetup: [
@@ -53,7 +53,7 @@ async function go() {
     console.log(line.join(""));
   }
 
-  store({ map: map, units: units });
+  store({ grid: gameInfo.startRaw.placementGrid, units: units });
 
   await client.quit();
 }
