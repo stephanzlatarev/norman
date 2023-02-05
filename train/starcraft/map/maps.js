@@ -3,14 +3,21 @@ import Map from "../../../body/starcraft/map.js";
 
 const MAPS_FILE = "./train/starcraft/map/maps.json";
 
-export const MAP = "StargazersAIE";
+export const MAPS = [
+  "BerlingradAIE",
+  "HardwireAIE",
+  "WaterfallAIE",
+  "StargazersAIE",
+  "MoondanceAIE",
+  "InsideAndOutAIE",
+];
 
 export function read() {
   return JSON.parse(fs.readFileSync(MAPS_FILE));
 }
 
-export function map() {
-  const data = read()[MAP];
+export function map(mapName) {
+  const data = read()[mapName];
 
   return new Map(
     { startRaw: { placementGrid: data.grid } },
@@ -18,13 +25,13 @@ export function map() {
   });
 }
 
-export function store(data) {
+export function store(mapName, data) {
   const maps = read();
 
-  if (!maps[MAP]) maps[MAP] = {};
+  if (!maps[mapName]) maps[mapName] = {};
 
   for (const key in data) {
-    maps[MAP][key] = data[key];
+    maps[mapName][key] = data[key];
   }
 
   fs.writeFileSync(MAPS_FILE, JSON.stringify(maps));

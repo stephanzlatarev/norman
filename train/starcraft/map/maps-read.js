@@ -1,6 +1,8 @@
 import { spawn } from "child_process";
 import starcraft from "@node-sc2/proto";
-import { MAP, store } from "./maps.js";
+import { MAPS, store } from "./maps.js";
+
+const MAP = MAPS[0];
 
 const GAME_CONFIG = {
   path: "C:\\games\\StarCraft II",
@@ -53,7 +55,7 @@ async function go() {
     console.log(line.join(""));
   }
 
-  store({ grid: gameInfo.startRaw.placementGrid, units: units });
+  store(MAP, { grid: gameInfo.startRaw.placementGrid, units: units });
 
   await client.quit();
 }

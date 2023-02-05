@@ -35,10 +35,10 @@ export default class Map {
 
     const minerals = this.units.filter(unit => (unit.type === "mineral"));
     const vespenes = this.units.filter(unit => (unit.type === "vespene"));
-    
+
     this.clusters = clusterResources(findClusters(minerals, vespenes));
     this.nexuses = this.clusters.map(cluster => findNexusLocation(this, cluster));
-    this.bases = this.clusters.map(cluster => findBasePlot(this, cluster));
+    this.bases = findBasePlots(this, 10);
   }
 
   map(filter) {
@@ -268,19 +268,33 @@ function findNexusLocation(map, cluster) {
   return cluster.nexus;
 }
 
-function findBasePlot(map, cluster) {
-  const nexusX = Math.floor(cluster.nexus.x);
-  const nexusY = Math.floor(cluster.nexus.y);
-  const plotMinX = nexusX - 12;
-  const plotMinY = nexusY - 12;
-  const plotMaxW = 24;
-  const plotMaxH = 24;
-  const data = map.prefix(map.map({ nexuses: 1, units: 1 }), plotMinX, plotMinY, plotMaxW, plotMaxH);
-  const slot = map.plot(data, 8, 8, plotMinX, plotMinY, plotMinX + plotMaxW, plotMinY + plotMaxH, nexusX, nexusY);
+function findBasePlots(map, size) {
+  const plots = [];
+  const board = map.map({ nexuses: 1, units: 1 });
 
-  if (slot && slot.x && slot.y) {
-    cluster.base = { x: slot.x + 4, y: slot.y + 4 };
+  for (let y = 0; y < board.length - size; y += size) {
+    for (let x = 0; x < board[y].length - size; x += size) {
+      const data = map.prefix(board, x, y, size + size, size + size);
+      const plot = findPlot(data, x, y, x + size + size, y + size + size, size, size);
+
+      if (plot) {
+        plots.push(plot);
+        add(board, "X", plot.x, plot.y, plot.w, plot.h);
+      }
+    }
   }
 
-  return slot;
+  return plots;
+}
+
+function findPlot(prefix, startX, startY, endX, endY, width, height) {
+  for (let y = startY; y < Math.min(endY, prefix.length - 1); y++) {
+    for (let x = startX; x < Math.min(endX, prefix[y].length - 1); x++) {
+      const cell = prefix[y][x];
+
+      if (cell && (cell.w >= width) && (cell.h >= height)) {
+        return { x: x, y: y, w: width, h: height };
+      }
+    }
+  }
 }
