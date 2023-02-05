@@ -86,6 +86,11 @@ async function observePlayers(node, client, observation) {
         break;
       }
     }
+    if (gameInfo.startRaw && gameInfo.startRaw.startLocations && gameInfo.startRaw.startLocations.length) {
+      const enemyBase = gameInfo.startRaw.startLocations[0];
+      node.set("enemyBaseX", enemyBase.x);
+      node.set("enemyBaseY", enemyBase.y);
+    }
 
     return owner;
   }

@@ -8,7 +8,7 @@
 
   "memory": {
     "nodes": {
-      "HOMEBASE": { "unitType": "nexus", "homebase": true },
+      "GAME": { "is-game": true },
       "LOCATION": { "type": "resources" },
       "ALTERNATIVE": { "type": "resources" },
       "PARTNER": { "unitType": "zealot" }
@@ -16,7 +16,7 @@
 
     "paths": [
       {
-        "path": ["HOMEBASE"]
+        "path": ["GAME"]
       },
       {
         "path": ["LOCATION"]
@@ -43,8 +43,8 @@
     "LOCATION/nexusY",
     "ALTERNATIVE/nexusX",
     "ALTERNATIVE/nexusY",
-    "HOMEBASE/x",
-    "HOMEBASE/y",
+    "GAME/enemyBaseX",
+    "GAME/enemyBaseY",
     "BODY",
     "PARTNER"
   ],

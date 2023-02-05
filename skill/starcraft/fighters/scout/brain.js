@@ -6,8 +6,8 @@ export default class Brain {
     const locationY = input[1];
     const alternativeX = input[9] ? input[10] : input[2];
     const alternativeY = input[9] ? input[11] : input[3];
-    const homebaseX = input[4];
-    const homebaseY = input[5];
+    const enemyBaseX = input[4];
+    const enemyBaseY = input[5];
     const thisZealot = input[6];
     const partnerZealot = input[7];
 
@@ -18,7 +18,7 @@ export default class Brain {
 
     if (!alternativeX && !alternativeY) {
       return [1, locationX, locationY];
-    } else if (distance(locationX, locationY, homebaseX, homebaseY) > distance(alternativeX, alternativeY, homebaseX, homebaseY)) {
+    } else if (distance(locationX, locationY, enemyBaseX, enemyBaseY) < distance(alternativeX, alternativeY, enemyBaseX, enemyBaseY)) {
       return [1, locationX, locationY];
     }
   }
