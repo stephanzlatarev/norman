@@ -175,7 +175,7 @@ function run(start, sequence, time) {
     current.vespene += current.vps;
 
     // Calculate strength
-    current.strength = current.zealot * 10 + current.sentry * 20 + current.stalker * 30;
+    current.strength = current.zealot * 10 + current.sentry * 10 + current.stalker * 10;
 
     // Log state
     for (const key in STATE) log[key].push(current[key]);
@@ -220,34 +220,41 @@ $(document).ready(function() {
   const time = 4 * 60;
 
   const sequence = [
-    "miner",
     "pylon",
+    "miner",
     "miner",
     "gateway",
     "miner",
     "assimilator",
     "miner",
-    "gateway",
     "gaser",
-    // 1:00
+    "gaser",
     "cybernetics",
-    "gaser",
+    "zealot",
     "gateway",
-    "zealot",
-    "gaser",
+    "pylon",
     "assimilator",
+    "gaser",
     "zealot",
     "gaser",
+    "gaser",
     "stalker",
     "gaser",
+    "stalker",
     "pylon",
-    // 2:00
     "stalker",
-    "gaser",
+    "stalker",
+    "nexus",
     "sentry",
+    "gateway",
     "pylon",
-    "stalker", "stalker", "stalker", "stalker", "stalker", "stalker",
-    "stalker", "stalker", "stalker", "stalker", "stalker", "stalker",
+    "stalker",
+    "stalker",
+    "miner",
+    "miner",
+    "stalker",
+    "stalker",
+    "stalker",
   ];
 
   show(start, [run(start, sequence, time)], time);
