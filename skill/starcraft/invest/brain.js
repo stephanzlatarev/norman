@@ -89,13 +89,13 @@ const PREREQUISITE = {
 };
 
 const BUILDORDER = [
-  "probes", "pylons", "probes", "gateways", "probes", "assimilators", "probes",
-  "gateways", "probes", "probes", "cybernetics", "zealots", "pylons", "gateways",
-  "assimilators", "zealots",
-  "pylons", "probes", "sentries", "stalkers", "stalkers",
-  "pylons", "probes", "stalkers", "sentries", "probes", "stalkers",
-  "stalkers", "stalkers", "stalkers", "stalkers",
-  "nexuses", "pylons",
+  "pylons", "probes", "probes", "gateways", "probes",
+  "assimilators", "probes", "probes", "probes", "probes",
+  "cybernetics", "zealots", "gateways", "pylons",
+  "assimilators", "probes", "zealots", "probes", "probes",
+  "stalkers", "stalkers", "pylons", "stalkers", "stalkers",
+  "nexuses", "sentries", "probes", "pylons", "stalkers", "probes",
+  "stalkers", "probes", "probes", "stalkers", "stalkers", "stalkers",
 ];
 const buildorder = { nexuses: 1, probes: 12 };
 buildorder[BUILDORDER[0]] = buildorder[BUILDORDER[0]] ? buildorder[BUILDORDER[0]] + 1 : 1;
@@ -130,18 +130,18 @@ const LIMIT = {
 
 const PARALLEL = {
   nexuses: 1,
-  pylons: 2,
+  pylons: 1,
   assimilators: 1,
   gateways: 2,
   stargates: 2,
-  zealots: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
-  stalkers: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
-  sentries: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers - situation.progress.sentries),
-  phoenixes: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays - situation.progress.carriers),
-  carriers: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays - situation.progress.carriers),
-  voidrays: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays - situation.progress.carriers),
-  observers: (situation) => (situation.complete.robotics - situation.progress.observers),
-  probes: (situation) => (situation.complete.nexuses - situation.progress.probes),
+  zealots: (situation) => (situation.complete.gateways - situation.progress.stalkers - situation.progress.sentries),
+  stalkers: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.sentries),
+  sentries: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers),
+  phoenixes: (situation) => (situation.complete.stargates - situation.progress.voidrays - situation.progress.carriers),
+  carriers: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays),
+  voidrays: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.carriers),
+  observers: (situation) => (situation.complete.robotics),
+  probes: (situation) => (situation.complete.nexuses),
   upgradeAirWeapons: (situation) => (situation.complete.cybernetics - situation.progress.upgradeAirWeapons - situation.progress.upgradeAirArmor),
   upgradeAirArmor: (situation) => (situation.complete.cybernetics - situation.progress.upgradeAirWeapons - situation.progress.upgradeAirArmor),
   upgradeGroundWeapons: (situation) => (situation.complete.forges - situation.progress.upgradeGroundWeapons - situation.progress.upgradeGroundArmor - situation.progress.upgradeShields),
@@ -215,13 +215,13 @@ export default class Brain {
         if (VESPENE[one] && (situation.resources.vespene < VESPENE[one])) break;
         if (FOOD[one] && (situation.resources.food < FOOD[one])) break;
 
+        // Check if limit of instances is reached
+        if (situation.total[one] >= threshold(LIMIT, one, situation)) break;
+
+        // Check if limit of parallel builds is reached
+        if (situation.progress[one] >= threshold(PARALLEL, one, situation)) break;
+
         if (!BUILDORDER.length) {
-          // Check if limit of instances is reached
-          if (situation.total[one] >= threshold(LIMIT, one, situation)) break;
-
-          // Check if limit of parallel builds is reached
-          if (situation.progress[one] >= threshold(PARALLEL, one, situation)) break;
-
           // Check if other conditions are not met
           if (CONDITION[one] && !CONDITION[one](situation)) break;
 
