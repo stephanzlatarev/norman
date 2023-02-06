@@ -195,7 +195,7 @@ function clusterResources(clusters) {
   let index = 1;
 
   for (const cluster of clusters) {
-    if (cluster.length < 6) continue;
+    if (cluster.length < 10) continue;
 
     let minX = 1000;
     let minY = 1000;
@@ -230,7 +230,7 @@ function findClusters(minerals, vespenes) {
     const list = [];
 
     for (const cluster of clusters) {
-      if (isResourceInCluster(resource, cluster)) {
+      if (isResourceInCluster(resource, cluster, 6)) {
         list.push(cluster);
       }
     }
@@ -257,7 +257,7 @@ function findClusters(minerals, vespenes) {
 
   for (const cluster of clusters) {
     for (const resource of vespenes) {
-      if (isResourceInCluster(resource, cluster)) {
+      if (isResourceInCluster(resource, cluster, 10)) {
         cluster.push(resource);
       }
     }
@@ -266,9 +266,7 @@ function findClusters(minerals, vespenes) {
   return clusters;
 }
 
-function isResourceInCluster(resource, cluster) {
-  const distance = 6;
-
+function isResourceInCluster(resource, cluster, distance) {
   for (const object of cluster) {
     if ((Math.abs(object.x - resource.x) < distance) && (Math.abs(object.y - resource.y) < distance)) {
       return true;
