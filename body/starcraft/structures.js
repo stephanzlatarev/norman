@@ -25,7 +25,7 @@ export function observeStructures(node, observation) {
 
 function countStructuresOfBases(node, bases, observation) {
   let baseCount = 0;
-  let baseSlots = 0;
+  let emptyPoweredBase = false;
 
   for (const base of bases.links()) {
     const baseX = base.get("x");
@@ -63,14 +63,14 @@ function countStructuresOfBases(node, bases, observation) {
     ) && near(structure, baseX, baseY));
     base.set("structures", structures.length);
 
-    if (pylons.length) {
-      baseSlots = Math.max(4 - structures.length, 0);
+    if (pylons.length && !structures.length) {
+      emptyPoweredBase = true;
     }
   }
 
   const stats = node.memory.get(node.path + "/stats");
   stats.set("base", baseCount);
-  stats.set("baseBuilding", (baseSlots < 2) ? 1 : 0);
+  stats.set("baseBuilding", emptyPoweredBase ? 0 : 1);
   stats.set("baseOrdered", 0);
 }
 

@@ -101,21 +101,21 @@ const buildorder = { nexuses: 1, probes: 12 };
 buildorder[BUILDORDER[0]] = buildorder[BUILDORDER[0]] ? buildorder[BUILDORDER[0]] + 1 : 1;
 
 const CONDITION = {
-  nexuses: (situation) => ((situation.total.nexuses < situation.inventory.probes / 12) || (situation.resources.minerals >= 2000)),
-  pylons: (situation) => (situation.progress.bases || (situation.resources.food < 10)),
+  nexuses: (situation) => ((situation.total.nexuses < situation.inventory.probes / 20) || (situation.resources.minerals >= 2000)),
+  pylons: (situation) => (situation.progress.bases || (situation.resources.food < 10) || (situation.resources.psi >= 100)),
   assimilators: (situation) => (situation.resources.minerals > situation.resources.vespene),
   forges: (situation) => (situation.inventory.zealots + situation.inventory.sentries + situation.inventory.stalkers > 10),
-  stargates: (situation) => (situation.complete.cybernetics && (situation.inventory.gateways >= 4)),
+  stargates: (situation) => ((situation.inventory.gateways >= 3) && (situation.resources.minerals >= 450) && (situation.resources.vespene >= 450)),
   probes: (situation) => (situation.inventory.pylons || (situation.total.probes <= 12)),
 };
 
 const LIMIT = {
-  pylons: (situation) => (situation.inventory.bases * 4),
+  pylons: (situation) => Math.min(situation.inventory.bases * 4, (220 - situation.complete.nexuses * 15) / 8),
   assimilators: (situation) => (situation.complete.nexuses * 2),
-  gateways: (situation) => Math.min(situation.complete.nexuses, 5),
+  gateways: (situation) => Math.min(situation.total.nexuses, 5),
   forges: 1,
   beacons: 1,
-  stargates: (situation) => Math.min(situation.complete.nexuses, 5),
+  stargates: (situation) => Math.min(situation.complete.nexuses, 4),
   cybernetics: 1,
   robotics: 1,
   motherships: 1,
@@ -133,7 +133,7 @@ const PARALLEL = {
   pylons: 1,
   assimilators: 1,
   gateways: 2,
-  stargates: 2,
+  stargates: 1,
   zealots: (situation) => (situation.complete.gateways - situation.progress.stalkers - situation.progress.sentries),
   stalkers: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.sentries),
   sentries: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers),
@@ -162,7 +162,7 @@ export default class Brain {
 
   react(input) {
     const situation = {
-      resources: { minerals: 0, vespene: 0, food: 0 },
+      resources: { minerals: 0, vespene: 0, psi: 0, food: 0 },
       complete: { nexuses: 0, pylons: 0 },
       progress: {},
       inventory: {},
@@ -185,7 +185,8 @@ export default class Brain {
 
     situation.resources.minerals = input[0];
     situation.resources.vespene = input[1];
-    situation.resources.food = situation.complete.nexuses * 15 + situation.complete.pylons * 8 - input[2];
+    situation.resources.psi = input[2];
+    situation.resources.food = situation.complete.nexuses * 15 + situation.complete.pylons * 8 - situation.resources.psi;
 
     while (BUILDORDER.length && (situation.inventory[BUILDORDER[0]] >= buildorder[BUILDORDER[0]])) {
       BUILDORDER.splice(0, 1);
@@ -215,13 +216,13 @@ export default class Brain {
         if (VESPENE[one] && (situation.resources.vespene < VESPENE[one])) break;
         if (FOOD[one] && (situation.resources.food < FOOD[one])) break;
 
-        // Check if limit of instances is reached
-        if (situation.total[one] >= threshold(LIMIT, one, situation)) break;
-
         // Check if limit of parallel builds is reached
         if (situation.progress[one] >= threshold(PARALLEL, one, situation)) break;
 
         if (!BUILDORDER.length) {
+          // Check if limit of instances is reached
+          if (situation.total[one] >= threshold(LIMIT, one, situation)) break;
+
           // Check if other conditions are not met
           if (CONDITION[one] && !CONDITION[one](situation)) break;
 
@@ -271,7 +272,7 @@ function isCappedByRatio(unit, situation) {
   for (const other in situation.ratio) {
     if (other !== unit) {
       if (situation.total[other] >= threshold(LIMIT, other, situation)) continue; // The other unit reached its limit, so it cannot cap others
-      if (threshold(PARALLEL, other, situation) <= 0) continue; // The factories for the other unit is producing at their limit, so it cannot cap others
+      if (threshold(PARALLEL, other, situation) <= situation.progress[other]) continue; // The other unit is produced at the factory limit, so it cannot cap others
       if (situation.total[unit] * situation.ratio[other] > situation.total[other] * situation.ratio[unit]) return true;
     }
   }
