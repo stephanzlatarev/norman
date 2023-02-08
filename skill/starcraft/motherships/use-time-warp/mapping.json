@@ -27,8 +27,9 @@
     "energy",
     "x",
     "y",
-    "MILITARY/enemyX",
-    "MILITARY/enemyY"
+    "MILITARY/enemyWarriorCount",
+    "MILITARY/enemyWarriorX",
+    "MILITARY/enemyWarriorY"
   ],
 
   "output": [

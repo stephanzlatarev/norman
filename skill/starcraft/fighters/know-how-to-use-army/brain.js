@@ -3,7 +3,7 @@ export default class Brain {
 
   react(input) {
     const warriors = input[0];
-    const enemies = input[1];
+    const enemies = input[1] + input[2];
 
     if (!warriors) {
       return [-1, -1];

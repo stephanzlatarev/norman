@@ -5,10 +5,11 @@ export default class Brain {
     const energy = input[0];
     const mothershipX = input[1];
     const mothershipY = input[2];
-    const enemyX = input[3];
-    const enemyY = input[4];
+    const enemies = input[3];
+    const enemyX = input[4];
+    const enemyY = input[5];
 
-    if (enemyX && enemyY && (energy >= 100)) {
+    if ((enemies > 5) && enemyX && enemyY && (energy >= 100)) {
       const distanceToEnemy = distance(mothershipX, mothershipY, enemyX, enemyY);
 
       if (distanceToEnemy <= 100) {

@@ -28,9 +28,12 @@
     "HOMEBASE/x",
     "HOMEBASE/y",
     "BODY/warriorCount",
-    "BODY/enemyCount",
-    "BODY/enemyX",
-    "BODY/enemyY",
+    "BODY/enemyWarriorCount",
+    "BODY/enemyWarriorX",
+    "BODY/enemyWarriorY",
+    "BODY/enemyDummyCount",
+    "BODY/enemyDummyX",
+    "BODY/enemyDummyY",
     "GAME/stats/nexus"
   ],
 

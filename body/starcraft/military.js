@@ -30,6 +30,21 @@ const CAN_HIT_AIR = {
   80: "voidray",
 };
 
+// The units that can't fight my army
+const DUMMY_TARGETS = {
+  59: "nexus",
+  60: "pylon",
+  61: "assimilator",
+  62: "gateway",
+  63: "forge",
+  64: "beacon",
+  67: "stargate",
+  71: "robotics",
+  72: "cybernetics",
+  82: "observer",
+  84: "probe",
+};
+
 export function observeMilitary(node, client, observation) {
   const homebase = node.get("homebase");
   const army = node.memory.get(node.path + "/army");
@@ -58,13 +73,13 @@ function observeArmy(army, homebase, observation) {
 
   const leaderUnits = armyUnits.filter(unit => LEADERS[unit.unitType]);
 
-  if (army.get("enemyCount") && leaderUnits.length) {
+  if (leaderUnits.length && (army.get("enemyWarriorCount") || army.get("enemyDummyCount"))) {
     const leaderTag = army.get("leaderTag");
     let leader = leaderTag ? leaderUnits.find(unit => (unit.tag === leaderTag)) : null;
 
     if (!leader) {
-      const enemyX = army.get("enemyX");
-      const enemyY = army.get("enemyY");
+      const enemyX = army.get("enemyWarriorX") ? army.get("enemyWarriorX") : army.get("enemyDummyX");
+      const enemyY = army.get("enemyWarriorY") ? army.get("enemyWarriorY") : army.get("enemyDummyY");
       const baseTangence = tangence(baseX, baseY, enemyX, enemyY);
 
       for (const unit of leaderUnits) {
@@ -141,31 +156,53 @@ function observeEnemy(game, army, homebase, observation) {
   const enemy = game.get("enemy");
   const homebaseX = homebase.get("x");
   const homebaseY = homebase.get("y");
-  const oldEnemyX = army.get("enemyX");
-  const oldEnemyY = army.get("enemyY");
+  const oldEnemyWarriorX = army.get("enemyWarriorX");
+  const oldEnemyWarriorY = army.get("enemyWarriorY");
 
   const combatFlyingUnits = observation.rawData.units.find(unit => (CAN_HIT_AIR[unit.unitType] && (unit.owner === owner)));
   const enemyUnits = observation.rawData.units.filter(unit => isValidTarget(unit, enemy, combatFlyingUnits));
-  for (const unit of enemyUnits) unit.distanceToHomebase = distance(unit.pos.x, unit.pos.y, homebaseX, homebaseY);
-  enemyUnits.sort((a, b) => (a.distanceToHomebase - b.distanceToHomebase));
-  const enemyUnit = enemyUnits.length ? enemyUnits[0] : null;
+  const enemyWarriors = enemyUnits.filter(unit => !DUMMY_TARGETS[unit.unitType]);
+
+  for (const unit of enemyWarriors) unit.distanceToHomebase = distance(unit.pos.x, unit.pos.y, homebaseX, homebaseY);
+  enemyWarriors.sort((a, b) => (a.distanceToHomebase - b.distanceToHomebase));
+  const enemyUnit = enemyWarriors.length ? enemyWarriors[0] : null;
 
   if (enemyUnit) {
-    const oldEnemyCount = army.get("enemyCount");
-    const enemyMovingUnits = enemyUnits.filter(unit => ((unit.pos.x * 2) !== Math.floor(unit.pos.x * 2)) || ((unit.pos.y * 2) !== Math.floor(unit.pos.y * 2)));
-    army.set("enemyCount", Math.max(enemyMovingUnits.length, oldEnemyCount ? oldEnemyCount : 1));
+    // Enemy warriors are in sight. Focus on one of them.
 
-    if (shouldSwitchAttention(oldEnemyX, oldEnemyY, enemyUnit, enemyUnits, homebaseX, homebaseY, army)) {
+    const oldEnemyCount = army.get("enemyWarriorCount");
+    army.set("enemyWarriorCount", Math.max(enemyWarriors.length, oldEnemyCount ? oldEnemyCount : 1));
+
+    if (shouldSwitchAttention(oldEnemyWarriorX, oldEnemyWarriorY, enemyUnit, enemyWarriors, homebaseX, homebaseY, army)) {
       // Switch attention to enemy which is closest to homebase
       army.set("enemyAlert", enemyUnit.distanceToHomebase <= ENEMY_ALERT_SQUARED);
-      army.set("enemyX", enemyUnit.pos.x);
-      army.set("enemyY", enemyUnit.pos.y);
+      army.set("enemyWarriorX", enemyUnit.pos.x);
+      army.set("enemyWarriorY", enemyUnit.pos.y);
     }
-  } else if (isLocationVisible(observation, owner, oldEnemyX, oldEnemyY)) {
-    army.set("enemyCount", 0);
-    army.clear("enemyAlert");
-    army.clear("enemyX");
-    army.clear("enemyY");
+
+    army.clear("enemyDummyCount");
+    army.clear("enemyDummyX");
+    army.clear("enemyDummyY");
+  } else {
+    // No enemy warrior is in sight. Focus on dummy targets if any.
+
+    if (isLocationVisible(observation, owner, oldEnemyWarriorX, oldEnemyWarriorY) || enemyUnits.length) {
+      army.set("enemyWarriorCount", 0);
+      army.clear("enemyAlert");
+      army.clear("enemyWarriorX");
+      army.clear("enemyWarriorY");
+    }
+
+    if (enemyUnits.length) {
+      const dummyTarget = enemyUnits[0];
+      army.set("enemyDummyCount", enemyUnits.length);
+      army.set("enemyDummyX", dummyTarget.pos.x);
+      army.set("enemyDummyY", dummyTarget.pos.y);
+    } else if (isLocationVisible(observation, owner, army.get("enemyDummyX"), army.get("enemyDummyY"))) {
+      army.clear("enemyDummyCount");
+      army.clear("enemyDummyX");
+      army.clear("enemyDummyY");
+    }
   }
 }
 

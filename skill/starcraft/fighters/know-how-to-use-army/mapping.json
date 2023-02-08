@@ -30,7 +30,8 @@
 
   "input": [
     "BODY/warriorCount",
-    "BODY/enemyCount"
+    "BODY/enemyWarriorCount",
+    "BODY/enemyDummyCount"
   ],
 
   "output": [

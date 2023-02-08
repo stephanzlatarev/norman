@@ -5,10 +5,10 @@ export default class Brain {
     const homeX = input[0];
     const homeY = input[1];
     const warriors = input[2];
-    const enemies = input[3];
-    const enemyX = input[4];
-    const enemyY = input[5];
-    const nexuses = input[6];
+    const enemies = input[3] + input[6];
+    const enemyX = input[4] ? input[4] : input[7];
+    const enemyY = input[5] ? input[5] : input[8];
+    const nexuses = input[9];
 
     return ((nexuses === 1) && (enemies > 1) && !warriors && near(enemyX, enemyY, homeX, homeY, 10)) ? [1] : [-1];
   }

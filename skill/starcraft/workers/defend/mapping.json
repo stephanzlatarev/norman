@@ -26,8 +26,10 @@
   },
 
   "input": [
-    "MILITARY/enemyX",
-    "MILITARY/enemyY"
+    "MILITARY/enemyWarriorX",
+    "MILITARY/enemyWarriorY",
+    "MILITARY/enemyDummyX",
+    "MILITARY/enemyDummyY"
   ],
 
   "output": [

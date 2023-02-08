@@ -34,55 +34,63 @@ export default class Brain {
     const armyEnergy = input[8];
     const armyX = input[9];
     const armyY = input[10];
-    const enemyCount = input[11];
-    const enemyX = input[12];
-    const enemyY = input[13];
-    const warriorCount = input[14];
-    const totalCount = input[15];
+    const enemyWarriorCount = input[11];
+    const enemyWarriorX = input[12];
+    const enemyWarriorY = input[13];
+    const enemyDummyX = input[14];
+    const enemyDummyY = input[15];
+    const warriorCount = input[16];
+    const totalCount = input[17];
 
-    if (!enemyX || !enemyY || !armyX || !armyY) return;
+    if (!armyX || !armyY) return;
 
-    if (enemyAlert) {
-      // Defend base
-      trace(this.mode, "defend", input, enemyX, enemyY);
-      this.mode = "defend";
-      return [0, -1, 1, enemyX, enemyY];
+    if (enemyWarriorX && enemyWarriorY) {
+      if (enemyAlert) {
+        // Defend base
+        trace(this.mode, "defend", input, enemyWarriorX, enemyWarriorY);
+        this.mode = "defend";
+        return [0, -1, 1, enemyWarriorX, enemyWarriorY];
+      }
+
+      if ((totalCount >= MAX_TOTAL_ATTACK) || ((this.mode === "kill") && (totalCount >= MIN_TOTAL_ATTACK))) {
+        // Total attack
+        trace(this.mode, "kill", input, enemyWarriorX, enemyWarriorY);
+        this.mode = "kill";
+        return [0, -1, 1, enemyWarriorX, enemyWarriorY];
+      }
+
+      if ((warriorCount >= MAX_WARRIOR_TOTAL_ATTACK) || ((this.mode === "kill") && (warriorCount >= MIN_WARRIOR_TOTAL_ATTACK))) {
+        // Total attack
+        trace(this.mode, "kill", input, enemyWarriorX, enemyWarriorY);
+        this.mode = "kill";
+        return [0, -1, 1, enemyWarriorX, enemyWarriorY];
+      }
+
+      if (shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyWarriorCount)) {
+        // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
+        const location = stalkingLocation(armyX, armyY, enemyWarriorX, enemyWarriorY, guardX, guardY, baseX, baseY);
+
+        trace(this.mode, "stalk", input, location.x, location.y);
+        this.mode = "stalk";
+        this.inertia = 10;
+        return [1, 1, -1, location.x, location.y];
+      }
+
+      if ((this.mode === "stalk") && (this.inertia > 0)) {
+        this.inertia--;
+        trace(this.mode, "stalking " + this.inertia, input);
+        return;
+      }
+
+      // Attack enemy
+      trace(this.mode, "attack", input, enemyWarriorX, enemyWarriorY);
+      this.mode = "attack";
+      return [0, -1, 1, enemyWarriorX, enemyWarriorY];
+    } else if (enemyDummyX && enemyDummyY) {
+      // Destroy dummy target
+      trace(this.mode, "destroy dummies", input, enemyDummyX, enemyDummyY);
+      return [0, -1, 1, enemyDummyX, enemyDummyY];
     }
-
-    if ((totalCount >= MAX_TOTAL_ATTACK) || ((this.mode === "kill") && (totalCount >= MIN_TOTAL_ATTACK))) {
-      // Total attack
-      trace(this.mode, "kill", input, enemyX, enemyY);
-      this.mode = "kill";
-      return [0, -1, 1, enemyX, enemyY];
-    }
-
-    if ((warriorCount >= MAX_WARRIOR_TOTAL_ATTACK) || ((this.mode === "kill") && (warriorCount >= MIN_WARRIOR_TOTAL_ATTACK))) {
-      // Total attack
-      trace(this.mode, "kill", input, enemyX, enemyY);
-      this.mode = "kill";
-      return [0, -1, 1, enemyX, enemyY];
-    }
-
-    if (shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyCount)) {
-      // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
-      const location = stalkingLocation(armyX, armyY, enemyX, enemyY, guardX, guardY, baseX, baseY);
-
-      trace(this.mode, "stalk", input, location.x, location.y);
-      this.mode = "stalk";
-      this.inertia = 10;
-      return [1, 1, -1, location.x, location.y];
-    }
-
-    if ((this.mode === "stalk") && (this.inertia > 0)) {
-      this.inertia--;
-      trace(this.mode, "stalking " + this.inertia, input);
-      return;
-    }
-
-    // Attack enemy
-    trace(this.mode, "attack", input, enemyX, enemyY);
-    this.mode = "attack";
-    return [0, -1, 1, enemyX, enemyY];
   }
 
 }
