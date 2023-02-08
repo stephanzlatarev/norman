@@ -7,6 +7,9 @@ export default class Unit {
     this.pendingCommands = [];
     this.progressingCommands = [];
     this.completedCommands = [];
+
+    this.loop = 0;
+    this.block = -1;
   }
 
   async tick() {
@@ -78,11 +81,13 @@ export default class Unit {
   async tock() {
     const client = this.node.get("channel");
 
-    if (client && this.actions.length) {
+    if (client && this.actions.length && (this.block !== this.loop)) {
       await client.action({ actions: this.actions });
-
-      this.actions = [];
+      this.block = this.loop + 1;
     }
+
+    this.actions = [];
+    this.loop++;
   }
 
 }

@@ -57,13 +57,18 @@ export default class Body {
 }
 
 async function traverse(parent, op) {
+  await traverseWithoutDuplicates(parent, op, {});
+}
+
+async function traverseWithoutDuplicates(parent, op, duplicate) {
   if (parent) {
     const links = parent.links();
 
     for (const child of links) {
-      if (child.path.startsWith(parent.path + "/") && child.get("code")) { // This checks if the memory node represents a body, avoiding loops
+      if (child.path.startsWith(parent.path + "/") && child.get("code") && !duplicate[child.ref]) { // This checks if the memory node represents a body, avoiding loops
+        duplicate[child.ref] = true;
         await op(child);
-        await traverse(child, op);
+        await traverseWithoutDuplicates(child, op, duplicate);
       }
     }
   }
