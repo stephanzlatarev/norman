@@ -91,7 +91,7 @@ const PREREQUISITE = {
 const BUILDORDER = [
   "pylons", "probes", "probes", "gateways", "probes",
   "assimilators", "probes", "probes", "probes", "probes",
-  "cybernetics", "zealots", "gateways", "pylons",
+  "zealots", "cybernetics", "gateways", "pylons",
   "assimilators", "probes", "zealots", "probes", "probes",
   "stalkers", "stalkers", "pylons", "stalkers", "stalkers",
   "nexuses", "sentries", "probes", "pylons", "stalkers", "probes",
