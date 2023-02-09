@@ -70,6 +70,10 @@ const DUMMY_TARGETS = {
   151: "larva",
 };
 
+const LIGHT_WARRIORS = {
+  105: "zergling",
+};
+
 export function observeMilitary(node, client, observation) {
   const homebase = node.get("homebase");
   const army = node.memory.get(node.path + "/army");
@@ -195,8 +199,14 @@ function observeEnemy(game, army, homebase, observation) {
   if (enemyUnit) {
     // Enemy warriors are in sight. Focus on one of them.
 
-    const oldEnemyCount = army.get("enemyWarriorCount");
-    army.set("enemyWarriorCount", Math.max(enemyWarriors.length, oldEnemyCount ? oldEnemyCount : 1));
+    let oldEnemyCount = army.get("enemyWarriorCount");
+    if (!oldEnemyCount) oldEnemyCount = 1;
+
+    const newEnemyCount = enemyWarriors.length - (countUnits(enemyWarriors, LIGHT_WARRIORS) / 2);
+
+    console.log("enemies:", enemyWarriors.length, "->", newEnemyCount);
+    
+    army.set("enemyWarriorCount", Math.max(newEnemyCount, oldEnemyCount));
 
     if (shouldSwitchAttention(oldEnemyWarriorX, oldEnemyWarriorY, enemyUnit, enemyWarriors, homebaseX, homebaseY, army)) {
       // Switch attention to enemy which is closest to homebase
@@ -229,6 +239,16 @@ function observeEnemy(game, army, homebase, observation) {
       army.clear("enemyDummyY");
     }
   }
+}
+
+function countUnits(units, types) {
+  let count = 0;
+
+  for (const unit of units) {
+    if (types[unit.unitType]) count++;
+  }
+
+  return count;
 }
 
 function isValidTarget(unit, enemy, combatFlyingUnits) {
