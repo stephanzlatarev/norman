@@ -32,6 +32,18 @@ const CAN_HIT_AIR = {
 
 // The units that can't fight my army
 const DUMMY_TARGETS = {
+  // Terran
+  18: "command center",
+  19: "supply depot",
+  20: "refinery",
+  21: "barracks",
+  28: "starport",
+  36: "flying command center",
+  45: "scv",
+  47: "supply depot lowered",
+  268: "mule",
+
+  // Protoss
   59: "nexus",
   60: "pylon",
   61: "assimilator",
@@ -43,6 +55,19 @@ const DUMMY_TARGETS = {
   72: "cybernetics",
   82: "observer",
   84: "probe",
+
+  // Zerg
+  86: "hatchery",
+  87: "creep tumor",
+  88: "extractor",
+  89: "spawning pool",
+  97: "roach warren",
+  100: "lair",
+  101: "hive",
+  103: "egg",
+  104: "drone",
+  106: "overlord",
+  151: "larva",
 };
 
 export function observeMilitary(node, client, observation) {
