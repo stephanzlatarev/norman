@@ -192,6 +192,7 @@
   },
 
   "input": [
+    "strategy",
     "minerals", "vespene", "foodUsed",
     "stats/nexus", "stats/nexusBuilding", "stats/nexusOrdered",
     "stats/base", "stats/baseBuilding", "stats/baseOrdered",

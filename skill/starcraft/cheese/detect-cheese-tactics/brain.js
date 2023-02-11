@@ -35,7 +35,7 @@ export default class Brain {
 
     // Keep strategy to standard (0) and remove any goals to counter cheese tactics
     reaction = null;
-    return [1, 0, -1];
+    return [1, -1, -1];
   }
 
 }

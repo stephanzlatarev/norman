@@ -1,17 +1,34 @@
+import InitialStrategy from "./strategy-initial.js";
+import StandardStrategy from "./strategy-standard.js";
+import SingleBaseStrategy from "./strategy-single-base.js";
 
-const INPUT = [
+const STRATEGY = [
+  new StandardStrategy(),
+  new SingleBaseStrategy(),
+];
+
+const UNITS = [
   "nexuses", "bases", "pylons", "assimilators", "gateways", "forges", "beacons", "stargates", "cybernetics", "robotics",
   "motherships", "zealots", "stalkers", "sentries", "phoenixes", "carriers", "voidrays", "observers", "probes",
   "upgradeAirWeapons", "upgradeAirArmor", "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields"
 ];
 
-const PRIO = [
-  "pylons", "nexuses", "assimilators", "probes",
-  "gateways", "cybernetics", "stalkers", "sentries", "zealots", "upgradeAirWeapons", "upgradeAirArmor",
-  "robotics", "observers",
-  "stargates", "beacons", "motherships", "carriers", "voidrays", "phoenixes",
-  "forges", "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields"
-];
+const FACTORY = {
+  motherships: "nexuses",
+  probes: "nexuses",
+  zealots: "gateways",
+  stalkers: "gateways",
+  sentries: "gateways",
+  observers: "robotics",
+  phoenixes: "stargates",
+  carriers: "stargates",
+  voidrays: "stargates",
+  upgradeGroundWeapons: "forges",
+  upgradeGroundArmor: "forges",
+  upgradeShields: "forges",
+  upgradeAirWeapons: "cybernetics",
+  upgradeAirArmor: "cybernetics",
+};
 
 const MINERALS = {
   nexuses: 400,
@@ -88,92 +105,43 @@ const PREREQUISITE = {
   upgradeShields: (situation) => (situation.complete.forges),
 };
 
-const BUILDORDER = [
-  "pylons", "probes", "probes", "gateways", "probes",
-  "assimilators", "probes", "probes", "probes", "probes",
-  "zealots", "cybernetics", "gateways", "pylons",
-  "assimilators", "probes", "zealots", "probes", "probes",
-  "stalkers", "stalkers", "pylons", "stalkers", "stalkers",
-  "nexuses", "sentries", "probes", "pylons", "stalkers", "probes",
-  "stalkers", "probes", "probes", "stalkers", "stalkers", "stalkers",
-];
-const buildorder = { nexuses: 1, probes: 12 };
-buildorder[BUILDORDER[0]] = buildorder[BUILDORDER[0]] ? buildorder[BUILDORDER[0]] + 1 : 1;
-
-const CONDITION = {
-  nexuses: (situation) => ((situation.total.nexuses < situation.inventory.probes / 20) || (situation.resources.minerals >= 2000)),
-  pylons: (situation) => (situation.progress.bases || (situation.resources.food < 10) || (situation.resources.psi >= 100)),
-  assimilators: (situation) => (situation.resources.minerals > situation.resources.vespene),
-  forges: (situation) => (situation.inventory.zealots + situation.inventory.sentries + situation.inventory.stalkers > 10),
-  stargates: (situation) => ((situation.inventory.gateways >= 3) && (situation.resources.minerals >= 450) && (situation.resources.vespene >= 450)),
-  probes: (situation) => (situation.inventory.pylons || (situation.total.probes <= 12)),
-};
-
-const LIMIT = {
-  pylons: (situation) => Math.min(situation.inventory.bases * 4, (220 - situation.complete.nexuses * 15) / 8),
-  assimilators: (situation) => (situation.complete.nexuses * 2),
-  gateways: (situation) => Math.min(situation.total.nexuses, 5),
-  forges: 1,
-  beacons: 1,
-  stargates: (situation) => Math.min(situation.complete.nexuses, 4),
-  cybernetics: 1,
-  robotics: 1,
-  motherships: 1,
-  observers: 2,
-  probes: (situation) => Math.min(situation.complete.nexuses * 22, 82),
-  upgradeAirWeapons: 1,
-  upgradeAirArmor: 1,
-  upgradeGroundWeapons: 1,
-  upgradeGroundArmor: 1,
-  upgradeShields: 1,
-};
-
-const PARALLEL = {
-  nexuses: 1,
-  pylons: 1,
-  assimilators: 1,
-  gateways: 2,
-  stargates: 1,
-  zealots: (situation) => (situation.complete.gateways - situation.progress.stalkers - situation.progress.sentries),
-  stalkers: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.sentries),
-  sentries: (situation) => (situation.complete.gateways - situation.progress.zealots - situation.progress.stalkers),
-  phoenixes: (situation) => (situation.complete.stargates - situation.progress.voidrays - situation.progress.carriers),
-  carriers: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.voidrays),
-  voidrays: (situation) => (situation.complete.stargates - situation.progress.phoenixes - situation.progress.carriers),
-  observers: (situation) => (situation.complete.robotics),
-  probes: (situation) => (situation.complete.nexuses),
-  upgradeAirWeapons: (situation) => (situation.complete.cybernetics - situation.progress.upgradeAirArmor),
-  upgradeAirArmor: (situation) => (situation.complete.cybernetics - situation.progress.upgradeAirWeapons),
-  upgradeGroundWeapons: (situation) => (situation.complete.forges - situation.progress.upgradeGroundArmor - situation.progress.upgradeShields),
-  upgradeGroundArmor: (situation) => (situation.complete.forges - situation.progress.upgradeGroundWeapons - situation.progress.upgradeShields),
-  upgradeShields: (situation) => (situation.complete.forges - situation.progress.upgradeGroundWeapons - situation.progress.upgradeGroundArmor),
-};
-
-const RATIO = {
-  zealots: 1,
-  stalkers: 4,
-  sentries: 1,
-  phoenixes: 2,
-  carriers: 6,
-  voidrays: 2,
-};
-
 export default class Brain {
+
+  constructor() {
+    this.strategy = new InitialStrategy();
+    this.strategyCode = 0;
+  }
+
+  useStrategy(code) {
+    const strategyCode = (code > 0) ? code : 0;
+
+    if ((strategyCode >= 0) && (this.strategyCode !== strategyCode)) {
+      this.strategy = STRATEGY[strategyCode];
+      this.strategyCode = strategyCode;
+      console.log("Investing switched to", this.strategy.constructor.name, "strategy");
+    }
+
+    if (!this.strategy.units().length) {
+      this.strategy = STRATEGY[0];
+      this.strategyCode = 0;
+      console.log("Investing switched to", this.strategy.constructor.name, "strategy");
+    }
+  }
 
   react(input) {
     const situation = {
+      strategy: input[0],
       resources: { minerals: 0, vespene: 0, psi: 0, food: 0 },
       complete: { nexuses: 0, pylons: 0 },
       progress: {},
       inventory: {},
       ordered: {},
       total: {},
-      ratio: {},
       order: {},
     }
 
-    let index = 3;
-    for (const i of INPUT) {
+    let index = 4;
+    for (const i of UNITS) {
       situation.complete[i] = input[index];
       situation.progress[i] = input[index + 1];
       situation.inventory[i] = situation.complete[i] + situation.progress[i];
@@ -183,29 +151,16 @@ export default class Brain {
       index += 3;
     }
 
-    situation.resources.minerals = input[0];
-    situation.resources.vespene = input[1];
-    situation.resources.psi = input[2];
+    situation.resources.minerals = input[1];
+    situation.resources.vespene = input[2];
+    situation.resources.psi = input[3];
     situation.resources.food = situation.complete.nexuses * 15 + situation.complete.pylons * 8 - situation.resources.psi;
 
-    while (BUILDORDER.length && (situation.inventory[BUILDORDER[0]] >= buildorder[BUILDORDER[0]])) {
-      BUILDORDER.splice(0, 1);
-      if (BUILDORDER.length) {
-        buildorder[BUILDORDER[0]] = buildorder[BUILDORDER[0]] ? buildorder[BUILDORDER[0]] + 1 : 1;
-      } else {
-        console.log("Initial build order is complete.");
-      }
-    }
+    this.useStrategy(situation.strategy);
+    this.strategy.set(situation);
 
-    for (const one of PRIO) {
-      if (CONDITION[one] && !CONDITION[one](situation)) continue;
-      if (RATIO[one]) situation.ratio[one] = RATIO[one];
-    }
-
-    for (const one of PRIO) {
+    for (const one of this.strategy.units()) {
       let order = 0;
-
-      if (BUILDORDER.length && (BUILDORDER[0] !== one)) continue;
 
       while (true) {
         // Check if pre-requisites are not met
@@ -216,19 +171,20 @@ export default class Brain {
         if (VESPENE[one] && (situation.resources.vespene < VESPENE[one])) break;
         if (FOOD[one] && (situation.resources.food < FOOD[one])) break;
 
+        // Check if limit of instances is reached
+        if (situation.total[one] >= this.strategy.limit(one)) break;
+
         // Check if limit of parallel builds is reached
-        if (situation.progress[one] >= threshold(PARALLEL, one, situation)) break;
+        if (situation.progress[one] >= this.strategy.parallel(one)) break;
 
-        if (!BUILDORDER.length) {
-          // Check if limit of instances is reached
-          if (situation.total[one] >= threshold(LIMIT, one, situation)) break;
+        // Check if other conditions are not met
+        if (!this.strategy.isAllowed(one)) break;
 
-          // Check if other conditions are not met
-          if (CONDITION[one] && !CONDITION[one](situation)) break;
+        // Check if capped by ratio
+        if (this.strategy.isCapped(one)) break;
 
-          // Check if capped by ratio
-          if (RATIO[one] && isCappedByRatio(one, situation)) break;
-        }
+        // Check if factory is free to produce the unit
+        if (FACTORY[one] && !hasFreeFactory(situation, one)) break;
 
         // Add one instance to order
         order++;
@@ -244,40 +200,28 @@ export default class Brain {
     }
 
     const output = [1, 1];
-    for (const one of INPUT) {
+    for (const one of UNITS) {
       output.push(situation.order[one]);
       output.push(situation.order[one]);
     }
 
-    log(situation);
+    log(this.strategy, situation);
 
     return output;
   }
 
 }
 
-function threshold(data, unit, situation) {
-  const threshold = data[unit];
+function hasFreeFactory(situation, one) {
+  const factory = FACTORY[one];
+  const factories = situation.complete[factory];
 
-  if (typeof(threshold) === "number") {
-    return threshold;
-  } else if (typeof(threshold) === "function") {
-    return threshold(situation);
+  let wip = 0;
+  for (const unit in FACTORY) {
+    if (FACTORY[unit] === factory) wip += situation.progress[unit];
   }
 
-  return Infinity;
-}
-
-function isCappedByRatio(unit, situation) {
-  for (const other in situation.ratio) {
-    if (other !== unit) {
-      if (situation.total[other] >= threshold(LIMIT, other, situation)) continue; // The other unit reached its limit, so it cannot cap others
-      if (threshold(PARALLEL, other, situation) <= situation.progress[other]) continue; // The other unit is produced at the factory limit, so it cannot cap others
-      if (situation.total[unit] * situation.ratio[other] > situation.total[other] * situation.ratio[unit]) return true;
-    }
-  }
-
-  return false;
+  return wip < factories;
 }
 
 ///////////////////////////////////////////
@@ -287,10 +231,16 @@ const previously = {};
 const logs = [];
 let time = -1;
 
-function log(situation) {
+function log(strategy, situation) {
   if (!TROUBLESHOOTING) return;
 
   time++;
+
+  if (logs.length) {
+    logs[0] = strategy.constructor.name;
+  } else {
+    logs.push(strategy.constructor.name);
+  }
 
   const seconds = time / 22.4;
   let neworders = false;
