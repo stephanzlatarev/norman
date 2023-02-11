@@ -1,6 +1,6 @@
 {
-  "label": "defend",
-  "goal": "defend the homebase",
+  "label": "counter worker rush",
+  "goal": "counter worker rush",
 
   "body": {
     "code": "body/starcraft/unit/probe"
