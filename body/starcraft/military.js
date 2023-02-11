@@ -203,8 +203,6 @@ function observeEnemy(game, army, homebase, observation) {
     if (!oldEnemyCount) oldEnemyCount = 1;
 
     const newEnemyCount = enemyWarriors.length - (countUnits(enemyWarriors, LIGHT_WARRIORS) / 2);
-
-    console.log("enemies:", enemyWarriors.length, "->", newEnemyCount);
     
     army.set("enemyWarriorCount", Math.max(newEnemyCount, oldEnemyCount));
 
