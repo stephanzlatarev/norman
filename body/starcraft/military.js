@@ -74,6 +74,10 @@ const LIGHT_WARRIORS = {
   105: "zergling",
 };
 
+const STATIONARY_WARRIORS = {
+  66: "photon cannon",
+};
+
 export function observeMilitary(node, client, observation) {
   const homebase = node.get("homebase");
   const army = node.memory.get(node.path + "/army");
@@ -208,7 +212,7 @@ function observeEnemy(game, army, homebase, observation) {
 
     if (shouldSwitchAttention(oldEnemyWarriorX, oldEnemyWarriorY, enemyUnit, enemyWarriors, homebaseX, homebaseY, army)) {
       // Switch attention to enemy which is closest to homebase
-      army.set("enemyAlert", enemyUnit.distanceToHomebase <= ENEMY_ALERT_SQUARED);
+      army.set("enemyAlert", (enemyUnit.distanceToHomebase <= ENEMY_ALERT_SQUARED) && !STATIONARY_WARRIORS[enemyUnit.unitType]);
       army.set("enemyWarriorX", enemyUnit.pos.x);
       army.set("enemyWarriorY", enemyUnit.pos.y);
     }
