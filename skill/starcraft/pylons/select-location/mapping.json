@@ -30,6 +30,7 @@
   },
 
   "input": [
+    "strategy",
     "stats/baseBuilding",
     "BASE/x",
     "BASE/y",
