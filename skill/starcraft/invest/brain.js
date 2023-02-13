@@ -234,7 +234,10 @@ function determineFreeFactories(situation, units) {
     }
   }
   for (const one of units) {
-    if (FACTORY[one]) situation.factories[one] = factories[FACTORY[one]];
+    if (FACTORY[one]) {
+      const arePrerequisitesMet = PREREQUISITE[one] ? PREREQUISITE[one](situation) : true;
+      situation.factories[one] = arePrerequisitesMet ? factories[FACTORY[one]] : 0;
+    }
   }
 }
 
