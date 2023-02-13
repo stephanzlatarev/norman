@@ -5,11 +5,16 @@ const UNITS = [
   "gateways", "cybernetics", "stalkers", "sentries", "zealots",
 ];
 
+const CONDITION = {
+  forges: (situation) => (situation.inventory.zealots + situation.inventory.sentries + situation.inventory.stalkers > 10),
+};
+
 const LIMIT = {
-  pylons: 4,
+  pylons: 8,
   probes: 22,
   assimilators: 2,
-  gateways: 2,
+  gateways: 4,
+  forges: 1,
   cybernetics: 1,
 };
 
@@ -42,6 +47,10 @@ export default class SingleBase extends Strategy {
 
   limit(unit) {
     return LIMIT[unit];
+  }
+
+  isAllowed(unit) {
+    return this.get(CONDITION, unit, true);
   }
 
 }
