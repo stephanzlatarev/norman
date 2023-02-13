@@ -71,7 +71,7 @@ export default class Standard extends Strategy {
     return this.get(LIMIT, unit, Infinity);
   }
 
-  isAlowed(unit) {
+  isAllowed(unit) {
     return this.get(CONDITION, unit, true);
   }
 
