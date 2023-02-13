@@ -74,11 +74,16 @@ const LIGHT_WARRIORS = {
   105: "zergling",
 };
 
+const HEAVY_WARRIORS = {
+  66: "photon cannon",
+};
+
 const STATIONARY_WARRIORS = {
   66: "photon cannon",
 };
 
 export function observeMilitary(node, client, observation) {
+  const strategy = node.get("strategy");
   const homebase = node.get("homebase");
   const army = node.memory.get(node.path + "/army");
 
@@ -88,11 +93,11 @@ export function observeMilitary(node, client, observation) {
 
   if (homebase) {
     observeEnemy(node, army, homebase, observation);
-    observeArmy(army, homebase, observation);
+    observeArmy(strategy, army, homebase, observation);
   }
 }
 
-function observeArmy(army, homebase, observation) {
+function observeArmy(strategy, army, homebase, observation) {
   const armyUnits = observation.ownUnits.filter(unit => WARRIORS[unit.unitType]);
   army.set("tag", armyUnits.map(unit => unit.tag));
 
@@ -157,7 +162,10 @@ function observeArmy(army, homebase, observation) {
     const guardTag = army.get("guardTag");
     let guard = guardTag ? leaderUnits.find(unit => (unit.tag === guardTag)) : null;
 
-    if (!guard || (distance(guard.pos.x, guard.pos.y, baseX, baseY) > ENEMY_ALERT_SQUARED)) {
+    if (strategy === 1) {
+      // Single-base strategy doesn't allow a guard
+      guard = null;
+    } else if (!guard || (distance(guard.pos.x, guard.pos.y, baseX, baseY) > ENEMY_ALERT_SQUARED)) {
       guard = leaderUnits.find(unit => (distance(unit.pos.x, unit.pos.y, baseX, baseY) < ENEMY_ALERT_SQUARED));
     }
 
@@ -206,7 +214,7 @@ function observeEnemy(game, army, homebase, observation) {
     let oldEnemyCount = army.get("enemyWarriorCount");
     if (!oldEnemyCount) oldEnemyCount = 1;
 
-    const newEnemyCount = enemyWarriors.length - (countUnits(enemyWarriors, LIGHT_WARRIORS) / 2);
+    const newEnemyCount = enemyWarriors.length + countUnits(enemyWarriors, HEAVY_WARRIORS) - (countUnits(enemyWarriors, LIGHT_WARRIORS) / 2);
     
     army.set("enemyWarriorCount", Math.max(newEnemyCount, oldEnemyCount));
 

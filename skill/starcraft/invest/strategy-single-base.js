@@ -1,12 +1,9 @@
 import Strategy from "./strategy.js";
 
-const UNITS = [
-  "pylons", "probes", "assimilators",
-  "gateways", "cybernetics", "stalkers", "sentries", "zealots",
-];
+const UNITS = ["pylons", "probes", "assimilators", "gateways", "forges", "zealots"];
 
 const CONDITION = {
-  forges: (situation) => (situation.inventory.zealots + situation.inventory.sentries + situation.inventory.stalkers > 10),
+  forges: (situation) => (situation.inventory.zealots > 10),
 };
 
 const LIMIT = {
@@ -15,7 +12,6 @@ const LIMIT = {
   assimilators: 2,
   gateways: 4,
   forges: 1,
-  cybernetics: 1,
 };
 
 const PARALLEL = {
@@ -25,20 +21,10 @@ const PARALLEL = {
   gateways: 2,
 };
 
-const RATIO = {
-  stalkers: 4,
-  sentries: 1,
-  zealots: 1,
-};
-
 export default class SingleBase extends Strategy {
 
   units() {
     return UNITS;
-  }
-
-  ratio(unit) {
-    return RATIO[unit];
   }
 
   parallel(unit) {
