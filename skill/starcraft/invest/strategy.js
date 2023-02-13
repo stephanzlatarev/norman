@@ -34,8 +34,9 @@ export default class Strategy {
   isCapped(unit) {
     for (const other in this.currentRatio) {
       if (other !== unit) {
+        if (this.situation.progress[other] >= this.situation.factories[other]) continue; // The other unit is produced at the factory limit, so it cannot cap others
         if (this.situation.total[other] >= this.limit(other)) continue; // The other unit reached its limit, so it cannot cap others
-        if (this.situation.progress[other] >= this.parallel(other)) continue; // The other unit is produced at the factory limit, so it cannot cap others
+        if (this.situation.progress[other] >= this.parallel(other)) continue; // The other unit is produced at the parallel limit, so it cannot cap others
         if (this.situation.total[unit] * this.currentRatio[other] > this.situation.total[other] * this.currentRatio[unit]) return true;
       }
     }

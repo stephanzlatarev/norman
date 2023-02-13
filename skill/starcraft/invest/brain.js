@@ -133,6 +133,7 @@ export default class Brain {
       strategy: input[0],
       resources: { minerals: 0, vespene: 0, psi: 0, food: 0 },
       complete: { nexuses: 0, pylons: 0 },
+      factories: {},
       progress: {},
       inventory: {},
       ordered: {},
@@ -159,7 +160,12 @@ export default class Brain {
     this.useStrategy(situation.strategy);
     this.strategy.set(situation);
 
-    for (const one of this.strategy.units()) {
+    const units = this.strategy.units();
+
+    determineFreeFactories(situation, units);
+
+    for (const one of units) {
+      const factory = FACTORY[one];
       let order = 0;
 
       while (true) {
@@ -170,6 +176,9 @@ export default class Brain {
         if (MINERALS[one] && (situation.resources.minerals < MINERALS[one])) break;
         if (VESPENE[one] && (situation.resources.vespene < VESPENE[one])) break;
         if (FOOD[one] && (situation.resources.food < FOOD[one])) break;
+
+        // Check if capped by factory capacity
+        if (factory && !situation.factories[one]) break;
 
         // Check if limit of instances is reached
         if (situation.total[one] >= this.strategy.limit(one)) break;
@@ -183,15 +192,18 @@ export default class Brain {
         // Check if capped by ratio
         if (this.strategy.isCapped(one)) break;
 
-        // Check if factory is free to produce the unit
-        if (FACTORY[one] && !hasFreeFactory(situation, one)) break;
-
         // Add one instance to order
         order++;
         situation.progress[one]++;
         situation.resources.minerals -= MINERALS[one] ? MINERALS[one] : 0;
         situation.resources.vespene -= VESPENE[one] ? VESPENE[one] : 0;
         situation.resources.food -= FOOD[one] ? FOOD[one] : 0;
+
+        if (factory) {
+          for (const another of units) {
+            if (FACTORY[another] === factory) situation.factories[another]--;
+          }
+        }
       }
 
       if (order > 0) {
@@ -212,16 +224,27 @@ export default class Brain {
 
 }
 
-function hasFreeFactory(situation, one) {
-  const factory = FACTORY[one];
-  const factories = situation.complete[factory];
+function determineFreeFactories(situation, units) {
+  const factories = {};
+  for (const one of units) {
+    const factory = FACTORY[one];
 
+    if (factory && !(factories[factory] >= 0)) {
+      factories[factory] = countFreeFactories(situation, factory);
+    }
+  }
+  for (const one of units) {
+    if (FACTORY[one]) situation.factories[one] = factories[FACTORY[one]];
+  }
+}
+
+function countFreeFactories(situation, factory) {
   let wip = 0;
   for (const unit in FACTORY) {
     if (FACTORY[unit] === factory) wip += situation.progress[unit];
   }
 
-  return wip < factories;
+  return situation.complete[factory] - wip;
 }
 
 ///////////////////////////////////////////
