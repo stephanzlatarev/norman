@@ -169,6 +169,8 @@ function observeUnits(node, client, observation) {
       unitInMemory.set("guardian-shield", !!unitInReality.buffIds.length);
     }
 
+    unitInMemory.set("boost", getBoostPercentage(unitInReality));
+
     unitInMemory.set("x", unitInReality.pos.x);
     unitInMemory.set("y", unitInReality.pos.y);
 
@@ -248,5 +250,13 @@ function getUpgradeLevel(observation, level1, level2, level3) {
   if (levels.indexOf(level3) >= 0) return 3;
   if (levels.indexOf(level2) >= 0) return 2;
   if (levels.indexOf(level1) >= 0) return 1;
+  return 0;
+}
+
+function getBoostPercentage(unit) {
+  if (unit.buffDurationMax && unit.buffIds.length && (unit.buffIds[0] === 281)) {
+    return unit.buffDurationRemain * 100 / unit.buffDurationMax; 
+  }
+
   return 0;
 }
