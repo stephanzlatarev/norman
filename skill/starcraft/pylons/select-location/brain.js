@@ -23,7 +23,7 @@ export default class Brain {
       return;
     }
 
-    if ((strategy === 1) && (distance > 15)) {
+    if ((strategy === 1) && (distance > 20)) {
       // This strategy doesn't allow to power a base in an expansion location
       return;
     }
@@ -35,14 +35,34 @@ export default class Brain {
       return [1, baseX + location.x, baseY + location.y, distance, pylons];
     }
 
-    if (powerNewBase && !pylons && (pylonsOfSelectedLocation || (distance < distanceOfSelectedLocation))) {
-      // We need to power a new base. We prefer this one because it has no pylons and is closer than the alternatives
-      return [1, baseX + location.x, baseY + location.y, distance, pylons];
-    }
+    if (powerNewBase) {
+      // We need to power a new base
 
-    if (distance < distanceOfSelectedLocation) {
-      // We prefer bases which are closer to the home base
-      return [1, baseX + location.x, baseY + location.y, distance, pylons];
+      if (!pylons) {
+        // This is an unpowered base
+
+        if (pylonsOfSelectedLocation) {
+          // This base is our first choice for an unpowered base
+          return [1, baseX + location.x, baseY + location.y, distance, pylons];
+        } else if (distance < distanceOfSelectedLocation) {
+          // We prefer this one because it is closer than the alternative unpowered base
+          return [1, baseX + location.x, baseY + location.y, distance, pylons];
+        }
+      } else {
+        // This is a powered base. We may choose it only if there are no unpowered alternatives
+
+        if (pylonsOfSelectedLocation && (distance < distanceOfSelectedLocation)) {
+          // We choose this one because it is closer than the alternative powered base
+          return [1, baseX + location.x, baseY + location.y, distance, pylons];
+        }
+      }
+    } else {
+      // Only distance matters
+
+      if (distance < distanceOfSelectedLocation) {
+        // We prefer bases which are closer to the home base
+        return [1, baseX + location.x, baseY + location.y, distance, pylons];
+      }
     }
   }
 
