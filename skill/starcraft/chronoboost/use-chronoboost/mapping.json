@@ -1,0 +1,34 @@
+{
+  "label": "use chronoboost",
+  "goal": "use chronoboost",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "NEXUS": { "unitType": "nexus" },
+      "TARGET": { "boostable": true }
+    },
+
+    "paths": [
+      { "path": ["GOAL", "nexus", "NEXUS"] },
+      { "path": ["GOAL", "target", "TARGET"] },
+      {
+        "label": "CHRONOBOOST",
+        "path": ["NEXUS", "chronoboost", "TARGET"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "NEXUS/energy"
+  ],
+
+  "output": [
+    "CHRONOBOOST"
+  ]
+}

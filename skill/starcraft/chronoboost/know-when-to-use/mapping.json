@@ -1,0 +1,53 @@
+{
+  "label": "know when to use chronoboost",
+  "goal": "build strength",
+
+  "body": {
+    "code": "body/starcraft/unit/nexus"
+  },
+
+  "memory": {
+    "nodes": {
+      "USE-CHRONOBOOST": { "label": "use chronoboost", "type": "goal" },
+      "TARGET": { "boostable": true },
+      "ALTERNATIVE": { "unitType": "nexus" }
+    },
+
+    "paths": [
+      {
+        "label": "LETS-USE-CHRONOBOOST",
+        "path": ["GOAL", "build-strength", "USE-CHRONOBOOST"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "path": ["USE-CHRONOBOOST", "nexus", "ALTERNATIVE"],
+        "optional": true
+      },
+      {
+        "label": "ON-THIS-TARGT",
+        "path": ["USE-CHRONOBOOST", "target", "TARGET"],
+        "optional": true
+      },
+      {
+        "label": "WITH-THIS-NEXUS",
+        "path": ["USE-CHRONOBOOST", "nexus", "BODY"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "BODY",
+    "operational",
+    "energy",
+    "ALTERNATIVE"
+  ],
+
+  "output": [
+    "LETS-USE-CHRONOBOOST",
+    "WITH-THIS-NEXUS",
+    "ON-THIS-TARGT"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "label": "use chronoboost",
+  "goal": "use chronoboost",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "TARGET": { "boostable": true },
+      "ALTERNATIVE": { "boostable": true }
+    },
+
+    "paths": [
+      { "path": ["TARGET"] },
+      {
+        "path": ["GOAL", "target", "ALTERNATIVE"],
+        "optional": true
+      },
+      {
+        "label": "SELECT",
+        "path": ["GOAL", "target", "TARGET"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "TARGET",
+    "TARGET/boost",
+    "TARGET/orderAbilityId",
+    "ALTERNATIVE"
+  ],
+
+  "output": [
+    "SELECT"
+  ]
+}
