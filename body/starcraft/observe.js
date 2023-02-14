@@ -48,6 +48,15 @@ const ORDERS = {
   3696: "shields",
 };
 
+const BOOSTABLE = {
+  59: "nexus",
+  62: "gateway",
+  63: "forge",
+  67: "stargate",
+  71: "robotics",
+  72: "cybernetics",
+};
+
 export default async function(node, client) {
   const observation = (await client.observation()).observation;
   const owner = await observePlayers(node, client, observation);
@@ -169,7 +178,10 @@ function observeUnits(node, client, observation) {
       unitInMemory.set("guardian-shield", !!unitInReality.buffIds.length);
     }
 
-    unitInMemory.set("boost", getBoostPercentage(unitInReality));
+    if (BOOSTABLE[unitInReality.unitType]) {
+      unitInMemory.set("boostable", true);
+      unitInMemory.set("boost", getBoostPercentage(unitInReality));
+    }
 
     unitInMemory.set("x", unitInReality.pos.x);
     unitInMemory.set("y", unitInReality.pos.y);
