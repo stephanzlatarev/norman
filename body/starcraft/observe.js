@@ -167,6 +167,9 @@ function observeUnits(node, client, observation) {
           progress[orderType]++;
         }
       }
+    } else {
+      unitInMemory.clear("orderAbilityId");
+      unitInMemory.clear("orderTargetUnitTag");
     }
 
     if (unitType === "assimilator") {
