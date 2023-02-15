@@ -174,7 +174,13 @@ function observeUnits(node, client, observation) {
 
     if (unitType === "assimilator") {
       unitInMemory.set("harvesters", unitInReality.assignedHarvesters);
-      unitInMemory.set("utilized", (unitInReality.assignedHarvesters >= 3));
+
+      if (unitInReality.vespeneContents) {
+        unitInMemory.set("utilized", (unitInReality.assignedHarvesters >= unitInReality.idealHarvesters));
+      } else {
+        abandonAssimilator(node, unitInMemory);
+        unitInMemory.set("utilized", true);
+      }
     }
 
     if (unitType === "sentry") {
@@ -274,4 +280,17 @@ function getBoostPercentage(unit) {
   }
 
   return 0;
+}
+
+function abandonAssimilator(game, assimilator) {
+  if (!assimilator.get("abandoned")) {
+    for (const probe of game.links()) {
+      if (probe.get("harvest") === assimilator) {
+        probe.clear("harvest");
+        probe.clear("busy");
+      }
+    }
+
+    assimilator.set("abandoned", true);
+  }
 }
