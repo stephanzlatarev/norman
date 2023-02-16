@@ -8,11 +8,8 @@ export default class Brain {
 
     if (selectedProbe) return;
 
-    const thisProbeBusy = input[3];
-    const thisProbeX = input[4];
-    const thisProbeY = input[5];
-
-    if (thisProbeBusy) return;
+    const thisProbeX = input[3];
+    const thisProbeY = input[4];
 
     selectedProbe = input[6];
     const selectedProbeX = input[7];
@@ -26,7 +23,7 @@ export default class Brain {
     const distanceSelectedProbe = distance(selectedProbeX, selectedProbeY, locationX, locationY);
 
     if (distanceThisProbe < distanceSelectedProbe) {
-      return [1, thisProbeX, thisProbeY];
+      return [1, 1, thisProbeX, thisProbeY];
     }
   }
 

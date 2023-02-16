@@ -46,6 +46,9 @@ export default class Probe extends Unit {
 
         isCommandIssued = true;
         this.node.clear("harvest");
+
+        // Break loop because this probe can perform only one command now
+        break;
       }
     }
 
@@ -58,11 +61,14 @@ export default class Probe extends Unit {
 
           isCommandIssued = true;
           this.node.clear("harvest");
+
+          // Break loop because this probe can perform only one command now
+          break;
         }
       }
     }
 
-    if (!isCommandIssued && this.node.get("harvest") && !this.node.get("busy")) {
+    if (!isCommandIssued && this.node.get("harvest")) {
       const orders = this.node.get("orders");
       const currentAbilityId = (orders && orders.length) ? orders[0].abilityId : -1;
       const currentTargetUnitTag = (orders && orders.length) ? orders[0].targetUnitTag : -1;

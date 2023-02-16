@@ -6,7 +6,6 @@ export default class Unit {
     this.actions = [];
     this.pendingCommands = [];
     this.progressingCommands = [];
-    this.completedCommands = [];
 
     this.loop = 0;
     this.block = -1;
@@ -15,19 +14,15 @@ export default class Unit {
   async tick() {
     const orders = this.node.get("orders");
 
-    for (const command of this.completedCommands) {
-      if (command.memoryLabel) {
-        this.node.clear(command.memoryLabel);
-      }
-    }
-    this.completedCommands = [];
-
     for (let i = this.progressingCommands.length - 1; i >= 0; i--) {
       const command = this.progressingCommands[i];
 
       if (!isMatchingAny(orders, command.unitTags, command.abilityId, command.targetUnitTag, command.targetWorldSpacePos)) {
-        this.completedCommands.push(command);
         this.progressingCommands.splice(i, 1);
+
+        if (command.memoryLabel) {
+          this.node.clear(command.memoryLabel);
+        }
       }
     }
 
@@ -46,7 +41,7 @@ export default class Unit {
       this.pendingCommands.splice(i, 1);
     }
 
-    this.node.set("busy", (this.pendingCommands.length + this.progressingCommands.length + this.completedCommands.length) > 0);
+    this.node.set("busy", (this.pendingCommands.length + this.progressingCommands.length) > 0);
   }
 
   command(abilityId, targetUnitTag, targetWorldSpacePos, memoryLabel) {

@@ -9,7 +9,7 @@
   "memory": {
     "nodes": {
       "VESPENE": { "unitType": "vespene" },
-      "PROBE": { "unitType": "probe" },
+      "PROBE": { "unitType": "probe", "busy": false },
       "SELECTION": { "unitType": "probe" }
     },
 
@@ -30,12 +30,12 @@
     "VESPENE/x",
     "VESPENE/y",
     "SELECTION",
-    "PROBE/busy",
     "PROBE/x",
     "PROBE/y"
   ],
 
   "output": [
-    "SELECT"
+    "SELECT",
+    "PROBE/busy"
   ]
 }

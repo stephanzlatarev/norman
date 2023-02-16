@@ -5,7 +5,7 @@ export default class KnowWhenToHarvestMineralsBrain {
     const mineral = input[1];
 
     if (!mineral) {
-      return [1, 1, 1];
+      return [1, 1, 1, 1];
     }
   }
 

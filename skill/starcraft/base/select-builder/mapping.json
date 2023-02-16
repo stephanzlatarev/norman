@@ -20,7 +20,7 @@
   "memory": {
     "nodes": {
       "LOCATION": { "type": "location" },
-      "PROBE": { "unitType": "probe" },
+      "PROBE": { "unitType": "probe", "busy": false },
       "SELECTION": { "unitType": "probe" }
     },
 
@@ -41,12 +41,12 @@
     "LOCATION/x",
     "LOCATION/y",
     "SELECTION",
-    "PROBE/busy",
     "PROBE/x",
     "PROBE/y"
   ],
 
   "output": [
-    "SELECT"
+    "SELECT",
+    "PROBE/busy"
   ]
 }

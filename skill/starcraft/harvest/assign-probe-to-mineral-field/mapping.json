@@ -8,7 +8,7 @@
 
   "memory": {
     "nodes": {
-      "PROBE": { "unitType": "probe", "busy": false },
+      "PROBE": { "unitType": "probe" },
       "MINERAL": { "unitType": "mineral" }
     },
 
@@ -34,6 +34,7 @@
 
   "output": [
     "ASSIGN",
+    "PROBE/busy",
     "GOAL"
   ]
 }

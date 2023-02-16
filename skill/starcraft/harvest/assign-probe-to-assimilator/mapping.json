@@ -9,12 +9,22 @@
   "memory": {
     "nodes": {
       "PROBE": { "unitType": "probe", "busy": false },
-      "ASSIMILATOR": { "unitType": "assimilator", "operational": true, "utilized": false }
+      "ASSIMILATOR": { "unitType": "assimilator", "operational": true, "utilized": false },
+      "PROBE-1": { "unitType": "probe" },
+      "PROBE-2": { "unitType": "probe" },
+      "PROBE-3": { "unitType": "probe" }
     },
 
+    "constraints": [
+      [ "⊃", "PROBE-1", "PROBE-2", "PROBE-3" ]
+    ],
+
     "paths": [
+      { "path": ["GOAL", "harvest", "ASSIMILATOR"] },
       { "path": ["PROBE"] },
-      { "path": ["ASSIMILATOR"] },
+      { "path": ["PROBE-1", "harvest", "ASSIMILATOR"], "optional": true },
+      { "path": ["PROBE-2", "harvest", "ASSIMILATOR"], "optional": true },
+      { "path": ["PROBE-3", "harvest", "ASSIMILATOR"], "optional": true },
       {
         "label": "ASSIGN",
         "path": ["PROBE", "harvest", "ASSIMILATOR"],
@@ -25,11 +35,16 @@
   },
 
   "input": [
-    "PROBE"
+    "PROBE",
+    "PROBE-1",
+    "PROBE-2",
+    "PROBE-3"
   ],
 
   "output": [
     "ASSIGN",
+    "PROBE/busy",
+    "ASSIMILATOR/utilized",
     "GOAL"
   ]
 }
