@@ -1,4 +1,5 @@
 
+let distance;
 let reaction;
 
 export default class Brain {
@@ -11,7 +12,7 @@ export default class Brain {
     const enemyX = input[4] ? input[4] : input[7];
     const enemyY = input[5] ? input[5] : input[8];
 
-    if (enemies && reaction) {
+    if (enemies && reaction && near(enemyX, enemyY, homeX, homeY, distance)) {
       return reaction;
     }
 
@@ -20,6 +21,7 @@ export default class Brain {
       // Detect worker rush
       if (near(enemyX, enemyY, homeX, homeY, 20)) {
         // Set strategy to single-base (1) and raise goal to counter worker rush
+        distance = 20;
         reaction = [1, 1, 1];
         return reaction;
       }
@@ -27,6 +29,7 @@ export default class Brain {
       // Detect first expansion challenged
       if (near(enemyX, enemyY, homeX, homeY, 50)) {
         // Set strategy to single-base (1)
+        distance = 50;
         reaction = [1, 1, -1];
         return reaction;
       }
