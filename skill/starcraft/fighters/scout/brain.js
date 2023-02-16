@@ -8,10 +8,10 @@ export default class Brain {
     const alternativeY = input[9] ? input[11] : input[3];
     const enemyBaseX = input[4];
     const enemyBaseY = input[5];
-    const thisZealot = input[6];
-    const partnerZealot = input[7];
+    const thisScout = input[6];
+    const otherScout = input[7];
 
-    if (partnerZealot && (partnerZealot !== thisZealot)) {
+    if (otherScout && (otherScout !== thisScout)) {
       // This location is already scouted
       return;
     }

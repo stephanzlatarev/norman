@@ -57,6 +57,16 @@ const BOOSTABLE = {
   72: "cybernetics",
 };
 
+const EXPLORERS = {
+  73: "zealot",
+  74: "stalker",
+  77: "sentry",
+  78: "phoenix",
+  79: "carrier",
+  80: "voidray",
+  82: "observer",
+};
+
 export default async function(node, client) {
   const observation = (await client.observation()).observation;
   const owner = await observePlayers(node, client, observation);
@@ -190,6 +200,10 @@ function observeUnits(node, client, observation) {
     if (BOOSTABLE[unitInReality.unitType]) {
       unitInMemory.set("boostable", true);
       unitInMemory.set("boost", getBoostPercentage(unitInReality));
+    }
+
+    if (EXPLORERS[unitInReality.unitType]) {
+      unitInMemory.set("explorer", true);
     }
 
     unitInMemory.set("x", unitInReality.pos.x);

@@ -3,7 +3,7 @@
   "goal": "fight opponent",
 
   "body": {
-    "code": "body/starcraft/unit/zealot"
+    "explorer": true
   },
 
   "memory": {

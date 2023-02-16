@@ -3,20 +3,20 @@
   "goal": "scout opponent",
 
   "body": {
-    "code": "body/starcraft/unit/zealot"
+    "is-game": true
   },
 
   "memory": {
     "nodes": {
-      "GAME": { "is-game": true },
+      "SCOUT": { "explorer": true },
       "LOCATION": { "type": "resources" },
       "ALTERNATIVE": { "type": "resources" },
-      "PARTNER": { "unitType": "zealot" }
+      "PARTNER": { "explorer": true }
     },
 
     "paths": [
       {
-        "path": ["GAME"]
+        "path": ["SCOUT"]
       },
       {
         "path": ["LOCATION"]
@@ -26,12 +26,12 @@
         "optional": true
       },
       {
-        "path": ["BODY", "scout", "ALTERNATIVE"],
+        "path": ["SCOUT", "scout", "ALTERNATIVE"],
         "optional": true
       },
       {
-        "label": "SCOUT",
-        "path": ["BODY", "scout", "LOCATION"],
+        "label": "LETS-SCOUT",
+        "path": ["SCOUT", "scout", "LOCATION"],
         "provisional": true,
         "unique": true
       }
@@ -39,17 +39,17 @@
   },
 
   "input": [
-    "LOCATION/nexusX",
-    "LOCATION/nexusY",
-    "ALTERNATIVE/nexusX",
-    "ALTERNATIVE/nexusY",
-    "GAME/enemyBaseX",
-    "GAME/enemyBaseY",
-    "BODY",
+    "LOCATION/x",
+    "LOCATION/y",
+    "ALTERNATIVE/x",
+    "ALTERNATIVE/y",
+    "enemyBaseX",
+    "enemyBaseY",
+    "SCOUT",
     "PARTNER"
   ],
 
   "output": [
-    "SCOUT"
+    "LETS-SCOUT"
   ]
 }
