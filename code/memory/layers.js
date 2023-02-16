@@ -281,7 +281,70 @@ function getExtendedMatch(match, extension) {
 
 function isSatisfyingConstraints(match, constraints, lists) {
   for (const c of constraints) {
-    if (!isSatisfyingConstraint(c[0], match[c[0]], c[1], c[2], match[c[2]], lists)) return false;
+    if (c[0] === "⊃") {
+      if (!isSelectionOfDistinctNodes(match, c.slice(1), lists)) return false;
+    } else if (c.length === 3) {
+      if (!isSatisfyingConstraint(c[0], match[c[0]], c[1], c[2], match[c[2]], lists)) return false;
+    }
+  }
+
+  return true;
+}
+
+function isSelectionOfDistinctNodes(selection, labels, lists) {
+  const distincts = [];
+  const duplicates = [];
+
+  let lastLabel;
+  let lastRef = -1;
+  let canDuplicateRef = -1;
+  for (const label of labels) {
+    const node = selection[label];
+
+    if (node) {
+      if (node.ref < lastRef) {
+        return false;
+      } else if (node.ref > lastRef) {
+        if (canDuplicateRef >= 0) {
+          // A previous node was duplicated, so cannot add a new distinct one. Only last nodes can be duplicates
+          return false;
+        }
+
+        distincts.push(node);
+        lastLabel = label;
+        lastRef = node.ref;
+      } else {
+        // This is a duplicate
+        if (canDuplicateRef == -1) {
+          canDuplicateRef = node.ref;
+        } else if (node.ref !== canDuplicateRef) {
+          return false;
+        }
+        if (!duplicates.length) duplicates.push(lastLabel);
+        duplicates.push(label);
+      }
+    } else if (lastRef >= 0) {
+      return false;
+    }
+  }
+
+  if (!duplicates.length) return true;
+
+  const pattern = {...selection};
+  for (const label of labels) {
+    delete pattern[label];
+  }
+
+  for (const list of lists) {
+    for (const match of list) {
+      if (isCompatibleToPattern(match, pattern)) {
+        for (const label of duplicates) {
+          if (match[label] && (distincts.indexOf(match[label]) < 0)) {
+            return false;
+          }
+        }
+      }
+    }
   }
 
   return true;
@@ -342,6 +405,13 @@ function getPatternOfList(label, node, list) {
 function isMatchingPattern(match, pattern) {
   for (const label in pattern) {
     if (match[label] !== pattern[label]) return false;
+  }
+  return true;
+}
+
+function isCompatibleToPattern(match, pattern) {
+  for (const label in pattern) {
+    if ((match[label] !== undefined) && (match[label] !== pattern[label])) return false;
   }
   return true;
 }

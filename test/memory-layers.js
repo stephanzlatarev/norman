@@ -452,6 +452,76 @@ describe("Memory layers", function() {
         ]);
       });
     });
+
+    describe("pick three harvesters for an assimilator", function() {
+      const PATTERN = {
+        nodes: {
+          "ASSIMILATOR": { "label": "assimilator" },
+          "PROBE-1": { "label": "probe" },
+          "PROBE-2": { "label": "probe" },
+          "PROBE-3": { "label": "probe" },
+          "OTHER": { "label": "other" }
+        },
+
+        constraints: [
+          [ "⊃", "PROBE-1", "PROBE-2", "PROBE-3" ],
+        ],
+
+        paths: [
+          { path: ["ASSIMILATOR"] },
+          { path: ["OTHER"] },
+          {
+            path: ["PROBE-1", "harvest", "ASSIMILATOR"],
+            optional: true
+          },
+          {
+            path: ["PROBE-2", "harvest", "ASSIMILATOR"],
+            optional: true
+          },
+          {
+            path: ["PROBE-3", "harvest", "ASSIMILATOR"],
+            optional: true
+          }
+        ]
+      };
+      const getSituation = function(harvesters) {
+        const memory = getMemory("probe", 5, "assimilator", 1, "other", 1);
+        for (let i = 1; i <= harvesters; i++) memory.get("probe-" + i).set("harvest", memory.get("assimilator-1"));
+        return memory;
+      };
+
+      it("when no harvesters", function() {
+        const memory = getSituation(0);
+
+        assertEqual(memory, layers(memory, PATTERN), [
+          { "PROBE-1": null, "PROBE-2": null, "PROBE-3": null },
+        ]);
+      });
+
+      it("when there is one harvester", function() {
+        const memory = getSituation(1);
+
+        assertEqual(memory, layers(memory, PATTERN), [
+          { "PROBE-1": "probe-1", "PROBE-2": "probe-1", "PROBE-3": "probe-1" },
+        ]);
+      });
+
+      it("when there are two harvesters", function() {
+        const memory = getSituation(2);
+
+        assertEqual(memory, layers(memory, PATTERN), [
+          { "PROBE-1": "probe-1", "PROBE-2": "probe-2", "PROBE-3": "probe-2" },
+        ]);
+      });
+
+      it("when there are three harvesters", function() {
+        const memory = getSituation(3);
+
+        assertEqual(memory, layers(memory, PATTERN), [
+          { "PROBE-1": "probe-1", "PROBE-2": "probe-2", "PROBE-3": "probe-3" },
+        ]);
+      });
+    });
   });
 
   describe("matching many paths", function() {
