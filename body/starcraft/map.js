@@ -203,10 +203,12 @@ function clusterResources(clusters) {
     let maxY = 0;
 
     for (const resource of cluster) {
-      minX = Math.min(minX, resource.x);
-      maxX = Math.max(maxX, resource.x);
-      minY = Math.min(minY, resource.y);
-      maxY = Math.max(maxY, resource.y);
+      if (resource.type === "mineral") {
+        minX = Math.min(minX, resource.x);
+        maxX = Math.max(maxX, resource.x);
+        minY = Math.min(minY, resource.y);
+        maxY = Math.max(maxY, resource.y);
+      }
     }
 
     const x = (maxX + minX) / 2;
@@ -287,6 +289,10 @@ function findNexusLocation(map, cluster) {
   const slot = map.plot(data, 5, 5, plotMinX, plotMinY, plotMinX + plotMaxW, plotMinY + plotMaxH, clusterX, clusterY);
 
   cluster.nexus = { x: slot.x + 2.5, y: slot.y + 2.5 };
+
+  // Move cluster center to be just outside the nexus
+  cluster.x = cluster.nexus.x + Math.sign(cluster.x - cluster.nexus.x) * 3;
+  cluster.y = cluster.nexus.y + Math.sign(cluster.y - cluster.nexus.y) * 3;
 
   return cluster.nexus;
 }
