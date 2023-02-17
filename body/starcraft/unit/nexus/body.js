@@ -7,6 +7,11 @@ export default class Nexus extends Unit {
   }
 
   async tock() {
+    if (!this.hasSetRallyPoint) {
+      super.command(3690, null, { x: this.node.get("resources/x"), y: this.node.get("resources/y")});
+      this.hasSetRallyPoint = true;
+    }
+
     if (this.node.get("build-probe")) {
       super.command(1006, null, null, "build-probe");
       this.node.clear("build-probe");
