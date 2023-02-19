@@ -62,7 +62,6 @@ const EXPLORERS = {
   74: "stalker",
   77: "sentry",
   78: "phoenix",
-  79: "carrier",
   80: "voidray",
   82: "observer",
 };
