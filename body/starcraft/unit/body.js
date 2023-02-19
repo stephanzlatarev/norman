@@ -73,6 +73,15 @@ export default class Unit {
     return true;
   }
 
+  async directCommand(unitTags, abilityId, targetUnitTag, targetWorldSpacePos) {
+    const client = this.node.get("channel");
+
+    if (client) {
+      const command = { unitTags: unitTags, abilityId: abilityId, targetUnitTag: targetUnitTag, targetWorldSpacePos: targetWorldSpacePos, queueCommand: false };
+      await client.action({ actions: [{ actionRaw: { unitCommand: command } }] });
+    }
+  }
+
   async tock() {
     const client = this.node.get("channel");
 

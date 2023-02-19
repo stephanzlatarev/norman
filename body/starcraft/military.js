@@ -193,6 +193,7 @@ function observeArmy(strategy, army, homebase, observation) {
 }
 
 function observeEnemy(game, army, homebase, observation) {
+  const armyUnit = army.get("body");
   const owner = game.get("owner");
   const enemy = game.get("enemy");
   const homebaseX = homebase.get("x");
@@ -210,6 +211,7 @@ function observeEnemy(game, army, homebase, observation) {
 
   if (enemyUnit) {
     // Enemy warriors are in sight. Focus on one of them.
+    if (armyUnit) armyUnit.observe(observation, owner, enemy);
 
     let oldEnemyCount = army.get("enemyWarriorCount");
     if (!oldEnemyCount) oldEnemyCount = 1;
@@ -230,6 +232,7 @@ function observeEnemy(game, army, homebase, observation) {
     army.clear("enemyDummyY");
   } else {
     // No enemy warrior is in sight. Focus on dummy targets if any.
+    if (armyUnit) armyUnit.observe(null);
 
     if (isLocationVisible(observation, owner, oldEnemyWarriorX, oldEnemyWarriorY) || enemyUnits.length) {
       army.set("enemyWarriorCount", 0);
