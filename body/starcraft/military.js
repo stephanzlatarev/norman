@@ -132,6 +132,8 @@ function getHighestRank(leader, units) {
   return bestLeader;
 }
 
+const lastKnownEnemy = [];
+
 function observeEnemy(game, army, homebase, observation) {
   const armyUnit = army.get("body");
   const owner = game.get("owner");
@@ -163,8 +165,16 @@ function observeEnemy(game, army, homebase, observation) {
     if (shouldSwitchAttention(oldEnemyWarriorX, oldEnemyWarriorY, enemyUnit, enemyWarriors, homebaseX, homebaseY, army)) {
       // Switch attention to enemy which is closest to homebase
       army.set("enemyAlert", (enemyUnit.distanceToHomebase <= ENEMY_ALERT_SQUARED) && !STATIONARY_WARRIORS[enemyUnit.unitType]);
+
       army.set("enemyWarriorX", enemyUnit.pos.x);
       army.set("enemyWarriorY", enemyUnit.pos.y);
+
+      const known = getSimilarKnownEnemy(enemyUnit, lastKnownEnemy);
+      if (known) {
+        known.count = Math.max(known.count, army.get("enemyWarriorCount"));
+      } else {
+        lastKnownEnemy.push({ x: enemyUnit.pos.x, y: enemyUnit.pos.y, count: army.get("enemyWarriorCount") });
+      }
     }
 
     army.clear("enemyDummyCount");
@@ -174,9 +184,38 @@ function observeEnemy(game, army, homebase, observation) {
     // No enemy warrior is in sight. Focus on dummy targets if any.
     if (armyUnit) armyUnit.observe(null);
 
-    if (isLocationVisible(observation, owner, oldEnemyWarriorX, oldEnemyWarriorY) || enemyUnits.length) {
+    army.clear("enemyAlert");
+
+    if (enemyUnits.length) {
+      // Allow to attack the dummy targets
       army.set("enemyWarriorCount", 0);
-      army.clear("enemyAlert");
+      army.clear("enemyWarriorX");
+      army.clear("enemyWarriorY");
+    } else if (lastKnownEnemy.length) {
+      let known = lastKnownEnemy[lastKnownEnemy.length - 1];
+      
+      if (isLocationVisible(observation, owner, known.x, known.y)) {
+        lastKnownEnemy.length = lastKnownEnemy.length - 1;
+
+        if (lastKnownEnemy.length) {
+          known = lastKnownEnemy[lastKnownEnemy.length - 1];
+          army.set("enemyWarriorCount", known.count);
+          army.set("enemyWarriorX", known.x);
+          army.set("enemyWarriorY", known.y);
+        } else {
+          army.set("enemyWarriorCount", 0);
+          army.clear("enemyWarriorX");
+          army.clear("enemyWarriorY");
+        }
+      } else {
+        // We haven't reach the location of last known enemy but we remember the enemy is there
+        army.set("enemyWarriorCount", known.count);
+        army.set("enemyWarriorX", known.x);
+        army.set("enemyWarriorY", known.y);
+      }
+    } else {
+      // No known enemies. Go scouting
+      army.set("enemyWarriorCount", 0);
       army.clear("enemyWarriorX");
       army.clear("enemyWarriorY");
     }
@@ -190,6 +229,14 @@ function observeEnemy(game, army, homebase, observation) {
       army.clear("enemyDummyCount");
       army.clear("enemyDummyX");
       army.clear("enemyDummyY");
+    }
+  }
+}
+
+function getSimilarKnownEnemy(enemyUnit, lastKnownEnemy) {
+  for (const known of lastKnownEnemy) {
+    if ((Math.abs(known.x - enemyUnit.pos.x) <= 10) || (Math.abs(known.y - enemyUnit.pos.y) <= 10)) {
+      return known;
     }
   }
 }
