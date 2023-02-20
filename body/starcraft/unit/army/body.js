@@ -4,6 +4,9 @@ export default class Army extends Unit {
 
   constructor(node) {
     super(node);
+
+    this.lastCommandToLeader;
+    this.lastCommandToSupport;
   }
 
   observe(observation, owner, enemy) {
@@ -13,14 +16,14 @@ export default class Army extends Unit {
   }
 
   async tock() {
+    if (!this.node.get("tag")) return;
+
     if (this.node.get("rally")) {
       const location = this.node.get("rally");
       const locationX = location.get("x");
       const locationY = location.get("y");
 
-      if (super.command(16, null, { x: locationX, y: locationY }, "move")) {
-        this.node.set("orders", [{ unitTags: [...this.node.get("tag")], abilityId: 16, targetWorldSpacePos: { x: locationX, y: locationY } }]);
-      }
+      this.instruct(16, { x: locationX, y: locationY });
     } else if (this.node.get("attack")) {
       const armyX = this.node.get("armyX");
       const armyY = this.node.get("armyY");
@@ -33,17 +36,46 @@ export default class Army extends Unit {
         await micro(this, armyX, armyY);
 
         const fleetTags = this.observation.ownUnits.filter(unit => FLEET[unit.unitType]).map(unit => unit.tag);
-        await super.directCommand(fleetTags, 3674, null, { x: locationX, y: locationY });
-      } else {
-        if (super.command(3674, null, { x: locationX, y: locationY }, "attack")) {
-          this.node.set("orders", [{ unitTags: [...this.node.get("tag")], abilityId: 3674, targetWorldSpacePos: { x: locationX, y: locationY } }]);
+        if (fleetTags.length) {
+          await super.directCommand(fleetTags, 3674, null, { x: locationX, y: locationY });
         }
+
+        this.lastCommandToLeader = null;
+        this.lastCommandToSupport = null;
+      } else {
+        this.instruct(3674, { x: locationX, y: locationY });
       }
-    } else {
-      this.node.set("orders", []);
     }
 
     await super.tock();
+  }
+
+  async instruct(command, position) {
+    const leaderTag = this.node.get("tag");
+    const supportTags = this.node.get("support");
+
+    let digest = leaderTag + "-" + command + "-" + position.x + ":" + position.y;
+    if (digest !== this.lastCommandToLeader) {
+      await super.directCommand([leaderTag], command, null, position);
+      this.lastCommandToLeader = digest;
+    }
+
+    if (supportTags && supportTags.length) {
+      if (command === 3674) {
+        digest += JSON.stringify(supportTags);
+        if (digest !== this.lastCommandToSupport) {
+          await super.directCommand(supportTags, 3674, null, position);
+        }
+      } else {
+        digest = leaderTag + "-" + command + "-" + JSON.stringify(supportTags);
+        if (digest !== this.lastCommandToSupport) {
+          await super.directCommand(supportTags, 1, leaderTag);
+        }
+        this.lastCommandToSupport = digest;
+      }
+    } else {
+      this.lastCommandToSupport = null;
+    }
   }
 
 }

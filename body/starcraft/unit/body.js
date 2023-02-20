@@ -46,7 +46,7 @@ export default class Unit {
 
   command(abilityId, targetUnitTag, targetWorldSpacePos, memoryLabel) {
     const unitTag = this.node.get("tag");
-    const unitTags = Array.isArray(unitTag) ? unitTag : [unitTag];
+    const unitTags = [unitTag];
 
     if (isMatchingAny(this.node.get("orders"), unitTags, abilityId, targetUnitTag, targetWorldSpacePos)) return false;
     if (isMatchingAny(this.pendingCommands, unitTags, abilityId, targetUnitTag, targetWorldSpacePos)) return false;

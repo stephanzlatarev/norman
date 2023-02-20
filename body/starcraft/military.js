@@ -99,7 +99,6 @@ export function observeMilitary(node, client, observation) {
 
 function observeArmy(strategy, army, homebase, observation) {
   const armyUnits = observation.ownUnits.filter(unit => WARRIORS[unit.unitType]);
-  army.set("tag", armyUnits.map(unit => unit.tag));
 
   const baseX = homebase.get("x");
   const baseY = homebase.get("y");
@@ -112,7 +111,7 @@ function observeArmy(strategy, army, homebase, observation) {
   const leaderUnits = armyUnits.filter(unit => LEADERS[unit.unitType]);
 
   if (leaderUnits.length && (army.get("enemyWarriorCount") || army.get("enemyDummyCount"))) {
-    const leaderTag = army.get("leaderTag");
+    const leaderTag = army.get("tag");
     let leader = leaderTag ? leaderUnits.find(unit => (unit.tag === leaderTag)) : null;
 
     if (!leader) {
@@ -139,6 +138,9 @@ function observeArmy(strategy, army, homebase, observation) {
       leader = leaderUnits[0];
     }
 
+    army.set("tag", leader.tag);
+    army.set("support", armyUnits.filter(unit => (unit !== leader)).map(unit => unit.tag).sort());
+
     const armyPackUnits = armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10));
 
     // We want to know the max energy level a unit in the army pack has
@@ -152,7 +154,6 @@ function observeArmy(strategy, army, homebase, observation) {
     }
     if (!countEnergyUnits) armyEnergy = 100;
 
-    army.set("leaderTag", leader.tag);
     army.set("engagedCount", armyPackUnits.filter(unit => (unit.engagedTargetTag !== "0")).length);
     army.set("armyCount", armyPackUnits.length);
     army.set("armyEnergy", armyEnergy);
@@ -180,8 +181,8 @@ function observeArmy(strategy, army, homebase, observation) {
     }
   } else {
     army.set("armyCount", 0);
-    army.set("tag", []);
-    army.clear("leaderTag");
+    army.set("support", []);
+    army.clear("tag");
     army.clear("engagedCount");
     army.clear("armyEnergy");
     army.clear("armyX");
