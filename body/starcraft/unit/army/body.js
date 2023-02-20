@@ -1,4 +1,5 @@
 import Unit from "../body.js";
+import { DUMMY_TARGETS } from "../../units.js";
 
 export default class Army extends Unit {
 
@@ -119,7 +120,7 @@ function mapUnits(units) {
 }
 
 function isValidTarget(unit, enemy) {
-  return (unit.owner === enemy) && (unit.displayType === 1);
+  return (unit.owner === enemy) && !DUMMY_TARGETS[unit.unitType] && (unit.displayType === 1);
 }
 
 function distance(a, b) {
