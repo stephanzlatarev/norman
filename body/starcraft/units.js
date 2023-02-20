@@ -12,11 +12,11 @@ export const WARRIORS = {
 
 export const LEADER_RANK = {
   10: 8, // mothership
-  82: 7, // observer
-  79: 6, // carrier
-  77: 5, // sentry
-  73: 4, // zealot
-  74: 3, // stalker
+  77: 7, // sentry
+  73: 6, // zealot
+  74: 5, // stalker
+  82: 4, // observer
+  79: 3, // carrier
   80: 2, // voidray
   78: 1, // phoenix
 };
