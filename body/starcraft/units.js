@@ -10,10 +10,15 @@ export const WARRIORS = {
   82: "observer",
 };
 
-export const LEADERS = {
-  10: "mothership",
-  73: "zealot",
-  74: "stalker",
+export const LEADER_RANK = {
+  10: 8, // mothership
+  82: 7, // observer
+  79: 6, // carrier
+  77: 5, // sentry
+  73: 4, // zealot
+  74: 3, // stalker
+  80: 2, // voidray
+  78: 1, // phoenix
 };
 
 export const USES_ENERGY = {

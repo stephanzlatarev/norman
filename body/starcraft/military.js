@@ -1,4 +1,4 @@
-import { WARRIORS, LEADERS, USES_ENERGY, CAN_HIT_AIR, DUMMY_TARGETS, LIGHT_WARRIORS, HEAVY_WARRIORS, STATIONARY_WARRIORS } from "./units.js";
+import { WARRIORS, LEADER_RANK, USES_ENERGY, CAN_HIT_AIR, DUMMY_TARGETS, LIGHT_WARRIORS, HEAVY_WARRIORS, STATIONARY_WARRIORS } from "./units.js";
 
 const ENEMY_ALERT_SQUARED = 40*40; // Squared distance which raises alert for enemies
 const STALK_RANGE_SQUARED = 14*14; // Squared range for stalking enemies - just outside range of tanks in siege mode
@@ -29,7 +29,7 @@ function observeArmy(strategy, army, homebase, observation) {
   army.set("warriorCount", armyUnits.length);
   army.set("totalCount", observation.playerCommon.foodUsed);
 
-  const leaderUnits = armyUnits.filter(unit => LEADERS[unit.unitType]);
+  const leaderUnits = armyUnits.filter(unit => LEADER_RANK[unit.unitType]);
 
   if (leaderUnits.length && (army.get("enemyWarriorCount") || army.get("enemyDummyCount"))) {
     const leaderTag = army.get("tag");
@@ -59,10 +59,12 @@ function observeArmy(strategy, army, homebase, observation) {
       leader = leaderUnits[0];
     }
 
+    const armyPackUnits = armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10));
+
+    leader = getHighestRank(leader, armyPackUnits);
+
     army.set("tag", leader.tag);
     army.set("support", armyUnits.filter(unit => (unit !== leader)).map(unit => unit.tag).sort());
-
-    const armyPackUnits = armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10));
 
     // We want to know the max energy level a unit in the army pack has
     let armyEnergy = 0;
@@ -112,6 +114,22 @@ function observeArmy(strategy, army, homebase, observation) {
     army.clear("guardX");
     army.clear("guardY");
   }
+}
+
+function getHighestRank(leader, units) {
+  let bestLeader = leader;
+  let bestRank = LEADER_RANK[leader.unitType];
+
+  for (const unit of units) {
+    const unitRank = LEADER_RANK[unit.unitType];
+
+    if (unitRank > bestRank) {
+      bestLeader = unit;
+      bestRank = unitRank;
+    }
+  }
+
+  return bestLeader;
 }
 
 function observeEnemy(game, army, homebase, observation) {
