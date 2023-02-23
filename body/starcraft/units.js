@@ -1,4 +1,25 @@
 
+export const OWN_UNITS = {
+  10: "mothership",
+  59: "nexus",
+  60: "pylon",
+  61: "assimilator",
+  62: "gateway",
+  63: "forge",
+  64: "beacon",
+  67: "stargate",
+  71: "robotics",
+  72: "cybernetics",
+  73: "zealot",
+  74: "stalker",
+  77: "sentry",
+  78: "phoenix",
+  79: "carrier",
+  80: "voidray",
+  82: "observer",
+  84: "probe"
+};
+
 export const WARRIORS = {
   10: "mothership",
   73: "zealot",
@@ -6,6 +27,15 @@ export const WARRIORS = {
   77: "sentry",
   78: "phoenix",
   79: "carrier",
+  80: "voidray",
+  82: "observer",
+};
+
+export const EXPLORERS = {
+  73: "zealot",
+  74: "stalker",
+  77: "sentry",
+  78: "phoenix",
   80: "voidray",
   82: "observer",
 };
@@ -33,6 +63,15 @@ export const CAN_HIT_AIR = {
   78: "phoenix",
   79: "carrier",
   80: "voidray",
+};
+
+export const BOOSTABLE = {
+  59: "nexus",
+  62: "gateway",
+  63: "forge",
+  67: "stargate",
+  71: "robotics",
+  72: "cybernetics",
 };
 
 // The units that can't fight my army
@@ -85,4 +124,29 @@ export const HEAVY_WARRIORS = {
 
 export const STATIONARY_WARRIORS = {
   66: "photon cannon",
+};
+
+export const ORDERS = {
+  110: "mothership",
+  880: "nexus",
+  881: "pylon",
+  882: "assimilator",
+  883: "gateway",
+  884: "forge",
+  885: "beacon",
+  889: "stargate",
+  893: "robotics",
+  894: "cybernetics",
+  916: "zealot",
+  917: "stalker",
+  921: "sentry",
+  946: "phoenix",
+  948: "carrier",
+  950: "voidray",
+  1006: "probe",
+  3692: "airArmor",
+  3693: "airWeapons",
+  3694: "groundArmor",
+  3695: "groundWeapons",
+  3696: "shields",
 };
