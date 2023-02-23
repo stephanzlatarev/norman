@@ -33,6 +33,7 @@
   },
 
   "input": [
+    "strategy",
     "HOMEBASE/x",
     "HOMEBASE/y",
     "stats/nexus",
@@ -41,7 +42,11 @@
     "MILITARY/enemyWarriorY",
     "MILITARY/enemyDummyCount",
     "MILITARY/enemyDummyX",
-    "MILITARY/enemyDummyY"
+    "MILITARY/enemyDummyY",
+    "BODY/statsEnemy/zergling",
+    "BODY/statsEnemy/hydralisk",
+    "BODY/statsEnemy/roach",
+    "BODY/statsEnemy/queen"
   ],
 
   "output": [

@@ -74,6 +74,13 @@ export const BOOSTABLE = {
   72: "cybernetics",
 };
 
+export const ENEMY_UNITS = {
+  105: "zergling",
+  107: "hydralisk",
+  110: "roach",
+  126: "queen",
+};
+
 // The units that can't fight my army
 export const DUMMY_TARGETS = {
   // Terran

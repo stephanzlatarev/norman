@@ -58,6 +58,8 @@ export default class Layer {
     } else if (this.layer.BODY) {
       if (value > 0) {
         this.layer.BODY.set(label, value);
+      } else if (value < 0) {
+        this.layer.BODY.clear(label);
       }
     }
   }

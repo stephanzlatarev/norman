@@ -1,7 +1,7 @@
 import { observeResources } from "./resources.js";
 import { observeStructures } from "./structures.js";
 import { observeMilitary } from "./military.js";
-import { BOOSTABLE, EXPLORERS, ORDERS, OWN_UNITS } from "./units.js";
+import { BOOSTABLE, ENEMY_UNITS, EXPLORERS, ORDERS, OWN_UNITS } from "./units.js";
 
 export default async function(node, client) {
   const observation = (await client.observation()).observation;
@@ -26,6 +26,7 @@ export default async function(node, client) {
   observeStructures(node, observation);
   observeUnits(node, client, observation);
   removeDeadUnits(node, observation);
+  observeEnemyUnits(node, observation);
   observeMilitary(node, client, observation);
 }
 
@@ -167,6 +168,23 @@ function observeUnits(node, client, observation) {
   }
 
   stats.set("probe", observation.playerCommon.foodWorkers);
+}
+
+
+function observeEnemyUnits(node, observation) {
+  const count = {};
+  for (const type in ENEMY_UNITS) {
+    count[type] = 0;
+  }
+
+  for (const unit of observation.rawData.units) {
+    if (ENEMY_UNITS[unit.unitType]) count[unit.unitType]++;
+  }
+
+  const stats = node.memory.get(node.path + "/statsEnemy");
+  for (const type in ENEMY_UNITS) {
+    stats.set(ENEMY_UNITS[type], count[type]);
+  }
 }
 
 function getOrderLocation(observation, order) {
