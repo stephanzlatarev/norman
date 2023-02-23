@@ -56,7 +56,9 @@ export default class Layer {
         console.log("ERROR: No deep set support for", label, "in memory layer");
       }
     } else if (this.layer.BODY) {
-      this.layer.BODY.set(label, value);
+      if (value > 0) {
+        this.layer.BODY.set(label, value);
+      }
     }
   }
 

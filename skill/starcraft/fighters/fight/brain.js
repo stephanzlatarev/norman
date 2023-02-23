@@ -49,21 +49,21 @@ export default class Brain {
         // Defend base
         trace(this.mode, "defend", input, enemyWarriorX, enemyWarriorY);
         this.mode = "defend";
-        return [0, -1, 1, enemyWarriorX, enemyWarriorY];
+        return [-1, -1, 1, enemyWarriorX, enemyWarriorY];
       }
 
       if ((totalCount >= MAX_TOTAL_ATTACK) || ((this.mode === "kill") && (totalCount >= MIN_TOTAL_ATTACK))) {
         // Total attack
         trace(this.mode, "kill", input, enemyWarriorX, enemyWarriorY);
         this.mode = "kill";
-        return [0, -1, 1, enemyWarriorX, enemyWarriorY];
+        return [-1, -1, 1, enemyWarriorX, enemyWarriorY];
       }
 
       if ((warriorCount >= MAX_WARRIOR_TOTAL_ATTACK) || ((this.mode === "kill") && (warriorCount >= MIN_WARRIOR_TOTAL_ATTACK))) {
         // Total attack
         trace(this.mode, "kill", input, enemyWarriorX, enemyWarriorY);
         this.mode = "kill";
-        return [0, -1, 1, enemyWarriorX, enemyWarriorY];
+        return [-1, -1, 1, enemyWarriorX, enemyWarriorY];
       }
 
       if (shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyWarriorCount)) {
@@ -85,11 +85,11 @@ export default class Brain {
       // Attack enemy
       trace(this.mode, "attack", input, enemyWarriorX, enemyWarriorY);
       this.mode = "attack";
-      return [0, -1, 1, enemyWarriorX, enemyWarriorY];
+      return [-1, -1, 1, enemyWarriorX, enemyWarriorY];
     } else if (enemyDummyX && enemyDummyY) {
       // Destroy dummy target
       trace(this.mode, "destroy dummies", input, enemyDummyX, enemyDummyY);
-      return [0, -1, 1, enemyDummyX, enemyDummyY];
+      return [-1, -1, 1, enemyDummyX, enemyDummyY];
     }
   }
 
