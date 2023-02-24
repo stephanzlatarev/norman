@@ -2,6 +2,8 @@
 let distance;
 let reaction;
 
+let canUseSingleBaseStrategy = true;
+
 let watchForZerglingRush = true;
 let detectedZerglingRush = false;
 
@@ -25,7 +27,7 @@ export default class Brain {
       return reaction;
     }
 
-    if ((nexuses === 1) && (enemies > 1)) {
+    if (canUseSingleBaseStrategy && (nexuses === 1) && (enemies > 1)) {
 
       // Detect worker rush
       if (near(enemyX, enemyY, homeX, homeY, 20)) {
@@ -63,6 +65,7 @@ export default class Brain {
     if ((strategy === 1) || (strategy === 2)) {
       // Set strategy back to the standard (0) and remove any goals to counter cheese tactics
       console.log("Set strategy back to the standard");
+      canUseSingleBaseStrategy = false;
       return [1, -1, -1];
     }
 
