@@ -78,7 +78,7 @@ export default class Brain {
 
       if ((this.mode === "stalk") && (this.inertia > 0)) {
         this.inertia--;
-        trace(this.mode, "stalking " + this.inertia, input);
+        trace(this.mode, "stalk", input);
         return;
       }
 
@@ -89,6 +89,7 @@ export default class Brain {
     } else if (enemyDummyX && enemyDummyY) {
       // Destroy dummy target
       trace(this.mode, "destroy dummies", input, enemyDummyX, enemyDummyY);
+      this.mode = "destroy dummies";
       return [-1, -1, 1, enemyDummyX, enemyDummyY];
     }
   }
@@ -161,7 +162,10 @@ function step(fromX, fromY, toX, toY) {
 }
 
 function trace(modeBefore, modeNow, input, x, y) {
-  if (!TROUBLESHOOTING) return;
+  if (!TROUBLESHOOTING) {
+    if (modeNow !== modeBefore) console.log("Army", modeNow, JSON.stringify(input));
+    return;
+  }
 
   const line = [modeBefore, ">>", modeNow];
   if (x && y) {
