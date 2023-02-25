@@ -14,13 +14,14 @@ const CONDITION = {
   assimilators: (situation) => (situation.resources.minerals > situation.resources.vespene),
   forges: (situation) => (situation.inventory.zealots + situation.inventory.sentries + situation.inventory.stalkers > 10),
   stargates: (situation) => ((situation.inventory.gateways >= 3) && (situation.resources.minerals >= 450) && (situation.resources.vespene >= 450)),
+  robotics: (situation) => (situation.complete.nexuses >= 2),
   probes: (situation) => (situation.inventory.pylons || (situation.total.probes <= 12)),
 };
 
 const LIMIT = {
   pylons: (situation) => Math.min(situation.inventory.bases * 4, (220 - situation.complete.nexuses * 15) / 8),
   assimilators: (situation) => (situation.complete.nexuses * 2),
-  gateways: (situation) => Math.min(situation.total.nexuses, 5),
+  gateways: (situation) => Math.min(situation.total.nexuses * 2, 5),
   forges: 1,
   beacons: 1,
   stargates: (situation) => Math.min(situation.complete.nexuses, 4),
