@@ -53,7 +53,7 @@ export default class Brain {
     if (watchForZerglingRush) {
       if (enemyHydralisk + enemyRoach + enemyQueen >= 2) {
         watchForZerglingRush = false;
-      } else if (detectedZerglingRush || (enemyZergling >= 4)) {
+      } else if (detectedZerglingRush || (enemyZergling >= 8)) {
         if (!detectedZerglingRush) console.log("Detected zergling rush");
         detectedZerglingRush = true;
         reaction = [1, 2];
