@@ -1,6 +1,8 @@
 import starcraft from "@node-sc2/proto";
 import observe from "./observe.js";
 
+let loop = 0;
+
 export default class Game {
 
   constructor(node) {
@@ -10,6 +12,7 @@ export default class Game {
   }
 
   async tick() {
+    loop++;
     await this.client.step({ count: 1 });
     await observe(this.node, this.client);
   }
@@ -24,4 +27,21 @@ export default class Game {
     }
   }
 
+}
+
+const print = console.log;
+
+console.log = function() {
+  print(clock(), ...arguments);
+}
+
+function twodigits(value) {
+  if (value < 10) return "0" + value;
+  return value;
+}
+
+function clock() {
+  const seconds = Math.floor(loop / 22.5);
+  const minutes = Math.floor(seconds / 60);
+  return twodigits(minutes) + ":" + twodigits(seconds % 60);
 }
