@@ -12,9 +12,10 @@ const MAX_TOTAL_ATTACK = 195; // When unit limit is over this number, go for tot
 const MIN_WARRIOR_TOTAL_ATTACK = 30; // When own units are below this number, don't go for total attack
 const MAX_WARRIOR_TOTAL_ATTACK = 40; // When own units are over this number, go for total attack
 
-const ENEMY_COUNT_CAP = 22;  // Even if enemies are more than this, we'll consider them as many to ensure we eventually attack
-const RATIO_TO_ATTACK = 1.5; // Have this ratio of own vs enemy units to launch an attack
-const ENERGY_TO_ATTACK = 10; // Accumulate this much energy before launching an attack
+const ENEMY_COUNT_CAP = 22;   // Even if enemies are more than this, we'll consider them as many to ensure we eventually attack
+const RATIO_TO_ATTACK = 1.0;  // Have this ratio of own vs enemy units to launch an attack
+const RATIO_TO_RETREAT = 0.7; // Have this ratio of own vs enemy units to stop an ongoing attack
+const ENERGY_TO_ATTACK = 10;  // Accumulate this much energy before launching an attack
 
 const TROUBLESHOOTING = false;
 
@@ -106,15 +107,15 @@ function shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyC
     if (armyEnergy < ENERGY_TO_ATTACK) return true;
 
     // If we haven't gathered enough own units we won't launch an attack
-    return (armyCount <= cappedEnemyCount * RATIO_TO_ATTACK);
+    return (armyCount < cappedEnemyCount * RATIO_TO_ATTACK);
   } else {
     // We are advancing
     if (engagedCount) {
       // We already fight. We should stop only if we see we are losing units
-      return (armyCount * RATIO_TO_ATTACK <= cappedEnemyCount);
+      return (armyCount < cappedEnemyCount * RATIO_TO_RETREAT);
     } else {
       // We haven't started yet. We can still go back if we see there are too many enemy units
-      return (armyCount <= cappedEnemyCount * RATIO_TO_ATTACK);
+      return (armyCount < cappedEnemyCount * RATIO_TO_ATTACK);
     }
   }
 }
