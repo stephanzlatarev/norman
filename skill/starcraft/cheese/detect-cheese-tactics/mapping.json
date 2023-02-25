@@ -37,6 +37,7 @@
     "HOMEBASE/x",
     "HOMEBASE/y",
     "stats/nexus",
+    "MILITARY/warriorCount",
     "MILITARY/enemyWarriorCount",
     "MILITARY/enemyWarriorX",
     "MILITARY/enemyWarriorY",

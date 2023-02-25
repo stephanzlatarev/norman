@@ -14,9 +14,10 @@ export default class Brain {
     const homeX = input[1];
     const homeY = input[2];
     const nexuses = input[3];
-    const enemies = input[4] + input[7];
-    const enemyX = input[5] ? input[5] : input[8];
-    const enemyY = input[6] ? input[6] : input[9];
+    const warriors = input[4];
+    const enemies = input[5] + input[8];
+    const enemyX = input[6] ? input[6] : input[9];
+    const enemyY = input[7] ? input[7] : input[10];
 
     const enemyZergling = input[10];
     const enemyHydralisk = input[11];
@@ -39,10 +40,10 @@ export default class Brain {
       }
 
       // Detect first expansion challenged
-      if (near(enemyX, enemyY, homeX, homeY, 50)) {
+      if ((enemies > warriors) && near(enemyX, enemyY, homeX, homeY, 40)) {
         // Set strategy to single-base (1)
         console.log("Detected first expansion challenged");
-        distance = 50;
+        distance = 40;
         reaction = [1, 1, -1];
         return reaction;
       }
