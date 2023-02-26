@@ -1,4 +1,4 @@
-import { WARRIORS, LEADER_RANK, USES_ENERGY, CAN_HIT_AIR, DUMMY_TARGETS, LIGHT_WARRIORS, HEAVY_WARRIORS, STATIONARY_WARRIORS } from "./units.js";
+import { WARRIORS, LEADER_RANK, USES_ENERGY, CAN_HIT_AIR, DUMMY_TARGETS, LIGHT_WARRIORS, HEAVY_WARRIORS, STATIONARY_WARRIORS, WORKERS } from "./units.js";
 
 const ENEMY_ALERT_SQUARED = 40*40; // Squared distance which raises alert for enemies
 const STALK_RANGE_SQUARED = 14*14; // Squared range for stalking enemies - just outside range of tanks in siege mode
@@ -221,7 +221,8 @@ function observeEnemy(game, army, homebase, observation) {
     }
 
     if (enemyUnits.length) {
-      const dummyTarget = enemyUnits[0];
+      const enemyWorker = enemyUnits.find(unit => WORKERS[unit.unitType]);
+      const dummyTarget = enemyWorker ? enemyWorker : enemyUnits[0];
       army.set("enemyDummyCount", enemyUnits.length);
       army.set("enemyDummyX", dummyTarget.pos.x);
       army.set("enemyDummyY", dummyTarget.pos.y);

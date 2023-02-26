@@ -31,6 +31,13 @@ export const WARRIORS = {
   82: "observer",
 };
 
+export const WORKERS = {
+  45: "scv",
+  84: "probe",
+  104: "drone",
+  268: "mule",
+};
+
 export const EXPLORERS = {
   73: "zealot",
   74: "stalker",
