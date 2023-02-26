@@ -19,10 +19,10 @@ export default class Brain {
     const enemyX = input[6] ? input[6] : input[9];
     const enemyY = input[7] ? input[7] : input[10];
 
-    const enemyZergling = input[10];
-    const enemyHydralisk = input[11];
-    const enemyRoach = input[12];
-    const enemyQueen = input[13];
+    const enemyZergling = input[11];
+    const enemyHydralisk = input[12];
+    const enemyRoach = input[13];
+    const enemyQueen = input[14];
 
     if (enemies && reaction && near(enemyX, enemyY, homeX, homeY, distance)) {
       return reaction;
