@@ -26,7 +26,7 @@ export default class Brain {
     const enemyQueen = input[14];
 
     const enemyWarriorWorkers = input[15];
-    const enemyVisibleCount = input[15];
+    const enemyVisibleCount = input[16];
 
     if (reaction) {
       if (enemyVisibleCount && near(enemyX, enemyY, homeX, homeY, distance)) {
@@ -38,7 +38,7 @@ export default class Brain {
       }
     }
 
-    if (canUseSingleBaseStrategy && (nexuses === 1) && (enemies > 1)) {
+    if (canUseSingleBaseStrategy && (nexuses === 1) && enemyVisibleCount && (enemies > 1)) {
 
       // Detect worker rush
       if (near(enemyX, enemyY, homeX, homeY, 20)) {
