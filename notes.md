@@ -1,13 +1,6 @@
 
 ============= MILESTONE 2 - Reach ELO 1600 in StarCraft II
 
-- army to focus fire on one enemy. make sure own units don't stand in their way to reach the enemy unit. maybe split own units into small groups which attack different enemy units.
-- keep army in a pack by moving at the speed of the slowest units
-
-- counter zergling rush by adding an investing strategy with zealot to stalker ratio of 4:1. The strategy is on until we detect warrior other than zergling (roach or hydra).
-
-- add 2nd and 3rd level air weapons and armor upgrades
-
 ============= MILESTONE 3 - Event-based memory
 
 - body/monitor to show count of memory nodes/neurons, and count by type (goal, skill, body)
@@ -33,7 +26,7 @@ When so, extract samples of failure and add them to the learning set. It can ask
 
 ============= FIXES & IMPROVEMENTS
 
-- use observers, zealots and probes for scouting
+- add 2nd and 3rd level air weapons and armor upgrades
 - check for range of enemy and stay away from that range when stalking
 - military.js to observe alpha (leader, x, y) and bravo (leader, x, y) army where alpha is between homebase and enemy and bravo is on the other side of the enemy. Rally units accordingly. Attack with alpha and bravo at the same time
 - add DEBUG and INFO log option for starcraft/unit
