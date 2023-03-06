@@ -1,6 +1,7 @@
 
 let distance;
 let reaction;
+let confirmation;
 
 let canUseSingleBaseStrategy = true;
 
@@ -24,8 +25,17 @@ export default class Brain {
     const enemyRoach = input[13];
     const enemyQueen = input[14];
 
-    if (enemies && reaction && near(enemyX, enemyY, homeX, homeY, distance)) {
-      return reaction;
+    const enemyWarriorWorkers = input[15];
+    const enemyVisibleCount = input[15];
+
+    if (reaction) {
+      if (enemyVisibleCount && near(enemyX, enemyY, homeX, homeY, distance)) {
+        confirmation = 3 * 22.5; // 3 seconds confirmation
+        return reaction;
+      } else if (confirmation > 0) {
+        confirmation--;
+        return reaction;
+      }
     }
 
     if (canUseSingleBaseStrategy && (nexuses === 1) && (enemies > 1)) {
@@ -34,17 +44,19 @@ export default class Brain {
       if (near(enemyX, enemyY, homeX, homeY, 20)) {
         // Set strategy to single-base (1) and raise goal to counter worker rush
         console.log("Detected worker rush");
-        distance = 20;
+        distance = 30;
         reaction = [1, 1, 1];
+        confirmation = 3 * 22.5; // 3 seconds confirmation
         return reaction;
       }
 
       // Detect first expansion challenged
-      if ((enemies > warriors) && near(enemyX, enemyY, homeX, homeY, 40)) {
+      if ((enemies > warriors) && near(enemyX, enemyY, homeX, homeY, enemyWarriorWorkers ? 80 : 40)) {
         // Set strategy to single-base (1)
-        console.log("Detected first expansion challenged");
-        distance = 40;
-        reaction = [1, 1, -1];
+        console.log("Detected first expansion challenged", enemyWarriorWorkers ? "with warrior workers" : "");
+        distance = enemyWarriorWorkers ? 100 : 50;
+        reaction = [1, 1, enemyWarriorWorkers ? 1 : -1];
+        confirmation = 3 * 22.5; // 3 seconds confirmation
         return reaction;
       }
 
@@ -57,11 +69,13 @@ export default class Brain {
         if (!detectedZerglingRush) console.log("Detected zergling rush");
         detectedZerglingRush = true;
         reaction = [1, 2];
+        confirmation = 3 * 22.5; // 3 seconds confirmation
         return reaction;
       }
     }
 
     reaction = null;
+    confirmation = null;
 
     if ((strategy === 1) || (strategy === 2)) {
       // Set strategy back to the standard (0) and remove any goals to counter cheese tactics
@@ -76,5 +90,6 @@ export default class Brain {
 }
 
 function near(x1, y1, x2, y2, distance) {
-  return (Math.abs(x1 - x2) <= distance) && (Math.abs(y1 - y2) <= distance);
+  const d = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+  return d <= distance * distance;
 }

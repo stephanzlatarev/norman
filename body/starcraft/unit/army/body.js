@@ -8,11 +8,11 @@ export default class Army extends Unit {
 
     this.lastCommandToLeader;
     this.lastCommandToSupport;
+    this.lastCommandToSupportWorkers;
   }
 
-  observe(observation, owner, enemy) {
+  observe(observation, enemy) {
     this.observation = observation;
-    this.owner = owner;
     this.enemy = enemy;
   }
 
@@ -31,9 +31,9 @@ export default class Army extends Unit {
       const location = this.node.get("attack");
       const locationX = location.get("x");
       const locationY = location.get("y");
-      const distanceToEnemy = (armyX - locationX) * (armyX - locationX) + (armyY - locationY) * (armyY - locationY);
+      const squaredDistanceToEnemy = (armyX - locationX) * (armyX - locationX) + (armyY - locationY) * (armyY - locationY);
 
-      if (this.observation && (distanceToEnemy < 200)) {
+      if (this.observation && (squaredDistanceToEnemy < 200)) {
         await micro(this, armyX, armyY);
 
         const fleetTags = this.observation.ownUnits.filter(unit => FLEET[unit.unitType]).map(unit => unit.tag);
@@ -43,6 +43,7 @@ export default class Army extends Unit {
 
         this.lastCommandToLeader = null;
         this.lastCommandToSupport = null;
+        this.lastCommandToSupportWorkers = null;
       } else {
         this.instruct(3674, { x: locationX, y: locationY });
       }
@@ -54,39 +55,63 @@ export default class Army extends Unit {
   async instruct(command, position) {
     const leaderTag = this.node.get("tag");
     const supportTags = this.node.get("support");
+    const supportWorkersTags = this.node.get("supportWorkers");
+    const supportCount = (supportTags ? supportTags.length : 0) + (supportWorkersTags ? supportWorkersTags.length : 0);
 
-    let digest = leaderTag + "-" + command + "-" + position.x + ":" + position.y;
+    const digest = leaderTag + "-" + command + "-" + position.x + ":" + position.y;
     if (digest !== this.lastCommandToLeader) {
       await super.directCommand([leaderTag], command, null, position);
       this.lastCommandToLeader = digest;
     }
 
-    if (supportTags && supportTags.length) {
+    if (supportCount) {
       if (command === 3674) {
-        digest += JSON.stringify(supportTags);
-        if (digest !== this.lastCommandToSupport) {
-          await super.directCommand(supportTags, 3674, null, position);
+        if (supportTags && supportTags.length) {
+          const digestSupport = digest + JSON.stringify(supportTags);
+          if (digestSupport !== this.lastCommandToSupport) {
+            await super.directCommand(supportTags, 3674, null, position);
+            this.lastCommandToSupport = digestSupport;
+          }
         }
-      } else {
-        digest = leaderTag + "-" + command + "-" + JSON.stringify(supportTags);
-        if (digest !== this.lastCommandToSupport) {
+        if (supportWorkersTags && supportWorkersTags.length) {
+          const digestSupportWorkers = digest + JSON.stringify(supportWorkersTags);
+          if (digestSupportWorkers !== this.lastCommandToSupportWorkers) {
+            await super.directCommand(supportWorkersTags, 3674, null, position);
+            this.lastCommandToSupportWorkers = digestSupportWorkers;
+          }
+        }
+      } else if (supportTags && supportTags.length) {
+        const digestSupport = leaderTag + "-" + command + "-" + JSON.stringify(supportTags);
+        if (digestSupport !== this.lastCommandToSupport) {
           await super.directCommand(supportTags, 1, leaderTag);
+          this.lastCommandToSupport = digestSupport;
         }
-        this.lastCommandToSupport = digest;
       }
     } else {
       this.lastCommandToSupport = null;
+      this.lastCommandToSupportWorkers = null;
     }
   }
 
 }
 
-const GANG = 3;
+const GANG = 4;
 
 const WARRIORS = {
   73: "zealot",
   74: "stalker",
   77: "sentry",
+};
+
+const WORKERS = {
+  84: "probe",
+};
+
+const IS_RANGED = {
+  73: false, // zealot
+  74: true,  // stalker
+  77: true,  // sentry
+  84: false, // probe
 };
 
 const FLEET = {
@@ -96,35 +121,57 @@ const FLEET = {
   80: "voidray",
 };
 
-const SPEED_SQUARED = {
-  73: (3.15 / 22.5) * (3.15 / 22.5), // zealot
-  74: (3.15 / 22.5) * (3.15 / 22.5), // stalker
-  77: (4.15 / 22.5) * (4.15 / 22.5), // sentry
+const SPEED = {
+  73: (3.15 / 22.5), // zealot
+  74: (3.15 / 22.5), // stalker
+  77: (4.15 / 22.5), // sentry
+  84: (3.94 / 22.5), // probe
 };
 
-const RANGE_SQUARED = {
-  73: 0.1,   // zealot
-  74: 6 * 6, // stalker
-  77: 5 * 5, // sentry
+const RANGE = {
+  73: 0.1, // zealot
+  74: 6.0, // stalker
+  77: 5.0, // sentry
+  84: 0.1, // probe
 };
 
-const ownMode = {};
-const ownLocked = {};
-const ownToEnemy = {};
-const ownToLocation = {};
+const DAMAGE = {
+  73:  8, // zealot
+  74: 13, // stalker
+  77:  6, // sentry
+  84:  5, // probe
+};
 
-function mapUnits(units) {
-  const map = {};
-  for (const unit of units) map[unit.tag] = unit;
-  return map;
-}
+const SENTRY_COOLDOWN = 0.71 * 22.5;
+const ZEALOT_COOLDOWN = 14;
 
 function isValidTarget(unit, enemy) {
   return (unit.owner === enemy) && !DUMMY_TARGETS[unit.unitType] && (unit.displayType === 1);
 }
 
+function weaponTime(unit) {
+  if (unit.unitType === 73) {
+    // Zealots have two hits
+    return (unit.weaponCooldown >= ZEALOT_COOLDOWN) ? 0 : unit.weaponCooldown;
+  } else if (unit.unitType === 77) {
+    // Sentries lock on target with negative weapon cooldown
+    return (unit.weaponCooldown < 0) ? SENTRY_COOLDOWN : unit.weaponCooldown;
+  }
+  return unit.weaponCooldown;
+}
+
+function walkTime(unit, distance) {
+  return (distance - RANGE[unit.unitType]) / SPEED[unit.unitType];
+}
+
+function engageTime(unit, distance) {
+  return Math.max(walkTime(unit, distance), weaponTime(unit));
+}
+
 function distance(a, b) {
-  return (a.pos.x - b.pos.x) * (a.pos.x - b.pos.x) + (a.pos.y - b.pos.y) * (a.pos.y - b.pos.y);
+  const dx = a.pos.x - b.pos.x;
+  const dy = a.pos.y - b.pos.y;
+  return Math.sqrt(dx * dx + dy * dy) - a.radius - b.radius;
 }
 
 function stepback(army, unit, enemy) {
@@ -149,155 +196,174 @@ function stepback(army, unit, enemy) {
   };
 }
 
-function findMostVulnerableTarget(units, ownLocked, ownToEnemy, targets) {
-  let bestTargetTag;
-  let bestAttackerTags = [];
+function calculateMatrix(units, enemies) {
+  const matrix = {
+    distance: {},
+    time: {},
+    unitEngaged: [],
+    unitDamage: [],
+    unitIsRanged: [],
+    enemyEngaged: [],
+    enemyHealth: [],
+    enemyPotentialDamage: [],
+    enemyMeleeAttackers: [],
+    enemyRangedAttackers: [],
+  };
 
-  for (const targetTag in targets) {
-    const target = targets[targetTag];
-    const attackerTags = [];
+  for (const enemyIndex in enemies) {
+    const enemy = enemies[enemyIndex];
+    matrix.enemyEngaged[enemyIndex] = false;
+    matrix.enemyHealth[enemyIndex] = enemy.health + enemy.shield;
+    matrix.enemyPotentialDamage[enemyIndex] = 0;
+    matrix.enemyMeleeAttackers[enemyIndex] = 0;
+    matrix.enemyRangedAttackers[enemyIndex] = 0;
+  }
 
-    // First, find if some of my units are locked on this target
-    for (const unitTag in units) {
-      if (ownLocked[unitTag] && (ownToEnemy[unitTag] === targetTag)) {
-        attackerTags.push(unitTag);
+  for (const unitIndex in units) {
+    const unit = units[unitIndex];
+    const unitDamage = DAMAGE[unit.unitType];
+    const unitIsRanged = IS_RANGED[unit.unitType];
+
+    matrix.unitEngaged[unitIndex] = false;
+    matrix.unitDamage[unitIndex] = unitDamage;
+    matrix.unitIsRanged[unitIndex] = unitIsRanged;
+
+    const distanceRow = [];
+    const timeRow = [];
+    for (const enemyIndex in enemies) {
+      const d = distance(unit, enemies[enemyIndex]);
+      const t = engageTime(unit, d);
+      distanceRow.push(d);
+      timeRow.push(t);
+
+      if (unitIsRanged) {
+        if (t < 1) matrix.enemyPotentialDamage[enemyIndex] += unitDamage;
+      } else {
+        if (t <= 0) matrix.enemyPotentialDamage[enemyIndex] += unitDamage;
       }
     }
-    if (attackerTags.length >= GANG) {
-      return { targetTag: targetTag, attackerTags: attackerTags };
-    }
+    matrix.distance[unitIndex] = distanceRow;
+    matrix.time[unitIndex] = timeRow;
+  }
 
-    // Then, check for additional attackers
-    for (const unitTag in units) {
-      if (ownLocked[unitTag]) continue;
+  return matrix;
+}
 
-      const unit = units[unitTag];
-      const range = RANGE_SQUARED[unit.unitType];
-      const walk = SPEED_SQUARED[unit.unitType] * unit.weaponCooldown * unit.weaponCooldown;
+function updateMatrix(matrix, pair) {
+  matrix.unitEngaged[pair.unitIndex] = true;
+  matrix.enemyHealth[pair.enemyIndex] -= matrix.unitDamage[pair.unitIndex];
+  matrix.enemyEngaged[pair.enemyIndex] = (matrix.enemyHealth[pair.enemyIndex] <= 0);
 
-      if (distance(unit, target) <= range + walk) {
-        attackerTags.push(unitTag);
+  if (matrix.unitIsRanged[pair.unitIndex]) {
+    matrix.enemyRangedAttackers[pair.enemyIndex]++;
+  } else {
+    matrix.enemyMeleeAttackers[pair.enemyIndex]++;
+  }
+}
 
-        if (attackerTags.length >= GANG) {
-          return { targetTag: targetTag, attackerTags: attackerTags };
+function getFightPair(matrix, units, unitIndex, enemies, enemyIndex) {
+  return {
+    unitIndex: unitIndex,
+    unit: units[unitIndex],
+    enemyIndex: enemyIndex,
+    enemy: enemies[enemyIndex],
+    time: matrix.time[unitIndex][enemyIndex],
+    distance: matrix.distance[unitIndex][enemyIndex],
+  };
+}
+
+function chooseFightPair(matrix, units, enemies) {
+  let bestUnitIndex;
+  let bestEnemyIndex;
+
+  // Find the unit which is ready to hit
+  let bestEnemyRemainingHealth = Infinity;
+  for (const unitIndex in matrix.unitEngaged) {
+    if (matrix.unitEngaged[unitIndex]) continue;
+
+    for (const enemyIndex in matrix.enemyEngaged) {
+      if (matrix.enemyEngaged[enemyIndex]) continue;
+
+      const enemyRemainingHealth = matrix.enemyHealth[enemyIndex] - matrix.enemyPotentialDamage[enemyIndex];
+      if (enemyRemainingHealth < bestEnemyRemainingHealth) continue;
+
+      if (matrix.unitIsRanged[unitIndex]) {
+        // This is a ranged unit. It must be close enough to the enemy
+        if (matrix.time[unitIndex][enemyIndex] < 1) {
+          bestUnitIndex = unitIndex;
+          bestEnemyIndex = enemyIndex;
+          bestEnemyRemainingHealth = enemyRemainingHealth;
+        }
+      } else {
+        // This is a melee unit. It must be next to the enemy
+        if (matrix.time[unitIndex][enemyIndex] <= 0) {
+          bestUnitIndex = unitIndex;
+          bestEnemyIndex = enemyIndex;
+          bestEnemyRemainingHealth = enemyRemainingHealth;
         }
       }
     }
-
-    if (attackerTags.length > bestAttackerTags.length) {
-      bestTargetTag = targetTag;
-      bestAttackerTags = attackerTags;
-    }
+  }
+  if ((bestUnitIndex >= 0) && (bestEnemyIndex >= 0)) {
+    return getFightPair(matrix, units, bestUnitIndex, enemies, bestEnemyIndex);
   }
 
-  return (bestAttackerTags.length > 1) ? { targetTag: bestTargetTag, attackerTags: bestAttackerTags } : null;
+  // Find the unit which is closest to enemy
+  let bestDistance = Infinity;
+  let bestTime = Infinity;
+  for (const unitIndex in matrix.unitEngaged) {
+    if (matrix.unitEngaged[unitIndex]) continue;
+
+    for (const enemyIndex in matrix.enemyEngaged) {
+      if (matrix.enemyEngaged[enemyIndex]) continue;
+      if (matrix.time[unitIndex][enemyIndex] > bestTime) continue;
+      if (!matrix.unitIsRanged[unitIndex] && (matrix.enemyMeleeAttackers[enemyIndex] >= GANG)) continue;
+
+      if ((matrix.time[unitIndex][enemyIndex] < bestTime) || (matrix.distance[unitIndex][enemyIndex] < bestDistance)) {
+        bestDistance = matrix.distance[unitIndex][enemyIndex];
+        bestTime = matrix.time[unitIndex][enemyIndex];
+        bestUnitIndex = unitIndex;
+        bestEnemyIndex = enemyIndex;
+      }
+    }
+  }
+  if ((bestUnitIndex >= 0) && (bestEnemyIndex >= 0)) {
+    return getFightPair(matrix, units, bestUnitIndex, enemies, bestEnemyIndex);
+  }
 }
 
-function findClosestTarget(unit, targets) {
-  let closestTarget;
-  let closestDistance = Infinity;
+async function fight(army, pair) {
+  if (pair.time < 1) {
+    await army.directCommand([pair.unit.tag], 3674, pair.enemy.tag);
+  } else {
+    const walk = walkTime(pair.unit, pair.distance) + 6;
+    const range = weaponTime(pair.unit);
 
-  for (const tag in targets) {
-    let thisTarget = targets[tag];
-    let thisDistance = distance(unit, thisTarget);
-
-    if (thisDistance < closestDistance) {
-      closestTarget = thisTarget;
-      closestDistance = thisDistance;
+    if (walk > range) {
+      await army.directCommand([pair.unit.tag], 3674, pair.enemy.tag);
+    } else {
+      await army.directCommand([pair.unit.tag], 16, null, stepback(army, pair.unit, pair.enemy));
     }
   }
-
-  return closestTarget;
 }
 
 async function micro(army, armyX, armyY) {
-  const units = mapUnits(army.observation.ownUnits.filter(unit => WARRIORS[unit.unitType]));
-  const enemies = mapUnits(army.observation.rawData.units.filter(unit => isValidTarget(unit, army.enemy)));
-  const nonLockedUnitTags = [];
+  const enemies = army.observation.rawData.units.filter(unit => isValidTarget(unit, army.enemy));
+  if (!enemies.length) return;
+
+  const units = army.node.get("mobilization")
+    ? army.observation.ownUnits.filter(unit => (WARRIORS[unit.unitType] || WORKERS[unit.unitType]))
+    : army.observation.ownUnits.filter(unit => WARRIORS[unit.unitType]);
+  if (!units.length) return;
 
   army.x = armyX;
   army.y = armyY;
 
-  // Keep attacking units on target
-  for (const unitTag in units) {
-    const unit = units[unitTag];
+  const matrix = calculateMatrix(units, enemies);
 
-    // Check expected attacked unit
-    let enemy = enemies[ownToEnemy[unit.tag]];
-
-    // Check actual attacked unit
-    if (!enemy && unit.orders.length) {
-      const enemyTag = unit.orders[0].targetUnitTag;
-      if (enemyTag && enemies[enemyTag]) {
-        enemy = enemies[enemyTag];
-      }
-    }
-
-    ownToEnemy[unitTag] = enemy ? enemy.tag : null;
-    ownLocked[unitTag] = (enemy && (unit.weaponCooldown < 1));
-
-    if (!ownLocked[unitTag]) nonLockedUnitTags.push(unitTag);
-  }
-
-  // Assign non-locked units to vulnerable enemy targets
-  const targets = {...enemies};
-  while (nonLockedUnitTags.length) {
-    const lock = findMostVulnerableTarget(units, ownLocked, ownToEnemy, targets);
-
-    if (lock) {
-      delete targets[lock.targetTag];
-      for (const attackerTag of lock.attackerTags) {
-        ownToEnemy[attackerTag] = lock.targetTag;
-        ownLocked[attackerTag] = true;
-
-        const index = nonLockedUnitTags.indexOf(attackerTag);
-        if (index >= 0) nonLockedUnitTags.splice(index, 1);
-      }
-    } else {
-      break;
-    }
-  }
-
-  // Assign idle units
-  for (const unitTag in units) {
-    const unit = units[unitTag];
-
-    if (!ownToEnemy[unitTag]) {
-      const enemy = findClosestTarget(unit, enemies);
-      ownToEnemy[unitTag] = enemy.tag;
-    }
-  }
-
-  // Attack or step back
-  for (const unitTag in units) {
-    const unit = units[unitTag];
-    const range = RANGE_SQUARED[unit.unitType];
-    const walk = SPEED_SQUARED[unit.unitType] * unit.weaponCooldown * unit.weaponCooldown;
-    const enemyTag = ownToEnemy[unitTag];
-    const enemy = enemies[enemyTag];
-    const distanceToEnemy = distance(unit, enemy);
-
-    if ((unit.weaponCooldown < 1) || (distanceToEnemy >= range + walk)) {
-      ownMode[unitTag] = "attack";
-      ownToEnemy[unitTag] = enemy.tag;
-    } else {
-      ownMode[unitTag] = "move";
-      ownToLocation[unitTag] = stepback(army, unit, enemy);
-    }
-  }
-
-  // Issue commands
-  const attackCommands = {};
-  for (const unitTag in units) {
-    if (ownMode[unitTag] === "attack") {
-      const enemyTag = ownToEnemy[unitTag];
-      if (!attackCommands[enemyTag]) attackCommands[enemyTag] = [];
-      attackCommands[enemyTag].push(unitTag);
-    } else if (ownMode[unitTag] === "move") {
-      await army.directCommand([unitTag], 16, null, ownToLocation[unitTag]);
-    }
-  }
-  for (const enemyTag in attackCommands) {
-    await army.directCommand(attackCommands[enemyTag], 3674, enemyTag);
+  let pair;
+  while (pair = chooseFightPair(matrix, units, enemies)) {
+    await fight(army, pair);
+    updateMatrix(matrix, pair);
   }
 }

@@ -45,7 +45,8 @@
     "enemyDummyX",
     "enemyDummyY",
     "warriorCount",
-    "totalCount"
+    "totalCount",
+    "mobilization"
   ],
 
   "output": [

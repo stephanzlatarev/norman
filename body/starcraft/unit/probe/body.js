@@ -33,6 +33,11 @@ export default class Probe extends Unit {
   }
 
   async tock() {
+    const army = this.node.get("game").get("army");
+    if (army && (army.get("mobilizeWorkers") > 0) && army.get("attack")) {
+      return;
+    }
+
     let isCommandIssued = false;
 
     for (const command in ABILITY_ON_POINT) {

@@ -19,7 +19,10 @@ export function observeMilitary(node, client, observation) {
 }
 
 function observeArmy(strategy, army, homebase, observation) {
-  const armyUnits = observation.ownUnits.filter(unit => WARRIORS[unit.unitType]);
+  const mobilization = (army.get("mobilizeWorkers") > 0);
+  const armyUnits = mobilization
+    ? observation.ownUnits.filter(unit => (WARRIORS[unit.unitType] || WORKERS[unit.unitType]))
+    : observation.ownUnits.filter(unit => WARRIORS[unit.unitType]);
 
   const baseX = homebase.get("x");
   const baseY = homebase.get("y");
@@ -28,8 +31,12 @@ function observeArmy(strategy, army, homebase, observation) {
   army.set("baseY", baseY);
   army.set("warriorCount", armyUnits.length);
   army.set("totalCount", observation.playerCommon.foodUsed);
+  army.set("mobilization", mobilization ? 1 : 0);
 
-  const leaderUnits = armyUnits.filter(unit => LEADER_RANK[unit.unitType]);
+  let leaderUnits = mobilization
+    ? armyUnits.filter(unit => WORKERS[unit.unitType])
+    : armyUnits.filter(unit => LEADER_RANK[unit.unitType]);
+  if (mobilization && !leaderUnits.length) leaderUnits = armyUnits.filter(unit => LEADER_RANK[unit.unitType]);
 
   if (leaderUnits.length && (army.get("enemyWarriorCount") || army.get("enemyDummyCount"))) {
     const leaderTag = army.get("tag");
@@ -61,10 +68,11 @@ function observeArmy(strategy, army, homebase, observation) {
 
     const armyPackUnits = armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10));
 
-    leader = getHighestRank(leader, armyPackUnits);
+    if (!mobilization) leader = getHighestRank(leader, armyPackUnits);
 
     army.set("tag", leader.tag);
-    army.set("support", armyUnits.filter(unit => (unit !== leader)).map(unit => unit.tag).sort());
+    army.set("support", armyUnits.filter(unit => ((unit !== leader) && !WORKERS[unit.unitType])).map(unit => unit.tag).sort());
+    army.set("supportWorkers", armyUnits.filter(unit => ((unit !== leader) && WORKERS[unit.unitType])).map(unit => unit.tag).sort());
 
     // We want to know the max energy level a unit in the army pack has
     let armyEnergy = 0;
@@ -105,6 +113,7 @@ function observeArmy(strategy, army, homebase, observation) {
   } else {
     army.set("armyCount", 0);
     army.set("support", []);
+    army.set("supportWorkers", []);
     army.clear("tag");
     army.clear("engagedCount");
     army.clear("armyEnergy");
@@ -135,13 +144,15 @@ function getHighestRank(leader, units) {
 const lastKnownEnemy = [];
 
 function observeEnemy(game, army, homebase, observation) {
-  const armyUnit = army.get("body");
   const owner = game.get("owner");
   const enemy = game.get("enemy");
   const homebaseX = homebase.get("x");
   const homebaseY = homebase.get("y");
   const oldEnemyWarriorX = army.get("enemyWarriorX");
   const oldEnemyWarriorY = army.get("enemyWarriorY");
+
+  const armyUnit = army.get("body");
+  if (armyUnit) armyUnit.observe(observation, enemy);
 
   const combatFlyingUnits = observation.rawData.units.find(unit => (CAN_HIT_AIR[unit.unitType] && (unit.owner === owner)));
   const enemyUnits = observation.rawData.units.filter(unit => isValidTarget(unit, enemy, combatFlyingUnits));
@@ -153,14 +164,15 @@ function observeEnemy(game, army, homebase, observation) {
 
   if (enemyUnit) {
     // Enemy warriors are in sight. Focus on one of them.
-    if (armyUnit) armyUnit.observe(observation, owner, enemy);
-
     let oldEnemyCount = army.get("enemyWarriorCount");
     if (!oldEnemyCount) oldEnemyCount = 1;
 
-    const newEnemyCount = enemyWarriors.length + countUnits(enemyWarriors, HEAVY_WARRIORS) - (countUnits(enemyWarriors, LIGHT_WARRIORS) / 2);
-    
+    const enemyWarriorWorkers = observation.rawData.units.filter(unit => isEnemyWarriorWorker(unit, enemy, enemyUnit.pos.x, enemyUnit.pos.y)).length;
+    const newEnemyCount = enemyWarriors.length + (enemyWarriorWorkers / 2) + countUnits(enemyWarriors, HEAVY_WARRIORS) - (countUnits(enemyWarriors, LIGHT_WARRIORS) / 2);
+
+    army.set("enemyVisibleCount", newEnemyCount);
     army.set("enemyWarriorCount", Math.max(newEnemyCount, oldEnemyCount));
+    army.set("enemyWarriorWorkerCount", enemyWarriorWorkers);
 
     if (shouldSwitchAttention(oldEnemyWarriorX, oldEnemyWarriorY, enemyUnit, enemyWarriors, homebaseX, homebaseY, army)) {
       // Switch attention to enemy which is closest to homebase
@@ -182,8 +194,7 @@ function observeEnemy(game, army, homebase, observation) {
     army.clear("enemyDummyY");
   } else {
     // No enemy warrior is in sight. Focus on dummy targets if any.
-    if (armyUnit) armyUnit.observe(null);
-
+    army.clear("enemyVisibleCount");
     army.clear("enemyAlert");
 
     if (enemyUnits.length) {
@@ -256,6 +267,13 @@ function isValidTarget(unit, enemy, combatFlyingUnits) {
   if (!combatFlyingUnits && unit.isFlying) return false;
 
   if (unit.unitType === 13) return false; // Ignore changelings
+
+  return (unit.owner === enemy) && (unit.displayType === 1);
+}
+
+function isEnemyWarriorWorker(unit, enemy, x, y) {
+  if (!WORKERS[unit.unitType]) return false;
+  if (!near(unit, x, y, 10)) return false;
 
   return (unit.owner === enemy) && (unit.displayType === 1);
 }

@@ -10,8 +10,7 @@
     "nodes": {
       "HOMEBASE": { "unitType": "nexus", "homebase": true },
       "MILITARY": { "code": "body/starcraft/unit/army" },
-      "DETECT-CHEESE": { "type": "goal", "label": "detect cheese tactics" },
-      "COUNTER-WORKER-RUSH": { "type": "goal", "label": "counter worker rush" }
+      "DETECT-CHEESE": { "type": "goal", "label": "detect cheese tactics" }
     },
 
     "paths": [
@@ -20,12 +19,6 @@
       {
         "label": "LETS-DETECT-CHEESE",
         "path": ["GOAL", "detect-cheese-tactics", "DETECT-CHEESE"],
-        "provisional": true,
-        "unique": true
-      },
-      {
-        "label": "LETS-COUNTER-WORKER-RUSH",
-        "path": ["DETECT-CHEESE", "counter-worker-rush", "COUNTER-WORKER-RUSH"],
         "provisional": true,
         "unique": true
       }
@@ -47,12 +40,14 @@
     "BODY/statsEnemy/zergling",
     "BODY/statsEnemy/hydralisk",
     "BODY/statsEnemy/roach",
-    "BODY/statsEnemy/queen"
+    "BODY/statsEnemy/queen",
+    "MILITARY/enemyWarriorWorkerCount",
+    "MILITARY/enemyVisibleCount"
   ],
 
   "output": [
     "LETS-DETECT-CHEESE",
     "strategy",
-    "LETS-COUNTER-WORKER-RUSH"
+    "MILITARY/mobilizeWorkers"
   ]
 }

@@ -56,6 +56,7 @@ export const LEADER_RANK = {
   79: 3, // carrier
   80: 2, // voidray
   78: 1, // phoenix
+  84: 1, // probe
 };
 
 export const USES_ENERGY = {
@@ -108,12 +109,10 @@ export const DUMMY_TARGETS = {
   42: "starport reactor",
   43: "factory flying",
   44: "starport flying",
-  45: "scv",
   46: "barracks flying",
   47: "supply depot lowered",
   132: "orbital command",
   134: "orbital command flying",
-  268: "mule",
 
   // Protoss
   59: "nexus",
@@ -126,7 +125,6 @@ export const DUMMY_TARGETS = {
   71: "robotics",
   72: "cybernetics",
   82: "observer",
-  84: "probe",
 
   // Zerg
   86: "hatchery",
@@ -137,13 +135,16 @@ export const DUMMY_TARGETS = {
   100: "lair",
   101: "hive",
   103: "egg",
-  104: "drone",
   106: "overlord",
   151: "larva",
 };
 
 export const LIGHT_WARRIORS = {
+  45: "scv",
+  84: "probe",
+  104: "drone",
   105: "zergling",
+  268: "mule",
 };
 
 export const HEAVY_WARRIORS = {
