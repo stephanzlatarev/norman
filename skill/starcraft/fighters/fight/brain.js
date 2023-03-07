@@ -1,4 +1,6 @@
 
+const MIN_ENGAGE_RANGE = 2 * 2;
+
 const HARD_MIN_STALK_RANGE = 21 * 21;
 const SOFT_MIN_STALK_RANGE = 22 * 22;
 const SOFT_MAX_STALK_RANGE = 23 * 23;
@@ -83,7 +85,8 @@ export default class Brain {
         return [-1, -1, 1, enemyWarriorX, enemyWarriorY];
       }
 
-      if (shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyWarriorCount)) {
+      const armyIsEngaged = (engagedCount || (distanceBetween(armyX, armyY, enemyWarriorX, enemyWarriorY) <= MIN_ENGAGE_RANGE));
+      if (shouldRegroup(isRegrouping, armyCount, armyIsEngaged, armyEnergy, enemyWarriorCount)) {
         // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
         const location = stalkingLocation(armyX, armyY, enemyWarriorX, enemyWarriorY, guardX, guardY, baseX, baseY);
 
@@ -113,7 +116,7 @@ export default class Brain {
 
 }
 
-function shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyCount) {
+function shouldRegroup(isRegrouping, armyCount, armyIsEngaged, armyEnergy, enemyCount) {
   const cappedEnemyCount = Math.min(enemyCount, ENEMY_COUNT_CAP);
 
   if (isRegrouping) {
@@ -126,7 +129,7 @@ function shouldRegroup(isRegrouping, armyCount, engagedCount, armyEnergy, enemyC
     return (armyCount < cappedEnemyCount * RATIO_TO_ATTACK);
   } else {
     // We are advancing
-    if (engagedCount) {
+    if (armyIsEngaged) {
       // We already fight. We should stop only if we see we are losing units
       return (armyCount < cappedEnemyCount * RATIO_TO_RETREAT);
     } else {
