@@ -13,9 +13,13 @@ export function observeMilitary(node, client, observation) {
   }
 
   if (homebase) {
-    observeEnemy(node, army, homebase, observation);
+    observeEnemy(node, army, homebase, observation, isMobilizationCalledOff(army));
     observeArmy(strategy, army, homebase, observation);
   }
+}
+
+function isMobilizationCalledOff(army) {
+  return army.get("mobilization") && !(army.get("mobilizeWorkers") > 0);
 }
 
 function observeArmy(strategy, army, homebase, observation) {
@@ -143,13 +147,18 @@ function getHighestRank(leader, units) {
 
 const lastKnownEnemy = [];
 
-function observeEnemy(game, army, homebase, observation) {
+function observeEnemy(game, army, homebase, observation, isMobilizationCalledOff) {
   const owner = game.get("owner");
   const enemy = game.get("enemy");
   const homebaseX = homebase.get("x");
   const homebaseY = homebase.get("y");
   const oldEnemyWarriorX = army.get("enemyWarriorX");
   const oldEnemyWarriorY = army.get("enemyWarriorY");
+
+  if (isMobilizationCalledOff) {
+    console.log("Mobilization is called off");
+    lastKnownEnemy.length = 0;
+  }
 
   const armyUnit = army.get("body");
   if (armyUnit) armyUnit.observe(observation, enemy);
