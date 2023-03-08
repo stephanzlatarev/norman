@@ -177,7 +177,8 @@ function observeEnemy(game, army, homebase, observation, isMobilizationCalledOff
     if (!oldEnemyCount) oldEnemyCount = 1;
 
     const enemyWarriorWorkers = observation.rawData.units.filter(unit => isEnemyWarriorWorker(unit, enemy, enemyUnit.pos.x, enemyUnit.pos.y)).length;
-    const newEnemyCount = enemyWarriors.length + (enemyWarriorWorkers / 2) + countUnits(enemyWarriors, HEAVY_WARRIORS) - (countUnits(enemyWarriors, LIGHT_WARRIORS) / 2);
+    const newEnemyCount = enemyWarriors.length + countUnits(enemyWarriors, HEAVY_WARRIORS)
+                          - (countUnits(enemyWarriors, LIGHT_WARRIORS) / 2) - (countUnits(enemyWarriors, WORKERS) * 5 / 6);
 
     army.set("enemyVisibleCount", newEnemyCount);
     army.set("enemyWarriorCount", Math.max(newEnemyCount, oldEnemyCount));

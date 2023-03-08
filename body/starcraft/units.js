@@ -140,12 +140,8 @@ export const DUMMY_TARGETS = {
 };
 
 export const LIGHT_WARRIORS = {
-  45: "scv",
   48: "marine",
-  84: "probe",
-  104: "drone",
   105: "zergling",
-  268: "mule",
 };
 
 export const HEAVY_WARRIORS = {
