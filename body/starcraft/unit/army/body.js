@@ -58,7 +58,7 @@ export default class Army extends Unit {
     const supportWorkersTags = this.node.get("supportWorkers");
     const supportCount = (supportTags ? supportTags.length : 0) + (supportWorkersTags ? supportWorkersTags.length : 0);
 
-    const digest = leaderTag + "-" + command + "-" + position.x + ":" + position.y;
+    const digest = leaderTag + "-" + command + "-" + Math.floor(position.x) + ":" + Math.floor(position.y);
     if (digest !== this.lastCommandToLeader) {
       await super.directCommand([leaderTag], command, null, position);
       this.lastCommandToLeader = digest;
