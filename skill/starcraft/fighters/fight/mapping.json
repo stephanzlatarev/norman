@@ -46,7 +46,8 @@
     "enemyDummyY",
     "warriorCount",
     "totalCount",
-    "mobilization"
+    "mobilization",
+    "noRetreat"
   ],
 
   "output": [

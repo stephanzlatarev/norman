@@ -27,7 +27,7 @@ export default class Brain {
     // When regrouping army will react to enemy alert but will not start attack until energy level and army count are at good levels
     const isRegrouping = input[0];
 
-    const enemyAlert = input[1];
+    const enemyAlert = input[1] && (input[19] <= 0);
     const baseX = input[2];
     const baseY = input[3];
     const guardX = input[4];
@@ -45,6 +45,7 @@ export default class Brain {
     const warriorCount = input[16];
     const totalCount = input[17];
     const mobilization = input[18];
+    const noRetreat = input[19];
 
     if (!armyX || !armyY) return;
 
@@ -85,27 +86,31 @@ export default class Brain {
         return [-1, -1, 1, enemyWarriorX, enemyWarriorY];
       }
 
-      const armyIsEngaged = (engagedCount || (distanceBetween(armyX, armyY, enemyWarriorX, enemyWarriorY) <= MIN_ENGAGE_RANGE));
-      if (shouldRegroup(isRegrouping, armyCount, armyIsEngaged, armyEnergy, enemyWarriorCount)) {
-        // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
-        const location = stalkingLocation(armyX, armyY, enemyWarriorX, enemyWarriorY, guardX, guardY, baseX, baseY);
+      if (canRetreat(this.mode, noRetreat, warriorCount)) {
+        const armyIsEngaged = (engagedCount || (distanceBetween(armyX, armyY, enemyWarriorX, enemyWarriorY) <= MIN_ENGAGE_RANGE));
+        if (shouldRegroup(isRegrouping, armyCount, armyIsEngaged, armyEnergy, enemyWarriorCount)) {
+          // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
+          const location = stalkingLocation(armyX, armyY, enemyWarriorX, enemyWarriorY, guardX, guardY, baseX, baseY);
 
-        trace(this.mode, "stalk", input, location.x, location.y);
-        this.mode = "stalk";
-        this.inertia = 10;
-        return [1, 1, -1, location.x, location.y];
+          trace(this.mode, "stalk", input, location.x, location.y);
+          this.mode = "stalk";
+          this.inertia = 10;
+          return [1, 1, -1, location.x, location.y];
+        }
+
+        if ((this.mode === "stalk") && (this.inertia > 0)) {
+          this.inertia--;
+          trace(this.mode, "stalk", input);
+          return;
+        }
       }
 
-      if ((this.mode === "stalk") && (this.inertia > 0)) {
-        this.inertia--;
-        trace(this.mode, "stalk", input);
-        return;
+      if (canAttack(this.mode, noRetreat, warriorCount)) {
+        // Attack enemy
+        trace(this.mode, "attack", input, enemyWarriorX, enemyWarriorY);
+        this.mode = "attack";
+        return [-1, -1, 1, enemyWarriorX, enemyWarriorY];
       }
-
-      // Attack enemy
-      trace(this.mode, "attack", input, enemyWarriorX, enemyWarriorY);
-      this.mode = "attack";
-      return [-1, -1, 1, enemyWarriorX, enemyWarriorY];
     } else if (enemyDummyX && enemyDummyY) {
       // Destroy dummy target
       trace(this.mode, "destroy dummies", input, enemyDummyX, enemyDummyY);
@@ -114,6 +119,20 @@ export default class Brain {
     }
   }
 
+}
+
+function canRetreat(mode, noRetreat, warriorCount) {
+  if (noRetreat <= 0) return true;
+  if (mode === "stalk") return true;
+  if (warriorCount < 8) return true;
+  return false;
+}
+
+function canAttack(mode, noRetreat, warriorCount) {
+  if (noRetreat <= 0) return true;
+  if (mode === "attack") return true;
+  if (warriorCount >= 16) return true;
+  return false;
 }
 
 function shouldRegroup(isRegrouping, armyCount, armyIsEngaged, armyEnergy, enemyCount) {

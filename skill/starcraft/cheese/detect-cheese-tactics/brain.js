@@ -3,6 +3,8 @@ let distance;
 let reaction;
 let confirmation;
 
+let confirmationRequiresVisibleEnemies;
+
 let canUseSingleBaseStrategy = true;
 
 let watchForZerglingRush = true;
@@ -29,8 +31,8 @@ export default class Brain {
     const enemyVisibleCount = input[16];
 
     if (reaction) {
-      if (enemyVisibleCount && near(enemyX, enemyY, homeX, homeY, distance)) {
-        confirmation = 3 * 22.5; // 3 seconds confirmation
+      if ((enemyVisibleCount || !confirmationRequiresVisibleEnemies) && near(enemyX, enemyY, homeX, homeY, distance)) {
+        if (confirmationRequiresVisibleEnemies) confirmation = 3 * 22.5; // 3 seconds confirmation
         return reaction;
       } else if (confirmation > 0) {
         confirmation--;
@@ -45,18 +47,21 @@ export default class Brain {
         // Set strategy to single-base (1) and raise goal to counter worker rush
         console.log("Detected worker rush");
         distance = 30;
-        reaction = [1, 1, 1];
+        reaction = [1, 1, 1, 1];
         confirmation = 3 * 22.5; // 3 seconds confirmation
+        confirmationRequiresVisibleEnemies = true;
         return reaction;
       }
 
       // Detect first expansion challenged
-      if ((enemies > warriors) && near(enemyX, enemyY, homeX, homeY, enemyWarriorWorkers ? 80 : 40)) {
+      const withWarriorWorkers = (enemyWarriorWorkers > 2);
+      if ((enemies > warriors) && near(enemyX, enemyY, homeX, homeY, withWarriorWorkers ? 80 : 40)) {
         // Set strategy to single-base (1)
-        console.log("Detected first expansion challenged", enemyWarriorWorkers ? "with warrior workers" : "");
-        distance = enemyWarriorWorkers ? 100 : 50;
-        reaction = [1, 1, enemyWarriorWorkers ? 1 : -1];
+        console.log("Detected first expansion challenged", withWarriorWorkers ? "with warrior workers" : "");
+        distance = withWarriorWorkers ? 100 : 50;
+        reaction = [1, 1, withWarriorWorkers ? 1 : -1, 1];
         confirmation = 3 * 22.5; // 3 seconds confirmation
+        confirmationRequiresVisibleEnemies = withWarriorWorkers;
         return reaction;
       }
 
@@ -68,8 +73,9 @@ export default class Brain {
       } else if (detectedZerglingRush || (enemyZergling >= 8)) {
         if (!detectedZerglingRush) console.log("Detected zergling rush");
         detectedZerglingRush = true;
-        reaction = [1, 2];
+        reaction = [1, 2, -1, -1];
         confirmation = 3 * 22.5; // 3 seconds confirmation
+        confirmationRequiresVisibleEnemies = true;
         return reaction;
       }
     }
@@ -81,10 +87,10 @@ export default class Brain {
       // Set strategy back to the standard (0) and remove any goals to counter cheese tactics
       console.log("Set strategy back to the standard");
       canUseSingleBaseStrategy = false;
-      return [1, -1, -1];
+      return [1, -1, -1, -1];
     }
 
-    return [1, 0, -1];
+    return [1, 0, -1, -1];
   }
 
 }

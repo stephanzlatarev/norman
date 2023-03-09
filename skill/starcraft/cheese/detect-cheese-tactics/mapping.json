@@ -48,6 +48,7 @@
   "output": [
     "LETS-DETECT-CHEESE",
     "strategy",
-    "MILITARY/mobilizeWorkers"
+    "MILITARY/mobilizeWorkers",
+    "MILITARY/noRetreat"
   ]
 }
