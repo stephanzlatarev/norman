@@ -27,25 +27,26 @@ export default class Brain {
     // When regrouping army will react to enemy alert but will not start attack until energy level and army count are at good levels
     const isRegrouping = input[0];
 
-    const enemyAlert = input[1] && (input[19] <= 0);
+    const enemyAlert = input[1] && (input[20] <= 0);
     const baseX = input[2];
     const baseY = input[3];
     const guardX = input[4];
     const guardY = input[5];
-    const armyCount = input[6];
-    const engagedCount = input[7];
-    const armyEnergy = input[8];
-    const armyX = input[9];
-    const armyY = input[10];
-    const enemyWarriorCount = input[11];
-    const enemyWarriorX = input[12];
-    const enemyWarriorY = input[13];
-    const enemyDummyX = input[14];
-    const enemyDummyY = input[15];
-    const warriorCount = input[16];
-    const totalCount = input[17];
-    const mobilization = input[18];
-    const noRetreat = input[19];
+    const armyLeaderPack = input[6];
+    const armyExtendedPack = input[7];
+    const engagedCount = input[8];
+    const armyEnergy = input[9];
+    const armyX = input[10];
+    const armyY = input[11];
+    const enemyWarriorCount = input[12];
+    const enemyWarriorX = input[13];
+    const enemyWarriorY = input[14];
+    const enemyDummyX = input[15];
+    const enemyDummyY = input[16];
+    const warriorCount = input[17];
+    const totalCount = input[18];
+    const mobilization = input[19];
+    const noRetreat = input[20];
 
     if (!armyX || !armyY) return;
 
@@ -88,13 +89,13 @@ export default class Brain {
 
       if (canRetreat(this.mode, noRetreat, warriorCount)) {
         const armyIsEngaged = (engagedCount || (distanceBetween(armyX, armyY, enemyWarriorX, enemyWarriorY) <= MIN_ENGAGE_RANGE));
-        if (shouldRegroup(isRegrouping, armyCount, armyIsEngaged, armyEnergy, enemyWarriorCount)) {
+        if (shouldRegroup(isRegrouping, armyLeaderPack, armyExtendedPack, armyIsEngaged, armyEnergy, enemyWarriorCount)) {
           // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
           const location = stalkingLocation(armyX, armyY, enemyWarriorX, enemyWarriorY, guardX, guardY, baseX, baseY);
 
           trace(this.mode, "stalk", input, location.x, location.y);
           this.mode = "stalk";
-          this.inertia = 10;
+          this.inertia = 22.5 * 3; // 3 seconds before switching from stalking to attacking
           return [1, 1, -1, location.x, location.y];
         }
 
@@ -135,7 +136,7 @@ function canAttack(mode, noRetreat, warriorCount) {
   return false;
 }
 
-function shouldRegroup(isRegrouping, armyCount, armyIsEngaged, armyEnergy, enemyCount) {
+function shouldRegroup(isRegrouping, armyLeaderPack, armyExtendedPack, armyIsEngaged, armyEnergy, enemyCount) {
   const cappedEnemyCount = Math.min(enemyCount, ENEMY_COUNT_CAP);
 
   if (isRegrouping) {
@@ -145,15 +146,15 @@ function shouldRegroup(isRegrouping, armyCount, armyIsEngaged, armyEnergy, enemy
     if (armyEnergy < ENERGY_TO_ATTACK) return true;
 
     // If we haven't gathered enough own units we won't launch an attack
-    return (armyCount < cappedEnemyCount * RATIO_TO_ATTACK);
+    return (armyLeaderPack < cappedEnemyCount * RATIO_TO_ATTACK);
   } else {
     // We are advancing
     if (armyIsEngaged) {
       // We already fight. We should stop only if we see we are losing units
-      return (armyCount < cappedEnemyCount * RATIO_TO_RETREAT);
+      return (armyExtendedPack < cappedEnemyCount * RATIO_TO_RETREAT);
     } else {
       // We haven't started yet. We can still go back if we see there are too many enemy units
-      return (armyCount < cappedEnemyCount * RATIO_TO_ATTACK);
+      return (armyLeaderPack < cappedEnemyCount * RATIO_TO_ATTACK);
     }
   }
 }
@@ -202,7 +203,7 @@ function step(fromX, fromY, toX, toY) {
 
 function trace(modeBefore, modeNow, input, x, y) {
   if (!TROUBLESHOOTING) {
-    if (modeNow !== modeBefore) console.log("Army", modeNow, JSON.stringify(input));
+    if (modeNow !== modeBefore) console.log("Army", modeNow, input[6], "/", input[7], "vs", input[12], JSON.stringify(input));
     return;
   }
 
@@ -220,10 +221,10 @@ function trace(modeBefore, modeNow, input, x, y) {
     }
   }
 
-  const armyX = input[9];
-  const armyY = input[10];
-  const enemyX = input[12];
-  const enemyY = input[13];
+  const armyX = input[10];
+  const armyY = input[11];
+  const enemyX = input[13];
+  const enemyY = input[14];
   const distx = enemyX - armyX;
   const disty = enemyY - armyY;
   const distance = Math.sqrt(distx * distx + disty * disty);

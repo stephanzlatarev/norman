@@ -70,7 +70,7 @@ function observeArmy(strategy, army, homebase, observation) {
       leader = leaderUnits[0];
     }
 
-    const armyPackUnits = armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10));
+    const armyPackUnits = armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 5));
 
     if (!mobilization) leader = getHighestRank(leader, armyPackUnits);
 
@@ -91,6 +91,8 @@ function observeArmy(strategy, army, homebase, observation) {
 
     army.set("engagedCount", armyPackUnits.filter(unit => (unit.engagedTargetTag !== "0")).length);
     army.set("armyCount", armyPackUnits.length);
+    army.set("armyLeaderPack", armyPackUnits.length);
+    army.set("armyExtendedPack", armyUnits.filter(unit => near(unit, leader.pos.x, leader.pos.y, 10)).length);
     army.set("armyEnergy", armyEnergy);
     army.set("armyX", leader.pos.x);
     army.set("armyY", leader.pos.y);
