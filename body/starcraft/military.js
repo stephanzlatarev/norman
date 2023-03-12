@@ -195,7 +195,7 @@ function observeEnemy(game, army, homebase, observation, isMobilizationCalledOff
       if (known) {
         known.count = Math.max(known.count, army.get("enemyWarriorCount"));
       } else {
-        lastKnownEnemy.push({ x: enemyUnit.pos.x, y: enemyUnit.pos.y, count: army.get("enemyWarriorCount") });
+        lastKnownEnemy.push({ x: enemyUnit.pos.x, y: enemyUnit.pos.y, isFlying: enemyUnit.isFlying, count: army.get("enemyWarriorCount") });
       }
     }
 
@@ -215,7 +215,7 @@ function observeEnemy(game, army, homebase, observation, isMobilizationCalledOff
     } else if (lastKnownEnemy.length) {
       let known = lastKnownEnemy[lastKnownEnemy.length - 1];
       
-      if (isLocationVisible(observation, owner, known.x, known.y)) {
+      if (isLocationVisible(observation, owner, known.x, known.y, known.isFlying ? 10 : 3)) {
         lastKnownEnemy.length = lastKnownEnemy.length - 1;
 
         if (lastKnownEnemy.length) {
@@ -247,7 +247,7 @@ function observeEnemy(game, army, homebase, observation, isMobilizationCalledOff
       army.set("enemyDummyCount", enemyUnits.length);
       army.set("enemyDummyX", dummyTarget.pos.x);
       army.set("enemyDummyY", dummyTarget.pos.y);
-    } else if (isLocationVisible(observation, owner, army.get("enemyDummyX"), army.get("enemyDummyY"))) {
+    } else if (isLocationVisible(observation, owner, army.get("enemyDummyX"), army.get("enemyDummyY"), 10)) {
       army.clear("enemyDummyCount");
       army.clear("enemyDummyX");
       army.clear("enemyDummyY");
@@ -275,6 +275,7 @@ function countUnits(units, types) {
 
 function isValidTarget(unit, enemy, combatFlyingUnits) {
   if (!combatFlyingUnits && unit.isFlying) return false;
+  if (unit.isHallucination) return false;
 
   if (unit.unitType === 13) return false; // Ignore changelings
 
@@ -312,8 +313,8 @@ function shouldSwitchAttention(oldEnemyX, oldEnemyY, enemyUnit, enemyUnits, home
   return false;
 }
 
-function isLocationVisible(observation, owner, x, y) {
-  return !!observation.rawData.units.find(unit => ((unit.owner === owner) && near(unit, x, y, 3)));
+function isLocationVisible(observation, owner, x, y, distance) {
+  return !!observation.rawData.units.find(unit => ((unit.owner === owner) && near(unit, x, y, distance)));
 }
 
 function near(unit, x, y, distance) {

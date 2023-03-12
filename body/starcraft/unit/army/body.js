@@ -33,9 +33,7 @@ export default class Army extends Unit {
       const locationY = location.get("y");
       const squaredDistanceToEnemy = (armyX - locationX) * (armyX - locationX) + (armyY - locationY) * (armyY - locationY);
 
-      if (this.observation && (squaredDistanceToEnemy < 200)) {
-        await micro(this, armyX, armyY);
-
+      if (this.observation && (squaredDistanceToEnemy < 200) && (await micro(this, armyX, armyY))) {
         const fleetTags = this.observation.ownUnits.filter(unit => FLEET[unit.unitType]).map(unit => unit.tag);
         if (fleetTags.length) {
           await super.directCommand(fleetTags, 3674, null, { x: locationX, y: locationY });
@@ -146,7 +144,7 @@ const SENTRY_COOLDOWN = 0.71 * 22.5;
 const ZEALOT_COOLDOWN = 14;
 
 function isValidTarget(unit, enemy) {
-  return (unit.owner === enemy) && !DUMMY_TARGETS[unit.unitType] && (unit.displayType === 1);
+  return (unit.owner === enemy) && !DUMMY_TARGETS[unit.unitType] && (unit.displayType === 1) && !unit.isHallucination;
 }
 
 function weaponTime(unit) {
@@ -349,12 +347,12 @@ async function fight(army, pair) {
 
 async function micro(army, armyX, armyY) {
   const enemies = army.observation.rawData.units.filter(unit => isValidTarget(unit, army.enemy));
-  if (!enemies.length) return;
+  if (!enemies.length) return false;
 
   const units = army.node.get("mobilization")
     ? army.observation.ownUnits.filter(unit => (WARRIORS[unit.unitType] || WORKERS[unit.unitType]))
     : army.observation.ownUnits.filter(unit => WARRIORS[unit.unitType]);
-  if (!units.length) return;
+  if (!units.length) return false;
 
   army.x = armyX;
   army.y = armyY;
@@ -366,4 +364,6 @@ async function micro(army, armyX, armyY) {
     await fight(army, pair);
     updateMatrix(matrix, pair);
   }
+
+  return true;
 }
