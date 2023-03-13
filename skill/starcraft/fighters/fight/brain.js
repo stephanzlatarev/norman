@@ -89,7 +89,15 @@ export default class Brain {
 
       if (canRetreat(this.mode, noRetreat, warriorCount)) {
         const armyIsEngaged = (engagedCount || (distanceBetween(armyX, armyY, enemyWarriorX, enemyWarriorY) <= MIN_ENGAGE_RANGE));
-        if (shouldRegroup(isRegrouping, armyLeaderPack, armyExtendedPack, armyIsEngaged, armyEnergy, enemyWarriorCount)) {
+        if (armyIsEngaged) {
+          this.engagement = 22.5 * 5; // Start five seconds engagement inertia
+        } else if (this.engagement > 0) {
+          this.engagement--;
+        } else {
+          this.engagement = 0;
+        }
+
+        if (shouldRegroup(isRegrouping, armyLeaderPack, armyExtendedPack, (this.engagement > 0), armyEnergy, enemyWarriorCount)) {
           // Rally army when energy levels are below 50% (only when regrouping) or when the army is smaller than enemy
           const location = stalkingLocation(armyX, armyY, enemyWarriorX, enemyWarriorY, guardX, guardY, baseX, baseY);
 
