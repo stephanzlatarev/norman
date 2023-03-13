@@ -177,14 +177,12 @@ function stepback(army, unit, enemy) {
   let dy = unit.pos.y - enemy.pos.y;
 
   if (Math.abs(dx) >= Math.abs(dy)) {
-    const adx = Math.abs(dx);
-    dy += Math.sign(unit.pos.y - army.y) * adx;
-    dy /= adx;
+    dy /= Math.abs(dx);
+    dy += Math.sign(unit.pos.y - army.y);
     dx = Math.sign(dx);
   } else {
-    const ady = Math.abs(dx);
-    dx += Math.sign(unit.pos.x - army.x) * ady;
-    dx /= ady;
+    dx /= Math.abs(dy);
+    dx += Math.sign(unit.pos.x - army.x);
     dy = Math.sign(dy);
   }
 
