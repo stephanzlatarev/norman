@@ -121,10 +121,15 @@ export const DUMMY_TARGETS = {
   62: "gateway",
   63: "forge",
   64: "beacon",
+  65: "twilight council",
   67: "stargate",
-  71: "robotics",
+  68: "templar archive",
+  69: "dark shrine",
+  70: "robotics bay",
+  71: "robotics facility",
   72: "cybernetics",
   82: "observer",
+  133: "warp gate",
 
   // Zerg
   86: "hatchery",
