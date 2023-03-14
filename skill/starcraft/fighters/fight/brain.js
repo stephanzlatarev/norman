@@ -140,7 +140,7 @@ function canRetreat(mode, noRetreat, warriorCount) {
 function canAttack(mode, noRetreat, warriorCount) {
   if (noRetreat <= 0) return true;
   if (mode === "attack") return true;
-  if (warriorCount >= 24) return true;
+  if (warriorCount >= 17) return true;
   return false;
 }
 
