@@ -174,6 +174,7 @@ export const ORDERS = {
   946: "phoenix",
   948: "carrier",
   950: "voidray",
+  977: "observer",
   1006: "probe",
   3692: "airArmor",
   3693: "airWeapons",

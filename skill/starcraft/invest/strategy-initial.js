@@ -1,13 +1,17 @@
 import Strategy from "./strategy.js";
 
 const BUILDORDER = [
-  "pylons", "probes", "probes", "gateways", "probes",
-  "assimilators", "probes", "probes", "probes", "probes",
-  "zealots", "cybernetics", "gateways", "pylons",
-  "assimilators", "probes", "zealots", "probes", "probes",
-  "stalkers", "stalkers", "pylons", "stalkers", "stalkers",
-  "nexuses", "sentries", "probes", "pylons", "stalkers", "probes",
-  "stalkers", "probes", "probes", "stalkers", "stalkers", "stalkers",
+  "pylons", "probes", "probes",
+  "gateways", "probes",
+  "assimilators", "probes",
+  "pylons", "probes", "probes", "probes", "zealots",
+  "cybernetics",
+  "assimilators",
+  "gateways", "probes", "zealots",
+  "pylons", "probes",
+  "robotics", "stalkers", "probes", "stalkers", "sentries", "sentries",
+  "nexuses", "observers", "stalkers",
+  "pylons", "stalkers", "stalkers", "stalkers", "stalkers", "stalkers",
 ];
 
 export default class Initial extends Strategy {
@@ -48,5 +52,5 @@ function expect(expected, unit) {
 }
 
 function isBuilt(situation, expected, unit) {
-  return situation.inventory[unit] >= expected[unit];
+  return situation.total[unit] >= expected[unit];
 }

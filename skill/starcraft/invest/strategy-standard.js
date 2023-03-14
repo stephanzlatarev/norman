@@ -41,7 +41,7 @@ const PARALLEL = {
   nexuses: 1,
   pylons: 1,
   assimilators: 1,
-  gateways: 2,
+  gateways: 1,
   stargates: 1,
 };
 
