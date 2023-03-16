@@ -28,7 +28,7 @@ const LIMIT = {
   cybernetics: 1,
   robotics: 1,
   motherships: 1,
-  observers: 2,
+  observers: 1,
   probes: (situation) => Math.min(situation.complete.nexuses * 22, 82),
   upgradeAirWeapons: 1,
   upgradeAirArmor: 1,

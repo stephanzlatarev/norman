@@ -42,7 +42,9 @@
     "BODY/statsEnemy/roach",
     "BODY/statsEnemy/queen",
     "MILITARY/enemyWarriorWorkerCount",
-    "MILITARY/enemyVisibleCount"
+    "MILITARY/enemyVisibleCount",
+    "BODY/statsEnemy/marine",
+    "BODY/statsEnemy/reaper"
   ],
 
   "output": [

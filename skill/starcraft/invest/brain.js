@@ -1,12 +1,14 @@
 import InitialStrategy from "./strategy-initial.js";
 import StandardStrategy from "./strategy-standard.js";
 import SingleBaseStrategy from "./strategy-single-base.js";
+import CounterReapersRush from "./strategy-vs-reapers.js";
 import CounterZerglingsStrategy from "./strategy-vs-zerglings.js";
 
 const STRATEGY = [
   new StandardStrategy(),
   new SingleBaseStrategy(),
   new CounterZerglingsStrategy(),
+  new CounterReapersRush(),
 ];
 
 const UNITS = [

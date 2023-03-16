@@ -10,6 +10,9 @@ let canUseSingleBaseStrategy = true;
 let watchForZerglingRush = true;
 let detectedZerglingRush = false;
 
+let watchForReaperRush = true;
+let detectedReaperRush = false;
+
 export default class Brain {
 
   react(input) {
@@ -30,8 +33,13 @@ export default class Brain {
     const enemyWarriorWorkers = input[15];
     const enemyVisibleCount = input[16];
 
+    const enemyMarine = input[17];
+    const enemyReaper = input[18];
+
     if (reaction) {
-      if ((enemyVisibleCount || !confirmationRequiresVisibleEnemies) && near(enemyX, enemyY, homeX, homeY, distance)) {
+      if (detectedReaperRush) {
+        return reaction;
+      } else if ((enemyVisibleCount || !confirmationRequiresVisibleEnemies) && near(enemyX, enemyY, homeX, homeY, distance)) {
         if (confirmationRequiresVisibleEnemies) confirmation = 3 * 22.5; // 3 seconds confirmation
         return reaction;
       } else if (confirmation > 0) {
@@ -77,6 +85,16 @@ export default class Brain {
         confirmation = 3 * 22.5; // 3 seconds confirmation
         confirmationRequiresVisibleEnemies = true;
         return reaction;
+      }
+    }
+
+    if (watchForReaperRush) {
+      if (enemyReaper >= 1) {
+        detectedReaperRush = true;
+        reaction = [1, 3, -1, -1];
+        return reaction;
+      } else if (enemyMarine >= 1) {
+        watchForReaperRush = false;
       }
     }
 

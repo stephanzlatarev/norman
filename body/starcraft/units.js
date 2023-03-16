@@ -83,6 +83,8 @@ export const BOOSTABLE = {
 };
 
 export const ENEMY_UNITS = {
+  48: "marine",
+  49: "reaper",
   105: "zergling",
   107: "hydralisk",
   110: "roach",
