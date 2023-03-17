@@ -1,6 +1,7 @@
 import { observeResources } from "./resources.js";
 import { observeStructures } from "./structures.js";
 import { observeMilitary } from "./military.js";
+import { applyStrategy } from "./strategy.js";
 import { BOOSTABLE, ENEMY_UNITS, EXPLORERS, ORDERS, OWN_UNITS } from "./units.js";
 
 export default async function(node, client) {
@@ -21,6 +22,7 @@ export default async function(node, client) {
   node.set("foodCap", observation.playerCommon.foodCap);
 
   await observeResources(node, client, observation);
+  await applyStrategy(node, client, observation);
 
   observeChat(node, client);
   observeStructures(node, observation);
