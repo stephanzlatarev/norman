@@ -143,6 +143,8 @@ export const DUMMY_TARGETS = {
   101: "hive",
   103: "egg",
   106: "overlord",
+  137: "creep tumor burrowed",
+  138: "creep tumor queen",
   151: "larva",
 };
 
