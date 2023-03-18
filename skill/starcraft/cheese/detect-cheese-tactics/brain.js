@@ -7,6 +7,8 @@ let confirmationRequiresVisibleEnemies;
 
 let canUseSingleBaseStrategy = true;
 
+let detectedFirstExpansionChallenged = false;
+
 let watchForZerglingRush = true;
 let detectedZerglingRush = false;
 
@@ -42,6 +44,12 @@ export default class Brain {
     const enemyMarine = input[17];
     const enemyReaper = input[18];
 
+    if (detectedFirstExpansionChallenged && (enemyWarriorWorkers > 2)) {
+      // Change to warrior worker rush
+      detectedFirstExpansionChallenged = false;
+      reaction = null;
+    }
+
     if (reaction) {
       if (detectedReaperRush) {
         return reaction;
@@ -71,7 +79,7 @@ export default class Brain {
         // Detect warrior and worker rush
         if ((enemies > warriors) && near(enemyX, enemyY, homeX, homeY, 80)) {
           // Set strategy to zealots only (4)
-          console.log("Detected warrior and worker rush");
+          console.log("Detected warrior worker rush");
           distance = 100;
           reaction = [1, 4, 1, 1];
           confirmation = 3 * 22.5; // 3 seconds confirmation
@@ -83,6 +91,7 @@ export default class Brain {
         if ((enemies > warriors) && near(enemyX, enemyY, homeX, homeY, 40)) {
           // Set strategy to single-base (1)
           console.log("Detected first expansion challenged");
+          detectedFirstExpansionChallenged = true;
           distance = 50;
           reaction = [1, 1, -1, 1];
           confirmation = 3 * 22.4; // 3 seconds confirmation

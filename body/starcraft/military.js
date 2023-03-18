@@ -8,6 +8,8 @@ export function observeMilitary(node, client, observation) {
   const homebase = node.get("homebase");
   const army = node.memory.get(node.path + "/army");
 
+  army.set("strategy", strategy);
+
   if (!army.get("code")) {
     army.set("code", "body/starcraft/unit/army").set("channel", client).set("game", node).set("orders", []);
   }

@@ -20,7 +20,7 @@ export async function applyStrategy(node, client, observation) {
       }
 
       if (unit.orders.length && FACTORIES[unit.unitType] && (unit.orders[0].abilityId !== 916) && (unit.orders[0].abilityId !== 917)) {
-        // This is building something other than a zealot
+        // This is building something other than a zealot or a stalker
         await cancel(client, unit, 3671);
       }
     }

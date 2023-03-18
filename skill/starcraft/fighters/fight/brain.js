@@ -47,6 +47,7 @@ export default class Brain {
     const totalCount = input[18];
     const mobilization = input[19];
     const noRetreat = input[20];
+    const strategy = input[21];
 
     if (!armyX || !armyY) return;
 
@@ -55,7 +56,11 @@ export default class Brain {
         const distanceToHomebase = distanceBetween(enemyWarriorX, enemyWarriorY, baseX, baseY);
         const distanceToArmy = distanceBetween(enemyWarriorX, enemyWarriorY, armyX, armyY);
 
-        if ((distanceToHomebase < MIN_GUARD_RANGE) || (distanceToArmy < HARD_MIN_STALK_RANGE)) {
+        const shouldAttack = (strategy === 4)
+          ? (distanceToHomebase < 10*10)
+          : ((distanceToHomebase < MIN_GUARD_RANGE) || (distanceToArmy < HARD_MIN_STALK_RANGE));
+
+        if (shouldAttack) {
           trace(this.mode, "mobilized attack", input, enemyWarriorX, enemyWarriorY);
           this.mode = "mobilized attack";
           return [-1, -1, 1, enemyWarriorX, enemyWarriorY];
@@ -64,9 +69,7 @@ export default class Brain {
           this.mode = "mobilized rally";
           return [1, 1, -1, armyX, armyY];
         }
-      }
-
-      if (enemyAlert) {
+      } else if (enemyAlert) {
         // Defend base
         trace(this.mode, "defend", input, enemyWarriorX, enemyWarriorY);
         this.mode = "defend";

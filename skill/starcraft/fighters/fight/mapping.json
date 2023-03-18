@@ -48,7 +48,8 @@
     "warriorCount",
     "totalCount",
     "mobilization",
-    "noRetreat"
+    "noRetreat",
+    "strategy"
   ],
 
   "output": [
