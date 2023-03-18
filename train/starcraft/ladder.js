@@ -2,6 +2,7 @@ import fs from "fs";
 import https from "https";
 
 const BOT = 518;
+const COMPETITION = 20;
 const LIMIT = 1000;
 const SECRETS = JSON.parse(fs.readFileSync("./train/starcraft/secrets.json"));
 const COOKIES = [];
@@ -66,13 +67,39 @@ async function go() {
   console.log("Reading ladder data...");
 
   await call("POST", "/api/auth/login/", SECRETS);
+  const bots = getBots((await call("GET", "/api/bots/?limit=1000")).results);
+  const ranks = getRanks((await call("GET", "/api/competition-participations/?competition=" + COMPETITION)).results);
   const count = (await call("GET", "/api/matches/?limit=1&bot=" + BOT)).count;
   const offset = Math.max(count - LIMIT, 0);
-  const matches = await call("GET", "/api/matches/?&offset=" + offset + "&limit=" + LIMIT + "&bot=" + BOT);
+  const matches = await call("GET", "/api/matches/?offset=" + offset + "&limit=" + LIMIT + "&bot=" + BOT);
   console.log("Received:", matches.results.length, "of", matches.count);
 
   const stats = getStats(matches.results);
-  showStats(stats);
+  showStats(stats, bots, ranks);
+}
+
+function getBots(list) {
+  const bots = {};
+
+  for (const item of list) {
+    bots[item.name] = item.id;
+  }
+
+  return bots;
+}
+
+function getRanks(list) {
+  const bots = {};
+
+  for (const item of list) {
+    if (!item.active) continue;
+    bots[item.bot] = {
+      division: item.division_num,
+      elo: item.elo,
+    };
+  }
+
+  return bots;
 }
 
 function getStats(matches) {
@@ -81,6 +108,7 @@ function getStats(matches) {
   for (let i = matches.length - 1; i >= 0; i--) {
     const match = matches[i];
     if (!match.result) continue;
+
     const opponent = (match.result.bot2_name === "norman") ? match.result.bot1_name : match.result.bot2_name;
     if (!stats[opponent]) stats[opponent] = { matches: 0, wins: 0, streak: true, winStreak: 0, lossStreak: 0, streakMaps: [], lossMaps: [] };
     if (stats[opponent].matches >= 10) continue;
@@ -112,17 +140,25 @@ function getStats(matches) {
   return stats;
 }
 
-function showStats(stats) {
+function showStats(stats, bots, ranks) {
   const lines = [];
   for (const opponent in stats) {
     const data = stats[opponent];
-    const rating = "|" + percentage(data) +
-      "|" + ((data.winStreak > data.lossStreak) ? "W" : "L") + "|" + (data.winStreak ? data.winStreak - 1 : data.matches - data.lossStreak) +
-      "|" + opponent.toLowerCase();
-    lines.push({...data, opponent: opponent, rating: rating });
+    const rank = ranks[bots[opponent]];
+
+    if (!rank) continue;
+
+    const rating = (5 - rank.division) * 10000 + rank.elo;
+    lines.push({...data, opponent: opponent, rating: rating, division: rank.division });
   }
-  lines.sort((a, b) => b.rating.localeCompare(a.rating));
+  lines.sort((a, b) => b.rating - a.rating);
+  let division = -1;
   for (const data of lines) {
+    if (data.division !== division) {
+      division = data.division;
+      console.log(" ======= Division", division, "=======");
+    }
+
     if (data.wins === data.matches) {
       console.log(cell(data.opponent, 25), "V", (data.matches < 10) ? "\t matches: " + data.matches : "");
     } else {
