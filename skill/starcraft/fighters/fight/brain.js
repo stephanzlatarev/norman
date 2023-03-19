@@ -21,6 +21,8 @@ const ENERGY_TO_ATTACK = 10;  // Accumulate this much energy before launching an
 
 const TROUBLESHOOTING = false;
 
+let noRetreatAttackStarted = false;
+
 export default class Brain {
 
   react(input) {
@@ -121,6 +123,7 @@ export default class Brain {
         // Attack enemy
         trace(this.mode, "attack", input, enemyWarriorX, enemyWarriorY);
         this.mode = "attack";
+        if (noRetreat >= 1) noRetreatAttackStarted = true;
         return [-1, -1, 1, enemyWarriorX, enemyWarriorY];
       }
     } else if (enemyDummyX && enemyDummyY) {
@@ -135,6 +138,7 @@ export default class Brain {
 
 function canRetreat(mode, noRetreat, warriorCount) {
   if (noRetreat <= 0) return true;
+  if ((noRetreat >= 1) && noRetreatAttackStarted) return false;
   if (mode === "stalk") return true;
   if (warriorCount < 8) return true;
   return false;
@@ -142,6 +146,7 @@ function canRetreat(mode, noRetreat, warriorCount) {
 
 function canAttack(mode, noRetreat, warriorCount) {
   if (noRetreat <= 0) return true;
+  if ((noRetreat >= 1) && noRetreatAttackStarted) return true;
   if (mode === "attack") return true;
   if (warriorCount >= 17) return true;
   return false;
