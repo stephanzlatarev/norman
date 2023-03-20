@@ -51,7 +51,7 @@ export default class Brain {
     }
 
     if (reaction) {
-      if (detectedReaperRush) {
+      if (detectedReaperRush && (enemyMarine <= 0)) {
         return reaction;
       } else if ((enemyVisibleCount || !confirmationRequiresVisibleEnemies) && near(enemyX, enemyY, homeX, homeY, distance)) {
         if (confirmationRequiresVisibleEnemies) confirmation = 3 * 22.4; // 3 seconds confirmation
@@ -116,7 +116,7 @@ export default class Brain {
     }
 
     if (watchForReaperRush) {
-      if (enemyReaper >= 1) {
+      if ((enemyReaper >= 1) && (enemyMarine <= 0)) {
         detectedReaperRush = true;
         reaction = [1, 3, -1, -1];
         return reaction;
