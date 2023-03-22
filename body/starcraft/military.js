@@ -3,6 +3,8 @@ import { WARRIORS, LEADER_RANK, USES_ENERGY, CAN_HIT_AIR, DUMMY_TARGETS, LIGHT_W
 const ENEMY_ALERT_SQUARED = 40*40; // Squared distance which raises alert for enemies
 const STALK_RANGE_SQUARED = 14*14; // Squared range for stalking enemies - just outside range of tanks in siege mode
 
+const lastKnownEnemy = [];
+
 export function observeMilitary(node, client, observation) {
   const strategy = node.get("strategy");
   const homebase = node.get("homebase");
@@ -12,6 +14,7 @@ export function observeMilitary(node, client, observation) {
 
   if (!army.get("code")) {
     army.set("code", "body/starcraft/unit/army").set("channel", client).set("game", node).set("orders", []);
+    lastKnownEnemy.push({ x: node.get("enemyBaseX"), y: node.get("enemyBaseY"), count: 1 });
   }
 
   if (homebase) {
@@ -149,8 +152,6 @@ function getHighestRank(leader, units) {
   return bestLeader;
 }
 
-const lastKnownEnemy = [];
-
 function observeEnemy(game, army, homebase, observation, isMobilizationCalledOff) {
   const owner = game.get("owner");
   const enemy = game.get("enemy");
@@ -162,6 +163,7 @@ function observeEnemy(game, army, homebase, observation, isMobilizationCalledOff
   if (isMobilizationCalledOff) {
     console.log("Mobilization is called off");
     lastKnownEnemy.length = 0;
+    lastKnownEnemy.push({ x: game.get("enemyBaseX"), y: game.get("enemyBaseY"), count: 1 });
   }
 
   const armyUnit = army.get("body");
