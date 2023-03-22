@@ -1,7 +1,8 @@
 import fs from "fs";
 import https from "https";
 
-const BOT = 518;
+const BOT_ID = 518;
+const BOT_NAME = "norman";
 const COMPETITION = 20;
 const LIMIT = 1000;
 const SECRETS = JSON.parse(fs.readFileSync("./train/starcraft/secrets.json"));
@@ -69,9 +70,9 @@ async function go() {
   await call("POST", "/api/auth/login/", SECRETS);
   const bots = getBots((await call("GET", "/api/bots/?limit=1000")).results);
   const ranks = getRanks((await call("GET", "/api/competition-participations/?competition=" + COMPETITION)).results);
-  const count = (await call("GET", "/api/matches/?limit=1&bot=" + BOT)).count;
+  const count = (await call("GET", "/api/matches/?limit=1&bot=" + BOT_ID)).count;
   const offset = Math.max(count - LIMIT, 0);
-  const matches = await call("GET", "/api/matches/?offset=" + offset + "&limit=" + LIMIT + "&bot=" + BOT);
+  const matches = await call("GET", "/api/matches/?offset=" + offset + "&limit=" + LIMIT + "&bot=" + BOT_ID);
   console.log("Received:", matches.results.length, "of", matches.count);
 
   const stats = getStats(matches.results);
@@ -109,13 +110,13 @@ function getStats(matches) {
     const match = matches[i];
     if (!match.result) continue;
 
-    const opponent = (match.result.bot2_name === "norman") ? match.result.bot1_name : match.result.bot2_name;
+    const opponent = (match.result.bot2_name === BOT_NAME) ? match.result.bot1_name : match.result.bot2_name;
     if (!stats[opponent]) stats[opponent] = { matches: 0, wins: 0, streak: true, winStreak: 0, lossStreak: 0, streakMaps: [], lossMaps: [] };
     if (stats[opponent].matches >= 10) continue;
 
     const data = stats[opponent];
     data.matches++;
-    if (match.result.winner === BOT) {
+    if (match.result.winner === BOT_ID) {
       data.wins++;
       if (data.streak) {
         if (data.lossStreak === 0) {
