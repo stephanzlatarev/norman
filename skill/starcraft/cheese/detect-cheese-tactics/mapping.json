@@ -44,7 +44,8 @@
     "MILITARY/enemyWarriorWorkerCount",
     "MILITARY/enemyVisibleCount",
     "BODY/statsEnemy/marine",
-    "BODY/statsEnemy/reaper"
+    "BODY/statsEnemy/reaper",
+    "BODY/statsEnemy/bunker"
   ],
 
   "output": [

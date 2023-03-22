@@ -43,6 +43,7 @@ export default class Brain {
 
     const enemyMarine = input[17];
     const enemyReaper = input[18];
+    const enemyBunker = input[19];
 
     if (detectedFirstExpansionChallenged && (enemyWarriorWorkers > 2)) {
       // Change to warrior worker rush
@@ -51,7 +52,7 @@ export default class Brain {
     }
 
     if (reaction) {
-      if (detectedReaperRush && (enemyMarine <= 0)) {
+      if (detectedReaperRush && (enemyMarine <= 0) && (enemyBunker <= 0)) {
         return reaction;
       } else if ((enemyVisibleCount || !confirmationRequiresVisibleEnemies) && near(enemyX, enemyY, homeX, homeY, distance)) {
         if (confirmationRequiresVisibleEnemies) confirmation = 3 * 22.4; // 3 seconds confirmation
@@ -116,11 +117,11 @@ export default class Brain {
     }
 
     if (watchForReaperRush) {
-      if ((enemyReaper >= 1) && (enemyMarine <= 0)) {
+      if ((enemyReaper >= 1) && (enemyMarine <= 0) && (enemyBunker <= 0)) {
         detectedReaperRush = true;
         reaction = [1, 3, -1, -1];
         return reaction;
-      } else if (enemyMarine >= 1) {
+      } else if ((enemyMarine >= 1) || (enemyBunker >= 1)) {
         watchForReaperRush = false;
       }
     }
