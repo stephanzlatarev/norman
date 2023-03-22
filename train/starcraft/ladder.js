@@ -76,7 +76,8 @@ async function go() {
   console.log("Received:", matches.results.length, "of", matches.count);
 
   const stats = getStats(matches.results);
-  showStats(stats, bots, ranks);
+  const rates = getSuccessRateByDivision(stats, bots, ranks);
+  showStats(stats, bots, ranks, rates);
 }
 
 function getBots(list) {
@@ -141,7 +142,27 @@ function getStats(matches) {
   return stats;
 }
 
-function showStats(stats, bots, ranks) {
+function getSuccessRateByDivision(stats, bots, ranks) {
+  const rates = {};
+
+  for (const r in ranks) {
+    const rank = ranks[r];
+    if (rank && !rates[rank.division]) {
+      rates[rank.division] = { wins: 0, matches: 0 };
+    }
+  }
+
+  for (const opponent in stats) {
+    const data = stats[opponent];
+    const rank = ranks[bots[opponent]];
+    if (!rank) continue;
+    rates[rank.division].wins += data.wins;
+    rates[rank.division].matches += data.matches;
+  }
+  return rates;
+}
+
+function showStats(stats, bots, ranks, rates) {
   const lines = [];
   for (const opponent in stats) {
     const data = stats[opponent];
@@ -157,7 +178,7 @@ function showStats(stats, bots, ranks) {
   for (const data of lines) {
     if (data.division !== division) {
       division = data.division;
-      console.log(" ======= Division", division, "=======");
+      console.log(" ====== Division", division, "======", percentage(rates[data.division]), "win rate");
     }
 
     if (data.wins === data.matches) {
