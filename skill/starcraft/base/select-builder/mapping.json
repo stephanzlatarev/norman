@@ -8,7 +8,8 @@
     "build a nexus",
     "build a pylon",
     "build a robotics facility",
-    "build a stargate"
+    "build a stargate",
+    "build a twilight council"
   ],
 
   "comment": "Selects a builder close to the location",

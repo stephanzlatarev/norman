@@ -1,0 +1,39 @@
+{
+  "label": "build a twilight council",
+  "goal": "build a twilight council",
+
+  "body": {
+    "is-game": true
+  },
+
+  "memory": {
+    "nodes": {
+      "LOCATION": { "type": "location", "purpose": "build" },
+      "PROBE": { "unitType": "probe" }
+    },
+
+    "paths": [
+      {
+        "path": ["GOAL", "location", "LOCATION"]
+      },
+      {
+        "path": ["GOAL", "builder", "PROBE"]
+      },
+      {
+        "label": "ASSIGN",
+        "path": ["PROBE", "build-council", "LOCATION"],
+        "provisional": true,
+        "unique": true
+      }
+    ]
+  },
+
+  "input": [
+    "PROBE",
+    "LOCATION"
+  ],
+
+  "output": [
+    "ASSIGN"
+  ]
+}

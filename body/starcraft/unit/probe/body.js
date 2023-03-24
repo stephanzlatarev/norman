@@ -7,6 +7,7 @@ const ABILITY_ON_POINT = {
   "build-gateway": 883,
   "build-forge": 884,
   "build-beacon": 885,
+  "build-council": 886,
   "build-stargate": 889,
   "build-robotics": 893,
   "build-cybernetics": 894,

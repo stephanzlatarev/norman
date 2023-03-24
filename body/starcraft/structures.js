@@ -48,6 +48,9 @@ function countStructuresOfBases(node, bases, observation) {
     const beacons = observation.ownUnits.filter(structure => (structure.unitType === 64) && (structure.buildProgress >= 1) && near(structure, baseX, baseY));
     base.set("beacons", beacons.length);
 
+    const councils = observation.ownUnits.filter(structure => (structure.unitType === 65) && (structure.buildProgress >= 1) && near(structure, baseX, baseY));
+    base.set("councils", councils.length);
+
     const stargates = observation.ownUnits.filter(structure => (structure.unitType === 67) && (structure.buildProgress >= 1) && near(structure, baseX, baseY));
     base.set("stargates", stargates.length);
 

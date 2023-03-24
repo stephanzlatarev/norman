@@ -3,6 +3,7 @@ import Strategy from "./strategy.js";
 const UNITS = [
   "pylons", "nexuses", "assimilators", "probes",
   "gateways", "cybernetics", "stalkers", "zealots",
+  "councils",
   "forges", "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields"
 ];
 
@@ -19,6 +20,7 @@ const LIMIT = {
   assimilators: (situation) => (situation.complete.nexuses),
   gateways: (situation) => Math.min(situation.complete.nexuses * 3, 6),
   forges: 1,
+  councils: 1,
   cybernetics: 1,
   probes: (situation) => Math.min(situation.complete.nexuses * 19 + 3, 82), // First nexus usually has 2 assimilators
   upgradeGroundWeapons: 1,
