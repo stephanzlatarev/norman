@@ -9,6 +9,7 @@ const ABILITY_ON_POINT = {
   "build-beacon": 885,
   "build-council": 886,
   "build-stargate": 889,
+  "build-shrine": 891,
   "build-robotics": 893,
   "build-cybernetics": 894,
   "move": 16,

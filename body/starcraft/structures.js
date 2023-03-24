@@ -54,6 +54,9 @@ function countStructuresOfBases(node, bases, observation) {
     const stargates = observation.ownUnits.filter(structure => (structure.unitType === 67) && (structure.buildProgress >= 1) && near(structure, baseX, baseY));
     base.set("stargates", stargates.length);
 
+    const shrines = observation.ownUnits.filter(structure => (structure.unitType === 69) && (structure.buildProgress >= 1) && near(structure, baseX, baseY));
+    base.set("shrines", shrines.length);
+
     const robotics = observation.ownUnits.filter(structure => (structure.unitType === 71) && (structure.buildProgress >= 1) && near(structure, baseX, baseY));
     base.set("robotics", robotics.length);
 
@@ -61,8 +64,8 @@ function countStructuresOfBases(node, bases, observation) {
     base.set("cybernetics", cybernetics.length);
 
     const structures = observation.ownUnits.filter(structure => (
-      (structure.unitType === 62) || (structure.unitType === 63) || (structure.unitType === 64) || (structure.unitType === 67) ||
-      (structure.unitType === 71) || (structure.unitType === 72)
+      (structure.unitType === 62) || (structure.unitType === 63) || (structure.unitType === 64) || (structure.unitType === 65) ||
+      (structure.unitType === 67) || (structure.unitType === 69) || (structure.unitType === 71) || (structure.unitType === 72)
     ) && near(structure, baseX, baseY));
     base.set("structures", structures.length);
 

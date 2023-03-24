@@ -14,7 +14,7 @@ const STRATEGY = [
 ];
 
 const UNITS = [
-  "nexuses", "bases", "pylons", "assimilators", "gateways", "forges", "beacons", "stargates", "cybernetics", "councils", "robotics",
+  "nexuses", "bases", "pylons", "assimilators", "gateways", "forges", "beacons", "stargates", "cybernetics", "councils", "shrines", "robotics",
   "motherships", "zealots", "stalkers", "sentries", "phoenixes", "carriers", "voidrays", "observers", "probes",
   "upgradeAirWeapons", "upgradeAirArmor", "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields"
 ];
@@ -46,6 +46,7 @@ const MINERALS = {
   stargates: 150,
   cybernetics: 200,
   councils: 150,
+  shrines: 150,
   robotics: 150,
   motherships: 400,
   zealots: 100,
@@ -67,6 +68,7 @@ const VESPENE = {
   beacons: 200,
   stargates: 150,
   councils: 100,
+  shrines: 150,
   robotics: 100,
   motherships: 400,
   stalkers: 50,
@@ -99,6 +101,7 @@ const PREREQUISITE = {
   stargates: (situation) => (situation.complete.cybernetics),
   cybernetics: (situation) => (situation.complete.gateways),
   councils: (situation) => (situation.complete.cybernetics),
+  shrines: (situation) => (situation.complete.councils),
   robotics: (situation) => (situation.complete.cybernetics),
   motherships: (situation) => (!situation.total.motherships && situation.complete.beacons),
   stalkers: (situation) => (situation.complete.cybernetics && situation.complete.assimilators),

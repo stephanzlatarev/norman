@@ -21,6 +21,7 @@
       "BUILD-STARGATE": { "label": "build a stargate", "type": "goal" },
       "BUILD-CYBERNETICS": { "label": "build a cybernetics core", "type": "goal" },
       "BUILD-COUNCIL": { "label": "build a twilight council", "type": "goal" },
+      "BUILD-SHRINE": { "label": "build a dark shrine", "type": "goal" },
       "BUILD-ROBOTICS": { "label": "build a robotics facility", "type": "goal" },
       "TRAIN-MOTHERSHIP": { "label": "train a mothership", "type": "goal" },
       "TRAIN-ZEALOT": { "label": "train a zealot", "type": "goal" },
@@ -102,6 +103,12 @@
       {
         "label": "LETS-BUILD-COUNCIL",
         "path": ["ADVANCE-MILITARY", "build-council", "BUILD-COUNCIL"],
+        "provisional": true,
+        "unique": true
+      },
+      {
+        "label": "LETS-BUILD-SHRINE",
+        "path": ["ADVANCE-MILITARY", "build-shrine", "BUILD-SHRINE"],
         "provisional": true,
         "unique": true
       },
@@ -210,7 +217,8 @@
     "stats/beacon", "stats/beaconBuilding", "stats/beaconOrdered",
     "stats/stargate", "stats/stargateBuilding", "stats/stargateOrdered",
     "stats/cybernetics", "stats/cyberneticsBuilding", "stats/cyberneticsOrdered",
-    "stats/councils", "stats/councilsBuilding", "stats/councilsOrdered",
+    "stats/council", "stats/councilBuilding", "stats/councilOrdered",
+    "stats/shrine", "stats/shrineBuilding", "stats/shrineOrdered",
     "stats/robotics", "stats/roboticsBuilding", "stats/roboticsOrdered",
     "stats/mothership", "stats/mothershipBuilding", "stats/mothershipOrdered",
     "stats/zealot", "stats/zealotBuilding", "stats/zealotOrdered",
@@ -241,6 +249,7 @@
     "LETS-BUILD-STARGATE", "BUILD-STARGATE",
     "LETS-BUILD-CYBERNETICS", "BUILD-CYBERNETICS",
     "LETS-BUILD-COUNCIL", "BUILD-COUNCIL",
+    "LETS-BUILD-SHRINE", "BUILD-SHRINE",
     "LETS-BUILD-ROBOTICS", "BUILD-ROBOTICS",
     "LETS-TRAIN-MOTHERSHIP", "TRAIN-MOTHERSHIP",
     "LETS-TRAIN-ZEALOT", "TRAIN-ZEALOT",
