@@ -14,6 +14,7 @@ export const OWN_UNITS = {
   72: "cybernetics",
   73: "zealot",
   74: "stalker",
+  76: "templar",
   77: "sentry",
   78: "phoenix",
   79: "carrier",
@@ -26,6 +27,7 @@ export const WARRIORS = {
   10: "mothership",
   73: "zealot",
   74: "stalker",
+  76: "templar",
   77: "sentry",
   78: "phoenix",
   79: "carrier",
@@ -43,6 +45,7 @@ export const WORKERS = {
 export const EXPLORERS = {
   73: "zealot",
   74: "stalker",
+  76: "templar",
   77: "sentry",
   78: "phoenix",
   80: "voidray",
@@ -53,6 +56,7 @@ export const LEADER_RANK = {
   10: 8, // mothership
   77: 7, // sentry
   73: 6, // zealot
+  76: 5, // templar
   74: 5, // stalker
   82: 4, // observer
   79: 3, // carrier
@@ -180,6 +184,7 @@ export const ORDERS = {
   894: "cybernetics",
   916: "zealot",
   917: "stalker",
+  920: "templar",
   921: "sentry",
   946: "phoenix",
   948: "carrier",

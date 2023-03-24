@@ -98,6 +98,7 @@ const GANG = 4;
 const WARRIORS = {
   73: "zealot",
   74: "stalker",
+  76: "templar",
   77: "sentry",
 };
 
@@ -108,6 +109,7 @@ const WORKERS = {
 const IS_RANGED = {
   73: false, // zealot
   74: true,  // stalker
+  76: false, // templar
   77: true,  // sentry
   84: false, // probe
 };
@@ -122,6 +124,7 @@ const FLEET = {
 const SPEED = {
   73: (3.15 / 22.5), // zealot
   74: (3.15 / 22.5), // stalker
+  76: (3.94 / 22.5), // templar
   77: (4.15 / 22.5), // sentry
   84: (3.94 / 22.5), // probe
 };
@@ -129,6 +132,7 @@ const SPEED = {
 const RANGE = {
   73: 0.1, // zealot
   74: 6.0, // stalker
+  76: 0.1, // templar
   77: 5.0, // sentry
   84: 0.1, // probe
 };
@@ -136,6 +140,7 @@ const RANGE = {
 const DAMAGE = {
   73:  8, // zealot
   74: 13, // stalker
+  74: 45, // templar
   77:  6, // sentry
   84:  5, // probe
 };

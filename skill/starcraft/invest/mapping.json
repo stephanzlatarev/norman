@@ -27,6 +27,7 @@
       "TRAIN-ZEALOT": { "label": "train a zealot", "type": "goal" },
       "TRAIN-STALKER": { "label": "train a stalker", "type": "goal" },
       "TRAIN-SENTRY": { "label": "train a sentry", "type": "goal" },
+      "TRAIN-TEMPLAR": { "label": "train a templar", "type": "goal" },
       "TRAIN-PHOENIX": { "label": "train a phoenix", "type": "goal" },
       "TRAIN-CARRIER": { "label": "train a carrier", "type": "goal" },
       "TRAIN-VOIDRAY": { "label": "train a void ray", "type": "goal" },
@@ -143,6 +144,12 @@
         "unique": true
       },
       {
+        "label": "LETS-TRAIN-TEMPLAR",
+        "path": ["ADVANCE-MILITARY", "build-templar", "TRAIN-TEMPLAR"],
+        "provisional": true,
+        "unique": true
+      },
+      {
         "label": "LETS-TRAIN-PHOENIX",
         "path": ["ADVANCE-MILITARY", "build-phoenix", "TRAIN-PHOENIX"],
         "provisional": true,
@@ -224,6 +231,7 @@
     "stats/zealot", "stats/zealotBuilding", "stats/zealotOrdered",
     "stats/stalker", "stats/stalkerBuilding", "stats/stalkerOrdered",
     "stats/sentry", "stats/sentryBuilding", "stats/sentryOrdered",
+    "stats/templar", "stats/templarBuilding", "stats/templarOrdered",
     "stats/phoenix", "stats/phoenixBuilding", "stats/phoenixOrdered",
     "stats/carrier", "stats/carrierBuilding", "stats/carrierOrdered",
     "stats/voidray", "stats/voidrayBuilding", "stats/voidrayOrdered",
@@ -255,6 +263,7 @@
     "LETS-TRAIN-ZEALOT", "TRAIN-ZEALOT",
     "LETS-TRAIN-STALKER", "TRAIN-STALKER",
     "LETS-TRAIN-SENTRY", "TRAIN-SENTRY",
+    "LETS-TRAIN-TEMPLAR", "TRAIN-TEMPLAR",
     "LETS-TRAIN-PHOENIX", "TRAIN-PHOENIX",
     "LETS-TRAIN-CARRIER", "TRAIN-CARRIER",
     "LETS-TRAIN-VOIDRAY", "TRAIN-VOIDRAY",

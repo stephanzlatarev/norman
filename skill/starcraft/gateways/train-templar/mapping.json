@@ -1,0 +1,18 @@
+{
+  "label": "train templar",
+  "goal": "train a templar",
+
+  "body": {
+    "code": "body/starcraft/unit/gateway"
+  },
+
+  "input": [
+    "operational",
+    "ordersCount"
+  ],
+
+  "output": [
+    "build-templar",
+    "ordersCount"
+  ]
+}

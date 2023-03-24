@@ -1,6 +1,7 @@
 
 const PRIO = {
-   110: 61, // mothership
+   110: 62, // mothership
+   920: 61, // templar
 
   3692: 52, // air armor
   1565: 52, // air armor level 1

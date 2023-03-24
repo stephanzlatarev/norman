@@ -15,7 +15,7 @@ const STRATEGY = [
 
 const UNITS = [
   "nexuses", "bases", "pylons", "assimilators", "gateways", "forges", "beacons", "stargates", "cybernetics", "councils", "shrines", "robotics",
-  "motherships", "zealots", "stalkers", "sentries", "phoenixes", "carriers", "voidrays", "observers", "probes",
+  "motherships", "zealots", "stalkers", "sentries", "templars", "phoenixes", "carriers", "voidrays", "observers", "probes",
   "upgradeAirWeapons", "upgradeAirArmor", "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields"
 ];
 
@@ -25,6 +25,7 @@ const FACTORY = {
   zealots: "gateways",
   stalkers: "gateways",
   sentries: "gateways",
+  templars: "gateways",
   observers: "robotics",
   phoenixes: "stargates",
   carriers: "stargates",
@@ -52,6 +53,7 @@ const MINERALS = {
   zealots: 100,
   stalkers: 125,
   sentries: 50,
+  templars: 125,
   phoenixes: 150,
   carriers: 350,
   voidrays: 250,
@@ -73,6 +75,7 @@ const VESPENE = {
   motherships: 400,
   stalkers: 50,
   sentries: 100,
+  templars: 125,
   phoenixes: 100,
   carriers: 250,
   voidrays: 150,
@@ -89,6 +92,7 @@ const FOOD = {
   zealots: 2,
   stalkers: 2,
   sentries: 2,
+  templars: 2,
   phoenixes: 2,
   carriers: 6,
   voidrays: 4,
@@ -106,6 +110,7 @@ const PREREQUISITE = {
   motherships: (situation) => (!situation.total.motherships && situation.complete.beacons),
   stalkers: (situation) => (situation.complete.cybernetics && situation.complete.assimilators),
   sentries: (situation) => (situation.complete.cybernetics && situation.complete.assimilators),
+  templars: (situation) => (situation.complete.shrines),
   phoenixes: (situation) => (situation.complete.stargates),
   carriers: (situation) => (situation.complete.stargates && situation.complete.beacons),
   voidrays: (situation) => (situation.complete.stargates),

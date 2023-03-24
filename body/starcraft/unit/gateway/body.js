@@ -13,6 +13,9 @@ export default class Gateway extends Unit {
     } else if (this.node.get("build-stalker")) {
       super.command(917, null, null, "build-stalker");
       this.node.clear("build-stalker");
+    } else if (this.node.get("build-templar")) {
+      super.command(920, null, null, "build-templar");
+      this.node.clear("build-templar");
     } else if (this.node.get("build-sentry")) {
       super.command(921, null, null, "build-sentry");
       this.node.clear("build-sentry");

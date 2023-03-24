@@ -3,16 +3,16 @@ import Strategy from "./strategy.js";
 const UNITS = [
   "pylons", "nexuses", "assimilators", "probes",
   "gateways", "cybernetics", "stalkers", "zealots",
-  "councils", "shrines",
+  "councils", "shrines", "templars",
   "forges", "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields"
 ];
 
 const CONDITION = {
   nexuses: (situation) => ((situation.complete.nexuses <= situation.inventory.probes / 19) || (situation.resources.minerals >= 2000)),
   pylons: (situation) => (situation.progress.bases || (situation.resources.food < 10) || (situation.resources.psi >= 100)),
-  gateways: (situation) => (situation.progress.zealots + situation.progress.stalkers >= situation.complete.gateways),
-  forges: (situation) => (situation.inventory.zealots + situation.inventory.stalkers > 20),
-  probes: (situation) => (situation.progress.zealots + situation.progress.stalkers >= situation.complete.gateways),
+  gateways: (situation) => (situation.progress.zealots + situation.progress.stalkers + situation.progress.templars >= situation.complete.gateways),
+  forges: (situation) => (situation.inventory.zealots + situation.inventory.stalkers + situation.progress.templars > 20),
+  probes: (situation) => (situation.progress.zealots + situation.progress.stalkers + situation.progress.templars >= situation.complete.gateways),
 };
 
 const LIMIT = {
@@ -37,8 +37,9 @@ const PARALLEL = {
 };
 
 const RATIO = {
-  zealots: 4,
-  stalkers: 1,
+  zealots: 1,
+  stalkers: 2,
+  templars: 2,
 };
 
 export default class CounterZerlingsRush extends Strategy {
