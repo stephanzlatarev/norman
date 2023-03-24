@@ -2,8 +2,7 @@ import Strategy from "./strategy.js";
 
 const UNITS = [
   "pylons", "nexuses", "assimilators", "probes",
-  "gateways", "cybernetics", "stalkers", "zealots", "upgradeAirWeapons",
-  "stargates", "beacons", "carriers",
+  "gateways", "cybernetics", "stalkers", "zealots",
   "forges", "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields"
 ];
 
@@ -11,8 +10,7 @@ const CONDITION = {
   nexuses: (situation) => ((situation.complete.nexuses <= situation.inventory.probes / 19) || (situation.resources.minerals >= 2000)),
   pylons: (situation) => (situation.progress.bases || (situation.resources.food < 10) || (situation.resources.psi >= 100)),
   gateways: (situation) => (situation.progress.zealots + situation.progress.stalkers >= situation.complete.gateways),
-  forges: (situation) => (situation.inventory.zealots > 20),
-  stargates: (situation) => ((situation.inventory.gateways >= 5) && (situation.resources.minerals >= 450) && (situation.resources.vespene >= 450)),
+  forges: (situation) => (situation.inventory.zealots + situation.inventory.stalkers > 20),
   probes: (situation) => (situation.progress.zealots + situation.progress.stalkers >= situation.complete.gateways),
 };
 
@@ -21,11 +19,8 @@ const LIMIT = {
   assimilators: (situation) => (situation.complete.nexuses),
   gateways: (situation) => Math.min(situation.complete.nexuses * 3, 6),
   forges: 1,
-  beacons: 1,
-  stargates: 2,
   cybernetics: 1,
-  probes: (situation) => Math.min(situation.complete.nexuses * 19, 82),
-  upgradeAirWeapons: 1,
+  probes: (situation) => Math.min(situation.complete.nexuses * 19 + 3, 82), // First nexus usually has 2 assimilators
   upgradeGroundWeapons: 1,
   upgradeGroundArmor: 1,
   upgradeShields: 1,
@@ -35,14 +30,12 @@ const PARALLEL = {
   nexuses: 1,
   pylons: 1,
   assimilators: 1,
-  gateways: 2,
-  stargates: 1,
+  gateways: 1,
 };
 
 const RATIO = {
   zealots: 4,
   stalkers: 1,
-  carriers: 6,
 };
 
 export default class CounterZerlingsRush extends Strategy {
