@@ -93,7 +93,7 @@ export default class Brain {
         // Set strategy to single-base (1) and raise goal to counter worker rush
         console.log("Detected worker rush");
         distance = 30;
-        reaction = [1, 1, 1, 1];
+        reaction = [1, 1, -1, -1];
         confirmation = 3 * 22.4; // 3 seconds confirmation
         confirmationRequiresVisibleEnemies = true;
         return reaction;

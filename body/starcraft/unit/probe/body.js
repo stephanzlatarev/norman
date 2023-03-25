@@ -35,6 +35,11 @@ export default class Probe extends Unit {
   }
 
   async tock() {
+    if (this.node.get("mobilized")) {
+      this.node.clear("mobilized");
+      return;
+    }
+
     const army = this.node.get("game").get("army");
     if (army && (army.get("mobilizeWorkers") > 0) && army.get("attack")) {
       return;

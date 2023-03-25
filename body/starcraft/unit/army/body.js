@@ -352,9 +352,18 @@ async function micro(army, armyX, armyY) {
   const enemies = army.observation.rawData.units.filter(unit => isValidTarget(unit, army.enemy));
   if (!enemies.length) return false;
 
-  const units = army.node.get("mobilization")
-    ? army.observation.ownUnits.filter(unit => (WARRIORS[unit.unitType] || WORKERS[unit.unitType]))
-    : army.observation.ownUnits.filter(unit => WARRIORS[unit.unitType]);
+  const units = army.observation.ownUnits.filter(unit => WARRIORS[unit.unitType]);
+  if (army.node.get("mobilization")) {
+    const workers = army.observation.ownUnits.filter(unit => WORKERS[unit.unitType]);
+    for (const worker of workers) units.push(worker);
+  } else if (units.length < enemies.length) {
+    const supporters = (enemies.length - units.length) * 2;
+    const workers = army.observation.ownUnits.filter(unit => (WORKERS[unit.unitType] && near(unit, armyX, armyY, 20)));
+    for (let i = 0; (i < supporters) && (i < workers.length); i++) {
+      mobilizeWorker(army, workers[i]);
+      units.push(workers[i]);
+    }
+  }
   if (!units.length) return false;
 
   army.x = armyX;
@@ -369,4 +378,14 @@ async function micro(army, armyX, armyY) {
   }
 
   return true;
+}
+
+function near(unit, x, y, distance) {
+  return (Math.abs(unit.pos.x - x) <= distance) && (Math.abs(unit.pos.y - y) <= distance);
+}
+
+function mobilizeWorker(army, worker) {
+  const path = army.node.path.split("/");
+  path[path.length - 1] = worker.tag;
+  army.node.memory.get(path.join("/")).set("mobilized", true);
 }
