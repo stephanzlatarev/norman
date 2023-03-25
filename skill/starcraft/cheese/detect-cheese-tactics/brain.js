@@ -63,6 +63,29 @@ export default class Brain {
       }
     }
 
+    if (watchForZerglingRush) {
+      if (enemyHydralisk + enemyRoach + enemyQueen >= 2) {
+        watchForZerglingRush = false;
+      } else if (detectedZerglingRush || (enemyZergling >= 8)) {
+        if (!detectedZerglingRush) console.log("Detected zergling rush");
+        detectedZerglingRush = true;
+        reaction = [1, 2, -1, -1];
+        confirmation = 3 * 22.4; // 3 seconds confirmation
+        confirmationRequiresVisibleEnemies = true;
+        return reaction;
+      }
+    }
+
+    if (watchForReaperRush) {
+      if ((enemyReaper >= 1) && (enemyMarine <= 0) && (enemyBunker <= 0)) {
+        detectedReaperRush = true;
+        reaction = [1, 3, -1, -1];
+        return reaction;
+      } else if ((enemyMarine >= 1) || (enemyBunker >= 1)) {
+        watchForReaperRush = false;
+      }
+    }
+
     if (canUseSingleBaseStrategy && (nexuses === 1) && enemyVisibleCount && (enemies > 1)) {
 
       // Detect worker rush
@@ -101,29 +124,6 @@ export default class Brain {
         }
       }
 
-    }
-
-    if (watchForZerglingRush) {
-      if (enemyHydralisk + enemyRoach + enemyQueen >= 2) {
-        watchForZerglingRush = false;
-      } else if (detectedZerglingRush || (enemyZergling >= 8)) {
-        if (!detectedZerglingRush) console.log("Detected zergling rush");
-        detectedZerglingRush = true;
-        reaction = [1, 2, -1, -1];
-        confirmation = 3 * 22.4; // 3 seconds confirmation
-        confirmationRequiresVisibleEnemies = true;
-        return reaction;
-      }
-    }
-
-    if (watchForReaperRush) {
-      if ((enemyReaper >= 1) && (enemyMarine <= 0) && (enemyBunker <= 0)) {
-        detectedReaperRush = true;
-        reaction = [1, 3, -1, -1];
-        return reaction;
-      } else if ((enemyMarine >= 1) || (enemyBunker >= 1)) {
-        watchForReaperRush = false;
-      }
     }
 
     reaction = null;
