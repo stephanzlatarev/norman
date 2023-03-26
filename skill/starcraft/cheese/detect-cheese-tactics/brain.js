@@ -66,7 +66,7 @@ export default class Brain {
     if (watchForZerglingRush) {
       if (enemyHydralisk + enemyRoach + enemyQueen >= 2) {
         watchForZerglingRush = false;
-      } else if (detectedZerglingRush || (enemyZergling >= 8)) {
+      } else if (detectedZerglingRush || (enemyZergling >= 4)) {
         if (!detectedZerglingRush) console.log("Detected zergling rush");
         detectedZerglingRush = true;
         reaction = [1, 2, -1, -1];
@@ -93,7 +93,7 @@ export default class Brain {
         // Set strategy to single-base (1) and raise goal to counter worker rush
         console.log("Detected worker rush");
         distance = 30;
-        reaction = [1, 1, -1, -1];
+        reaction = [1, 1, 1, -1];
         confirmation = 3 * 22.4; // 3 seconds confirmation
         confirmationRequiresVisibleEnemies = true;
         return reaction;
