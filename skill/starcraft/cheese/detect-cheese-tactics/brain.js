@@ -78,11 +78,13 @@ export default class Brain {
 
     if (watchForReaperRush) {
       if ((enemyReaper >= 1) && (enemyMarine <= 0) && (enemyBunker <= 0)) {
+        if (!detectedReaperRush) console.log("Detected reaper rush");
         detectedReaperRush = true;
         reaction = [1, 3, -1, -1];
         return reaction;
       } else if ((enemyMarine >= 1) || (enemyBunker >= 1)) {
         watchForReaperRush = false;
+        detectedReaperRush = false;
       }
     }
 
