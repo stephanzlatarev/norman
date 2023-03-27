@@ -148,8 +148,17 @@ const DAMAGE = {
 const SENTRY_COOLDOWN = 0.71 * 22.5;
 const ZEALOT_COOLDOWN = 14;
 
+const LIGHT_ENEMY_WARRIORS = {
+  48: "marine",
+  105: "zergling",
+};
+
 function isValidTarget(unit, enemy) {
   return (unit.owner === enemy) && !DUMMY_TARGETS[unit.unitType] && (unit.displayType === 1) && !unit.isHallucination;
+}
+
+function isLightTarget(unit, enemy) {
+  return isValidTarget(unit, enemy) && LIGHT_ENEMY_WARRIORS[unit.unitType];
 }
 
 function weaponTime(unit) {
@@ -357,11 +366,22 @@ async function micro(army, armyX, armyY) {
     const workers = army.observation.ownUnits.filter(unit => WORKERS[unit.unitType]);
     for (const worker of workers) units.push(worker);
   } else if (units.length < enemies.length) {
-    const supporters = (enemies.length - units.length + 1) * 2;
-    const workers = army.observation.ownUnits.filter(unit => (WORKERS[unit.unitType] && near(unit, armyX, armyY, 20)));
-    for (let i = 0; (i < supporters) && (i < workers.length); i++) {
-      mobilizeWorker(army, workers[i]);
-      units.push(workers[i]);
+    const supporters = army.observation.ownUnits.filter(unit => (WORKERS[unit.unitType] && near(unit, armyX, armyY, 20))).sort((a, b) => a.tag.localeCompare(b.tag));
+    if (supporters.length) {
+      // Limit mobilized workers to 3 per enemy
+      let supportersCount = enemies.length * 3;
+      if (units.length) {
+        // Reduce mobilized workers when there are own warriors and when enemy uses light warriors
+        const lightEnemies = army.observation.rawData.units.filter(unit => isLightTarget(unit, army.enemy));
+        supportersCount = (enemies.length * 2 - lightEnemies.length - units.length * 2 + 1) * 2;
+      }
+      if (supporters.length > supportersCount) {
+        supporters.length = supportersCount;
+      }
+    }
+    for (const worker of supporters) {
+      mobilizeWorker(army, worker);
+      units.push(worker);
     }
   }
   if (!units.length) return false;
