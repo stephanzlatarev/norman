@@ -373,7 +373,7 @@ async function micro(army, armyX, armyY) {
       if (units.length) {
         // Reduce mobilized workers when there are own warriors and when enemy uses light warriors
         const lightEnemies = army.observation.rawData.units.filter(unit => isLightTarget(unit, army.enemy));
-        supportersCount = (enemies.length * 2 - lightEnemies.length - units.length * 2 + 1) * 2;
+        supportersCount = Math.max((enemies.length * 2 - lightEnemies.length - units.length * 2 + 1) * 2, 0);
       }
       if (supporters.length > supportersCount) {
         supporters.length = supportersCount;
