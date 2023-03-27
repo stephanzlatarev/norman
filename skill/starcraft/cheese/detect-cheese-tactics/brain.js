@@ -45,6 +45,30 @@ export default class Brain {
     const enemyReaper = input[18];
     const enemyBunker = input[19];
 
+    if (watchForZerglingRush) {
+      if (enemyHydralisk + enemyRoach + enemyQueen >= 2) {
+        watchForZerglingRush = false;
+        detectedZerglingRush = false;
+      } else if (detectedZerglingRush || (enemyZergling >= 4)) {
+        if (!detectedZerglingRush) console.log("Detected zergling rush");
+        detectedZerglingRush = true;
+        reaction = null;
+        return [1, 2, -1, -1];
+      }
+    }
+
+    if (watchForReaperRush) {
+      if ((enemyMarine >= 1) || (enemyBunker >= 1)) {
+        watchForReaperRush = false;
+        detectedReaperRush = false;
+      } else if (detectedReaperRush || (enemyReaper >= 1)) {
+        if (!detectedReaperRush) console.log("Detected reaper rush");
+        detectedReaperRush = true;
+        reaction = null;
+        return [1, 3, -1, -1];
+      }
+    }
+
     if (detectedFirstExpansionChallenged && (enemyWarriorWorkers > 2)) {
       // Change to warrior worker rush
       detectedFirstExpansionChallenged = false;
@@ -52,39 +76,12 @@ export default class Brain {
     }
 
     if (reaction) {
-      if (detectedReaperRush && (enemyMarine <= 0) && (enemyBunker <= 0)) {
-        return reaction;
-      } else if ((enemyVisibleCount || !confirmationRequiresVisibleEnemies) && near(enemyX, enemyY, homeX, homeY, distance)) {
+      if ((enemyVisibleCount || !confirmationRequiresVisibleEnemies) && near(enemyX, enemyY, homeX, homeY, distance)) {
         if (confirmationRequiresVisibleEnemies) confirmation = 3 * 22.4; // 3 seconds confirmation
         return reaction;
       } else if (confirmation > 0) {
         confirmation--;
         return reaction;
-      }
-    }
-
-    if (watchForZerglingRush) {
-      if (enemyHydralisk + enemyRoach + enemyQueen >= 2) {
-        watchForZerglingRush = false;
-      } else if (detectedZerglingRush || (enemyZergling >= 4)) {
-        if (!detectedZerglingRush) console.log("Detected zergling rush");
-        detectedZerglingRush = true;
-        reaction = [1, 2, -1, -1];
-        confirmation = 3 * 22.4; // 3 seconds confirmation
-        confirmationRequiresVisibleEnemies = true;
-        return reaction;
-      }
-    }
-
-    if (watchForReaperRush) {
-      if ((enemyReaper >= 1) && (enemyMarine <= 0) && (enemyBunker <= 0)) {
-        if (!detectedReaperRush) console.log("Detected reaper rush");
-        detectedReaperRush = true;
-        reaction = [1, 3, -1, -1];
-        return reaction;
-      } else if ((enemyMarine >= 1) || (enemyBunker >= 1)) {
-        watchForReaperRush = false;
-        detectedReaperRush = false;
       }
     }
 
