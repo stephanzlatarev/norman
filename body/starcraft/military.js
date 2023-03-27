@@ -19,7 +19,7 @@ export function observeMilitary(node, client, observation) {
 
   if (homebase) {
     observeEnemy(node, army, homebase, observation, isMobilizationCalledOff(army));
-    observeArmy(strategy, army, homebase, observation);
+    observeArmy(strategy, node, army, homebase, observation);
   }
 }
 
@@ -27,7 +27,7 @@ function isMobilizationCalledOff(army) {
   return army.get("mobilization") && !(army.get("mobilizeWorkers") > 0);
 }
 
-function observeArmy(strategy, army, homebase, observation) {
+function observeArmy(strategy, node, army, homebase, observation) {
   const mobilization = (army.get("mobilizeWorkers") > 0);
   const armyUnits = mobilization
     ? observation.ownUnits.filter(unit => (WARRIORS[unit.unitType] || WORKERS[unit.unitType]))
@@ -42,13 +42,31 @@ function observeArmy(strategy, army, homebase, observation) {
   army.set("totalCount", observation.playerCommon.foodUsed);
   army.set("mobilization", mobilization ? 1 : 0);
 
+  const leaderTag = army.get("tag");
   let leaderUnits = mobilization
     ? armyUnits.filter(unit => WORKERS[unit.unitType])
     : armyUnits.filter(unit => LEADER_RANK[unit.unitType]);
-  if (mobilization && !leaderUnits.length) leaderUnits = armyUnits.filter(unit => LEADER_RANK[unit.unitType]);
+  if (!leaderUnits.length && mobilization) leaderUnits = armyUnits.filter(unit => LEADER_RANK[unit.unitType]);
+  if (!leaderUnits.length) {
+    const enemyX = army.get("enemyWarriorX");
+    const enemyY = army.get("enemyWarriorY");
+
+    if ((enemyX > 0) && (enemyY > 0)) {
+      let leader = leaderTag ? observation.ownUnits.find(unit => (unit.tag === leaderTag)) : null;
+  
+      if (!leader && (distance(enemyX, enemyY, baseX, baseY) <= STALK_RANGE_SQUARED)) {
+        leader = observation.ownUnits.find(unit => WORKERS[unit.unitType]);
+      }
+  
+      if (leader) {
+        leaderUnits = [leader];
+        army.set("tag", leader.tag);
+        node.memory.get(node.path + "/" + leader.tag).set("mobilized", true);
+      }
+    }
+  }
 
   if (leaderUnits.length && (army.get("enemyWarriorCount") || army.get("enemyDummyCount"))) {
-    const leaderTag = army.get("tag");
     let leader = leaderTag ? leaderUnits.find(unit => (unit.tag === leaderTag)) : null;
 
     if (!leader) {

@@ -357,7 +357,7 @@ async function micro(army, armyX, armyY) {
     const workers = army.observation.ownUnits.filter(unit => WORKERS[unit.unitType]);
     for (const worker of workers) units.push(worker);
   } else if (units.length < enemies.length) {
-    const supporters = (enemies.length - units.length) * 2;
+    const supporters = (enemies.length - units.length + 1) * 2;
     const workers = army.observation.ownUnits.filter(unit => (WORKERS[unit.unitType] && near(unit, armyX, armyY, 20)));
     for (let i = 0; (i < supporters) && (i < workers.length); i++) {
       mobilizeWorker(army, workers[i]);
