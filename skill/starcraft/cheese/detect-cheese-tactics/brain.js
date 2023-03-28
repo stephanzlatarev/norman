@@ -128,7 +128,7 @@ export default class Brain {
     reaction = null;
     confirmation = null;
 
-    if ((strategy === 1) || (strategy === 2)) {
+    if (strategy > 0) {
       // Set strategy back to the standard (0) and remove any goals to counter cheese tactics
       console.log("Set strategy back to the standard");
       canUseSingleBaseStrategy = false;
