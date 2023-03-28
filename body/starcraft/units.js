@@ -163,6 +163,8 @@ export const LIGHT_WARRIORS = {
 
 export const HEAVY_WARRIORS = {
   24: "bunker",
+  32: "siege tank",
+  33: "siege tank sieged",
   66: "photon cannon",
 };
 
