@@ -3,26 +3,19 @@ import Strategy from "./strategy.js";
 const UNITS = [
   "pylons", "nexuses", "probes",
   "gateways", "zealots",
-  "forges", "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields"
 ];
 
 const CONDITION = {
-  nexuses: (situation) => ((situation.total.nexuses <= situation.inventory.probes / 16) || (situation.resources.minerals >= 2000)),
+  nexuses: (situation) => (situation.resources.minerals >= 600),
   pylons: (situation) => (situation.progress.bases || (situation.resources.food < 12)),
-  probes: (situation) => (situation.progress.zealots >= situation.complete.gateways),
   gateways: (situation) => (situation.progress.zealots >= situation.complete.gateways),
-  forges: (situation) => (situation.inventory.zealots > 20),
 };
 
 const LIMIT = {
   nexuses: 3,
   pylons: (situation) => Math.min(situation.inventory.bases * 4, 20),
   probes: (situation) => (Math.min(situation.complete.nexuses * 16, 48) + situation.complete.assimilators * 3),
-  gateways: (situation) => Math.min(situation.total.nexuses * 2, 6),
-  forges: 1,
-  upgradeGroundWeapons: 1,
-  upgradeGroundArmor: 1,
-  upgradeShields: 1,
+  gateways: (situation) => (situation.total.nexuses * 4),
 };
 
 const PARALLEL = {
