@@ -360,6 +360,7 @@ async function fight(army, pair) {
 async function micro(army, armyX, armyY) {
   const enemies = army.observation.rawData.units.filter(unit => isValidTarget(unit, army.enemy));
   if (!enemies.length) return false;
+  orderTargets(enemies);
 
   const units = army.observation.ownUnits.filter(unit => WARRIORS[unit.unitType]);
   if (army.node.get("mobilization")) {
@@ -408,4 +409,20 @@ function mobilizeWorker(army, worker) {
   const path = army.node.path.split("/");
   path[path.length - 1] = worker.tag;
   army.node.memory.get(path.join("/")).set("mobilized", true);
+}
+
+function orderTargets(enemies) {
+  lowerPriorityOfRepairedBunkers(enemies);
+}
+
+function lowerPriorityOfRepairedBunkers(enemies) {
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    const bunker = enemies[i];
+    if (bunker.unitType !== 24) continue;
+    const bunkerX = bunker.pos.x;
+    const bunkerY = bunker.pos.y;
+    if (enemies.find(unit => ((unit.unitType === 45) && near(unit, bunkerX, bunkerY, 3)))) {
+      enemies.splice(i, 1);
+    }
+  }
 }
