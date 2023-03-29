@@ -12,6 +12,9 @@ let detectedFirstExpansionChallenged = false;
 let watchForZerglingRush = true;
 let detectedZerglingRush = false;
 
+let watchForQueenRush = true;
+let detectedQueenRush = false;
+
 let watchForReaperRush = true;
 let detectedReaperRush = false;
 
@@ -54,6 +57,18 @@ export default class Brain {
         detectedZerglingRush = true;
         reaction = null;
         return [1, 2, -1, -1];
+      }
+    }
+
+    if (watchForQueenRush) {
+      if (enemyZergling + enemyRoach + enemyHydralisk >= 1) {
+        watchForQueenRush = false;
+        detectedQueenRush = false;
+      } else if (detectedQueenRush || (enemyQueen >= 2)) {
+        if (!detectedQueenRush) console.log("Detected queen rush");
+        detectedQueenRush = true;
+        reaction = null;
+        return [1, 5, -1, -1];
       }
     }
 

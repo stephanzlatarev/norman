@@ -4,6 +4,7 @@ import SingleBaseStrategy from "./strategy-single-base.js";
 import CounterReapersRush from "./strategy-vs-reapers.js";
 import CounterZerglingsStrategy from "./strategy-vs-zerglings.js";
 import ZealotsOnlyStrategy from "./strategy-zealots-only.js";
+import CounterQueensRush from "./strategy-vs-queens.js";
 
 const STRATEGY = [
   new StandardStrategy(),
@@ -11,6 +12,7 @@ const STRATEGY = [
   new CounterZerglingsStrategy(),
   new CounterReapersRush(),
   new ZealotsOnlyStrategy(),
+  new CounterQueensRush(),
 ];
 
 const UNITS = [
