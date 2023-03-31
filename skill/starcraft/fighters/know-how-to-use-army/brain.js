@@ -7,7 +7,7 @@ export default class Brain {
     const warriors = input[0];
     const enemies = input[1] + input[2];
 
-    if (!warriors) {
+    if (!warriors && (enemies <= 1)) {
       return [-1, -1];
     } else if (!enemies) {
       // Scout
