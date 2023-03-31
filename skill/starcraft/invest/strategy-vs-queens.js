@@ -7,21 +7,20 @@ const UNITS = [
 
 const CONDITION = {
   pylons: (situation) => (situation.progress.bases || (situation.resources.food < 8 + situation.complete.nexuses + situation.complete.gateways * 2)),
-  gateways: (situation) => (situation.progress.zealots >= Math.min(situation.complete.gateways, situation.complete.nexuses * 2)),
 };
 
 const LIMIT = {
   nexuses: 4,
   pylons: (situation) => Math.min(situation.inventory.bases * 4, 20),
-  probes: (situation) => (Math.min(situation.total.nexuses * 16, 64) + situation.complete.assimilators * 3),
-  gateways: (situation) => (situation.total.nexuses * 2),
+  probes: (situation) => (Math.min(situation.total.nexuses * 16, 48) + situation.complete.assimilators * 3),
+  gateways: gatewaysSupportedByHarvest,
 };
 
 const PARALLEL = {
   nexuses: 1,
   pylons: 1,
   gateways: 2,
-  zealots: (situation) => (situation.complete.nexuses * 2),
+  zealots: gatewaysSupportedByHarvest,
 };
 
 export default class CounterQueensRush extends Strategy {
@@ -42,4 +41,12 @@ export default class CounterQueensRush extends Strategy {
     return this.get(CONDITION, unit, true);
   }
 
+}
+
+function harvestPerMinute(situation) {
+  return (situation.complete.probes - situation.complete.assimilators * 3) * 60;
+}
+
+function gatewaysSupportedByHarvest(situation) {
+  return Math.floor((harvestPerMinute(situation) - 300) / 200);
 }
