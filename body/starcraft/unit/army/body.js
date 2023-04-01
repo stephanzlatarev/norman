@@ -421,7 +421,7 @@ function lowerPriorityOfRepairedBunkers(enemies) {
     if (bunker.unitType !== 24) continue;
     const bunkerX = bunker.pos.x;
     const bunkerY = bunker.pos.y;
-    if (enemies.find(unit => ((unit.unitType === 45) && near(unit, bunkerX, bunkerY, 3)))) {
+    if (enemies.find(unit => (((unit.unitType === 45) || (unit.unitType === 268)) && near(unit, bunkerX, bunkerY, 3)))) {
       enemies.splice(i, 1);
     }
   }
