@@ -45,7 +45,10 @@
     "MILITARY/enemyVisibleCount",
     "BODY/statsEnemy/marine",
     "BODY/statsEnemy/reaper",
-    "BODY/statsEnemy/bunker"
+    "BODY/statsEnemy/bunker",
+    "BODY/statsEnemy/tank",
+    "BODY/statsEnemy/marauder",
+    "BODY/statsEnemy/cyclone"
   ],
 
   "output": [

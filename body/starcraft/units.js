@@ -90,12 +90,16 @@ export const BOOSTABLE = {
 
 export const ENEMY_UNITS = {
   24: "bunker",
+  32: "tank",
+  33: "tank",
   48: "marine",
   49: "reaper",
+  51: "marauder",
   105: "zergling",
   107: "hydralisk",
   110: "roach",
   126: "queen",
+  692: "cyclone",
 };
 
 // The units that can't fight my army

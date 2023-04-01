@@ -47,6 +47,9 @@ export default class Brain {
     const enemyMarine = input[17];
     const enemyReaper = input[18];
     const enemyBunker = input[19];
+    const enemyTank = input[20];
+    const enemyMarauder = input[21];
+    const enemyCyclone = input[22];
 
     if (watchForZerglingRush) {
       if (enemyHydralisk + enemyRoach + enemyQueen >= 2) {
@@ -73,7 +76,7 @@ export default class Brain {
     }
 
     if (watchForReaperRush) {
-      if ((enemyMarine >= 1) || (enemyBunker >= 1)) {
+      if (enemyMarine + enemyBunker + enemyTank + enemyMarauder + enemyCyclone >= 1) {
         watchForReaperRush = false;
         detectedReaperRush = false;
       } else if (detectedReaperRush || (enemyReaper >= 1)) {
