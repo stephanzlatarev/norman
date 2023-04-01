@@ -10,14 +10,14 @@ const CONDITION = {
 };
 
 const LIMIT = {
-  nexuses: 4,
-  pylons: (situation) => Math.min(situation.inventory.bases * 4, 20),
-  probes: (situation) => (Math.min(situation.total.nexuses * 16, 48) + situation.complete.assimilators * 3),
+  nexuses: 5,
+  pylons: 20,
+  probes: (situation) => (Math.min(situation.total.nexuses * 16, 64) + situation.complete.assimilators * 3),
   gateways: gatewaysSupportedByHarvest,
 };
 
 const PARALLEL = {
-  nexuses: 1,
+  nexuses: 2,
   pylons: 1,
   gateways: 2,
   zealots: gatewaysSupportedByHarvest,
