@@ -2,15 +2,15 @@ import Strategy from "./strategy.js";
 
 const UNITS = [
   "nexuses", "pylons", "probes",
-  "gateways", "zealots", "sentries",
+  "gateways", "zealots",
   "forges", "upgradeGroundWeapons", "upgradeGroundArmor", "upgradeShields",
 ];
 
 const LIMIT = {
-  nexuses: 4,
-  pylons: (situation) => ((situation.total.nexuses >= 4) ? 18 : 0),
-  probes: (situation) => ((situation.total.nexuses >= 4) ? 70 : 0),
-  forges: (situation) => ((situation.complete.nexuses >= 4) ? 1 : 0),
+  nexuses: 3,
+  pylons: 20,
+  probes: (situation) => (isMaxedOut(situation) ? 54 : 0),
+  forges: (situation) => (isMaxedOut(situation) ? 1 : 0),
   gateways: limitGateways,
   upgradeGroundWeapons: 1,
   upgradeGroundArmor: 1,
@@ -19,23 +19,13 @@ const LIMIT = {
 
 const PARALLEL = {
   pylons: 1,
-  zealots: limitZealots,
-  sentries: limitSentries,
-};
-
-const RATIO = {
-  zealots: 6,
-  sentries: 1,
+  zealots: limitGateways,
 };
 
 export default class CounterQueensRush extends Strategy {
 
   units() {
     return UNITS;
-  }
-
-  ratio(unit) {
-    return RATIO[unit];
   }
 
   parallel(unit) {
@@ -49,7 +39,7 @@ export default class CounterQueensRush extends Strategy {
 }
 
 function isMaxedOut(situation) {
-  return (situation.inventory.probes >= 62);
+  return (situation.total.nexuses >= 3);
 }
 
 function harvestPerMinute(situation) {
@@ -57,13 +47,5 @@ function harvestPerMinute(situation) {
 }
 
 function limitGateways(situation) {
-  return isMaxedOut(situation) ? Math.floor(harvestPerMinute(situation) / 200) : 0;
-}
-
-function limitSentries(situation) {
-  return limitGateways(situation) / 6;
-}
-
-function limitZealots(situation) {
-  return limitGateways(situation);
+  return (isMaxedOut(situation) && situation.total.forges) ? Math.floor(harvestPerMinute(situation) / 200) : 0;
 }
