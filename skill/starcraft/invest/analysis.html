@@ -105,9 +105,11 @@ function run(start, sequence, time) {
 
   const current = {...STATE, ...start};
   const factories = {...STATE, ...start};
+  const progress = {};
   const productions = [];
 
   for (const key in STATE) log[key].push(current[key]);
+  for (const type in UNIT) progress[type] = 0;
 
   let blocks = {};
 
@@ -119,7 +121,7 @@ function run(start, sequence, time) {
     current.food = current.supply;
     for (const type in current) {
       if (UNIT[type] && UNIT[type].food) {
-        current.food -= current[type] * UNIT[type].food;
+        current.food -= (current[type] + progress[type]) * UNIT[type].food;
       }
     }
 
@@ -128,6 +130,7 @@ function run(start, sequence, time) {
       const production = productions[i];
       if (production.time === s) {
         current[production.type]++;
+        progress[production.type]--;
         factories[production.type]++;
         factories[production.factory]++; // Free this factory
         productions.splice(i, 1);
@@ -158,6 +161,7 @@ function run(start, sequence, time) {
       } else {
         productions.push({ type: type, time: s + unit.seconds });
       }
+      progress[type]++;
 
       sequence.splice(0, 1);
       log.text.push(
@@ -182,6 +186,10 @@ function run(start, sequence, time) {
   }
 
   log.text.push(JSON.stringify(current));
+
+  if (sequence.length) {
+    log.text.push(sequence[0] + " blocked by: " + Object.keys(blocks).join(", "));
+  }
 
   return log;
 }
@@ -216,48 +224,67 @@ function generate(size) {
 }
 
 $(document).ready(function() {
-  const start = { mineral: 50, nexus: 1, miner: 12 };
-  const time = 4 * 60;
+  const start = { mineral: 400, nexus: 1, assimilator: 2, pylon: 4, gateway: 2, cybernetics: 1, miner: 16, gaser: 6, zealot: 3, stalker: 3 };
+  const time = 12 * 60;
 
-  const sequence = [
+  const best = [
+    "nexus", "miner", "miner", "miner",
+    "nexus", "miner", "miner", "miner",
+    "nexus", "miner", "miner",
+    "pylon", "miner", "miner", "miner", "miner",
+    "pylon", "gateway", "miner", "miner", "miner",
+    "gateway", "pylon", "miner", "miner", "miner",
+    "gateway", "miner", "miner", "miner",
+    "pylon", "gateway", "miner", "miner", "miner", "miner",
+    "gateway", "pylon", "miner", "miner", "miner", "miner",
+    "gateway", "zealot", "miner", "miner", "miner", "miner",
+    "gateway", "pylon", "miner", "miner", "miner", "miner",
+    "gateway", "zealot", "miner", "miner", "miner", "miner",
+    "gateway", "pylon", "miner", "miner", "miner", "miner",
+    "gateway", "pylon", "miner", "miner", "miner",
+    "zealot", "zealot", "zealot",
     "pylon",
-    "miner",
-    "miner",
-    "gateway",
-    "miner",
-    "assimilator",
-    "miner",
-    "gaser",
-    "gaser",
-    "cybernetics",
-    "zealot",
-    "gateway",
-    "pylon",
-    "assimilator",
-    "gaser",
-    "zealot",
-    "gaser",
-    "gaser",
-    "stalker",
-    "gaser",
-    "stalker",
-    "pylon",
-    "stalker",
-    "stalker",
-    "nexus",
-    "sentry",
-    "gateway",
-    "pylon",
-    "stalker",
-    "stalker",
-    "miner",
-    "miner",
-    "stalker",
-    "stalker",
-    "stalker",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
   ];
 
-  show(start, [run(start, sequence, time)], time);
+  const test = [
+    "nexus", "miner", "miner", "miner",
+    "nexus", "miner", "miner", "miner",
+    "nexus", "miner", "miner",
+    "pylon", "miner", "miner",
+    "gateway", "miner", "miner",
+    "gateway", "pylon", "miner", "miner", "miner",
+    "gateway", "pylon", "miner", "miner", "miner",
+    "gateway", "miner", "miner", "miner",
+    "gateway", "pylon", "miner", "miner", "miner", "miner",
+    "gateway", "pylon", "miner", "miner", "miner", "miner",
+    "gateway", "zealot", "miner", "miner", "miner", "miner",
+    "gateway", "pylon", "miner", "miner", "miner", "miner",
+    "gateway", "zealot", "miner", "miner", "miner", "miner",
+    "gateway", "pylon", "miner", "miner", "miner", "miner",
+    "pylon", "miner", "miner", "miner",
+    "zealot", "zealot", "zealot", "zealot",
+    "pylon",
+    "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+    "zealot", "zealot", "zealot", "zealot",
+  ];
+
+  show(start, [run(start, best, time), run(start, test, time)], time);
 
   /*
   let best;
