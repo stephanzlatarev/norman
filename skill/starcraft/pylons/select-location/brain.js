@@ -15,8 +15,8 @@ export default class Brain {
     const pylons = input[5];
 
     const selectedLocation = input[6];
-    const distanceOfSelectedLocation = input[9];
-    const pylonsOfSelectedLocation = input[10];
+    const distanceOfSelectedLocation = input[11];
+    const pylonsOfSelectedLocation = input[12];
 
     if (pylons >= LOCATIONS.length) {
       // This base is already full of pylons
@@ -32,7 +32,7 @@ export default class Brain {
 
     if (!selectedLocation) {
       // This base is our first choice
-      return [1, baseX + location.x, baseY + location.y, distance, pylons];
+      return [1, baseX + location.x, baseY + location.y, baseX, baseY, distance, pylons];
     }
 
     if (powerNewBase) {
@@ -43,17 +43,17 @@ export default class Brain {
 
         if (pylonsOfSelectedLocation) {
           // This base is our first choice for an unpowered base
-          return [1, baseX + location.x, baseY + location.y, distance, pylons];
+          return [1, baseX + location.x, baseY + location.y, baseX, baseY, distance, pylons];
         } else if (distance < distanceOfSelectedLocation) {
           // We prefer this one because it is closer than the alternative unpowered base
-          return [1, baseX + location.x, baseY + location.y, distance, pylons];
+          return [1, baseX + location.x, baseY + location.y, baseX, baseY, distance, pylons];
         }
       } else {
         // This is a powered base. We may choose it only if there are no unpowered alternatives
 
         if (pylonsOfSelectedLocation && (distance < distanceOfSelectedLocation)) {
           // We choose this one because it is closer than the alternative powered base
-          return [1, baseX + location.x, baseY + location.y, distance, pylons];
+          return [1, baseX + location.x, baseY + location.y, baseX, baseY, distance, pylons];
         }
       }
     } else {
@@ -61,7 +61,7 @@ export default class Brain {
 
       if (distance < distanceOfSelectedLocation) {
         // We prefer bases which are closer to the home base
-        return [1, baseX + location.x, baseY + location.y, distance, pylons];
+        return [1, baseX + location.x, baseY + location.y, baseX, baseY, distance, pylons];
       }
     }
   }

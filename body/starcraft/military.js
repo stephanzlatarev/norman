@@ -4,6 +4,8 @@ const ENEMY_ALERT_SQUARED = 40*40; // Squared distance which raises alert for en
 const STALK_RANGE_SQUARED = 14*14; // Squared range for stalking enemies - just outside range of tanks in siege mode
 
 const lastKnownEnemy = [];
+let lastPowerBaseX = -1;
+let lastPowerBaseY = -1;
 
 export function observeMilitary(node, client, observation) {
   const strategy = node.get("strategy");
@@ -18,6 +20,7 @@ export function observeMilitary(node, client, observation) {
   }
 
   if (homebase) {
+    observePowerBase(node);
     observeEnemy(node, army, homebase, observation, isMobilizationCalledOff(army));
     observeArmy(strategy, node, army, homebase, observation);
   }
@@ -25,6 +28,19 @@ export function observeMilitary(node, client, observation) {
 
 function isMobilizationCalledOff(army) {
   return army.get("mobilization") && !(army.get("mobilizeWorkers") > 0);
+}
+
+// This is a skill. Sends army to secure the location for a new base
+function observePowerBase(node) {
+  const thisPowerBaseX = node.get("powerBaseX");
+  const thisPowerBaseY = node.get("powerBaseY");
+
+  if (thisPowerBaseX && thisPowerBaseY && (thisPowerBaseX !== lastPowerBaseX) && (thisPowerBaseY !== lastPowerBaseY)) {
+    lastKnownEnemy.push({ x: thisPowerBaseX, y: thisPowerBaseY, count: 1 });
+    lastPowerBaseX = thisPowerBaseX;
+    lastPowerBaseY = thisPowerBaseY;
+  }
+  
 }
 
 function observeArmy(strategy, node, army, homebase, observation) {

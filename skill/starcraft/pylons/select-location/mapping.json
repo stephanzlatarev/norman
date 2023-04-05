@@ -41,6 +41,8 @@
   "output": [
     "SELECT",
     "LOCATION/x",
-    "LOCATION/y"
+    "LOCATION/y",
+    "BODY/powerBaseX",
+    "BODY/powerBaseY"
   ]
 }
