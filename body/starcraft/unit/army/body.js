@@ -32,8 +32,9 @@ export default class Army extends Unit {
       const locationX = location.get("x");
       const locationY = location.get("y");
       const squaredDistanceToEnemy = (armyX - locationX) * (armyX - locationX) + (armyY - locationY) * (armyY - locationY);
+      const strategyAllowsMicroFighting = (this.node.get("strategy") !== 5);
 
-      if (this.observation && (squaredDistanceToEnemy < 200) && (await micro(this, armyX, armyY))) {
+      if (this.observation && strategyAllowsMicroFighting && (squaredDistanceToEnemy < 200) && (await micro(this, armyX, armyY))) {
         const fleetTags = this.observation.ownUnits.filter(unit => FLEET[unit.unitType]).map(unit => unit.tag);
         if (fleetTags.length) {
           await super.directCommand(fleetTags, 3674, null, { x: locationX, y: locationY });

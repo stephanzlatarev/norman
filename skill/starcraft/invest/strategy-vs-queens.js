@@ -7,19 +7,24 @@ const UNITS = [
 ];
 
 const LIMIT = {
-  nexuses: 3,
-  pylons: 20,
-  probes: (situation) => (isMaxedOut(situation) ? 54 : 0),
-  forges: (situation) => (isMaxedOut(situation) ? 1 : 0),
-  gateways: limitGateways,
+  nexuses: 4,
+  pylons: 18,
+  probes: 70,
+  gateways: 18,
+  forges: 1,
   upgradeGroundWeapons: 1,
   upgradeGroundArmor: 1,
   upgradeShields: 1,
 };
 
-const PARALLEL = {
-  pylons: 1,
-  zealots: limitGateways,
+const CONDITION = {
+  pylons: canBuildPylon,
+  probes: canTrainProbe,
+  gateways: canBuildGateway,
+  zealots: canTrainZealot,
+  forges: canBuildForge,
+  upgradeGroundArmor: canUpgradeGroundArmor,
+  upgradeShields: canUpgradeShields,
 };
 
 export default class CounterQueensRush extends Strategy {
@@ -28,24 +33,43 @@ export default class CounterQueensRush extends Strategy {
     return UNITS;
   }
 
-  parallel(unit) {
-    return this.get(PARALLEL, unit, Infinity);
-  }
-
   limit(unit) {
     return this.get(LIMIT, unit, Infinity);
   }
 
+  isAllowed(unit) {
+    return this.get(CONDITION, unit, true);
+  }
+
+}
+function hasAllNexuses(situation) {
+  return (situation.inventory.nexuses >= LIMIT.nexuses);
 }
 
-function isMaxedOut(situation) {
-  return (situation.total.nexuses >= 3);
+function canBuildPylon(situation) {
+  return hasAllNexuses(situation) && (situation.progress.pylons + situation.ordered.pylons < 1);
 }
 
-function harvestPerMinute(situation) {
-  return (situation.complete.probes - situation.complete.assimilators * 3) * 60;
+function canTrainProbe(situation) {
+  return (situation.progress.probes < situation.complete.nexuses);
 }
 
-function limitGateways(situation) {
-  return (isMaxedOut(situation) && situation.total.forges) ? Math.floor(harvestPerMinute(situation) / 200) : 0;
+function canBuildGateway(situation) {
+  return hasAllNexuses(situation) && !canTrainZealot(situation) && !canBuildPylon(situation);
+}
+
+function canTrainZealot(situation) {
+  return hasAllNexuses(situation) && (situation.progress.zealots < situation.complete.gateways);
+}
+
+function canBuildForge(situation) {
+  return hasAllNexuses(situation) && !canBuildPylon(situation);
+}
+
+function canUpgradeGroundArmor(situation) {
+  return (situation.complete.upgradeGroundWeapons >= 1);
+}
+
+function canUpgradeShields(situation) {
+  return (situation.complete.upgradeGroundArmor >= 1);
 }
