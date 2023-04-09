@@ -29,6 +29,6 @@ export async function applyStrategy(node, client, observation) {
 }
 
 async function cancel(client, unit, op) {
+  console.log("Cancel action", unit.tag, op);
   await client.action({ actions: [{ actionRaw: { unitCommand: { unitTags: [unit.tag], abilityId: op } } }] });
-  
 }

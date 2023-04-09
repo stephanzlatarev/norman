@@ -35,7 +35,7 @@ function observePowerBase(node) {
   const thisPowerBaseX = node.get("powerBaseX");
   const thisPowerBaseY = node.get("powerBaseY");
 
-  if (thisPowerBaseX && thisPowerBaseY && (thisPowerBaseX !== lastPowerBaseX) && (thisPowerBaseY !== lastPowerBaseY)) {
+  if (thisPowerBaseX && thisPowerBaseY && ((thisPowerBaseX !== lastPowerBaseX) || (thisPowerBaseY !== lastPowerBaseY))) {
     lastKnownEnemy.push({ x: thisPowerBaseX, y: thisPowerBaseY, count: 1 });
     lastPowerBaseX = thisPowerBaseX;
     lastPowerBaseY = thisPowerBaseY;

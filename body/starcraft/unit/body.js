@@ -78,7 +78,8 @@ export default class Unit {
 
     if (client) {
       const command = { unitTags: unitTags, abilityId: abilityId, targetUnitTag: targetUnitTag, targetWorldSpacePos: targetWorldSpacePos, queueCommand: false };
-      await client.action({ actions: [{ actionRaw: { unitCommand: command } }] });
+      const response = await client.action({ actions: [{ actionRaw: { unitCommand: command } }] });
+      if (response.result[0] !== 1) console.log(JSON.stringify(command), ">>", JSON.stringify(response));
     }
   }
 
@@ -86,7 +87,8 @@ export default class Unit {
     const client = this.node.get("channel");
 
     if (client && this.actions.length && (this.block !== this.loop)) {
-      await client.action({ actions: this.actions });
+      const response = await client.action({ actions: this.actions });
+      if (response.result[0] !== 1) console.log(JSON.stringify(this.actions), ">>", JSON.stringify(response));
       this.block = this.loop + 1;
     }
 
