@@ -1,5 +1,6 @@
 import starcraft from "@node-sc2/proto";
 import observe from "./observe.js";
+import act from "./actions/act.js";
 
 let loop = 0;
 
@@ -18,6 +19,7 @@ export default class Game {
   }
 
   async tock() {
+    await act(this.node, this.client);
     if (this.node.get("over")) this.detach();
   }
 

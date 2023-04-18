@@ -2,19 +2,15 @@
   "label": "use guardian shield",
   "goal": "fight opponent",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "SENTRY": { "unitType": "sentry", "guardian-shield": false },
-      "MILITARY": { "code": "body/starcraft/unit/army" }
+      "ARMY": { "unitType": "army" }
     },
 
     "paths": [
       { "path": ["SENTRY"] },
-      { "path": ["MILITARY"] },
+      { "path": ["ARMY"] },
       {
         "label": "USE-GUARDIAN-SHIELD",
         "path": ["SENTRY", "use-guardian-shield", "SENTRY"],
@@ -27,9 +23,9 @@
     "SENTRY/energy",
     "SENTRY/x",
     "SENTRY/y",
-    "MILITARY/enemyWarriorCount",
-    "MILITARY/enemyWarriorX",
-    "MILITARY/enemyWarriorY"
+    "ARMY/enemyWarriorCount",
+    "ARMY/enemyWarriorX",
+    "ARMY/enemyWarriorY"
   ],
 
   "output": [

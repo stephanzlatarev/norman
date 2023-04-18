@@ -2,10 +2,6 @@
   "label": "build a twilight council",
   "goal": "build a twilight council",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "LOCATION": { "type": "location", "purpose": "build" },

@@ -2,25 +2,23 @@
   "label": "fight",
   "goal": "fight opponent",
 
-  "body": {
-    "code": "body/starcraft/unit/army"
-  },
-
   "memory": {
     "nodes": {
+      "ARMY": { "unitType": "army" },
       "LOCATION": { "type": "location", "purpose": "fight" }
     },
 
     "paths": [
+      { "path": ["ARMY"] },
       {
         "label": "RALLY",
-        "path": ["BODY", "rally", "LOCATION"],
+        "path": ["ARMY", "rally", "LOCATION"],
         "provisional": true,
         "unique": true
       },
       {
         "label": "ATTACK",
-        "path": ["BODY", "attack", "LOCATION"],
+        "path": ["ARMY", "attack", "LOCATION"],
         "provisional": true,
         "unique": true
       }
@@ -28,32 +26,32 @@
   },
 
   "input": [
-    "regrouping",
-    "enemyAlert",
-    "baseX",
-    "baseY",
-    "guardX",
-    "guardY",
-    "armyLeaderPack",
-    "armyExtendedPack",
-    "engagedCount",
-    "armyEnergy",
-    "armyX",
-    "armyY",
-    "enemyWarriorCount",
-    "enemyWarriorX",
-    "enemyWarriorY",
-    "enemyDummyX",
-    "enemyDummyY",
-    "warriorCount",
-    "totalCount",
-    "mobilization",
-    "noRetreat",
-    "strategy"
+    "ARMY/regrouping",
+    "ARMY/enemyAlert",
+    "ARMY/baseX",
+    "ARMY/baseY",
+    "ARMY/guardX",
+    "ARMY/guardY",
+    "ARMY/armyLeaderPack",
+    "ARMY/armyExtendedPack",
+    "ARMY/engagedCount",
+    "ARMY/armyEnergy",
+    "ARMY/armyX",
+    "ARMY/armyY",
+    "ARMY/enemyWarriorCount",
+    "ARMY/enemyWarriorX",
+    "ARMY/enemyWarriorY",
+    "ARMY/enemyDummyX",
+    "ARMY/enemyDummyY",
+    "ARMY/warriorCount",
+    "ARMY/totalCount",
+    "ARMY/mobilization",
+    "ARMY/noRetreat",
+    "ARMY/strategy"
   ],
 
   "output": [
-    "regrouping",
+    "ARMY/regrouping",
     "RALLY",
     "ATTACK",
     "LOCATION/x",

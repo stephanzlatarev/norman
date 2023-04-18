@@ -2,17 +2,22 @@
   "label": "train carrier",
   "goal": "train a carrier",
 
-  "body": {
-    "code": "body/starcraft/unit/stargate"
+  "memory": {
+    "nodes": {
+      "STARGATE": { "unitType": "stargate" }
+    },
+    "paths": [
+      { "path": ["STARGATE"] }
+    ]
   },
 
   "input": [
-    "operational",
-    "ordersCount"
+    "STARGATE/operational",
+    "STARGATE/ordersCount"
   ],
 
   "output": [
-    "build-carrier",
-    "ordersCount"
+    "STARGATE/build-carrier",
+    "STARGATE/ordersCount"
   ]
 }

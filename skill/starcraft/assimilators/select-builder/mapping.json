@@ -2,10 +2,6 @@
   "label": "select builder",
   "goal": "build an assimilator",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "VESPENE": { "unitType": "vespene" },

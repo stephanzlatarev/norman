@@ -204,3 +204,97 @@ export const ORDERS = {
   3695: "groundWeapons",
   3696: "shields",
 };
+
+export const ACTIONS = {
+  "carrier": {
+    "scout": 16,
+  },
+  "cybernetics": {
+    "research-armor": 3692,
+    "research-weapons": 3693,
+  },
+  "forge": {
+    "research-armor": 3694,
+    "research-weapons": 3695,
+    "research-shields": 3696,
+  },
+  "gateway": {
+    "build-zealot": 916,
+    "build-stalker": 917,
+    "build-templar": 920,
+    "build-sentry": 921,
+  },
+  "mothership": {
+    "time-warp": 2244,
+  },
+  "nexus": {
+    "chronoboost": 3755,
+    "build-probe": 1006,
+    "build-mothership": 110,
+    "set-rally-point": 3690,
+  },
+  "observer": {
+    "scout": 16,
+  },
+  "phoenix": {
+    "scout": 16,
+  },
+  "probe": {
+    "move": 16,
+    "build-nexus": 880,
+    "build-pylon": 881,
+    "build-assimilator": 882,
+    "build-gateway": 883,
+    "build-forge": 884,
+    "build-beacon": 885,
+    "build-council": 886,
+    "build-stargate": 889,
+    "build-shrine": 891,
+    "build-robotics": 893,
+    "build-cybernetics": 894,
+    "attack": 3674,
+  },
+  "robotics": {
+    "build-observer": 977,
+  },
+  "sentry": {
+    "scout": 16,
+    "use-guardian-shield": 76,
+  },
+  "stalker": {
+    "scout": 16,
+  },
+  "stargate": {
+    "build-phoenix": 946,
+    "build-carrier": 948,
+    "build-voidray": 950,
+  },
+  "templar": {
+    "scout": 16,
+  },
+  "voidray": {
+    "scout": 16,
+  },
+  "zealot": {
+    "scout": 16,
+  }
+};
+
+export const ACTION_TARGET = {
+  "scout": "location",
+  "move": "location",
+  "set-rally-point": "location",
+  "build-nexus": "location",
+  "build-pylon": "location",
+  "build-gateway": "location",
+  "build-forge": "location",
+  "build-beacon": "location",
+  "build-council": "location",
+  "build-stargate": "location",
+  "build-shrine": "location",
+  "build-robotics": "location",
+  "build-cybernetics": "location",
+  "attack": "location",
+  "build-assimilator": "unit",
+  "chronoboost": "unit",
+};

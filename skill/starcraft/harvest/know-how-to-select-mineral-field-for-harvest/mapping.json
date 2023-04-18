@@ -2,10 +2,6 @@
   "label": "know how to select mineral field for harvest",
   "goal": "select mineral field for harvest",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "NEXUS": { "unitType": "nexus" },

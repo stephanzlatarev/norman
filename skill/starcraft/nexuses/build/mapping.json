@@ -2,10 +2,6 @@
   "label": "build a nexus",
   "goal": "build a nexus",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "LOCATION": { "type": "location", "purpose": "build" },

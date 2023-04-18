@@ -2,20 +2,18 @@
   "label": "detect cheese tactics",
   "goal": "win the game",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
+      "GAME": { "is-game": true },
+      "ARMY": { "unitType": "army" },
       "HOMEBASE": { "unitType": "nexus", "homebase": true },
-      "MILITARY": { "code": "body/starcraft/unit/army" },
       "DETECT-CHEESE": { "type": "goal", "label": "detect cheese tactics" }
     },
 
     "paths": [
+      { "path": ["GAME"] },
+      { "path": ["ARMY"] },
       { "path": ["HOMEBASE"] },
-      { "path": ["MILITARY"] },
       {
         "label": "LETS-DETECT-CHEESE",
         "path": ["GOAL", "detect-cheese-tactics", "DETECT-CHEESE"],
@@ -26,35 +24,35 @@
   },
 
   "input": [
-    "strategy",
+    "GAME/strategy",
     "HOMEBASE/x",
     "HOMEBASE/y",
-    "stats/nexus",
-    "MILITARY/warriorCount",
-    "MILITARY/enemyWarriorCount",
-    "MILITARY/enemyWarriorX",
-    "MILITARY/enemyWarriorY",
-    "MILITARY/enemyDummyCount",
-    "MILITARY/enemyDummyX",
-    "MILITARY/enemyDummyY",
-    "BODY/statsEnemy/zergling",
-    "BODY/statsEnemy/hydralisk",
-    "BODY/statsEnemy/roach",
-    "BODY/statsEnemy/queen",
-    "MILITARY/enemyWarriorWorkerCount",
-    "MILITARY/enemyVisibleCount",
-    "BODY/statsEnemy/marine",
-    "BODY/statsEnemy/reaper",
-    "BODY/statsEnemy/bunker",
-    "BODY/statsEnemy/tank",
-    "BODY/statsEnemy/marauder",
-    "BODY/statsEnemy/cyclone"
+    "GAME/stats/nexus",
+    "ARMY/warriorCount",
+    "ARMY/enemyWarriorCount",
+    "ARMY/enemyWarriorX",
+    "ARMY/enemyWarriorY",
+    "ARMY/enemyDummyCount",
+    "ARMY/enemyDummyX",
+    "ARMY/enemyDummyY",
+    "GAME/statsEnemy/zergling",
+    "GAME/statsEnemy/hydralisk",
+    "GAME/statsEnemy/roach",
+    "GAME/statsEnemy/queen",
+    "ARMY/enemyWarriorWorkerCount",
+    "ARMY/enemyVisibleCount",
+    "GAME/statsEnemy/marine",
+    "GAME/statsEnemy/reaper",
+    "GAME/statsEnemy/bunker",
+    "GAME/statsEnemy/tank",
+    "GAME/statsEnemy/marauder",
+    "GAME/statsEnemy/cyclone"
   ],
 
   "output": [
     "LETS-DETECT-CHEESE",
-    "strategy",
-    "MILITARY/mobilizeWorkers",
-    "MILITARY/noRetreat"
+    "GAME/strategy",
+    "ARMY/mobilizeWorkers",
+    "ARMY/noRetreat"
   ]
 }

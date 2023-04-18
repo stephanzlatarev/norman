@@ -2,10 +2,6 @@
   "label": "select vespene",
   "goal": "build an assimilator",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "NEXUS": { "unitType": "nexus", "operational": true },

@@ -13,10 +13,6 @@
 
   "comment": "Selects a free slot in the base of a nexus",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
 
     "nodes": {

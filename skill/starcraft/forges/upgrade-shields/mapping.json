@@ -2,16 +2,21 @@
   "label": "upgrade shields",
   "goal": "upgrade shields",
 
-  "body": {
-    "code": "body/starcraft/unit/forge"
+  "memory": {
+    "nodes": {
+      "FORGE": { "unitType": "forge" }
+    },
+    "paths": [
+      { "path": ["FORGE"] }
+    ]
   },
 
   "input": [
-    "operational",
-    "ordersCount"
+    "FORGE/operational",
+    "FORGE/ordersCount"
   ],
 
   "output": [
-    "research-shields"
+    "FORGE/research-shields"
   ]
 }

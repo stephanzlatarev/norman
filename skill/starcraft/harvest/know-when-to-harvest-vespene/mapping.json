@@ -4,10 +4,6 @@
 
   "comment": "When an assimilator is not utilized, dispatch three probes to it",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "ASSIMILATOR": { "unitType": "assimilator", "operational": true, "utilized": false },

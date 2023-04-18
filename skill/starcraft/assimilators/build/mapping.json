@@ -2,10 +2,6 @@
   "label": "build an assimilator",
   "goal": "build an assimilator",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "PROBE": { "unitType": "probe" },

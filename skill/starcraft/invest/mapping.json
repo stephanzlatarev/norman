@@ -4,12 +4,9 @@
 
   "comment": "Plan the structure and units to build with the available resources",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
+      "GAME": { "is-game": true },
       "ADVANCE-ECONOMY": { "label": "advance economy", "type": "goal" },
       "ADVANCE-MILITARY": { "label": "advance military", "type": "goal" },
       "BUILD-NEXUS": { "label": "build a nexus", "type": "goal" },
@@ -41,6 +38,7 @@
     },
 
     "paths": [
+      { "path": ["GAME"] },
       {
         "label": "LETS-ADVANCE-ECONOMY",
         "path": ["GOAL", "advance-economy", "ADVANCE-ECONOMY"],
@@ -213,35 +211,35 @@
   },
 
   "input": [
-    "strategy",
-    "minerals", "vespene", "foodUsed",
-    "stats/nexus", "stats/nexusBuilding", "stats/nexusOrdered",
-    "stats/base", "stats/baseBuilding", "stats/baseOrdered",
-    "stats/pylon", "stats/pylonBuilding", "stats/pylonOrdered",
-    "stats/assimilator", "stats/assimilatorBuilding", "stats/assimilatorOrdered",
-    "stats/gateway", "stats/gatewayBuilding", "stats/gatewayOrdered",
-    "stats/forge", "stats/forgeBuilding", "stats/forgeOrdered",
-    "stats/beacon", "stats/beaconBuilding", "stats/beaconOrdered",
-    "stats/stargate", "stats/stargateBuilding", "stats/stargateOrdered",
-    "stats/cybernetics", "stats/cyberneticsBuilding", "stats/cyberneticsOrdered",
-    "stats/council", "stats/councilBuilding", "stats/councilOrdered",
-    "stats/shrine", "stats/shrineBuilding", "stats/shrineOrdered",
-    "stats/robotics", "stats/roboticsBuilding", "stats/roboticsOrdered",
-    "stats/mothership", "stats/mothershipBuilding", "stats/mothershipOrdered",
-    "stats/zealot", "stats/zealotBuilding", "stats/zealotOrdered",
-    "stats/stalker", "stats/stalkerBuilding", "stats/stalkerOrdered",
-    "stats/sentry", "stats/sentryBuilding", "stats/sentryOrdered",
-    "stats/templar", "stats/templarBuilding", "stats/templarOrdered",
-    "stats/phoenix", "stats/phoenixBuilding", "stats/phoenixOrdered",
-    "stats/carrier", "stats/carrierBuilding", "stats/carrierOrdered",
-    "stats/voidray", "stats/voidrayBuilding", "stats/voidrayOrdered",
-    "stats/observer", "stats/observerBuilding", "stats/observerOrdered",
-    "stats/probe", "stats/probeBuilding", "stats/probeOrdered",
-    "stats/airWeapons", "stats/airWeaponsBuilding", "stats/airWeaponsOrdered",
-    "stats/airArmor", "stats/airArmorBuilding", "stats/airArmorOrdered",
-    "stats/groundWeapons", "stats/groundWeaponsBuilding", "stats/groundWeaponsOrdered",
-    "stats/groundArmor", "stats/groundArmorBuilding", "stats/groundArmorOrdered",
-    "stats/shields", "stats/shieldsBuilding", "stats/shieldsOrdered"
+    "GAME/strategy",
+    "GAME/minerals", "GAME/vespene", "GAME/foodUsed",
+    "GAME/stats/nexus", "GAME/stats/nexusBuilding", "GAME/stats/nexusOrdered",
+    "GAME/stats/base", "GAME/stats/baseBuilding", "GAME/stats/baseOrdered",
+    "GAME/stats/pylon", "GAME/stats/pylonBuilding", "GAME/stats/pylonOrdered",
+    "GAME/stats/assimilator", "GAME/stats/assimilatorBuilding", "GAME/stats/assimilatorOrdered",
+    "GAME/stats/gateway", "GAME/stats/gatewayBuilding", "GAME/stats/gatewayOrdered",
+    "GAME/stats/forge", "GAME/stats/forgeBuilding", "GAME/stats/forgeOrdered",
+    "GAME/stats/beacon", "GAME/stats/beaconBuilding", "GAME/stats/beaconOrdered",
+    "GAME/stats/stargate", "GAME/stats/stargateBuilding", "GAME/stats/stargateOrdered",
+    "GAME/stats/cybernetics", "GAME/stats/cyberneticsBuilding", "GAME/stats/cyberneticsOrdered",
+    "GAME/stats/council", "GAME/stats/councilBuilding", "GAME/stats/councilOrdered",
+    "GAME/stats/shrine", "GAME/stats/shrineBuilding", "GAME/stats/shrineOrdered",
+    "GAME/stats/robotics", "GAME/stats/roboticsBuilding", "GAME/stats/roboticsOrdered",
+    "GAME/stats/mothership", "GAME/stats/mothershipBuilding", "GAME/stats/mothershipOrdered",
+    "GAME/stats/zealot", "GAME/stats/zealotBuilding", "GAME/stats/zealotOrdered",
+    "GAME/stats/stalker", "GAME/stats/stalkerBuilding", "GAME/stats/stalkerOrdered",
+    "GAME/stats/sentry", "GAME/stats/sentryBuilding", "GAME/stats/sentryOrdered",
+    "GAME/stats/templar", "GAME/stats/templarBuilding", "GAME/stats/templarOrdered",
+    "GAME/stats/phoenix", "GAME/stats/phoenixBuilding", "GAME/stats/phoenixOrdered",
+    "GAME/stats/carrier", "GAME/stats/carrierBuilding", "GAME/stats/carrierOrdered",
+    "GAME/stats/voidray", "GAME/stats/voidrayBuilding", "GAME/stats/voidrayOrdered",
+    "GAME/stats/observer", "GAME/stats/observerBuilding", "GAME/stats/observerOrdered",
+    "GAME/stats/probe", "GAME/stats/probeBuilding", "GAME/stats/probeOrdered",
+    "GAME/stats/airWeapons", "GAME/stats/airWeaponsBuilding", "GAME/stats/airWeaponsOrdered",
+    "GAME/stats/airArmor", "GAME/stats/airArmorBuilding", "GAME/stats/airArmorOrdered",
+    "GAME/stats/groundWeapons", "sGAME/tats/groundWeaponsBuilding", "GAME/stats/groundWeaponsOrdered",
+    "GAME/stats/groundArmor", "GAME/stats/groundArmorBuilding", "GAME/stats/groundArmorOrdered",
+    "GAME/stats/shields", "GAME/stats/shieldsBuilding", "GAME/stats/shieldsOrdered"
   ],
 
   "output": [

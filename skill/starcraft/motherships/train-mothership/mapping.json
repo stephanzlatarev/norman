@@ -2,16 +2,21 @@
   "label": "train mothership",
   "goal": "train a mothership",
 
-  "body": {
-    "code": "body/starcraft/unit/nexus"
+  "memory": {
+    "nodes": {
+      "NEXUS": { "unitType": "nexus" }
+    },
+    "paths": [
+      { "path": ["NEXUS"] }
+    ]
   },
 
   "input": [
-    "operational",
-    "ordersCount"
+    "NEXUS/operational",
+    "NEXUS/ordersCount"
   ],
 
   "output": [
-    "build-mothership"
+    "NEXUS/build-mothership"
   ]
 }

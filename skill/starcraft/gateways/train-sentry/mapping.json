@@ -2,17 +2,22 @@
   "label": "train sentry",
   "goal": "train a sentry",
 
-  "body": {
-    "code": "body/starcraft/unit/gateway"
+  "memory": {
+    "nodes": {
+      "GATEWAY": { "unitType": "gateway" }
+    },
+    "paths": [
+      { "path": ["GATEWAY"] }
+    ]
   },
 
   "input": [
-    "operational",
-    "ordersCount"
+    "GATEWAY/operational",
+    "GATEWAY/ordersCount"
   ],
 
   "output": [
-    "build-sentry",
-    "ordersCount"
+    "GATEWAY/build-sentry",
+    "GATEWAY/ordersCount"
   ]
 }

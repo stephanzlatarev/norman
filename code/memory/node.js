@@ -12,20 +12,6 @@ export default class Node {
     }
   }
 
-  props() {
-    const props = {};
-
-    for (const label in this.data) {
-      const item = this.data[label];
-
-      if ((typeof(item) === "boolean") || (typeof(item) === "number") || (typeof(item) === "string")) {
-        props[label] = item;
-      }
-    }
-
-    return props;
-  }
-
   links() {
     const links = [];
 

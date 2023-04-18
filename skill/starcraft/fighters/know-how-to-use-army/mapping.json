@@ -2,17 +2,15 @@
   "label": "know how to use army",
   "goal": "win the game",
 
-  "body": {
-    "code": "body/starcraft/unit/army"
-  },
-
   "memory": {
     "nodes": {
+      "ARMY": {"unitType": "army" },
       "SCOUT": { "label": "scout opponent", "type": "goal" },
       "FIGHT": { "label": "fight opponent", "type": "goal" }
     },
 
     "paths": [
+      { "path": ["ARMY"] },
       {
         "label": "LETS-SCOUT",
         "path": ["GOAL", "scout", "SCOUT"],
@@ -29,9 +27,9 @@
   },
 
   "input": [
-    "BODY/warriorCount",
-    "BODY/enemyWarriorCount",
-    "BODY/enemyDummyCount"
+    "ARMY/warriorCount",
+    "ARMY/enemyWarriorCount",
+    "ARMY/enemyDummyCount"
   ],
 
   "output": [

@@ -12,7 +12,6 @@ export default class Goal {
   }
 
   async tick() {
-    // each goal will be achieved by one or more pairs of "body" and "skill"
     for (const goal of this.node.links()) {
       await doGoal(this, goal);
     }
@@ -54,34 +53,7 @@ async function doGoal(controller, goal) {
 async function doSkill(controller, goal, skill) {
   const skillStepTimeInMillis = new Date().getTime();
 
-  const bodyFilter = skill.get("body");
-  await traverseBodies(controller.node.memory.get("body"), bodyFilter, async (body) => await controller.skill.perform(goal, skill, body));
+  await controller.skill.perform(goal, skill);
 
   skill.set("stepTimeInMillis", new Date().getTime() - skillStepTimeInMillis);
-}
-
-
-async function traverseBodies(node, bodyFilter, op) {
-  const body = node.get("body");
-
-  if (body) {
-    let isMatching = true;
-
-    for (const key in bodyFilter) {
-      if (node.get(key) !== bodyFilter[key]) {
-        isMatching = false;
-        break;
-      }
-    }
-
-    if (isMatching) {
-      await op(node, body);
-    }
-  }
-
-  for (const child of node.links()) {
-    if (child.path.startsWith(node.path + "/")) {
-      await traverseBodies(child, bodyFilter, op);
-    }
-  }
 }

@@ -15,10 +15,6 @@
 
   "comment": "Selects a builder close to the location",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "LOCATION": { "type": "location" },

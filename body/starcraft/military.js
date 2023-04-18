@@ -1,4 +1,5 @@
 import { WARRIORS, LEADER_RANK, USES_ENERGY, CAN_HIT_AIR, DUMMY_TARGETS, LIGHT_WARRIORS, HEAVY_WARRIORS, STATIONARY_WARRIORS, WORKERS } from "./units.js";
+import { observe } from "./actions/army.js";
 
 const ENEMY_ALERT_SQUARED = 40*40; // Squared distance which raises alert for enemies
 const STALK_RANGE_SQUARED = 14*14; // Squared range for stalking enemies - just outside range of tanks in siege mode
@@ -7,15 +8,15 @@ const lastKnownEnemy = [];
 let lastPowerBaseX = -1;
 let lastPowerBaseY = -1;
 
-export function observeMilitary(node, client, observation) {
+export function observeMilitary(node, observation) {
   const strategy = node.get("strategy");
   const homebase = node.get("homebase");
   const army = node.memory.get(node.path + "/army");
 
   army.set("strategy", strategy);
 
-  if (!army.get("code")) {
-    army.set("code", "body/starcraft/unit/army").set("channel", client).set("game", node).set("orders", []);
+  if (!army.get("unitType")) {
+    army.set("unitType", "army").set("orders", []);
     lastKnownEnemy.push({ x: node.get("enemyBaseX"), y: node.get("enemyBaseY"), count: 1 });
   }
 
@@ -77,7 +78,7 @@ function observeArmy(strategy, node, army, homebase, observation) {
       if (leader) {
         leaderUnits = [leader];
         army.set("tag", leader.tag);
-        node.memory.get(node.path + "/" + leader.tag).set("mobilized", true);
+        if (army.get("enemyWarriorCount") >= 2) node.memory.get(node.path + "/" + leader.tag).set("mobilized", true);
       }
     }
   }
@@ -200,8 +201,7 @@ function observeEnemy(game, army, homebase, observation, isMobilizationCalledOff
     lastKnownEnemy.push({ x: game.get("enemyBaseX"), y: game.get("enemyBaseY"), count: 1 });
   }
 
-  const armyUnit = army.get("body");
-  if (armyUnit) armyUnit.observe(observation, enemy);
+  observe(observation, enemy);
 
   const combatFlyingUnits = observation.rawData.units.find(unit => (CAN_HIT_AIR[unit.unitType] && (unit.owner === owner)));
   const enemyUnits = observation.rawData.units.filter(unit => isValidTarget(unit, enemy, combatFlyingUnits));

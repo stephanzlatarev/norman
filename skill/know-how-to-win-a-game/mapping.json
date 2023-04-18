@@ -2,10 +2,6 @@
   "label": "know how to win a game",
   "goal": "win the game",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "BUILD-STRENGTH": { "label": "build strength", "type": "goal" }

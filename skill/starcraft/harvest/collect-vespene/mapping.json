@@ -2,10 +2,6 @@
   "label": "collect vespene",
   "goal": "build strength",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "COLLECT-VESPENE": { "label": "collect vespene", "type": "goal" }

@@ -54,15 +54,33 @@ function convert(node) {
     path: node.path,
     ref: node.ref,
     label: node.get("label") ? node.get("label") : node.path.split("/").at(-1),
-    props: node.props(),
+    props: props(node),
     links: node.links().map(item => filter(node, item)),
   };
+}
+
+function props(node) {
+  const props = { path: node.path, ref: node.ref };
+
+  for (const label in node.data) {
+    const item = node.data[label];
+
+    if ((typeof(item) === "boolean") || (typeof(item) === "number") || (typeof(item) === "string")) {
+      props[label] = item;
+    } else if (item && item.path) {
+      props[label] = item.path + " (" + item.ref + ")";
+    } else {
+      props[label] = !!item ? "yes" : "no";
+    }
+  }
+
+  return props;
 }
 
 function filter(node, child) {
   if (child.path.startsWith(node.path + "/")) {
     return convert(child);
   } else if (!node.path.startsWith(child.path)) {
-    return { path: child.path, label: child.get("label"), props: child.props() };
+    return { path: child.path, label: child.get("label"), props: props(child) };
   }
 }

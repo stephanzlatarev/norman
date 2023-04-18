@@ -86,4 +86,5 @@ function near(structure, x, y) {
 
 export function linkNexusToCluster(nexus, cluster) {
   nexus.set("resources", cluster);
+  nexus.set("set-rally-point", cluster);
 }

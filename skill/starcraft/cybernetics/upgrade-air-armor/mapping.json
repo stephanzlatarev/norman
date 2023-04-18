@@ -2,16 +2,21 @@
   "label": "upgrade air armor",
   "goal": "upgrade air armor",
 
-  "body": {
-    "code": "body/starcraft/unit/cybernetics"
+  "memory": {
+    "nodes": {
+      "CYBERNETICS": { "unitType": "cybernetics" }
+    },
+    "paths": [
+      { "path": ["CYBERNETICS"] }
+    ]
   },
 
   "input": [
-    "operational",
-    "ordersCount"
+    "CYBERNETICS/operational",
+    "CYBERNETICS/ordersCount"
   ],
 
   "output": [
-    "research-armor"
+    "CYBERNETICS/research-armor"
   ]
 }

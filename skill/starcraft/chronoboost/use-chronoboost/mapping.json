@@ -2,10 +2,6 @@
   "label": "use chronoboost",
   "goal": "use chronoboost",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "NEXUS": { "unitType": "nexus" },

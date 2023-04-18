@@ -2,16 +2,22 @@
   "label": "greet opponent",
   "goal": "show good manners",
 
-  "body": {
-    "code": "body/starcraft/chat"
+  "memory": {
+    "nodes": {
+      "GAME": { "is-game": true },
+      "CHAT": {}
+    },
+    "paths": [
+      { "path": ["GAME", "chat", "CHAT" ] }
+    ]
   },
 
   "input": [
-    "game/time",
-    "game/over"
+    "GAME/time",
+    "GAME/over"
   ],
 
   "output": [
-    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+    "CHAT/0", "CHAT/1", "CHAT/2", "CHAT/3", "CHAT/4", "CHAT/5", "CHAT/6", "CHAT/7", "CHAT/8", "CHAT/9"
   ]
 }

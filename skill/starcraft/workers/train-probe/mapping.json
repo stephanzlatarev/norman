@@ -2,16 +2,21 @@
   "label": "train probe",
   "goal": "train a probe",
 
-  "body": {
-    "code": "body/starcraft/unit/nexus"
+  "memory": {
+    "nodes": {
+      "NEXUS": { "unitType": "nexus" }
+    },
+    "paths": [
+      { "path": ["NEXUS"] }
+    ]
   },
 
   "input": [
-    "operational",
-    "ordersCount"
+    "NEXUS/operational",
+    "NEXUS/ordersCount"
   ],
 
   "output": [
-    "build-probe"
+    "NEXUS/build-probe"
   ]
 }

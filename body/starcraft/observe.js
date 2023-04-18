@@ -24,12 +24,11 @@ export default async function(node, client) {
   await observeResources(node, client, observation);
   await applyStrategy(node, client, observation);
 
-  observeChat(node, client);
   observeStructures(node, observation);
-  observeUnits(node, client, observation);
+  observeUnits(node, observation);
   removeDeadUnits(node, observation);
   observeEnemyUnits(node, observation);
-  observeMilitary(node, client, observation);
+  observeMilitary(node, observation);
 }
 
 async function observePlayers(node, client, observation) {
@@ -56,15 +55,7 @@ async function observePlayers(node, client, observation) {
   return node.get("owner");
 }
 
-function observeChat(node, client) {
-  const chat = node.memory.get(node.path + "/chat");
-
-  if (!chat.get("code")) {
-    chat.set("code", "body/starcraft/chat").set("channel", client).set("game", node);
-  }
-}
-
-function observeUnits(node, client, observation) {
+function observeUnits(node, observation) {
   const units = observation.ownUnits;
 
   const complete = {
@@ -90,10 +81,8 @@ function observeUnits(node, client, observation) {
     if (!unitType || !unitInReality.buildProgress) continue;
 
     const unitInMemory = node.memory.get(node.path + "/" + unitInReality.tag);
-    if (!unitInMemory.get("code")) {
-      unitInMemory.set("code", "body/starcraft/unit/" + unitType)
-      .set("unitType", unitType).set("tag", unitInReality.tag)
-      .set("channel", client).set("game", node);
+    if (!unitInMemory.get("unitType")) {
+      unitInMemory.set("unitType", unitType).set("tag", unitInReality.tag);
     }
 
     unitInMemory.set("operational", unitInReality.buildProgress >= 1);
@@ -116,6 +105,10 @@ function observeUnits(node, client, observation) {
           progress[orderType]++;
         }
       }
+
+      if (unitInMemory.get("pending") === ORDERS[order.abilityId]) {
+        unitInMemory.clear("pending");
+      }
     } else {
       unitInMemory.clear("orderAbilityId");
       unitInMemory.clear("orderTargetUnitTag");
@@ -130,6 +123,12 @@ function observeUnits(node, client, observation) {
         abandonAssimilator(node, unitInMemory);
         unitInMemory.set("utilized", true);
       }
+    }
+
+    if (unitType === "probe") {
+      const harvest = unitInMemory.get("harvest");
+      const isBusy = !!harvest && (harvest.get("unitType") === "assimilator");
+      unitInMemory.set("busy", isBusy);
     }
 
     if (unitType === "sentry") {
@@ -257,7 +256,7 @@ function abandonAssimilator(game, assimilator) {
     for (const probe of game.links()) {
       if (probe.get("harvest") === assimilator) {
         probe.clear("harvest");
-        probe.clear("busy");
+        probe.set("busy", false);
       }
     }
 

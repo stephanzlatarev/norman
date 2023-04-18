@@ -4,18 +4,16 @@
 
   "comment": "Selects a free slot in the base of a nexus",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
 
     "nodes": {
+      "GAME": { "is-game": true },
       "BASE": { "type": "base" },
       "LOCATION": { "type": "location", "purpose": "pylon" }
     },
 
     "paths": [
+      { "path": ["GAME"] },
       { "path": ["BASE"] },
       {
         "path": ["GOAL", "location", "LOCATION"],
@@ -30,8 +28,8 @@
   },
 
   "input": [
-    "strategy",
-    "stats/baseBuilding",
+    "GAME/strategy",
+    "GAME/stats/baseBuilding",
     "BASE/x",
     "BASE/y",
     "BASE/distance",
@@ -42,7 +40,7 @@
     "SELECT",
     "LOCATION/x",
     "LOCATION/y",
-    "BODY/powerBaseX",
-    "BODY/powerBaseY"
+    "GAME/powerBaseX",
+    "GAME/powerBaseY"
   ]
 }

@@ -2,12 +2,9 @@
   "label": "scout",
   "goal": "scout opponent",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
+      "GAME": { "is-game": true },
       "SCOUT": { "explorer": true },
       "LOCATION": { "type": "resources" },
       "ALTERNATIVE": { "type": "resources" },
@@ -15,6 +12,7 @@
     },
 
     "paths": [
+      { "path": ["GAME"] },
       {
         "path": ["SCOUT"]
       },
@@ -43,8 +41,8 @@
     "LOCATION/y",
     "ALTERNATIVE/x",
     "ALTERNATIVE/y",
-    "enemyBaseX",
-    "enemyBaseY",
+    "GAME/enemyBaseX",
+    "GAME/enemyBaseY",
     "SCOUT",
     "PARTNER"
   ],

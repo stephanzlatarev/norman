@@ -2,17 +2,22 @@
   "label": "train phoenix",
   "goal": "train a phoenix",
 
-  "body": {
-    "code": "body/starcraft/unit/stargate"
+  "memory": {
+    "nodes": {
+      "STARGATE": { "unitType": "stargate" }
+    },
+    "paths": [
+      { "path": ["STARGATE"] }
+    ]
   },
 
   "input": [
-    "operational",
-    "ordersCount"
+    "STARGATE/operational",
+    "STARGATE/ordersCount"
   ],
 
   "output": [
-    "build-phoenix",
-    "ordersCount"
+    "STARGATE/build-phoenix",
+    "STARGATE/ordersCount"
   ]
 }

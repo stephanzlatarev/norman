@@ -2,17 +2,22 @@
   "label": "train stalker",
   "goal": "train a stalker",
 
-  "body": {
-    "code": "body/starcraft/unit/gateway"
+  "memory": {
+    "nodes": {
+      "GATEWAY": { "unitType": "gateway" }
+    },
+    "paths": [
+      { "path": ["GATEWAY"] }
+    ]
   },
 
   "input": [
-    "operational",
-    "ordersCount"
+    "GATEWAY/operational",
+    "GATEWAY/ordersCount"
   ],
 
   "output": [
-    "build-stalker",
-    "ordersCount"
+    "GATEWAY/build-stalker",
+    "GATEWAY/ordersCount"
   ]
 }

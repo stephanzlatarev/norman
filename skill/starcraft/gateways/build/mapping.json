@@ -2,15 +2,10 @@
   "label": "build a gateway",
   "goal": "build a gateway",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "LOCATION": { "type": "location", "purpose": "build" },
-      "PROBE": { "unitType": "probe" },
-      "GATEWAY": { "unitType": "gateway" }
+      "PROBE": { "unitType": "probe" }
     },
 
     "paths": [

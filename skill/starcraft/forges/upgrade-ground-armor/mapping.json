@@ -2,16 +2,21 @@
   "label": "upgrade ground armor",
   "goal": "upgrade ground armor",
 
-  "body": {
-    "code": "body/starcraft/unit/forge"
+  "memory": {
+    "nodes": {
+      "FORGE": { "unitType": "forge" }
+    },
+    "paths": [
+      { "path": ["FORGE"] }
+    ]
   },
 
   "input": [
-    "operational",
-    "ordersCount"
+    "FORGE/operational",
+    "FORGE/ordersCount"
   ],
 
   "output": [
-    "research-armor"
+    "FORGE/research-armor"
   ]
 }

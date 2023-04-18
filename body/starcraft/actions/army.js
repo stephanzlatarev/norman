@@ -1,97 +1,100 @@
-import Unit from "../body.js";
-import { DUMMY_TARGETS } from "../../units.js";
+import { DUMMY_TARGETS } from "../units.js";
 
-export default class Army extends Unit {
+let client
+let observation;
+let armyX;
+let armyY;
+let enemy;
+let lastCommandToLeader;
+let lastCommandToSupport;
+let lastCommandToSupportWorkers;
 
-  constructor(node) {
-    super(node);
+export default async function(node, c) {
+  if (!node.get("tag")) return;
 
-    this.lastCommandToLeader;
-    this.lastCommandToSupport;
-    this.lastCommandToSupportWorkers;
-  }
+  client = c;
 
-  observe(observation, enemy) {
-    this.observation = observation;
-    this.enemy = enemy;
-  }
+  if (node.get("rally")) {
+    const location = node.get("rally");
+    const locationX = location.get("x");
+    const locationY = location.get("y");
 
-  async tock() {
-    if (!this.node.get("tag")) return;
+    await instruct(node, 16, { x: locationX, y: locationY });
+  } else if (node.get("attack")) {
+    armyX = node.get("armyX");
+    armyY = node.get("armyY");
 
-    if (this.node.get("rally")) {
-      const location = this.node.get("rally");
-      const locationX = location.get("x");
-      const locationY = location.get("y");
+    const location = node.get("attack");
+    const locationX = location.get("x");
+    const locationY = location.get("y");
+    const squaredDistanceToEnemy = (armyX - locationX) * (armyX - locationX) + (armyY - locationY) * (armyY - locationY);
+    const strategyAllowsMicroFighting = (node.get("strategy") !== 5);
 
-      this.instruct(16, { x: locationX, y: locationY });
-    } else if (this.node.get("attack")) {
-      const armyX = this.node.get("armyX");
-      const armyY = this.node.get("armyY");
-      const location = this.node.get("attack");
-      const locationX = location.get("x");
-      const locationY = location.get("y");
-      const squaredDistanceToEnemy = (armyX - locationX) * (armyX - locationX) + (armyY - locationY) * (armyY - locationY);
-      const strategyAllowsMicroFighting = (this.node.get("strategy") !== 5);
-
-      if (this.observation && strategyAllowsMicroFighting && (squaredDistanceToEnemy < 200) && (await micro(this, armyX, armyY))) {
-        const fleetTags = this.observation.ownUnits.filter(unit => FLEET[unit.unitType]).map(unit => unit.tag);
-        if (fleetTags.length) {
-          await super.directCommand(fleetTags, 3674, null, { x: locationX, y: locationY });
-        }
-
-        this.lastCommandToLeader = null;
-        this.lastCommandToSupport = null;
-        this.lastCommandToSupportWorkers = null;
-      } else {
-        this.instruct(3674, { x: locationX, y: locationY });
+    if (observation && strategyAllowsMicroFighting && (squaredDistanceToEnemy < 200) && (await micro(node))) {
+      const fleetTags = observation.ownUnits.filter(unit => FLEET[unit.unitType]).map(unit => unit.tag);
+      if (fleetTags.length) {
+        await command(fleetTags, 3674, undefined, { x: locationX, y: locationY });
       }
-    }
 
-    await super.tock();
-  }
-
-  async instruct(command, position) {
-    const leaderTag = this.node.get("tag");
-    const supportTags = this.node.get("support");
-    const supportWorkersTags = this.node.get("supportWorkers");
-    const supportCount = (supportTags ? supportTags.length : 0) + (supportWorkersTags ? supportWorkersTags.length : 0);
-
-    const digest = leaderTag + "-" + command + "-" + Math.floor(position.x) + ":" + Math.floor(position.y);
-    if (digest !== this.lastCommandToLeader) {
-      await super.directCommand([leaderTag], command, null, position);
-      this.lastCommandToLeader = digest;
-    }
-
-    if (supportCount) {
-      if (command === 3674) {
-        if (supportTags && supportTags.length) {
-          const digestSupport = digest + JSON.stringify(supportTags);
-          if (digestSupport !== this.lastCommandToSupport) {
-            await super.directCommand(supportTags, 3674, null, position);
-            this.lastCommandToSupport = digestSupport;
-          }
-        }
-        if (supportWorkersTags && supportWorkersTags.length) {
-          const digestSupportWorkers = digest + JSON.stringify(supportWorkersTags);
-          if (digestSupportWorkers !== this.lastCommandToSupportWorkers) {
-            await super.directCommand(supportWorkersTags, 3674, null, position);
-            this.lastCommandToSupportWorkers = digestSupportWorkers;
-          }
-        }
-      } else if (supportTags && supportTags.length) {
-        const digestSupport = leaderTag + "-" + command + "-" + JSON.stringify(supportTags);
-        if (digestSupport !== this.lastCommandToSupport) {
-          await super.directCommand(supportTags, 1, leaderTag);
-          this.lastCommandToSupport = digestSupport;
-        }
-      }
+      lastCommandToLeader = null;
+      lastCommandToSupport = null;
+      lastCommandToSupportWorkers = null;
     } else {
-      this.lastCommandToSupport = null;
-      this.lastCommandToSupportWorkers = null;
+      await instruct(node, 3674, { x: locationX, y: locationY });
     }
   }
+}
 
+export function observe(o, e) {
+  observation = o;
+  enemy = e;
+}
+
+async function command(unitTags, abilityId, targetUnitTag, targetWorldSpacePos) {
+  const command = { unitTags: unitTags, abilityId: abilityId, targetUnitTag: targetUnitTag, targetWorldSpacePos: targetWorldSpacePos, queueCommand: false };
+  const response = await client.action({ actions: [{ actionRaw: { unitCommand: command } }] });
+  if (response.result[0] !== 1) console.log(JSON.stringify(command), ">>", JSON.stringify(response));
+}
+
+async function instruct(node, abilityId, position) {
+  const leaderTag = node.get("tag");
+  const supportTags = node.get("support");
+  const supportWorkersTags = node.get("supportWorkers");
+  const supportCount = (supportTags ? supportTags.length : 0) + (supportWorkersTags ? supportWorkersTags.length : 0);
+
+  const digest = leaderTag + "-" + abilityId + "-" + Math.floor(position.x) + ":" + Math.floor(position.y);
+  if (digest !== lastCommandToLeader) {
+    await command([leaderTag], abilityId, undefined, position);
+    lastCommandToLeader = digest;
+  }
+
+  if (supportCount) {
+    if (abilityId === 3674) {
+      if (supportTags && supportTags.length) {
+        const digestSupport = digest + JSON.stringify(supportTags);
+        if (digestSupport !== lastCommandToSupport) {
+          await command(supportTags, 3674, undefined, position);
+          lastCommandToSupport = digestSupport;
+        }
+      }
+      if (supportWorkersTags && supportWorkersTags.length) {
+        const digestSupportWorkers = digest + JSON.stringify(supportWorkersTags);
+        if (digestSupportWorkers !== lastCommandToSupportWorkers) {
+          await command(supportWorkersTags, 3674, undefined, position);
+          lastCommandToSupportWorkers = digestSupportWorkers;
+        }
+      }
+    } else if (supportTags && supportTags.length) {
+      const digestSupport = leaderTag + "-" + abilityId + "-" + JSON.stringify(supportTags);
+      if (digestSupport !== lastCommandToSupport) {
+        await command(supportTags, 1, leaderTag);
+        lastCommandToSupport = digestSupport;
+      }
+    }
+  } else {
+    lastCommandToSupport = null;
+    lastCommandToSupportWorkers = null;
+  }
 }
 
 const GANG = 4;
@@ -187,17 +190,17 @@ function distance(a, b) {
   return Math.sqrt(dx * dx + dy * dy) - a.radius - b.radius;
 }
 
-function stepback(army, unit, enemy) {
+function stepback(unit, enemy) {
   let dx = unit.pos.x - enemy.pos.x;
   let dy = unit.pos.y - enemy.pos.y;
 
   if (Math.abs(dx) >= Math.abs(dy)) {
     dy /= Math.abs(dx);
-    dy += Math.sign(unit.pos.y - army.y);
+    dy += Math.sign(unit.pos.y - armyY);
     dx = Math.sign(dx);
   } else {
     dx /= Math.abs(dy);
-    dx += Math.sign(unit.pos.x - army.x);
+    dx += Math.sign(unit.pos.x - armyX);
     dy = Math.sign(dy);
   }
 
@@ -343,38 +346,38 @@ function chooseFightPair(matrix, units, enemies) {
   }
 }
 
-async function fight(army, pair) {
+async function fight(pair) {
   if (pair.time < 1) {
-    await army.directCommand([pair.unit.tag], 3674, pair.enemy.tag);
+    await command([pair.unit.tag], 3674, pair.enemy.tag);
   } else {
     const walk = walkTime(pair.unit, pair.distance) + 6;
     const range = weaponTime(pair.unit);
 
     if (walk > range) {
-      await army.directCommand([pair.unit.tag], 3674, pair.enemy.tag);
+      await command([pair.unit.tag], 3674, pair.enemy.tag);
     } else {
-      await army.directCommand([pair.unit.tag], 16, null, stepback(army, pair.unit, pair.enemy));
+      await command([pair.unit.tag], 16, undefined, stepback(pair.unit, pair.enemy));
     }
   }
 }
 
-async function micro(army, armyX, armyY) {
-  const enemies = army.observation.rawData.units.filter(unit => isValidTarget(unit, army.enemy));
+async function micro(node) {
+  const enemies = observation.rawData.units.filter(unit => isValidTarget(unit, enemy));
   if (!enemies.length) return false;
   orderTargets(enemies);
 
-  const units = army.observation.ownUnits.filter(unit => WARRIORS[unit.unitType]);
-  if (army.node.get("mobilization")) {
-    const workers = army.observation.ownUnits.filter(unit => WORKERS[unit.unitType]);
+  const units = observation.ownUnits.filter(unit => WARRIORS[unit.unitType]);
+  if (node.get("mobilization")) {
+    const workers = observation.ownUnits.filter(unit => WORKERS[unit.unitType]);
     for (const worker of workers) units.push(worker);
   } else if (units.length < enemies.length) {
-    const supporters = army.observation.ownUnits.filter(unit => (WORKERS[unit.unitType] && near(unit, armyX, armyY, 20))).sort((a, b) => a.tag.localeCompare(b.tag));
+    const supporters = observation.ownUnits.filter(unit => (WORKERS[unit.unitType] && near(unit, armyX, armyY, 20))).sort((a, b) => a.tag.localeCompare(b.tag));
     if (supporters.length) {
       // Limit mobilized workers to 3 per enemy
       let supportersCount = enemies.length * 3;
       if (units.length) {
         // Reduce mobilized workers when there are own warriors and when enemy uses light warriors
-        const lightEnemies = army.observation.rawData.units.filter(unit => isLightTarget(unit, army.enemy));
+        const lightEnemies = observation.rawData.units.filter(unit => isLightTarget(unit, enemy));
         supportersCount = Math.max((enemies.length * 2 - lightEnemies.length - units.length * 2 + 1) * 2, 0);
       }
       if (supporters.length > supportersCount) {
@@ -382,20 +385,17 @@ async function micro(army, armyX, armyY) {
       }
     }
     for (const worker of supporters) {
-      mobilizeWorker(army, worker);
+      mobilizeWorker(node, worker);
       units.push(worker);
     }
   }
   if (!units.length) return false;
 
-  army.x = armyX;
-  army.y = armyY;
-
   const matrix = calculateMatrix(units, enemies);
 
   let pair;
   while (pair = chooseFightPair(matrix, units, enemies)) {
-    await fight(army, pair);
+    await fight(pair);
     updateMatrix(matrix, pair);
   }
 
@@ -406,10 +406,10 @@ function near(unit, x, y, distance) {
   return (Math.abs(unit.pos.x - x) <= distance) && (Math.abs(unit.pos.y - y) <= distance);
 }
 
-function mobilizeWorker(army, worker) {
-  const path = army.node.path.split("/");
+function mobilizeWorker(node, worker) {
+  const path = node.path.split("/");
   path[path.length - 1] = worker.tag;
-  army.node.memory.get(path.join("/")).set("mobilized", true);
+  node.memory.get(path.join("/")).set("mobilized", true);
 }
 
 function orderTargets(enemies) {

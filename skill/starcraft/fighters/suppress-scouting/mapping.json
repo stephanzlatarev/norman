@@ -2,19 +2,16 @@
   "label": "suppress scouting",
   "goal": "fight opponent",
 
-  "body": {
-    "explorer": true
-  },
-
   "memory": {
     "nodes": {
+      "EXPLORER": { "explorer": true },
       "LOCATION": { "type": "resources" }
     },
 
     "paths": [
       {
         "label": "SCOUT",
-        "path": ["BODY", "scout", "LOCATION"]
+        "path": ["EXPLORER", "scout", "LOCATION"]
       }
     ]
   },

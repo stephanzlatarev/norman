@@ -4,10 +4,6 @@
 
   "comment": "When there's an idle probe and the quota for harvesting minerals is not reached, then assign the probe to harvest some mineral field",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "PROBE": { "unitType": "probe", "busy": false },

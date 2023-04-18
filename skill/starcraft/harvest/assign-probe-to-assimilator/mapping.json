@@ -2,10 +2,6 @@
   "label": "assign probe to assimilator",
   "goal": "use an assimilator",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "PROBE": { "unitType": "probe", "busy": false },

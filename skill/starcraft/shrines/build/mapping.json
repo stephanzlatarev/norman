@@ -2,10 +2,6 @@
   "label": "build a dark shrine",
   "goal": "build a dark shrine",
 
-  "body": {
-    "is-game": true
-  },
-
   "memory": {
     "nodes": {
       "LOCATION": { "type": "location", "purpose": "build" },

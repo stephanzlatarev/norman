@@ -2,17 +2,22 @@
   "label": "train observer",
   "goal": "train an observer",
 
-  "body": {
-    "code": "body/starcraft/unit/robotics"
+  "memory": {
+    "nodes": {
+      "ROBOTICS": { "unitType": "robotics" }
+    },
+    "paths": [
+      { "path": ["ROBOTICS"] }
+    ]
   },
 
   "input": [
-    "operational",
-    "ordersCount"
+    "ROBOTICS/operational",
+    "ROBOTICS/ordersCount"
   ],
 
   "output": [
-    "build-observer",
-    "ordersCount"
+    "ROBOTICS/build-observer",
+    "ROBOTICS/ordersCount"
   ]
 }

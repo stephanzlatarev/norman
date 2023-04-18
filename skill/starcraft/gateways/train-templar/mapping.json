@@ -2,17 +2,22 @@
   "label": "train templar",
   "goal": "train a templar",
 
-  "body": {
-    "code": "body/starcraft/unit/gateway"
+  "memory": {
+    "nodes": {
+      "GATEWAY": { "unitType": "gateway" }
+    },
+    "paths": [
+      { "path": ["GATEWAY"] }
+    ]
   },
 
   "input": [
-    "operational",
-    "ordersCount"
+    "GATEWAY/operational",
+    "GATEWAY/ordersCount"
   ],
 
   "output": [
-    "build-templar",
-    "ordersCount"
+    "GATEWAY/build-templar",
+    "GATEWAY/ordersCount"
   ]
 }

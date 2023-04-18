@@ -2,17 +2,22 @@
   "label": "train void ray",
   "goal": "train a void ray",
 
-  "body": {
-    "code": "body/starcraft/unit/stargate"
+  "memory": {
+    "nodes": {
+      "STARGATE": { "unitType": "stargate" }
+    },
+    "paths": [
+      { "path": ["STARGATE"] }
+    ]
   },
 
   "input": [
-    "operational",
-    "ordersCount"
+    "STARGATE/operational",
+    "STARGATE/ordersCount"
   ],
 
   "output": [
-    "build-voidray",
-    "ordersCount"
+    "STARGATE/build-voidray",
+    "STARGATE/ordersCount"
   ]
 }
