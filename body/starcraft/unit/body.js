@@ -67,7 +67,6 @@ export default class Unit {
     }
 
     this.actions.push({ actionRaw: { unitCommand: command } });
-    this.pendingCommands.push(command);
     this.node.set("busy", true);
 
     return true;
@@ -88,7 +87,14 @@ export default class Unit {
 
     if (client && this.actions.length && (this.block !== this.loop)) {
       const response = await client.action({ actions: this.actions });
-      if (response.result[0] !== 1) console.log(JSON.stringify(this.actions), ">>", JSON.stringify(response));
+      for (let i = 0; i < response.result.length; i++) {
+        const result = response.result[i];
+        if (result === 1) {
+          this.pendingCommands.push(this.actions[i].actionRaw.unitCommand);
+        } else {
+          console.log(JSON.stringify(command), ">>", JSON.stringify(response));
+        }
+      }
       this.block = this.loop + 1;
     }
 

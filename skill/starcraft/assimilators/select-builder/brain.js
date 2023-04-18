@@ -16,7 +16,7 @@ export default class Brain {
     const selectedProbeY = input[8];
 
     if (!selectedProbe) {
-      return [1, thisProbeX, thisProbeY];
+      return [1, 1, thisProbeX, thisProbeY];
     }
 
     const distanceThisProbe = distance(thisProbeX, thisProbeY, locationX, locationY);
