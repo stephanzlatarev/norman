@@ -41,9 +41,21 @@ function ensureNexusesAreLinkedToResources(node, clustersInMemory) {
         if ((Math.abs(clusterX - nexusX) <= 10) && (Math.abs(clusterY - nexusY) <= 10)) {
           cluster.set("nexus", nexus);
           linkNexusToCluster(nexus, cluster);
+          measureDistanceFromResourcesToNexus(nexus, cluster.links());
         }
       }
     }
+  }
+}
+
+function measureDistanceFromResourcesToNexus(nexus, resources) {
+  const nexusX = nexus.get("x");
+  const nexusY = nexus.get("y");
+
+  for (const resource of resources) {
+    const dx = resource.get("x") - nexusX;
+    const dy = resource.get("y") - nexusY;
+    resource.set("distanceToNexus", Math.sqrt(dx * dx + dy * dy));
   }
 }
 
