@@ -1,9 +1,13 @@
 import chat from "./chat.js";
 import fight from "./army.js";
-import { goHarvest } from "./workers.js";
+import { goHarvest, setupHarvest } from "./workers.js";
 import { ACTIONS, ACTION_TARGET, ORDERS } from "../units.js";
 
+let isSetupDone = false;
+
 export default async function(node, client) {
+  if (!isSetupDone && setupHarvest(node)) isSetupDone = true;
+
   await chat(node.memory.get(node.path + "/chat"), client);
 
   const army = node.get("army");
