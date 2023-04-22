@@ -35,6 +35,13 @@ describe("Memory nodes", function() {
       assert.equal(node.get("zero"), 0);
     });
 
+    it("booleans", function() {
+      node.set("true", true);
+      assert.equal(node.get("true"), 1);
+      node.set("false", false);
+      assert.equal(node.get("false"), 0);
+    });
+
     it("numbers", function() {
       node.set("positive number", 135.65);
       assert.equal(node.get("positive number"), 135.65);
@@ -51,6 +58,21 @@ describe("Memory nodes", function() {
   });
 
   describe("calling back on changes", function() {
+
+    it("booleans", function() {
+      let calls = 0;
+      new Node(9, function(node, label, value) {
+        assert.equal(node.ref, 9, "Callback didn't refer to correct node");
+        assert.equal(label, "bool", "Callback didn't refer to correct label");
+        if (calls === 0) {
+          assert.equal(value, 1, "Callback didn't refer to correct value");
+        } else if (calls === 1) {
+          assert.equal(value, 0, "Callback didn't refer to correct value");
+        }
+        calls++;
+      }).set("bool", true).set("bool", false);
+      assert.equal(calls, 2, "Callback didn't make correct number of calls");
+    });
 
     it("numbers", function() {
       let calls = 0;
@@ -89,6 +111,25 @@ describe("Memory nodes", function() {
         calls++;
       }).set("link", other).clear("link");
       assert.equal(calls, 2, "Callback didn't make correct number of calls");
+    });
+
+  });
+
+  describe("matching information", function() {
+
+    it("various values", function() {
+      const node = new Node().set("a", 2).set("b", true).set("c", false).set("d", 0);
+      assert.equal(node.match({ a: 2, b: true, c: false, d: 0 }), true);
+    });
+
+    it("ignoring empty values", function() {
+      const node = new Node().set("id", 1).set("boolean", false).set("number", 0).set("link", new Node()).clear("link");
+      assert.equal(node.match({ id: 1 }), true);
+    });
+
+    it("matching empty values", function() {
+      const node = new Node().set("id", 1);
+      assert.equal(node.match({ id: 1, "boolean": false, "number": 0, "link": null }), true);
     });
 
   });

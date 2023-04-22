@@ -17,7 +17,7 @@ export default class Node {
 
     if (value instanceof Node) {
       this.data[label] = value;
-    } else if (value === 0) {
+    } else if ((value === 0) || (value === false)) {
       delete this.data[label];
     } else if ((value > 0) || (value < 0)) {
       this.data[label] = value;
@@ -38,6 +38,18 @@ export default class Node {
     if (!data) return 0;
 
     return data;
+  }
+
+  match(data) {
+    for (const label in data) {
+      const a = data[label] ? data[label] : 0;
+      const b = this.get(label);
+
+      if (!a && b) return false;
+      if (a !== b) return false;
+    }
+
+    return true;
   }
 
 }
