@@ -1,5 +1,5 @@
 import fs from "fs";
-import Map from "../../../body/starcraft/map.js";
+import Map from "../../../body/starcraft/map/map.js";
 
 const MAPS_FILE = "./train/starcraft/map/maps.json";
 

@@ -1,5 +1,19 @@
 
+export const LOOPS_PER_STEP = 2;
+export const LOOPS_PER_SECOND = 22.4;
+export const STEPS_PER_SECOND = LOOPS_PER_SECOND / LOOPS_PER_STEP;
+
+export const RESOURCES = { 
+  146: "mineral", 147: "mineral", 341: "mineral", 483: "mineral",
+  665: "mineral", 666: "mineral", 796: "mineral", 797: "mineral",
+  884: "mineral", 885: "mineral", 886: "mineral", 887: "mineral",
+  1996: "mineral", 1997: "mineral", 1998: "mineral",
+  342: "vespene", 343: "vespene", 344: "vespene",
+  608: "vespene", 880: "vespene", 881: "vespene",
+};
+
 export const OWN_UNITS = {
+   0: "base",
   10: "mothership",
   59: "nexus",
   60: "pylon",
@@ -23,6 +37,30 @@ export const OWN_UNITS = {
   84: "probe"
 };
 
+export const CLASS = {
+  10: "unit",
+  59: "building",
+  60: "building",
+  61: "building",
+  62: "building",
+  63: "building",
+  64: "building",
+  65: "building",
+  67: "building",
+  69: "building",
+  71: "building",
+  72: "building",
+  73: "unit",
+  74: "unit",
+  76: "unit",
+  77: "unit",
+  78: "unit",
+  79: "unit",
+  80: "unit",
+  82: "unit",
+  84: "unit"
+};
+
 export const WARRIORS = {
   10: "mothership",
   73: "zealot",
@@ -42,7 +80,7 @@ export const WORKERS = {
   268: "mule",
 };
 
-export const EXPLORERS = {
+export const SCOUTS = {
   73: "zealot",
   74: "stalker",
   76: "templar",
@@ -100,6 +138,20 @@ export const ENEMY_UNITS = {
   110: "roach",
   126: "queen",
   692: "cyclone",
+};
+
+export const UNIT_RACE = {
+  24: 1,
+  32: 1,
+  33: 1,
+  48: 1,
+  49: 1,
+  51: 1,
+  105: 2,
+  107: 2,
+  110: 2,
+  126: 2,
+  692: 1,
 };
 
 // The units that can't fight my army
@@ -198,6 +250,21 @@ export const ORDERS = {
   950: "voidray",
   977: "observer",
   1006: "probe",
+  1062: "groundWeapons",
+  1063: "groundWeapons",
+  1064: "groundWeapons",
+  1065: "groundArmor",
+  1066: "groundArmor",
+  1067: "groundArmor",
+  1068: "shields",
+  1069: "shields",
+  1070: "shields",
+  1562: "airWeapons",
+  1563: "airWeapons",
+  1564: "airWeapons",
+  1565: "airArmor",
+  1566: "airArmor",
+  1567: "airArmor",
   3692: "airArmor",
   3693: "airWeapons",
   3694: "groundArmor",
@@ -205,78 +272,66 @@ export const ORDERS = {
   3696: "shields",
 };
 
+export const ACTIONS_LABELS = {
+  ...ORDERS,
+    16: "move",
+    76: "use-guardian-shield",
+   298: "harvest",
+  2244: "time-warp",
+  3690: "set-rally-point",
+  3755: "chronoboost",
+  3674: "attack",
+}
+
 export const ACTIONS = {
-  "carrier": {
-    "scout": 16,
-  },
   "cybernetics": {
-    "research-armor": 3692,
-    "research-weapons": 3693,
+    "airArmor": 3692,
+    "airWeapons": 3693,
   },
   "forge": {
-    "research-armor": 3694,
-    "research-weapons": 3695,
-    "research-shields": 3696,
+    "groundArmor": 3694,
+    "groundWeapons": 3695,
+    "shields": 3696,
   },
   "gateway": {
-    "build-zealot": 916,
-    "build-stalker": 917,
-    "build-templar": 920,
-    "build-sentry": 921,
+    "zealot": 916,
+    "stalker": 917,
+    "templar": 920,
+    "sentry": 921,
   },
   "mothership": {
     "time-warp": 2244,
   },
   "nexus": {
     "chronoboost": 3755,
-    "build-probe": 1006,
-    "build-mothership": 110,
+    "probe": 1006,
+    "mothership": 110,
     "set-rally-point": 3690,
   },
-  "observer": {
-    "scout": 16,
-  },
-  "phoenix": {
-    "scout": 16,
-  },
   "probe": {
-    "move": 16,
-    "build-nexus": 880,
-    "build-pylon": 881,
-    "build-assimilator": 882,
-    "build-gateway": 883,
-    "build-forge": 884,
-    "build-beacon": 885,
-    "build-council": 886,
-    "build-stargate": 889,
-    "build-shrine": 891,
-    "build-robotics": 893,
-    "build-cybernetics": 894,
-    "attack": 3674,
+    "nexus": 880,
+    "base": 881,
+    "pylon": 881,
+    "assimilator": 882,
+    "gateway": 883,
+    "forge": 884,
+    "beacon": 885,
+    "council": 886,
+    "stargate": 889,
+    "shrine": 891,
+    "robotics": 893,
+    "cybernetics": 894,
   },
   "robotics": {
-    "build-observer": 977,
+    "observer": 977,
   },
   "sentry": {
-    "scout": 16,
     "use-guardian-shield": 76,
   },
-  "stalker": {
-    "scout": 16,
-  },
   "stargate": {
-    "build-phoenix": 946,
-    "build-carrier": 948,
-    "build-voidray": 950,
-  },
-  "templar": {
-    "scout": 16,
-  },
-  "voidray": {
-    "scout": 16,
-  },
-  "zealot": {
-    "scout": 16,
+    "phoenix": 946,
+    "carrier": 948,
+    "voidray": 950,
   }
 };
 
@@ -284,17 +339,35 @@ export const ACTION_TARGET = {
   "scout": "location",
   "move": "location",
   "set-rally-point": "location",
-  "build-nexus": "location",
-  "build-pylon": "location",
-  "build-gateway": "location",
-  "build-forge": "location",
-  "build-beacon": "location",
-  "build-council": "location",
-  "build-stargate": "location",
-  "build-shrine": "location",
-  "build-robotics": "location",
-  "build-cybernetics": "location",
+  "nexus": "location",
+  "pylon": "location",
+  "gateway": "location",
+  "forge": "location",
+  "beacon": "location",
+  "council": "location",
+  "stargate": "location",
+  "shrine": "location",
+  "robotics": "location",
+  "cybernetics": "location",
   "attack": "location",
-  "build-assimilator": "unit",
+  "assimilator": "unit",
   "chronoboost": "unit",
+};
+
+export const IS_PRODUCED_BY = {
+  "mothership": "nexus",
+  "zealot": "gateway",
+  "stalker": "gateway",
+  "templar": "gateway",
+  "sentry": "gateway",
+  "phoenix": "stargate",
+  "carrier": "stargate",
+  "voidray": "stargate",
+  "observer": "robotics",
+  "probe": "nexus",
+  "airWeapons": "cybernetics",
+  "airArmor": "cybernetics",
+  "groundWeapons": "forge",
+  "groundArmor": "forge",
+  "shields": "forge",
 };

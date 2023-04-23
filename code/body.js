@@ -1,88 +1,75 @@
 
+const BODY = "body";
+const PROGRESS = "progress";
+const ATTACHED = "attached";
+const ATTACHING = "attaching";
+const DETACHING = "detaching";
+
 export default class Body {
 
-  constructor(node) {
-    this.node = node;
+  constructor(memory, label, code, config) {
+    this.memory = memory;
+    this.node = memory.add(label).set("type", memory.add(BODY));
+    this.code = code;
+    this.config = config;
+
+    this.timer = setInterval(this.run.bind(this), 1000);
   }
 
-  ok() {
-    return !this.bodies || (this.bodies.length > 0);
+  isAttached() {
+    return !!this.node.get(ATTACHED);
   }
 
-  async init() {
-    this.bodies = [];
+  async attach() {
+    this.node.set(PROGRESS, new Date().getTime());
 
-    for (const node of this.node.links()) {
-      const body = await attach(node);
+    const module = await import("../" + this.code + "/body.js");
 
-      if (body) {
-        this.bodies.push(body);
-      }
-    }
-  }
+    this.body = new module.default(this.memory.model(), this.config);
 
-  async tick() {
-    if (!this.bodies) {
-      await this.init();
+    if (this.body && this.body.attach) {
+      await this.body.attach();
     }
 
-    for (const body of this.bodies) {
-      if (body.tick) {
-        await body.tick();
-      }
-    }
-  }
+    this.node.set(ATTACHED, true);
+    this.node.clear(PROGRESS);
 
-  async tock() {
-    for (const body of this.bodies) {
-      if (body.tock) {
-        await body.tock();
-      }
-    }
+    console.log("Successfully attached body:", this.code);
   }
 
   async detach() {
-    for (const node of this.node.links()) {
-      await detach(node);
+    this.node.set(PROGRESS, new Date().getTime());
+
+    if (this.body && this.body.detach) {
+      await this.body.detach();
+    }
+
+    this.node.set(ATTACHED, false);
+    this.node.clear(PROGRESS);
+
+    console.log("Successfully detached body:", this.code);
+  }
+
+  async run() {
+    if (!this.node.get(PROGRESS)) {
+      if (this.node.get(ATTACHING)) {
+        this.node.clear(ATTACHING);
+        await this.attach();
+      }
+      if (this.node.get(DETACHING)) {
+        this.node.clear(DETACHING);
+        await this.detach();
+      }
     }
   }
 
-}
+  async destroy() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
 
-async function attach(node) {
-  if (!node.get("code")) return;
-
-  node.set("progress", new Date().getTime());
-
-  const module = await import("../" + node.get("code") + "/body.js");
-  const body = new module.default(node);
-
-  if (body.attach) {
-    await body.attach();
+      await this.detach();
+    }
   }
 
-  node.set("body", body);
-  node.set("status", "attached");
-  node.clear("progress");
-
-  console.log("Successfully attached body:", node.path);
-
-  return body;
-}
-
-async function detach(node) {
-  node.set("progress", new Date().getTime());
-
-  const body = node.get("body");
-  if (body && body.detach) {
-    await body.detach();
-  }
-
-  node.clear("body");
-  node.clearLinks();
-
-  node.set("status", "detached");
-  node.clear("progress");
-
-  console.log("Successfully detached body:", node.path);
 }

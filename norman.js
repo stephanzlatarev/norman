@@ -9,8 +9,8 @@ console.log = function() {
 
 const norman = new Norman(JSON.parse(fs.readFileSync("./norman.env").toString()));
 
-norman.go().catch(error => { console.log("ERROR:", error.message); console.log(error); });
+norman.start().catch(error => { console.log("ERROR:", error.message); console.log(error); });
 
-process.on('SIGINT', () => norman.stop());
-process.on('SIGQUIT', () => norman.stop());
-process.on('SIGTERM', () => norman.stop());
+process.on('SIGINT', async () => await norman.stop());
+process.on('SIGQUIT', async () => await norman.stop());
+process.on('SIGTERM', async () => await norman.stop());

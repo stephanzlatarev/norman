@@ -1,0 +1,39 @@
+{
+  "label": "produce unit",
+
+  "given": {
+    "nodes": {
+      "GOAL": { "goal": true, "isProducer": true },
+      "PRODUCT": { "isUnitType": true },
+      "PRODUCER": { "isUnitType": true }
+    },
+    "paths": [
+      [ "GOAL", "produce", "PRODUCT", "isProducedBy", "PRODUCER" ]
+    ],
+    "infos": [
+      { "node": "GOAL" }
+    ]
+  },
+
+  "when": {
+    "nodes": {
+      "FACTORY": { "isUnit": true, "operational": true, "orders": false, "produce": false }
+    },
+    "paths": [
+      [ "FACTORY", "type", "PRODUCER" ]
+    ],
+    "infos": [
+      { "node": "FACTORY" }
+    ]
+  },
+
+  "then": {
+    "paths": {
+      "COMMAND": [ "FACTORY", "produce", "PRODUCT" ]
+    },
+    "infos": [
+      { "path": "COMMAND" },
+      { "node": "GOAL" }
+    ]
+  }
+}

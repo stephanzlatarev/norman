@@ -6,7 +6,7 @@ const MAP = MAPS[0];
 
 const GAME_CONFIG = {
   path: "C:\\games\\StarCraft II",
-  version: "Base89720",
+  version: "Base90136",
   realtime: false,
   localMap: { mapPath: MAP + ".SC2Map" },
   playerSetup: [
@@ -63,12 +63,12 @@ async function go() {
 async function startGame() {
   console.log("Starting StarCraft II game...");
 
-  spawn("..\\Versions\\" + GAME_CONFIG.version + "\\SC2.exe", [
+  spawn("..\\Versions\\" + GAME_CONFIG.version + "\\SC2_x64.exe", [
     "-displaymode", "0", "-windowx", "0", "-windowy", "0",
     "-windowwidth", "1920", "-windowwidth", "1440",
     "-listen", "127.0.0.1", "-port", "5000"
   ], {
-    cwd: GAME_CONFIG.path + "\\Support"
+    cwd: GAME_CONFIG.path + "\\Support64"
   });
 
   for (let i = 0; i < 12; i++) {

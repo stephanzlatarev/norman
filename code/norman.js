@@ -1,40 +1,79 @@
 import Body from "./body.js";
-import Goal from "./goal.js";
-import Memory from "./memory/memory.js";
+import Memory from "./memory.js";
+import { loadSkills } from "./skills.js";
 
 export default class Norman {
 
   constructor(env) {
-    this.memory = new Memory(env);
-    this.goal = new Goal(this.memory.get("goal"));
-    this.body = new Body(this.memory.get("body"));
+    this.memory = new Memory();
+
+    for (const goal of env.goals) {
+      this.memory.add(goal).set("goal", true);
+    }
+
+    this.body = [];
+    for (const body of env.body) {
+      if (body.label && body.code) {
+        this.body.push(new Body(this.memory, body.label, body.code, body.config));
+      }
+    }
+
   }
 
-  async go() {
+  async start() {
     console.log("Hi!");
 
-    while (this.goal.ok() && this.body.ok()) {
+    await loadSkills(this.memory);
 
-      // Bodies should now read the changes in their situation
-      await this.body.tick();
+    this.time = 0;
+    this.timer = setInterval(this.run.bind(this), 1000);
 
-      // Run all skills towards the goals
-      await this.goal.tick();
+    for (const body of this.body) {
+      await body.attach();
+    }
 
-      // Bodies should now execute the performed actions
-      await this.body.tock();
+    this.isStarted = true;
+  }
 
-      // Give space for asynchronous operations
-      await new Promise(r => setTimeout(r));
+  run() {
+    this.memory.add("Norman")
+      .set("time", this.time++)
+      .set("nodes", this.memory.metrics.nodes)
+      .set("patterns", this.memory.metrics.patterns)
+      .set("changes", this.memory.metrics.changes);
+
+    const metrics = this.memory.add("Memory patterns");
+    let otherConsumedTime = 0;
+    for (const pattern of this.memory.patterns) {
+      if (pattern.name) {
+        metrics.set(pattern.name, pattern.consumedTime);
+      } else {
+        otherConsumedTime += pattern.consumedTime;
+      }
+    }
+    metrics.set("others", otherConsumedTime);
+
+    if (this.isStarted) {
+      for (const body of this.body) {
+        if (body.isAttached()) return;
+      }
+
+      this.stop();
+    }
+  }
+
+  async stop() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+
+    for (const body of this.body) {
+      await body.destroy();
     }
 
     console.log("Bye!");
-  }
-  
-  stop() {
-    if (this.body.ok()) {
-      this.body.detach();
-    }
+    process.exit(0);
   }
 
 }

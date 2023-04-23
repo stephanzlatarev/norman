@@ -1,10 +1,13 @@
+import { EVENT_UPDATE_NODE } from "./codes.js";
+
 // Memory nodes store information as numbers and links to other nodes
 export default class Node {
 
-  constructor(ref, callback) {
+  constructor(label, ref, callback) {
     this.ref = ref;
     this.callback = callback;
 
+    this.label = label;
     this.data = {};
   }
 
@@ -12,21 +15,25 @@ export default class Node {
     return this.set(label, 0);
   }
 
-  set(label, value) {
-    if (this.data[label] === value) return this;
+  link(node) {
+    this.set(node.label ? node.label : node.ref, node);
+  }
 
-    if (value instanceof Node) {
-      this.data[label] = value;
-    } else if ((value === 0) || (value === false)) {
-      delete this.data[label];
-    } else if ((value > 0) || (value < 0)) {
+  set(label, value) {
+    if (value === undefined) return this;
+    if (label === "label") return this;
+
+    value = canon(value);
+    if (value) {
+      if (this.data[label] === value) return this;
       this.data[label] = value;
     } else {
-      return this;
+      if (this.data[label] === undefined) return this;
+      delete this.data[label];
     }
 
     if (this.callback) {
-      this.callback(this, label, value);
+      this.callback(EVENT_UPDATE_NODE, this, label, value);
     }
 
     return this;
@@ -41,15 +48,43 @@ export default class Node {
   }
 
   match(data) {
-    for (const label in data) {
-      const a = data[label] ? data[label] : 0;
-      const b = this.get(label);
+    if (data.label && (this.label !== data.label)) return false;
 
-      if (!a && b) return false;
-      if (a !== b) return false;
+    for (const label in data) {
+      if (label === "label") continue;
+
+      if (typeof(data[label]) === "string") {
+        const node = this.get(label);
+        if (!(node instanceof Node) || (node.label !== data[label])) return false;
+      } else {
+        if (!match(canon(data[label]), this.get(label))) return false;
+      }
     }
 
     return true;
   }
 
+  get[Symbol.toStringTag]() {
+    return this.label + " #" + this.ref;
+  }
+
+}
+
+function canon(value) {
+  if (value instanceof Node) return value;
+
+  if (value === true) return 1;
+  if (value === false) return 0;
+
+  if (value < 0) return value;
+  if (value === 0) return 0;
+  if (value > 0) return value;
+
+  if (value === null) return 0;
+}
+
+function match(a, b) {
+  if (!a && b) return false;
+  if (a !== b) return false;
+  return true;
 }

@@ -2,12 +2,12 @@ import Game from "../game.js";
 
 export default class LadderGame extends Game {
 
-  constructor(node) {
-    super(node);
+  constructor(model) {
+    super(model);
     this.ladder = parseArguments(process.argv);
   }
 
-  async attach() {
+  async connect() {
     await this.client.connect({
       host: this.ladder.ladderServer,
       port: this.ladder.gamePort,

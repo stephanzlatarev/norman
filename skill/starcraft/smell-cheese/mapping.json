@@ -1,0 +1,56 @@
+{
+  "label": "smell cheese",
+
+  "given": {
+    "nodes": {
+      "CHEESE": { "label": "react to cheesy tactics", "goal": true }
+    },
+    "infos": [
+      { "node": "CHEESE" }
+    ]
+  },
+
+  "when": {
+    "nodes": {
+      "GAME": { "label": "Game" },
+      "BASE": { "army:base": true },
+      "ARMY": { "label": "Army" },
+      "ENEMY": { "label": "Enemy" },
+      "ENEMY_UNITS": { "label": "Enemy units" },
+      "OWN_UNITS": { "label": "Units ready" }
+    },
+    "infos": [
+      { "node": "GAME", "label": "strategy" },
+      { "node": "BASE", "label": "x" },
+      { "node": "BASE", "label": "y" },
+      { "node": "OWN_UNITS", "label": "nexus" },
+      { "node": "ARMY", "label": "warriorCount" },
+      { "node": "ENEMY", "label": "race" },
+      { "node": "ENEMY", "label": "visibleCount" },
+      { "node": "ENEMY", "label": "warriorCount" },
+      { "node": "ENEMY", "label": "dummyCount" },
+      { "node": "ENEMY", "label": "workerCount" },
+      { "node": "ENEMY", "label": "warriorX" },
+      { "node": "ENEMY", "label": "warriorY" },
+      { "node": "ENEMY", "label": "dummyX" },
+      { "node": "ENEMY", "label": "dummyY" },
+      { "node": "ENEMY_UNITS", "label": "bunker" },
+      { "node": "ENEMY_UNITS", "label": "cyclone" },
+      { "node": "ENEMY_UNITS", "label": "hydralisk" },
+      { "node": "ENEMY_UNITS", "label": "marauder" },
+      { "node": "ENEMY_UNITS", "label": "marine" },
+      { "node": "ENEMY_UNITS", "label": "reaper" },
+      { "node": "ENEMY_UNITS", "label": "roach" },
+      { "node": "ENEMY_UNITS", "label": "queen" },
+      { "node": "ENEMY_UNITS", "label": "tank" },
+      { "node": "ENEMY_UNITS", "label": "zergling" }
+    ]
+  },
+
+  "then": {
+    "infos": [
+      { "node": "GAME", "label": "strategy" },
+      { "node": "CHEESE" }
+    ]
+  }
+}

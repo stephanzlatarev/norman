@@ -1,7 +1,7 @@
 import * as tf from "@tensorflow/tfjs-node";
 import fs from "fs";
 
-const HIDDEN_LAYER_INFLATION = 0.8;
+const HIDDEN_LAYER_INFLATION = 0.01;
 const LEARNING_EPOCHS = 100;
 const LEARNING_BATCH = 50;
 const ACTIVATION_FUNCTION = "sigmoid";
@@ -35,7 +35,9 @@ export default class Brain {
       });
     }
 
-    await this.model.save(new Storage(this.file));
+    if (this.file) {
+      await this.model.save(new Storage(this.file));
+    }
 
     summary(time, info);
 
@@ -53,7 +55,16 @@ export default class Brain {
     return answer[0];
   }
 
-  async random() {
+  async reactMany(inputs) {
+    tf.engine().startScope();
+
+    const question = tf.tensor(inputs, [inputs.length, this.body.sensor.length]);
+    await this.model.predict(question).array();
+
+    tf.engine().endScope();
+  }
+
+  random() {
     const data = [];
 
     for (let i = 0; i < this.body.motor.length; i++) data.push(Math.random());
@@ -85,9 +96,9 @@ async function startScope(brain) {
     } catch (error) {
       console.log(error.message);
     }
+  } else {
+    brain.model = await create(brain.body.sensor.length, brain.body.motor.length);
   }
-
-  brain.model = await create(brain.body.sensor.length, brain.body.motor.length);
 }
 
 function endScope() {

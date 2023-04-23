@@ -1,0 +1,34 @@
+{
+  "label": "use guardian shield",
+
+  "given": {
+    "nodes": {
+      "FIGHT": { "label": "fight opponent", "goal": true }
+    },
+    "infos": [
+      { "node": "FIGHT" }
+    ]
+  },
+
+  "when": {
+    "nodes": {
+      "SENTRY": { "type:sentry": true, "canUseGuardianShield": true, "guardian-shield": false },
+      "ENEMY": { "label": "Enemy" }
+    },
+    "infos": [
+      { "node": "SENTRY", "label": "energy" },
+      { "node": "SENTRY", "label": "x" },
+      { "node": "SENTRY", "label": "y" },
+      { "node": "ENEMY", "label": "warriorCount" },
+      { "node": "ENEMY", "label": "warriorX" },
+      { "node": "ENEMY", "label": "warriorY" }
+    ]
+  },
+
+  "then": {
+    "infos": [
+      { "node": "SENTRY", "label": "use-guardian-shield" }
+    ]
+  }
+
+}

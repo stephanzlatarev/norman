@@ -4,12 +4,12 @@ import Node from "../code/node.js";
 describe("Memory nodes", function() {
 
   it("create node", function() {
-    const node = new Node(1);
+    const node = new Node("node", 1);
     assert.equal(node.ref, 1, "Node doesn't remember its reference number");
   });
 
   describe("storing and retrieving information", function() {
-    const node = new Node();
+    const node = new Node("node", );
 
     it("empty", function() {
       assert.equal(node.get("empty"), 0, "Node doesn't return 0 for empty memory");
@@ -25,9 +25,6 @@ describe("Memory nodes", function() {
 
       node.set("empty", undefined);
       assert.equal(node.get("empty"), value, "Node doesn't ignore call with undefined value");
-
-      node.set("empty", null);
-      assert.equal(node.get("empty"), value, "Node doesn't ignore call with null value");
     });
 
     it("zero", function() {
@@ -61,7 +58,8 @@ describe("Memory nodes", function() {
 
     it("booleans", function() {
       let calls = 0;
-      new Node(9, function(node, label, value) {
+      new Node("node", 9, function(type, node, label, value) {
+        assert.equal(type, 2, "Callback didn't refer to correct event type");
         assert.equal(node.ref, 9, "Callback didn't refer to correct node");
         assert.equal(label, "bool", "Callback didn't refer to correct label");
         if (calls === 0) {
@@ -76,7 +74,8 @@ describe("Memory nodes", function() {
 
     it("numbers", function() {
       let calls = 0;
-      new Node(17, function(node, label, value) {
+      new Node("node", 17, function(type, node, label, value) {
+        assert.equal(type, 2, "Callback didn't refer to correct event type");
         assert.equal(node.ref, 17, "Callback didn't refer to correct node");
         assert.equal(label, "pi", "Callback didn't refer to correct label");
         assert.equal(value, 3.14, "Callback didn't refer to correct value");
@@ -86,9 +85,10 @@ describe("Memory nodes", function() {
     });
 
     it("links to nodes", function() {
-      const other = new Node();
+      const other = new Node("other");
       let calls = 0;
-      new Node(14, function(node, label, value) {
+      new Node("node", 14, function(type, node, label, value) {
+        assert.equal(type, 2, "Callback didn't refer to correct event type");
         assert.equal(node.ref, 14, "Callback didn't refer to correct node");
         assert.equal(label, "link", "Callback didn't refer to correct label");
         assert.equal(value, other, "Callback didn't refer to correct value");
@@ -98,9 +98,10 @@ describe("Memory nodes", function() {
     });
 
     it("when clearing stored information", function() {
-      const other = new Node();
+      const other = new Node("other");
       let calls = 0;
-      new Node(21, function(node, label, value) {
+      new Node("node", 21, function(type, node, label, value) {
+        assert.equal(type, 2, "Callback didn't refer to correct event type");
         assert.equal(node.ref, 21, "Callback didn't refer to correct node");
         assert.equal(label, "link", "Callback didn't refer to correct label");
         if (calls === 0) {
@@ -117,19 +118,29 @@ describe("Memory nodes", function() {
 
   describe("matching information", function() {
 
+    it("matching label", function() {
+      const node = new Node("node");
+      assert.equal(node.match({ label: "node" }), true);
+    });
+
     it("various values", function() {
-      const node = new Node().set("a", 2).set("b", true).set("c", false).set("d", 0);
+      const node = new Node("node").set("a", 2).set("b", true).set("c", false).set("d", 0);
       assert.equal(node.match({ a: 2, b: true, c: false, d: 0 }), true);
     });
 
     it("ignoring empty values", function() {
-      const node = new Node().set("id", 1).set("boolean", false).set("number", 0).set("link", new Node()).clear("link");
+      const node = new Node("node").set("id", 1).set("boolean", false).set("number", 0).set("link", new Node()).clear("link");
       assert.equal(node.match({ id: 1 }), true);
     });
 
     it("matching empty values", function() {
-      const node = new Node().set("id", 1);
+      const node = new Node("node").set("id", 1);
       assert.equal(node.match({ id: 1, "boolean": false, "number": 0, "link": null }), true);
+    });
+
+    it("testing for empty values", function() {
+      const node = new Node("node").set("id", 1).set("boolean", true);
+      assert.equal(node.match({ id: 1, "boolean": false }), false);
     });
 
   });

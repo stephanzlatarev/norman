@@ -1,0 +1,45 @@
+{
+  "label": "create building",
+
+  "given": {
+    "nodes": {
+      "GOAL": { "goal": true, "isProducer": true, "builder": false },
+      "PRODUCT": { "isUnitType": true },
+      "LOCATION": { "isLocation": true }
+    },
+    "paths": [
+      [ "GOAL", "produce", "PRODUCT" ],
+      [ "GOAL", "location", "LOCATION" ]
+    ],
+    "infos": [
+      { "node": "GOAL" }
+    ]
+  },
+
+  "when": {
+    "nodes": {
+      "PROBE": { "type:probe": true, "isProducer": false, "isVespeneHarvester": false, "isMobilized": false }
+    },
+    "infos": [
+      { "node": "LOCATION", "label": "x" },
+      { "node": "LOCATION", "label": "y" },
+      { "node": "PROBE", "label": "x" },
+      { "node": "PROBE", "label": "y" },
+      { "node": "PROBE", "label": "orderAbilityId" }
+    ]
+  },
+
+  "then": {
+    "paths": {
+      "COMMAND-1": [ "PROBE", "produce", "PRODUCT" ],
+      "COMMAND-2": [ "PROBE", "produceAt", "LOCATION" ]
+    },
+    "infos": [
+      { "node": "PROBE", "label": "isProducer" },
+      { "path": "COMMAND-1" },
+      { "path": "COMMAND-2" },
+      { "node": "GOAL" }
+    ]
+  }
+
+}

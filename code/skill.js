@@ -1,146 +1,86 @@
-import fs from "fs";
-import layers from "./memory/layers.js";
-import Node from "./memory/node.js";
 
 export default class Skill {
 
-  constructor(node) {
-    this.node = node;
+  constructor(label, memory, brain, given, when, then) {
+    this.label = label;
+    this.memory = memory;
+    this.brain = brain;
+
+    this.situations = {};
+    this.given = memory.pattern(given).title(label + " - given");
+    this.when = when;
+    this.then = then;
+
+    this.given.listen(this.onChange.bind(this));
   }
 
-  async find(goal) {
-    if (!this.didLoadSkills) {
-      await loadAll(this.node);
-      this.didLoadSkills = true;
-    }
+  onChange() {
+    const exists = {};
 
-    return find(this.node, goal);
-  }
+    for (const situation of this.given) {
+      const key = situation.key();
 
-  // The skill takes two graph patterns - one for the input and one for the output.
-  // It generates alternative memory layers for the matches of the input graph pattern and the memory.
-  // It feeds all memory layers into the skill brain one by one.
-  // The skill brain produces output. The last output is written in the memory following the output graph pattern.
-  async perform(goal, skill) {
-    let layer = skill.get("memory");
-    let memory;
-    let motor;
+      exists[key] = true;
 
-    const pattern = { ...layer };
-    pattern.nodes = { ...layer.nodes, GOAL: goal };
-
-    for (const one of layers(goal.memory, pattern)) {
-      const output = await iterate(skill, one, motor);
-
-      if (output) {
-        memory = one;
-        motor = output;
+      if (!this.situations[key]) {
+        this.situations[key] = new Situation(this, situation);
       }
     }
 
-    if (memory && motor) {
-      const output = skill.data.output;
-
-      for (let i = 0; i < output.length; i++) {
-        if (output[i]) {
-          memory.set(output[i], motor[i]);
-        }
+    for (const key in this.situations) {
+      if (!exists[key]) {
+        this.situations[key].stop();
+        delete this.situations[key];
       }
     }
   }
+
 }
 
-async function iterate(skill, layer, cache) {
-  const sensor = [];
+class Situation {
 
-  for (const input of skill.get("input")) {
-    const node = layer.get(input);
+  constructor(skill, given) {
+    this.skill = skill;
+    this.when = skill.memory.pattern(skill.when).title(skill.label + " - when").fix(given);
+    this.then = skill.memory.pattern(skill.then).title(skill.label + " - then");
 
-    if (typeof(node) === "number") {
-      sensor.push(node);
-    } else if (typeof(node) === "boolean") {
-      sensor.push(node ? 1 : 0);
-    } else if (node instanceof Node) {
-      sensor.push(node.ref);
-    } else {
-      sensor.push(0);
-    }
+    this.when.listen(this.onChange.bind(this));
   }
 
-  if (cache) {
-    for (const one of cache) {
-      sensor.push(one);
-    }
-  }
+  async onChange() {
+    const infoSize = length(this.then.infos);
 
-  return await skill.get("skill").react(sensor);
-}
+    let updates = [];
+    let feedback = [];
+    let fixture;
 
-async function load(node) {
-  const path = "./" + node.get("code") + "/";
-  const pathMapping = path + "mapping.json";
+    for (const take of this.when) {
+      this.then.fix(take);
 
-  if (fs.existsSync(pathMapping)) {
-    const mapping = JSON.parse(fs.readFileSync(pathMapping));
-    for (const key in mapping) {
-      node.set(key, mapping[key]);
-    }
+      const input = take.data();
+      const reaction = await this.skill.brain.react(...input, ...feedback);
 
-    if (fs.existsSync(path + "brain.js")) {
-      const module = await import("." + path + "brain.js");
-      node.set("skill", new module.default());
-
-      console.log("Successfully loaded skill:", node.get("label"));
-    }
-  }
-}
-
-async function loadAll(node) {
-  const skills = node.links();
-
-  if (skills.length) {
-    for (const skill of skills) {
-      if (skill.get("code")) {
-        await load(skill);
-      }
-
-      await loadAll(skill);
-    }
-  } else {
-    await loadFolder(node, "./skill");
-  }
-}
-
-async function loadFolder(node, folder) {
-  const subfolders = fs.readdirSync(folder, { withFileTypes: true }).filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
-
-  if (subfolders.length) {
-    for (const subfolder of subfolders) {
-      await loadFolder(node, folder + "/" + subfolder);
-    }
-  } else {
-    const path = node.path + "/" + folder.replace(/[/]/g, "-");
-    await load(node.memory.get(path).set("type", "skill").set("code", folder.substring(2)));
-  }
-}
-
-function find(node, goal, output) {
-  if (!output) output = [];
-
-  for (const skill of node.links()) {
-    const skillGoals = skill.get("goal");
-    if (skillGoals === goal) {
-      output.push(skill);
-    } else if (Array.isArray(skillGoals)) {
-      for (const one of skillGoals) {
-        if (one === goal) {
-          output.push(skill);
-        }
+      if (reaction) {
+        fixture = take;
+        updates = reaction.slice(0, infoSize);
+        feedback = reaction.slice(infoSize);
       }
     }
 
-    find(skill, goal, output);
+    if (fixture) {
+      this.then.fix(fixture);
+      this.then.write(updates);
+    }
   }
 
-  return output;
+  stop() {
+    this.when.remove(this.when);
+    this.then.remove(this.then);
+  }
+}
+
+function length(object) {
+  let index = 0;
+  for (const _ in object) index++;
+  return index;
 }

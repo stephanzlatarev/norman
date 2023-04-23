@@ -1,22 +1,26 @@
 
-============= MILESTONE 2 - Reach ELO 1600 in StarCraft II
+============= MILESTONE 2 - Event-based memory
 
-============= MILESTONE 3 - Event-based memory
+- update Goals. They are passive.
 
-- body/monitor to show count of memory nodes/neurons, and count by type (goal, skill, body)
+- update Skills. They are passive. They use memory patterns to listen for changes and reactively make updates to memory.
+- prevent skills from infinite loops when listening for memory changes and applying memory changes.
+
+- test that Body receives all updates from skills before applying changes in memory to world. Bodies are active.
+
+- test that norman closes when all bodies have detached. In the arena, when the game is over then norman will exit. When testing with a monitor, norman will never exit.
+
+- test that norman says "gg" when game is over.
 
 - add stats body to print every second cpu usage for top 5 skills, as milliseconds and percentage, as well as overall norman.js cpu usage, as millis and percentage. Activate the stats for the arena games.
 
-- replace memory nodes with neurons. A neuron can only store data one value fiels and in labeled links to other neurons. Example: **x**  _is_  **zealot**, **x**'s  _health_  is  **100**, **x**  _busy_  **yes**. There are special nodes "yes" (=true), "no" (=false), "void" (=null/undefined).  
-
-- make use of memory to be based on events. Goals are not active. Skills listen for changes affecting their patterns and make updates (detect infinite loops within one tick-tock cycle). Bodies make pulses (previously tick/tock), reflect their state into memory, listen for changes on their nodes, and when the pulse is over making changes then apply any resulting changes in memory to the external body.
-  In starcraft, there will be only one body - the game. Previous bodies like a "probe" will be represented by a neuron. Orders will be translated to links between neurons. Links between neurons will be translated to action commands.
-
-- norman closes when all bodies have detached. In the arena, when the game is over then norman will exit. When testing with a monitor, norman will never exit.
+============= MILESTONE 3 - Reach ELO 1600 in StarCraft II
 
 ============= MILESTONE 4 - Add ability to train skills with samples given in the Web UI
 
 ============= MILESTONE 5 - Add Gherkin to describe skills. Internally convert to the json description
+
+Example: **x**  _is_  **zealot**, **x**'s  _health_  is  **100**, **x**  _busy_  **yes**.
 
 ============= MILESTONE 6 - Match skills to goals by outcomes instead of by label
 

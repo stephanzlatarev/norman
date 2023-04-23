@@ -1,49 +1,81 @@
 import starcraft from "@node-sc2/proto";
-import observe from "./observe.js";
-import act from "./actions/act.js";
+import read from "./map/read.js";
+import observe from "./observe/observe.js";
+import act from "./act/act.js";
+import { LOOPS_PER_STEP, LOOPS_PER_SECOND } from "./units.js";
 
-let loop = 0;
+const print = console.log;
 
 export default class Game {
 
-  constructor(node) {
-    this.node = node;
+  constructor(model) {
+    this.model = model;
+  }
+
+  async attach() {
     this.client = starcraft();
-    this.actions = [];
+
+    await this.connect();
+
+    read(this.model, await this.client.gameInfo(), (await this.client.observation()).observation);
+
+    setTimeout(this.run.bind(this));
   }
 
-  async tick() {
-    loop++;
-    await this.client.step({ count: 1 });
-    await observe(this.node, this.client);
+  clock() {
+    const loop = this.model.observation ? this.model.observation.gameLoop : 0;
+    const seconds = Math.floor(loop / LOOPS_PER_SECOND);
+    const minutes = Math.floor(seconds / 60);
+    return twodigits(minutes) + ":" + twodigits(seconds % 60) + "/" + loop;
   }
 
-  async tock() {
-    await act(this.node, this.client);
-    if (this.node.get("over")) this.detach();
+  async run() {
+    console.log = function() { print(this.clock(), ...arguments); }.bind(this);
+
+    try {
+      const game = this.model.get("Game");
+      const owner = game.get("owner");
+      const enemy = this.model.get("Enemy").get("owner");
+
+      while (this.client && !game.get("over")) {
+        // Observe the current situation
+        this.model.observation = (await this.client.observation()).observation;
+        this.model.observation.ownUnits = this.model.observation.rawData.units.filter(unit => unit.owner === owner);
+        this.model.observation.enemyUnits = this.model.observation.rawData.units.filter(unit => unit.owner === enemy);
+        const images = observe(this.model, this.model.observation);
+  
+        // Let skills perform on current situation
+        await this.model.memory.notifyPatternListeners();
+
+        // Act on skills reaction
+        await act(this.model, this.client, images);
+
+        // Step in the game
+        await this.client.step({ count: LOOPS_PER_STEP });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      console.log = print;
+    }
+
+    this.detach();
   }
 
   async detach() {
     if (this.client) {
-      await this.client.quit();
+      try {
+        await this.client.quit();
+      } catch (error) {
+      }
+
+      this.client = null;
     }
   }
 
 }
 
-const print = console.log;
-
-console.log = function() {
-  print(clock(), ...arguments);
-}
-
 function twodigits(value) {
   if (value < 10) return "0" + value;
   return value;
-}
-
-function clock() {
-  const seconds = Math.floor(loop / 22.5);
-  const minutes = Math.floor(seconds / 60);
-  return twodigits(minutes) + ":" + twodigits(seconds % 60);
 }
