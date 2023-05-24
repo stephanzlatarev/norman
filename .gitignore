@@ -6,3 +6,5 @@ package-lock.json
 sandbox
 todo.txt
 secrets.json
+samples*
+*.tf

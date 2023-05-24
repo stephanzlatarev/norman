@@ -1,9 +1,8 @@
-import * as tf from "@tensorflow/tfjs-node";
+import * as tf from "@tensorflow/tfjs-node-gpu";
 import fs from "fs";
 
-const HIDDEN_LAYER_INFLATION = 0.01;
 const LEARNING_EPOCHS = 100;
-const LEARNING_BATCH = 50;
+const LEARNING_BATCH = 100;
 const ACTIVATION_FUNCTION = "sigmoid";
 const OPTIMIZER_FUNCTION = "adam";
 const LOSS_FUNCTION = "meanSquaredError";
@@ -39,7 +38,7 @@ export default class Brain {
       await this.model.save(new Storage(this.file));
     }
 
-    summary(time, info);
+    summary(this.memory, time, info);
 
     endScope();
   }
@@ -73,10 +72,10 @@ export default class Brain {
   }
 }
 
-async function create(inputSize, outputSize) {
+function create(inputSize, outputSize) {
   const model = tf.sequential();
 
-  model.add(tf.layers.dense({ inputShape: [inputSize], units: Math.floor(inputSize * HIDDEN_LAYER_INFLATION), activation: ACTIVATION_FUNCTION }));
+  model.add(tf.layers.dense({ inputShape: [inputSize], units: Math.floor((inputSize + outputSize) / 2), activation: ACTIVATION_FUNCTION }));
   model.add(tf.layers.dense({ units: outputSize, activation: ACTIVATION_FUNCTION }));
   model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
 
@@ -88,7 +87,7 @@ async function startScope(brain) {
 
   if (brain.model) return;
 
-  if (brain.file) {
+  if (brain.file && fs.existsSync(brain.file)) {
     try {
       brain.model = await tf.loadLayersModel(new Storage(brain.file));
       brain.model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
@@ -97,7 +96,7 @@ async function startScope(brain) {
       console.log(error.message);
     }
   } else {
-    brain.model = await create(brain.body.sensor.length, brain.body.motor.length);
+    brain.model = create(brain.body.sensor.length, brain.body.motor.length);
   }
 }
 
@@ -105,7 +104,7 @@ function endScope() {
   tf.engine().endScope();
 }
 
-function summary(time, info) {
+function summary(memory, time, info) {
   const lossAtStart = info.history.loss[0];
   const lossAtEnd = info.history.loss[info.history.loss.length - 1];
   const accuracy = 1 - lossAtEnd;
@@ -113,7 +112,12 @@ function summary(time, info) {
   const millisPerIteration = new Date().getTime() - time;
   const perfectionTime = new Date(new Date().getTime() + millisPerIteration * iterationsTillZeroLoss);
 
-  console.log("Accuracy:", accuracy, "\tPerfection:", (iterationsTillZeroLoss > 0) ? perfectionTime.toISOString() : "-");
+  console.log(
+    "Accuracy:", accuracy,
+    "\tPerfection:", (iterationsTillZeroLoss > 0) ? perfectionTime.toISOString() : "-",
+    "\tSamples:", memory.input.length,
+    "\tScore:", memory.score[memory.score.length - 1], "->", memory.score[0],
+  );
 }
 
 class Storage {

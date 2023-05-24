@@ -1,3 +1,4 @@
+import fs from "fs";
 
 export default class Memory {
 
@@ -11,12 +12,15 @@ export default class Memory {
     if (score < this.minScore) return;
 
     const inputHash = JSON.stringify(input);
-    const outputHash = JSON.stringify(output);
-    if (this.hash[inputHash] && (this.hash[inputHash] !== outputHash)) {
-      if (this.options.informAboutCollisions) console.log("Memory collision detected:", inputHash, "requires", this.hash[inputHash], "and", outputHash);
+    const previous = this.index[inputHash];
+    if (previous >= 0) {
+      if (score > this.score[previous]) {
+        this.input[previous] = [...input];
+        this.output[previous] = [...output];
+        this.score[previous] = score;
+      }
       return;
     }
-    this.hash[inputHash] = JSON.stringify(output);
 
     if (this.score.length && (score > this.score[this.score.length - 1])) {
       let index = 0;
@@ -27,13 +31,17 @@ export default class Memory {
       this.input.splice(index, 0, [...input]);
       this.output.splice(index, 0, [...output]);
       this.score.splice(index, 0, score);
+      this.index[inputHash] = index;
     } else {
       this.input.push([...input]);
       this.output.push([...output]);
       this.score.push(score);
+      this.index[inputHash] = this.input.length - 1;
     }
 
     if (this.output.length > this.maxSize) {
+      for (let i = this.maxSize; i < this.output.length; i++) delete this.index[JSON.stringify(this.input[i])];
+
       this.input.length = this.maxSize;
       this.output.length = this.maxSize;
       this.score.length = this.maxSize;
@@ -45,7 +53,7 @@ export default class Memory {
     this.input = [];
     this.output = [];
     this.score = [];
-    this.hash = {};
+    this.index = {};
   }
 
   all() {
@@ -66,6 +74,32 @@ export default class Memory {
     }
 
     return { input: input, output: output };
+  }
+
+  load(file) {
+    if (fs.existsSync(file)) {
+      const record = JSON.parse(fs.readFileSync(file));
+      this.options = record.options;
+      this.maxSize = record.maxSize;
+      this.minScore = record.minScore;
+      this.input = record.input;
+      this.output = record.output;
+      this.score = record.score;
+    }
+
+    return this;
+  }
+
+  store(file) {
+    fs.writeFileSync(file, JSON.stringify({
+      options: this.options,
+      maxSize: this.maxSize,
+      minScore: this.minScore,
+      input: this.input,
+      output: this.output,
+      score: this.score,
+      index: this.index,
+    }));
   }
 
 }

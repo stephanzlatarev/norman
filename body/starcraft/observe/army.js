@@ -48,9 +48,12 @@ function getPack(units, leader, distance) {
 function selectBase(model, army, observation) {
   if (!army.get("base")) {
     const nexus = observation.ownUnits.find(unit => (unit.unitType === 59));
-    const base = model.get(nexus.tag);
 
-    army.set("base", base.set("army:base", true).set("flag:fight", true));
+    if (nexus) {
+      const base = model.get(nexus.tag);
+
+      army.set("base", base.set("army:base", true).set("flag:fight", true));
+    }
   }
 }
 

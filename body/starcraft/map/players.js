@@ -6,6 +6,8 @@ export function mapPlayers(model, gameInfo, observation) {
 
   model.add("Game").set("owner", owner);
   model.add("Enemy").set("owner", enemy).set("baseX", enemyBase.x).set("baseY", enemyBase.y);
+
+  mapPlayableArea(model, gameInfo);
 }
 
 function getEnemyId(gameInfo, owner) {
@@ -14,4 +16,19 @@ function getEnemyId(gameInfo, owner) {
       return player.playerId;
     }
   }
+}
+
+function mapPlayableArea(model, gameInfo) {
+  const playArea = gameInfo.startRaw.playableArea;
+
+  const left = playArea.p0.x;
+  const top = playArea.p0.y;
+  const width = playArea.p1.x - playArea.p0.x;
+  const height = playArea.p1.y - playArea.p0.y;
+
+  const cellWidth = width / 10;
+  const cellHeight = height / 10;
+
+  model.add("Map").set("left", left).set("top", top).set("width", width).set("height", height)
+    .set("cellWidth", cellWidth).set("cellHeight", cellHeight);
 }
