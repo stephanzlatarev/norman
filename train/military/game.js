@@ -1,3 +1,5 @@
+import display from "./display.js";
+import move from "./flows.js";
 
 const DAMAGE = 0.2;
 const SPAWN = 0.1;
@@ -10,7 +12,20 @@ export default class Game {
     this.player2 = player2;
   }
 
+  async play(limit) {
+    this.start();
+
+    while (this.time < limit) {
+      await this.step();
+    }
+
+    return this.score();
+  }
+
   start() {
+    this.time = 0;
+
+    this.player1.start();
     this.player1.military = field();
     this.player1.economy = field();
     this.player1.economy[coordinates(1, 1)] = 1;
@@ -20,6 +35,7 @@ export default class Game {
     this.player1.economy[coordinates(3, 3)] = 1;
     this.player1.economy[coordinates(5, 1)] = 1;
 
+    this.player2.start();
     this.player2.military = field();
     this.player2.economy = field();
     this.player2.economy[coordinates(8, 8)] = 1;
@@ -30,12 +46,10 @@ export default class Game {
     this.player2.economy[coordinates(4, 8)] = 1;
   }
 
-  step() {
+  async step() {
     for (let spot = 0; spot < 100; spot++) {
       fight(this.player1, this.player2, spot);
     }
-
-    this.time++;
 
     if (this.time % 10 === 0) {
       for (let spot = 0; spot < 100; spot++) {
@@ -50,24 +64,32 @@ export default class Game {
       }
     }
 
-    const deployment1 = this.player1.deploy(this.player1.military, this.player1.economy, this.player2.military, this.player2.economy);
-    const deployment2 = this.player2.deploy(this.player2.military, this.player2.economy, this.player1.military, this.player1.economy);
+    const deployment1 = await this.player1.deploy(this.player1.military, this.player1.economy, this.player2.military, this.player2.economy);
+    const deployment2 = await this.player2.deploy(this.player2.military, this.player2.economy, this.player1.military, this.player1.economy);
 
     this.player1.military = move(this.player1.military, deployment1);
     this.player2.military = move(this.player2.military, deployment2);
+
+    this.time++;
   }
 
-  winner() {
-    let player1 = 0;
-    let player2 = 0;
-    for (const one of this.player1.economy) {
-      if (one > 0) player1 += one;
-    }
-    for (const one of this.player2.economy) {
-      if (one > 0) player2 += one;
-    }
-    if (!player1) return 2;
-    if (!player2) return 1;
+  score() {
+    let score = 0;
+
+    for (const one of this.player1.economy) if (one > 0) score += one;
+    for (const one of this.player1.military) if (one > 0) score += one;
+
+    for (const one of this.player2.economy) if (one > 0) score -= one;
+    for (const one of this.player2.military) if (one > 0) score -= one;
+
+    return score;
+  }
+
+  display() {
+    display(this.player1.military, 0, 0);
+    display(this.player2.military, 1, 0);
+    display(this.player1.economy, 0, 1);
+    display(this.player2.economy, 1, 1);
   }
 }
 
@@ -95,11 +117,8 @@ function fight(player1, player2, spot) {
     // Fight between warriors
     const damage = Math.max(military1, military2) * DAMAGE;
 
-    player1.military[spot] = Math.max(military1 - damage, 0);
-    if (player1.military[spot] < 0.1) player1.military[spot] = 0;
-
-    player2.military[spot] = Math.max(military2 - damage, 0);
-    if (player2.military[spot] < 0.1) player2.military[spot] = 0;
+    player1.military[spot] = round(military1 - damage);
+    player2.military[spot] = round(military2 - damage);
   } else if (military1 && economy2) {
     const damage = military1 * DAMAGE;
 
@@ -119,163 +138,6 @@ function fight(player1, player2, spot) {
   }
 }
 
-const PREFIX_LEFT = 0;
-const PREFIX_LEFT_TOP = 1;
-const PREFIX_TOP = 2;
-const PREFIX_TOP_RIGHT = 3;
-const PREFIX_RIGHT = 4;
-const PREFIX_BOTTOM_RIGHT = 5;
-const PREFIX_BOTTOM = 6;
-const PREFIX_LEFT_BOTTOM = 7;
-
-function move(military, deployment) {
-  const result = [...military];
-
-  for (const flow of flows(military, deployment)) {
-    result[flow.source] -= flow.volume;
-    result[flow.target] += flow.volume;
-
-    if (result[flow.source] < 0.1) result[flow.source] = 0;
-  }
-
-  return result;
-}
-
-function flows(military, deployment) {
-  const table = [];
-  for (let i = 0; i < military.length; i++) table[i] = { delta: military[i] - deployment[i], prefix: [] };
-
-  for (let y = 0; y < 10; y++) {
-    let prefix = 0;
-    let cell = table[y * 10];
-    cell.prefix[PREFIX_LEFT] = 0;
-    for (let x = 1; x < 10; x++) {
-      prefix += cell.delta;
-      cell = table[x + y * 10];
-      cell.prefix[PREFIX_LEFT] = prefix;
-    }
-
-    prefix = 0;
-    cell = table[9 + y * 10];
-    cell.prefix[PREFIX_RIGHT] = 0;
-    for (let x = 8; x >= 0; x--) {
-      prefix += cell.delta;
-      cell = table[x + y * 10];
-      cell.prefix[PREFIX_RIGHT] = prefix;
-    }
-  }
-
-  for (let x = 0; x < 10; x++) {
-    let prefix = 0;
-    let cell = table[x];
-    cell.prefix[PREFIX_TOP] = 0;
-    for (let y = 1; y < 10; y++) {
-      prefix += cell.delta;
-      cell = table[x + y * 10];
-      cell.prefix[PREFIX_TOP] = prefix;
-    }
-
-    prefix = 0;
-    cell = table[x + 9 * 10];
-    cell.prefix[PREFIX_BOTTOM] = 0;
-    for (let y = 8; y >= 0; y--) {
-      prefix += cell.delta;
-      cell = table[x + y * 10];
-      cell.prefix[PREFIX_BOTTOM] = prefix;
-    }
-  }
-
-  for (let x = 0; x < 10; x++) {
-    const cell = table[x];
-    cell.prefix[PREFIX_LEFT_TOP] = 0;
-    cell.prefix[PREFIX_TOP_RIGHT] = 0;
-  } 
-  for (let y = 1; y < 10; y++) {
-    let prefix = 0;
-    let cell = table[y * 10];
-    cell.prefix[PREFIX_LEFT_TOP] = 0;
-    for (let x = 1; x < 10; x++) {
-      prefix += cell.delta + cell.prefix[PREFIX_TOP];
-      cell = table[x + y * 10];
-      cell.prefix[PREFIX_LEFT_TOP] = prefix;
-    }
-
-    prefix = 0;
-    cell = table[9 + y * 10];
-    cell.prefix[PREFIX_TOP_RIGHT] = 0;
-    for (let x = 8; x >= 0; x--) {
-      prefix += cell.delta + cell.prefix[PREFIX_TOP];
-      cell = table[x + y * 10];
-      cell.prefix[PREFIX_TOP_RIGHT] = prefix;
-    }
-  }
-
-  for (let x = 0; x < 10; x++) {
-    const cell = table[x + 9 * 10];
-    cell.prefix[PREFIX_LEFT_BOTTOM] = 0;
-    cell.prefix[PREFIX_BOTTOM_RIGHT] = 0;
-  } 
-  for (let y = 8; y >= 0; y--) {
-    let prefix = 0;
-    let cell = table[y * 10];
-    cell.prefix[PREFIX_LEFT_BOTTOM] = 0;
-    for (let x = 1; x < 10; x++) {
-      prefix += cell.delta + cell.prefix[PREFIX_BOTTOM];
-      cell = table[x + y * 10];
-      cell.prefix[PREFIX_LEFT_BOTTOM] = prefix;
-    }
-
-    prefix = 0;
-    cell = table[9 + y * 10];
-    cell.prefix[PREFIX_BOTTOM_RIGHT] = 0;
-    for (let x = 8; x >= 0; x--) {
-      prefix += cell.delta + cell.prefix[PREFIX_BOTTOM];
-      cell = table[x + y * 10];
-      cell.prefix[PREFIX_BOTTOM_RIGHT] = prefix;
-    }
-  }
-
-  // Create movement for each delta
-  const flows = [];
-  for (let y = 0; y < 10; y++) {
-    for (let x = 0; x < 10; x++) {
-      const source = x + y * 10;
-      const cell = table[source];
-
-      if (cell.delta > 0) {
-        let pressure = 0;
-        for (const pressureInDirection of cell.prefix) if (pressureInDirection < 0) pressure -= pressureInDirection;
-
-        for (let direction = 0; direction < cell.prefix.length; direction++) {
-          const pressureInDirection = cell.prefix[direction];
-
-          if (pressureInDirection < 0) {
-            const volume = -pressureInDirection * cell.delta / pressure;
-
-            if (volume >= 0.1) {
-              const target = getTarget(x, y, direction);
-              flows.push({ source: source, target: target, volume: Math.floor(volume * 10) / 10 });
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // TODO: Add movement for spill volumes
-
-  return flows;
-}
-
-function getTarget(x, y, direction) {
-  switch (direction) {
-    case PREFIX_LEFT: return (x - 1) + y * 10;
-    case PREFIX_LEFT_TOP: return (x - 1) + (y - 1) * 10;
-    case PREFIX_TOP: return x + (y - 1) * 10;
-    case PREFIX_TOP_RIGHT: return (x + 1) + (y - 1) * 10;
-    case PREFIX_RIGHT: return (x + 1) + y * 10;
-    case PREFIX_BOTTOM_RIGHT: return (x + 1) + (y + 1) * 10;
-    case PREFIX_BOTTOM: return x + (y + 1) * 10;
-    case PREFIX_LEFT_BOTTOM: return (x - 1) + (y + 1) * 10;
-  }
+function round(value) {
+  return Math.max(Math.floor(value * 10) / 10, 0);
 }

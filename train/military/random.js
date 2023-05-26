@@ -5,6 +5,9 @@ export default class RandomPlayer {
     this.name = name;
   }
 
+  start() {
+  }
+
   deploy(military) {
     const deployment = [];
     let army = 0;

@@ -80,8 +80,6 @@ export default class Memory {
     if (fs.existsSync(file)) {
       const record = JSON.parse(fs.readFileSync(file));
       this.options = record.options;
-      this.maxSize = record.maxSize;
-      this.minScore = record.minScore;
       this.input = record.input;
       this.output = record.output;
       this.score = record.score;
@@ -93,8 +91,6 @@ export default class Memory {
   store(file) {
     fs.writeFileSync(file, JSON.stringify({
       options: this.options,
-      maxSize: this.maxSize,
-      minScore: this.minScore,
       input: this.input,
       output: this.output,
       score: this.score,

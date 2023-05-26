@@ -2,8 +2,8 @@ import * as tf from "@tensorflow/tfjs-node-gpu";
 import fs from "fs";
 
 const LEARNING_EPOCHS = 20;
-const LEARNING_BATCH = 2048;
-const ACTIVATION_FUNCTION = "sigmoid";
+const LEARNING_BATCH = 1024;
+const ACTIVATION_FUNCTION = "relu";
 const OPTIMIZER_FUNCTION = "adam";
 const LOSS_FUNCTION = "meanSquaredError";
 
@@ -15,30 +15,31 @@ export default class Brain {
     this.file = file;
   }
 
-  async learn(millis) {
+  async learn() {
     await startScope(this);
 
-    const time = Date.now();
     const batch = this.memory.all();
     const input = tf.tensor(batch.input, [batch.input.length, this.body.sensor.length]);
     const output = tf.tensor(batch.output, [batch.output.length, this.body.motor.length]);
 
-    let info;
+    let loss;
 
-    while (new Date().getTime() - time < millis) {
-      info = await this.model.fit(input, output, {
+    do {
+      const info = await this.model.fit(input, output, {
         epochs: LEARNING_EPOCHS,
         batchSize: LEARNING_BATCH,
         shuffle: true,
         verbose: false,
       });
-    }
+
+      loss = info.history.loss[info.history.loss.length - 1];
+
+      this.summary = "Loss: " + loss.toFixed(2) + " | Samples: " + this.memory.input.length;
+    } while (this.loss >= 1);
 
     if (this.file) {
       await this.model.save(new Storage(this.file));
     }
-
-    summary(this.memory, time, info);
 
     endScope();
   }
@@ -102,22 +103,6 @@ async function startScope(brain) {
 
 function endScope() {
   tf.engine().endScope();
-}
-
-function summary(memory, time, info) {
-  const lossAtStart = info.history.loss[0];
-  const lossAtEnd = info.history.loss[info.history.loss.length - 1];
-  const accuracy = 1 - lossAtEnd;
-  const iterationsTillZeroLoss = (lossAtStart - lossAtEnd) ? lossAtEnd / (lossAtStart - lossAtEnd) : -1;
-  const millisPerIteration = Date.now() - time;
-  const perfectionTime = new Date(Date.now() + millisPerIteration * iterationsTillZeroLoss);
-
-  console.log(
-    "Accuracy:", accuracy,
-    "\tPerfection:", (iterationsTillZeroLoss > 0) ? perfectionTime.toISOString() : "-",
-    "\tSamples:", memory.input.length,
-    "\tScore:", memory.score[memory.score.length - 1], "->", memory.score[0],
-  );
 }
 
 class Storage {
