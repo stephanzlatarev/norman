@@ -15,7 +15,7 @@ export default class Game {
   async play(limit) {
     this.start();
 
-    while (this.time < limit) {
+    while (this.time <= limit) {
       await this.step();
     }
 

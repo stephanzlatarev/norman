@@ -12,6 +12,7 @@ export default class Robot {
     this.name = name;
     this.randomness = randomness;
     this.log = [];
+    this.experiments = [];
 
     if (memory) {
       this.memory = new Memory(memory).load(FOLDER + name + ".json");
@@ -25,23 +26,36 @@ export default class Robot {
 
   start() {
     this.log = [];
+    this.experiments = [];
+    delete this.practice;
     delete this.experiment;
   }
 
   async deploy(ownMilitary, ownEconomy, enemyMilitary, enemyEconomy) {
+    if (this.practice) {
+      this.log.push({ input: this.practice, output: [...ownMilitary] });
+    }
     if (this.experiment) {
-      this.log.push({ input: this.experiment, output: [...ownMilitary] });
+      this.experiments.push({ input: this.experiment, output: [...ownMilitary] });
+      delete this.experiment;
     }
 
+    const input = [...ownMilitary, ...ownEconomy, ...enemyMilitary, ...enemyEconomy];
+    const deployment = await this.brain.react(input);
+
+    this.practice = [...input];
+
     if (Math.random() < this.randomness) {
-      this.experiment = [...ownMilitary, ...ownEconomy, ...enemyMilitary, ...enemyEconomy];
-      return random(ownMilitary);
-    } else {
-      return await this.brain.react([...ownMilitary, ...ownEconomy, ...enemyMilitary, ...enemyEconomy]);
+      this.experiment = [...input];
+      randomize(deployment);
     }
+
+    return deployment;
   }
 
   async study() {
+    if (!this.log.length) return;
+
     for (const mirror of mirrors) {
       this.memory.add(mirror(this.log));
     }
@@ -51,22 +65,18 @@ export default class Robot {
   }
 }
 
-function random(military) {
-  const deployment = [];
-  let army = 0;
+function randomize(deployment) {
+  const spots = [];
 
-  for (let i = 0; i < military.length; i++) {
-    if (military[i] >= 0.1) {
-      army += military[i];
+  for (let i = 0; i < deployment.length; i++) {
+    if (deployment[i] >= 0.1) {
+      spots.push(i);
     }
-
-    deployment.push(0);
   }
 
-  for (let i = 0; i < army; i++) {
-    const spot = Math.floor(100 * Math.random());
-    deployment[spot]++;
-  }
+  const source = spots[Math.floor(spots.length * Math.random())];
+  const target = Math.floor(100 * Math.random());
 
-  return deployment;
+  deployment[target] += deployment[source];
+  deployment[source] = 0;
 }

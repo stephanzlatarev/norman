@@ -1,11 +1,11 @@
 import * as tf from "@tensorflow/tfjs-node-gpu";
 import fs from "fs";
 
-const LEARNING_EPOCHS = 20;
+const LEARNING_EPOCHS = 10;
 const LEARNING_BATCH = 1024;
 const ACTIVATION_FUNCTION = "relu";
 const OPTIMIZER_FUNCTION = "adam";
-const LOSS_FUNCTION = "meanSquaredError";
+const LOSS_FUNCTION = "meanAbsoluteError";
 
 export default class Brain {
 
@@ -22,7 +22,7 @@ export default class Brain {
     const input = tf.tensor(batch.input, [batch.input.length, this.body.sensor.length]);
     const output = tf.tensor(batch.output, [batch.output.length, this.body.motor.length]);
 
-    let loss;
+    let loss = Infinity;
 
     do {
       const info = await this.model.fit(input, output, {
@@ -32,10 +32,11 @@ export default class Brain {
         verbose: false,
       });
 
+      this.loss = loss;
       loss = info.history.loss[info.history.loss.length - 1];
 
       this.summary = "Loss: " + loss.toFixed(2) + " | Samples: " + this.memory.input.length;
-    } while (this.loss >= 1);
+    } while (loss < this.loss);
 
     if (this.file) {
       await this.model.save(new Storage(this.file));
@@ -59,9 +60,11 @@ export default class Brain {
     tf.engine().startScope();
 
     const question = tf.tensor(inputs, [inputs.length, this.body.sensor.length]);
-    await this.model.predict(question).array();
+    const answer = await this.model.predict(question, { batchSize: inputs.length }).array();
 
     tf.engine().endScope();
+
+    return answer;
   }
 
   random() {
