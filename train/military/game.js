@@ -4,12 +4,67 @@ import move from "./flows.js";
 const DAMAGE = 0.2;
 const SPAWN = 0.1;
 
+const BOARD_MILITARY_1 = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+const BOARD_ECONOMY_1 = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 1, 0, 1, 0, 1, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 1, 0, 1, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+const BOARD_MILITARY_2 = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+const BOARD_ECONOMY_2 = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 1, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 1, 0, 1, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+
 export default class Game {
 
-  constructor(player1, player2) {
+  constructor(player1, player2, parallelBoardsCount) {
     this.time = 0;
     this.player1 = player1;
     this.player2 = player2;
+
+    const boardsCount = parallelBoardsCount ? parallelBoardsCount : 1;
+    this.boards = [];
+    for (let i = 0; i < boardsCount; i++) {
+      this.boards.push(new Board());
+    }
   }
 
   async play(limit) {
@@ -19,123 +74,153 @@ export default class Game {
       await this.step();
     }
 
-    return this.score();
+    return this.boards.map(board => board.score());
   }
 
   start() {
     this.time = 0;
 
-    this.player1.start();
-    this.player1.military = field();
-    this.player1.economy = field();
-    this.player1.economy[coordinates(1, 1)] = 1;
-    this.player1.economy[coordinates(1, 3)] = 1;
-    this.player1.economy[coordinates(1, 5)] = 1;
-    this.player1.economy[coordinates(3, 1)] = 1;
-    this.player1.economy[coordinates(3, 3)] = 1;
-    this.player1.economy[coordinates(5, 1)] = 1;
-
-    this.player2.start();
-    this.player2.military = field();
-    this.player2.economy = field();
-    this.player2.economy[coordinates(8, 8)] = 1;
-    this.player2.economy[coordinates(8, 6)] = 1;
-    this.player2.economy[coordinates(8, 4)] = 1;
-    this.player2.economy[coordinates(6, 8)] = 1;
-    this.player2.economy[coordinates(6, 6)] = 1;
-    this.player2.economy[coordinates(4, 8)] = 1;
+    for (const board of this.boards) {
+      board.init();
+    }
   }
 
   async step() {
-    for (let spot = 0; spot < 100; spot++) {
-      fight(this.player1, this.player2, spot);
+    const shouldSpawn = (this.time % 10 === 0);
+    for (const board of this.boards) {
+      board.step(shouldSpawn);
     }
 
-    if (this.time % 10 === 0) {
-      for (let spot = 0; spot < 100; spot++) {
-        if (this.player1.economy[spot]) {
-          this.player1.military[spot] += Math.floor(this.player1.economy[spot]);
-          this.player1.economy[spot] += this.player1.economy[spot] * SPAWN;
-        }
-        if (this.player2.economy[spot]) {
-          this.player2.military[spot] += Math.floor(this.player2.economy[spot]);
-          this.player2.economy[spot] += this.player2.economy[spot] * SPAWN;
-        }
-      }
+    const deployments1 = await this.player1.play(this.boards.map(board => board.view(1)));
+    const deployments2 = await this.player2.play(this.boards.map(board => board.view(2)));
+
+    for (let i = 0; i < this.boards.length; i++) {
+      this.boards[i].move(deployments1[i], deployments2[i]);
     }
-
-    const deployment1 = await this.player1.deploy(this.player1.military, this.player1.economy, this.player2.military, this.player2.economy);
-    const deployment2 = await this.player2.deploy(this.player2.military, this.player2.economy, this.player1.military, this.player1.economy);
-
-    this.player1.military = move(this.player1.military, deployment1);
-    this.player2.military = move(this.player2.military, deployment2);
 
     this.time++;
   }
 
-  score() {
-    let score = 0;
+  log(player, scoreThreshold) {
+    const list = [];
 
-    for (const one of this.player1.economy) if (one > 0) score += one;
-    for (const one of this.player1.military) if (one > 0) score += one;
+    for (const board of this.boards) {
+      const score = board.score();
+      if (
+        ((player === 1) && (score >= scoreThreshold)) ||
+        ((player === 2) && (score <= scoreThreshold))
+      ) {
+        list.push(board.log(player));
+      }
+    }
 
-    for (const one of this.player2.economy) if (one > 0) score -= one;
-    for (const one of this.player2.military) if (one > 0) score -= one;
-
-    return score;
+    return list;
   }
 
   display() {
-    display(this.player1.military, 0, 0);
-    display(this.player2.military, 1, 0);
-    display(this.player1.economy, 0, 1);
-    display(this.player2.economy, 1, 1);
+    if (this.boards.length) {
+      this.boards[0].display();
+    }
   }
 }
 
-function field() {
-  const field = [];
+class Board {
 
-  for (let i = 0; i < 100; i++) {
-    field.push(0);
+  init() {
+    this.time = 0;
+    this.log1 = [];
+    this.log2 = [];
+    this.thescore = 0;
+
+    this.military1 = [...BOARD_MILITARY_1];
+    this.economy1 = [...BOARD_ECONOMY_1];
+    this.military2 = [...BOARD_MILITARY_2];
+    this.economy2 = [...BOARD_ECONOMY_2];
   }
 
-  return field;
+  step(shouldSpawn) {
+    for (let spot = 0; spot < 100; spot++) {
+      const military1 = this.military1[spot];
+      const economy1 = this.economy1[spot];
+      const military2 = this.military2[spot];
+      const economy2 = this.economy2[spot];
+  
+      if (military1 && military2) {
+        const damage = Math.max(military1, military2) * DAMAGE;
+  
+        this.military1[spot] = round(military1 - damage);
+        this.military2[spot] = round(military2 - damage);
+      } else if (military1 && economy2) {
+        this.economy2[spot] = round(economy2 - military1 * DAMAGE);
+      } else if (military2 && economy1) {
+        this.economy1[spot] = round(economy1 - military2 * DAMAGE);
+      }
+
+      if (shouldSpawn) {
+        if (economy1) {
+          this.military1[spot] += Math.floor(economy1);
+          this.economy1[spot] += economy1 * SPAWN;
+        }
+        if (economy2) {
+          this.military2[spot] += Math.floor(economy2);
+          this.economy2[spot] += economy2 * SPAWN;
+        }
+      }
+    }
+  }
+
+  view(player) {
+    if (player === 1) {
+      return [...this.military1, ...this.economy1, ...this.military2, ...this.economy2];
+    } else if (player === 2) {
+      return [...this.military2, ...this.economy2, ...this.military1, ...this.economy1];
+    }
+  }
+
+  log(player) {
+    if (player === 1) {
+      return this.log1;
+    } else if (player === 2) {
+      return this.log2;
+    }
+  }
+
+  move(deployment1, deployment2) {
+    const input1 = this.view(1);
+    const input2 = this.view(2);
+
+    this.military1 = move(this.military1, deployment1);
+    this.military2 = move(this.military2, deployment2);
+
+    this.log1.push({ input: input1, output: [...this.military1] });
+    this.log2.push({ input: input2, output: [...this.military2] });
+  }
+
+  score() {
+    if (!this.thescore) {
+      this.thescore = 0;
+
+      for (const one of this.economy1) if (one > 0) this.thescore += one;
+      for (const one of this.military1) if (one > 0) this.thescore += one;
+
+      for (const one of this.economy2) if (one > 0) this.thescore -= one;
+      for (const one of this.military2) if (one > 0) this.thescore -= one;
+    }
+
+    return this.thescore;
+  }
+
+  display() {
+    display(this.military1, 0, 0);
+    display(this.military2, 1, 0);
+    display(this.economy1, 0, 1);
+    display(this.economy2, 1, 1);
+  }
+
 }
 
 function coordinates(x, y) {
   return x + y * 10;
-}
-
-function fight(player1, player2, spot) {
-  const military1 = player1.military[spot];
-  const economy1 = player1.economy[spot];
-  const military2 = player2.military[spot];
-  const economy2 = player2.economy[spot];
-
-  if (military1 && military2) {
-    // Fight between warriors
-    const damage = Math.max(military1, military2) * DAMAGE;
-
-    player1.military[spot] = round(military1 - damage);
-    player2.military[spot] = round(military2 - damage);
-  } else if (military1 && economy2) {
-    const damage = military1 * DAMAGE;
-
-    if (damage > economy2) {
-      player2.economy[spot] = 0;
-    } else {
-      player2.economy[spot] -= damage;
-    }
-  } else if (military2 && economy1) {
-    const damage = military2 * DAMAGE;
-
-    if (damage > economy1) {
-      player1.economy[spot] = 0;
-    } else {
-      player1.economy[spot] -= damage;
-    }
-  }
 }
 
 function round(value) {

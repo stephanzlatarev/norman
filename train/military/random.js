@@ -5,27 +5,34 @@ export default class RandomPlayer {
     this.name = name;
   }
 
-  start() {
-  }
+  play(boards) {
+    const deployments = [];
 
-  deploy(military) {
-    const deployment = [];
-    let army = 0;
-
-    for (let i = 0; i < military.length; i++) {
-      if (military[i] >= 0.1) {
-        army += military[i];
-      }
-
-      deployment.push(0);
+    for (const board of boards) {
+      deployments.push(random(board));
     }
 
-    for (let i = 0; i < army; i++) {
-      const spot = Math.floor(100 * Math.random());
-      deployment[spot]++;
-    }
-
-    return deployment;
+    return deployments;
   }
 
+}
+
+function random(board) {
+  const deployment = [];
+  let army = 0;
+
+  for (let i = 0; i < board.length; i++) {
+    if (board[i] >= 0.1) {
+      army += board[i];
+    }
+
+    deployment.push(0);
+  }
+
+  for (let i = 0; i < army; i++) {
+    const spot = Math.floor(board.length * Math.random());
+    deployment[spot]++;
+  }
+
+  return deployment;
 }

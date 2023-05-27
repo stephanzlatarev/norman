@@ -57,12 +57,12 @@ export default class Brain {
   }
 
   async reactMany(inputs) {
-    tf.engine().startScope();
+    await startScope(this);
 
     const question = tf.tensor(inputs, [inputs.length, this.body.sensor.length]);
     const answer = await this.model.predict(question, { batchSize: inputs.length }).array();
 
-    tf.engine().endScope();
+    endScope();
 
     return answer;
   }
