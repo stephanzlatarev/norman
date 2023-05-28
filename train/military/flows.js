@@ -25,7 +25,8 @@ function flows(past, future) {
   const table = [];
   for (let i = 0; i < past.length; i++) table[i] = { volume: past[i], delta: past[i] - future[i], prefix: [] };
 
-  // TODO: Make sure delta totals to zero. Remove surplus.
+  // Deltas total to zero
+  trimDeltas(table);
 
   // Calculate pressure gradients based on delta.
   for (let y = 0; y < GRID; y++) {
@@ -174,6 +175,38 @@ function flows(past, future) {
 
 function round(value) {
   return Math.max(Math.floor(value * 10) / 10, 0);
+}
+
+function trimDeltas(table) {
+  let total = 0;
+
+  for (const cell of table) {
+    total += cell.delta;
+  }
+
+  if (total >= 0.1) {
+    for (const cell of table) {
+      if (cell.delta >= total) {
+        cell.delta -= total;
+        return;
+      } else if (cell.delta >= 0.1) {
+        total -= cell.delta;
+        cell.delta = 0;
+        if (total < 0.1) return;
+      }
+    }
+  } else if (total <= -0.1) {
+    for (const cell of table) {
+      if (cell.delta <= total) {
+        cell.delta -= total;
+        return;
+      } else if (cell.delta <= -0.1) {
+        total -= cell.delta;
+        cell.delta = 0;
+        if (total > -0.1) return;
+      }
+    }
+  }
 }
 
 const STEP = [1, 7, 2, 6, 3, 5, 4];

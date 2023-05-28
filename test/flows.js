@@ -202,4 +202,28 @@ describe("Flows", function() {
 
   });
 
+  describe("excessive deployment", function() {
+
+    it("no units have to move", function() {
+      const initial = new Placement().place(4, 4, 10);
+      const deployment = new Placement().place(4, 4, 10).place(1, 1, 10).place(7, 1, 10).place(1, 7, 10).place(7, 7, 10);
+      initial.assertEqual(initial.move(deployment, 1));
+    });
+
+    it("all units have to move at least one step", function() {
+      const initial = new Placement().place(4, 4, 10);
+      const deployment = new Placement().place(1, 1, 10).place(7, 1, 10).place(1, 7, 10).place(7, 7, 10);
+      const expected = new Placement().place(5, 5, 10);
+      expected.assertEqual(initial.move(deployment, 1));
+    });
+
+    it("all units have to move a few steps", function() {
+      const initial = new Placement().place(4, 4, 10);
+      const deployment = new Placement().place(1, 1, 10).place(7, 1, 10).place(1, 7, 10).place(7, 7, 10);
+      const expected = new Placement().place(7, 7, 10);
+      expected.assertEqual(initial.move(deployment, 3));
+    });
+
+  });
+
 });
