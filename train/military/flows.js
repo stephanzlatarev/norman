@@ -23,7 +23,7 @@ export default function(past, future) {
 
 function flows(past, future) {
   const table = [];
-  for (let i = 0; i < past.length; i++) table[i] = { delta: past[i] - future[i], prefix: [] };
+  for (let i = 0; i < past.length; i++) table[i] = { volume: past[i], delta: past[i] - future[i], prefix: [] };
 
   // TODO: Make sure delta totals to zero. Remove surplus.
 
@@ -121,11 +121,24 @@ function flows(past, future) {
   // Balance pressure directions.
   for (let spot = 0; spot < GRID * GRID; spot++) {
     const cell = table[spot];
+    let correction = 0;
 
     for (let i = 0; i < cell.prefix.length; i++) {
       if (cell.prefix[i] > 0) {
-        balance(cell.prefix, i);
+        correction += balance(cell.prefix, i);
       }
+    }
+
+    if ((cell.delta > 0) && (correction > 0) && (cell.volume > cell.delta)) {
+      correction = Math.min(cell.volume - cell.delta, correction);
+      for (let i = 0; i < cell.prefix.length; i++) {
+        if (cell.prefix[i] < 0) {
+          cell.prefix[i] -= correction;
+          // TODO: Distribute the correction among all pressure directions
+          break;
+        }
+      }
+      cell.delta += correction;
     }
   }
 
@@ -165,6 +178,8 @@ function round(value) {
 
 const STEP = [1, 7, 2, 6, 3, 5, 4];
 function balance(pressures, index) {
+  let correction = 0;
+
   for (let step of STEP) {
     let i = (index + step) % pressures.length;
 
@@ -175,10 +190,13 @@ function balance(pressures, index) {
         pressures[index] = round(pressures[index] - volume);
         pressures[i] = -round(-pressures[i] - volume);
 
+        if ((step >= 3) && (step <= 5)) correction += volume;
         if (!pressures[index]) break;
       }
     }
   }
+
+  return correction;
 }
 
 function getTarget(x, y, direction) {
