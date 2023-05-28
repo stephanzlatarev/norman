@@ -219,10 +219,6 @@ class Board {
 
 }
 
-function coordinates(x, y) {
-  return x + y * 10;
-}
-
 function round(value) {
   return Math.max(Math.floor(value * 10) / 10, 0);
 }
