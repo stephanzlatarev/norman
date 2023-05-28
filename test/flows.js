@@ -15,6 +15,10 @@ class Placement {
     }
   }
 
+  get(x, y) {
+    return this.placements[x + y * 10];
+  }
+
   place(x, y, volume) {
     this.placements[x + y * 10] = volume;
     return this;
@@ -222,6 +226,33 @@ describe("Flows", function() {
       const deployment = new Placement().place(1, 1, 10).place(7, 1, 10).place(1, 7, 10).place(7, 7, 10);
       const expected = new Placement().place(7, 7, 10);
       expected.assertEqual(initial.move(deployment, 3));
+    });
+
+  });
+
+  describe("low deployment", function() {
+
+    it("no units have to move", function() {
+      const initial = new Placement().place(4, 4, 10);
+      const deployment = new Placement().place(4, 4, 10).place(1, 1, 1).place(7, 1, 1).place(1, 7, 1).place(7, 7, 1);
+      initial.assertEqual(initial.move(deployment, 1));
+    });
+
+    it("all units have to move at least one step", function() {
+      const initial = new Placement().place(4, 4, 10);
+      const deployment = new Placement().place(1, 1, 1).place(7, 1, 1).place(1, 7, 1).place(7, 7, 1);
+      const expected = new Placement().place(4, 4, 6).place(3, 3, 1).place(5, 3, 1).place(3, 5, 1).place(5, 5, 1);
+      expected.assertEqual(initial.move(deployment, 1));
+    });
+
+    it("all units have to move a few steps", function() {
+      const initial = new Placement().place(4, 4, 10);
+      const deployment = new Placement().place(1, 1, 1).place(7, 1, 1).place(1, 7, 1).place(7, 7, 1);
+      const actual = initial.move(deployment, 20); // Low deployment may require more steps
+      assert.equal(actual.get(1, 1), 1);
+      assert.equal(actual.get(7, 1), 1);
+      assert.equal(actual.get(1, 7), 1);
+      assert.equal(actual.get(7, 7), 1);
     });
 
   });
