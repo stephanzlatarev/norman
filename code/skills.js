@@ -18,7 +18,7 @@ async function loadFolder(memory, folder) {
     if (fs.existsSync(mapping)) {
       const descriptor = JSON.parse(fs.readFileSync(mapping));
 
-      if (descriptor.given && descriptor.when && descriptor.then) {
+      if (descriptor.label && descriptor.given && descriptor.when && descriptor.then) {
         await loadSkill(memory, folder, descriptor);
       }
     }
