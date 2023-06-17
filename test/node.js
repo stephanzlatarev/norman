@@ -9,7 +9,7 @@ describe("Memory nodes", function() {
   });
 
   describe("storing and retrieving information", function() {
-    const node = new Node("node", );
+    const node = new Node("node");
 
     it("empty", function() {
       assert.equal(node.get("empty"), 0, "Node doesn't return 0 for empty memory");
@@ -50,6 +50,13 @@ describe("Memory nodes", function() {
       const other = new Node();
       node.set("link", other);
       assert.equal(node.get("link"), other);
+    });
+
+    it("arrays", function() {
+      const array = [5, 1, -1, 135.65, 0, 32.76];
+      const other = new Node();
+      for (const i in array) other.set(i, array[i]);
+      assert.equal(JSON.stringify(other.values(array.length)), JSON.stringify(array));
     });
 
   });

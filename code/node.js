@@ -47,6 +47,16 @@ export default class Node {
     return data;
   }
 
+  values(count) {
+    const data = [];
+
+    for (let i = 0; i < count; i++) {
+      data.push(canon(this.data[i]));
+    }
+
+    return data;
+  }
+
   match(data) {
     if (data.label && (this.label !== data.label)) return false;
 
@@ -80,7 +90,7 @@ function canon(value) {
   if (value === 0) return 0;
   if (value > 0) return value;
 
-  if (value === null) return 0;
+  return 0;
 }
 
 function match(a, b) {
