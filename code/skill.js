@@ -79,8 +79,12 @@ class Situation {
   }
 }
 
-function length(object) {
+function length(infos) {
   let index = 0;
-  for (const _ in object) index++;
+
+  for (const info of infos) {
+    index += info.length ? info.length : 1;
+  }
+
   return index;
 }

@@ -23,16 +23,7 @@
   "then": {
     "infos": [
       { "node": "GOAL" },
-      { "node": "CHAT", "label": "0" },
-      { "node": "CHAT", "label": "1" },
-      { "node": "CHAT", "label": "2" },
-      { "node": "CHAT", "label": "3" },
-      { "node": "CHAT", "label": "4" },
-      { "node": "CHAT", "label": "5" },
-      { "node": "CHAT", "label": "6" },
-      { "node": "CHAT", "label": "7" },
-      { "node": "CHAT", "label": "8" },
-      { "node": "CHAT", "label": "9" }
+      { "node": "CHAT", "length": 10 }
     ]
   }
 }

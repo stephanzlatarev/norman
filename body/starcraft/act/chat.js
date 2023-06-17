@@ -1,16 +1,8 @@
 
 export default async function(chat, client) {
-  const message = [];
-  for (let i = 0; i < 10; i++) {
-    const label = "" + i;
-    const letter = chat.get(label);
-    if (letter) {
-      message.push(letter);
-      chat.clear(label);
-    }
-  }
+  const message = chat.values(10);
 
-  if (message.length) {
+  if (message[0]) {
     await client.action({
       actions: [
         {
@@ -21,5 +13,7 @@ export default async function(chat, client) {
         }
       ]
     });
+
+    chat.clear(0);
   }
 }
