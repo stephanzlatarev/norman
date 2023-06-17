@@ -14,13 +14,13 @@ export default class Memory {
 
     for (const sample of samples) {
       const hash = JSON.stringify(sample.input);
-      const index = find(this.hash, hash);
+      const index = this.hash[hash];
 
       if (index >= 0) {
         this.input[index] = sample.input;
         this.output[index] = sample.output;
       } else {
-        this.hash.push(hash);
+        this.hash[hash] = this.input.length;
         this.input.push(sample.input);
         this.output.push(sample.output);
 
@@ -29,7 +29,8 @@ export default class Memory {
     }
 
     if (this.input.length > this.limit) {
-      this.hash.splice(0, this.hash.length - this.limit);
+      for (let i = this.limit; i < this.input.length; i++) delete this.hash[JSON.stringify(this.input[i])];
+
       this.input.splice(0, this.input.length - this.limit);
       this.output.splice(0, this.output.length - this.limit);
     }
@@ -38,7 +39,7 @@ export default class Memory {
   }
 
   clear() {
-    this.hash = [];
+    this.hash = {};
     this.input = [];
     this.output = [];
   }
@@ -66,12 +67,4 @@ export default class Memory {
     }));
   }
 
-}
-
-function find(array, item) {
-  for (let index = 0; index < array.length; index++) {
-    if (array[index] === item) {
-      return index;
-    }
-  }
 }

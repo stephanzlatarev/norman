@@ -12,11 +12,16 @@ export default class Robot {
     this.name = name;
     this.randomness = randomness;
     this.memory = new Memory();
+    this.number = 1;
 
     const body = { sensor: [], motor: []};
     body.sensor.length = INPUT_SIZE;
     body.motor.length = OUTPUT_SIZE;
     this.brain = new Brain(body, this.memory, FOLDER + name + ".tf");
+  }
+
+  watch(monitor) {
+    this.brain.watch(monitor);
   }
 
   async play(boards) {
@@ -43,6 +48,17 @@ export default class Robot {
 
     await this.brain.learn();
   }
+
+  async clone() {
+    const clone = new Robot(this.name, this.randomness);
+    clone.number = this.number + 1;
+    clone.brain.monitor = this.brain.monitor;
+
+    await this.brain.save();
+    await clone.brain.load();
+
+    return clone;
+  }
 }
 
 function randomize(deployment) {
@@ -56,7 +72,12 @@ function randomize(deployment) {
 
   const source = spots[Math.floor(spots.length * Math.random())];
   const target = Math.floor(deployment.length * Math.random());
+  const split = round(deployment[source] / 2);
 
-  deployment[target] += deployment[source];
-  deployment[source] = 0;
+  deployment[target] += split;
+  deployment[source] -= split;
+}
+
+function round(value) {
+  return Math.max(Math.floor(value * 10) / 10, 0);
 }

@@ -5,6 +5,12 @@ const GRID_HEIGHT = 13;
 
 const frames = {};
 
+export function show(message) {
+  ttys.stdout.write("\x1b[1000D");
+  ttys.stdout.write("\x1b[A");
+  console.log(message, "                         ");
+}
+
 export default function display(heatmap, col, row) {
   const offsetx = col * GRID_WIDTH;
   const offsety = row * GRID_HEIGHT;
