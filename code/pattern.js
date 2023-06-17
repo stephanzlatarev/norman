@@ -239,8 +239,12 @@ class Match {
 
     if (this.pattern.infos && this.pattern.infos.length) {
       for (const info of this.pattern.infos) {
-        if (info.label) {
-          reading.push(normalize(this.match[info.node].get(info.label)));
+        const node = this.match[info.node];
+
+        if (info.length) {
+          reading.push(...node.values(info.length));
+        } else if (info.label) {
+          reading.push(normalize(node.get(info.label)));
         } else {
           // The information is that this node exists
           reading.push(1);

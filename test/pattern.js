@@ -468,6 +468,27 @@ describe("Memory patterns", function() {
 
   });
 
+  describe("reading data", function() {
+
+    it("reading arrays of values", async function() {
+      const memory = new Memory();
+      const model = memory.model();
+      const pattern = memory.pattern({
+        nodes: { A: { label: "A" }, OBJECT1: { label: "Object 1" }, OBJECT2: { label: "Object 2" }, OBJECT3: { label: "Object 3" }, Z: { label: "Z" } },
+        infos: [ { node: "A" }, { node: "OBJECT1", length: 2 }, { node: "OBJECT2", length: 3 }, { node: "OBJECT3", length: 4 }, { node: "Z" } ]
+      });
+
+      model.add("A");
+      model.add("Object 1").set(0, 101).set(1, 102);
+      model.add("Object 2").set(0, 201).set(1, 202).set(2, 203);
+      model.add("Object 3").set(0, 301).set(1, 302).set(2, 303).set(3, 304);
+      model.add("Z");
+
+      assertPatternMatch(pattern, [[1, 101, 102, 201, 202, 203, 301, 302, 303, 304, 1]]);
+    });
+
+  });
+
   describe("writing data", function() {
 
     it("create node with label", async function() {
@@ -505,6 +526,24 @@ describe("Memory patterns", function() {
 
       pattern.write([300]);
       assert.equal(object.get("value"), 300, "New value is not as expected");
+    });
+
+    it("setting arrays of values", async function() {
+      const memory = new Memory();
+      const model = memory.model();
+      const pattern = memory.pattern({
+        nodes: { OBJECT1: { label: "Object 1" }, OBJECT2: { label: "Object 2" }, OBJECT3: { label: "Object 3" } },
+        infos: [ { node: "OBJECT1", length: 2 }, { node: "OBJECT2", length: 3 }, { node: "OBJECT3", length: 4 } ]
+      });
+
+      model.add("Object 1");
+      model.add("Object 2");
+      model.add("Object 3");
+
+      pattern.write([101, 102, 201, 202, 203, 301, 302, 303, 304]);
+      assert.equal(asArrayText(model.get("Object 1").values(2)), asArrayText([101, 102]));
+      assert.equal(asArrayText(model.get("Object 2").values(3)), asArrayText([201, 202, 203]));
+      assert.equal(asArrayText(model.get("Object 3").values(4)), asArrayText([301, 302, 303, 304]));
     });
 
     it("linking existing nodes", async function() {
@@ -656,7 +695,7 @@ describe("Memory patterns", function() {
 
       // Check that the goal is gone and the message is in the chat
       assertPatternMatch(given, []);
-      assert.equal(JSON.stringify(chat.values(2)), JSON.stringify([8, 7]));
+      assert.equal(asArrayText(chat.values(2)), asArrayText([8, 7]));
 
       // Check that notifications are not too many
       await memory.notifyPatternListeners();
