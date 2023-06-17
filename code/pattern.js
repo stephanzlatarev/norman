@@ -109,12 +109,17 @@ export default class Pattern {
   write(data) {
     if (!data || !data.length) return;
 
-    for (let i = 0; i < data.length; i++) {
-      const value = data[i];
-      const info = this.infos[i];
+    for (let infoIndex = 0, valueIndex = 0; (infoIndex < this.infos.length) && (valueIndex < data.length); infoIndex++, valueIndex++) {
+      const value = data[valueIndex];
+      const info = this.infos[infoIndex];
 
       if (info.node) {
-        if (info.label) {
+        if (info.length) {
+          for (let i = 0; i < info.length; i++, valueIndex++) {
+            writeValue(this, info.node, i, data[valueIndex]);
+          }
+          valueIndex--;
+        } else if (info.label) {
           writeValue(this, info.node, info.label, value);
         } else {
           if (value) {

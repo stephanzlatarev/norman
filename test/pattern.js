@@ -632,7 +632,7 @@ describe("Memory patterns", function() {
         infos: [ { node: "GAME", label: "time" } ]
       }).listen(() => (notificationsWhen++));
       const then = memory.pattern({
-        infos: [ { node: "GOAL" }, { node: "CHAT", label: "0" }, { node: "CHAT", label: "1" } ]
+        infos: [ { node: "GOAL" }, { node: "CHAT", length: 2 } ]
       }).listen(() => (notificationsThen++));
 
       for (const situation of given) when.fix(situation);
@@ -656,8 +656,7 @@ describe("Memory patterns", function() {
 
       // Check that the goal is gone and the message is in the chat
       assertPatternMatch(given, []);
-      assert.equal(chat.get("0"), 8);
-      assert.equal(chat.get("1"), 7);
+      assert.equal(JSON.stringify(chat.values(2)), JSON.stringify([8, 7]));
 
       // Check that notifications are not too many
       await memory.notifyPatternListeners();
