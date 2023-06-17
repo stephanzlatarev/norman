@@ -5,17 +5,17 @@ const tf = tensorflow.engine ? tensorflow : tensorflow.default;
 
 export default class Brain {
 
-  constructor(skill) {
-    this.skill = skill;
+  constructor(folder) {
+    this.folder = folder;
   }
 
   async load() {
-    const model = JSON.parse(fs.readFileSync("./" + this.skill + "/brain.tf"));
+    const model = JSON.parse(fs.readFileSync(this.folder + "/brain.tf"));
     model.weightData = new Uint8Array(model.weightData).buffer;
     return model;
   }
 
-  async react(input) {
+  async react(...input) {
     await startScope(this);
 
     const question = tf.tensor(input, [1, this.model.inputLayers[0].batchInputShape[1]]);
