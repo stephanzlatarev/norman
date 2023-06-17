@@ -176,13 +176,13 @@ export default class Pattern {
     let procedures = this.procedures[node.ref];
 
     let shouldUpdateProcedures = (!procedures && (((type === EVENT_CREATE_NODE) || (type === EVENT_UPDATE_NODE)) && (!label || this.labels[label])))
-      || ((type === EVENT_UPDATE_NODE) && procedures && !procedures[label]);
+      || ((type === EVENT_UPDATE_NODE) && procedures && !procedures[label] && !(label >= 0));
 
     if (shouldUpdateProcedures) {
       for (const key in this.nodes) {
         const template = this.nodes[key];
         if (label && (template[label] === undefined)) continue;
-        if (!label && (template["label"] === undefined)) continue;
+        if (!label && (template.label === undefined)) continue;
 
         if (node.match(template)) {
           procedures = addProceduresForNode(this, key, node);
@@ -451,7 +451,7 @@ function addProcedure(list, procedure) {
 }
 
 function useProcedures(pattern, procedures, eventType, node, label) {
-  procedures = procedures[label];
+  procedures = (label >= 0) ? procedures[undefined] : procedures[label];
   if (!procedures) return;
 
   for (const procedure of procedures) {

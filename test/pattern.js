@@ -466,6 +466,27 @@ describe("Memory patterns", function() {
       assert.equal(notification, "null", "Notification is not as expected");
     });
 
+    it("notification on change in array of values", async function() {
+      let notification = "no notification received yet";
+      const callback = ((...match) => notification = JSON.stringify(match));
+
+      const memory = new Memory();
+      const model = memory.model();
+      const object = model.add("Object");
+
+      memory.pattern({
+        nodes: { OBJECT: { label: "Object" } },
+        infos: [ { node: "OBJECT", length: 5 } ]
+      }).listen(callback);
+
+      for (let i = 0; i < 5; i++) {
+        notification = "<last notification>";
+        object.set(i, i);
+        await memory.notifyPatternListeners();
+        assert.equal(notification, "[]", "Notification is not as expected");
+      }
+    });
+
   });
 
   describe("reading data", function() {
