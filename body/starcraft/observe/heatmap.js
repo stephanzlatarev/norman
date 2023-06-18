@@ -12,21 +12,22 @@ import { IS_MILITARY } from "../units.js";
 const HEATMAP = []; for (let i = 0; i < 100; i++) HEATMAP.push(0);
 
 export function observeHeatmap(model, observation) {
-  if (model.get("Game").get("time") % 224 !== 0) return;
-  console.log("heatmap - own:", observation.ownUnits.length, "enemy:", observation.enemyUnits.length);
-
   updateKnowns(model, observation);
 
   const grid = makeGrid(model.get("Map"));
+
   const ownMilitary = makeHeatmap(grid, model.knowns.ownMilitary);
   const ownEconomy = makeHeatmap(grid, model.knowns.ownEconomy);
   const enemyMilitary = makeHeatmap(grid, model.knowns.enemyMilitary);
   const enemyEconomy = makeHeatmap(grid, model.knowns.enemyEconomy);
 
-  show("Own military", ownMilitary);
-  show("Own economy", ownEconomy);
-  show("Enemy military", enemyMilitary);
-  show("Enemy economy", enemyEconomy);
+  scaleHeatmaps(ownMilitary, enemyMilitary);
+  scaleHeatmaps(ownEconomy, enemyEconomy);
+
+  addToMemory(model, "Heatmap own military", ownMilitary);
+  addToMemory(model, "Heatmap own economy", ownEconomy);
+  addToMemory(model, "Heatmap enemy military", enemyMilitary);
+  addToMemory(model, "Heatmap enemy economy", enemyEconomy);
 }
 
 function updateKnowns(model, observation) {
@@ -122,6 +123,30 @@ function addToHeatmap(grid, heatmap, unit) {
   }
 
   heatmap[y * 10 + x] += value;
+}
+
+function scaleHeatmaps(...heatmaps) {
+  let scale = 0;
+
+  for (const heatmap of heatmaps) {
+    for (const value of heatmap) {
+      scale = Math.max(scale, value);
+    }
+  }
+
+  for (const heatmap of heatmaps) {
+    for (let i = 0; i < heatmap.length; i++) {
+      heatmap[i] /= scale;
+    }
+  }
+}
+
+function addToMemory(memory, label, heatmap) {
+  const node = memory.add(label);
+
+  for (let i = 0; i < heatmap.length; i++) {
+    node.set(i, heatmap[i]);
+  }
 }
 
 function show(title, heatmap) {
