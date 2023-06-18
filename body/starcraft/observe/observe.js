@@ -1,5 +1,3 @@
-import { observeArmy } from "./army.js";
-import { observeEnemy } from "./enemy.js";
 import { observeHeatmap } from "./heatmap.js";
 import { observeUnits } from "./units.js";
 
@@ -8,8 +6,6 @@ export default function(model, observation) {
 
   const units = observeUnits(model, observation);
 
-  observeArmy(model, observation);
-  observeEnemy(model, observation);
   observeHeatmap(model, observation);
 
   return units;

@@ -1,47 +1,31 @@
-import { DUMMY_TARGETS, WARRIORS, LOOPS_PER_STEP, STEPS_PER_SECOND } from "../units.js";
-
-let armyX;
-let armyY;
-let lastCommandToLeader;
-let lastCommandToSupport;
+import { DUMMY_TARGETS, LOOPS_PER_STEP, STEPS_PER_SECOND } from "../units.js";
 
 export default async function(model, client) {
-  const game = model.get("Game");
-  const army = model.get("Army");
-  const leader = army.get("leader");
-  if (!leader) return;
+  const airUnits = model.observation.ownUnits.filter(unit => AIR_UNITS[unit.unitType]);
+  const landUnits = model.observation.ownUnits.filter(unit => LAND_UNITS[unit.unitType]);
+  const enemyWarriors = model.observation.enemyUnits.filter(unit => (!DUMMY_TARGETS[unit.unitType] && (unit.displayType === 1) && !unit.isHallucination));
 
-  if (army.get("rally")) {
-    leader.set("isMobilized", true);
+  if (!landUnits.length && !airUnits.length) {
+    // We don't have warriors yet! Do nothing here.
+  } else if (enemyWarriors.length) {
+    orderTargets(enemyWarriors);
 
-    const location = army.get("rally");
-    const locationX = location.get("x");
-    const locationY = location.get("y");
-
-    await instruct(model, client, leader, 16, { x: locationX, y: locationY });
-  } else if (army.get("attack")) {
-    leader.set("isMobilized", true);
-
-    armyX = leader.get("x");
-    armyY = leader.get("y");
-
-    const location = army.get("attack");
-    const locationX = location.get("x");
-    const locationY = location.get("y");
-    const squaredDistanceToEnemy = (armyX - locationX) * (armyX - locationX) + (armyY - locationY) * (armyY - locationY);
-    const strategyAllowsMicroFighting = (game.get("strategy") !== 5);
-
-    if (strategyAllowsMicroFighting && (squaredDistanceToEnemy < 200) && (await micro(model, client))) {
-      const fleetTags = model.observation.ownUnits.filter(unit => FLEET[unit.unitType]).map(unit => unit.tag);
-      if (fleetTags.length) {
-        await command(client, fleetTags, 3674, undefined, { x: locationX, y: locationY });
-      }
-
-      lastCommandToLeader = null;
-      lastCommandToSupport = null;
-    } else {
-      await instruct(model, client, leader, 3674, { x: locationX, y: locationY });
+    if (airUnits.length) {
+      console.log("TODO: Attack with air units");
+      await command(client, airUnits.map(unit => unit.tag), 3674, undefined, { x: 0, y: 0 });
     }
+
+    if (landUnits.length) {
+      const matrix = calculateMatrix(landUnits, enemyWarriors);
+
+      let pair;
+      while (pair = chooseFightPair(matrix, landUnits, enemyWarriors)) {
+        await fight(client, pair);
+        updateMatrix(matrix, pair);
+      }
+    }
+  } else if (model.observation.enemyUnits.length) {
+    console.log("TODO: Attack dummy targets with all warrior units");
   }
 }
 
@@ -51,58 +35,16 @@ async function command(client, unitTags, abilityId, targetUnitTag, targetWorldSp
   if (response.result[0] !== 1) console.log(JSON.stringify(command), ">>", JSON.stringify(response));
 }
 
-async function instruct(model, client, leader, abilityId, position) {
-  const leaderTag = leader.label;
-  const supportTags = model.observation.ownUnits.filter(unit => ((unit.tag !== leaderTag) && (WARRIORS[unit.unitType]))).map(unit => unit.tag);
-  const supportCount = (supportTags ? supportTags.length : 0);
-
-  const digest = leaderTag + "-" + abilityId + "-" + Math.floor(position.x) + ":" + Math.floor(position.y);
-  if (digest !== lastCommandToLeader) {
-    await command(client, [leaderTag], abilityId, undefined, position);
-    lastCommandToLeader = digest;
-  }
-
-  if (supportCount) {
-    if (abilityId === 3674) {
-      const digestSupport = digest + JSON.stringify(supportTags);
-      if (digestSupport !== lastCommandToSupport) {
-        await command(client, supportTags, 3674, undefined, position);
-        lastCommandToSupport = digestSupport;
-      }
-    } else {
-      const digestSupport = leaderTag + "-" + abilityId + "-" + JSON.stringify(supportTags);
-      if (digestSupport !== lastCommandToSupport) {
-        await command(client, supportTags, 1, leaderTag);
-        lastCommandToSupport = digestSupport;
-      }
-    }
-  } else {
-    lastCommandToSupport = null;
-  }
-}
-
 const GANG = 4;
 
-const MICRO_FIGHT_WARRIORS = {
+const LAND_UNITS = {
   73: "zealot",
   74: "stalker",
   76: "templar",
   77: "sentry",
 };
 
-const WORKERS = {
-  84: "probe",
-};
-
-const IS_RANGED = {
-  73: false, // zealot
-  74: true,  // stalker
-  76: false, // templar
-  77: true,  // sentry
-  84: false, // probe
-};
-
-const FLEET = {
+const AIR_UNITS = {
   10: "mothership",
   79: "carrier",
   78: "phoenix",
@@ -114,7 +56,6 @@ const SPEED = {
   74: (3.15 / STEPS_PER_SECOND), // stalker
   76: (3.94 / STEPS_PER_SECOND), // templar
   77: (4.15 / STEPS_PER_SECOND), // sentry
-  84: (3.94 / STEPS_PER_SECOND), // probe
 };
 
 const RANGE = {
@@ -122,7 +63,6 @@ const RANGE = {
   74: 6.0, // stalker
   76: 0.1, // templar
   77: 5.0, // sentry
-  84: 0.1, // probe
 };
 
 const DAMAGE = {
@@ -130,24 +70,10 @@ const DAMAGE = {
   74: 13, // stalker
   74: 45, // templar
   77:  6, // sentry
-  84:  5, // probe
 };
 
 const SENTRY_COOLDOWN = 0.71 / STEPS_PER_SECOND;
 const ZEALOT_COOLDOWN = 13 + LOOPS_PER_STEP;
-
-const LIGHT_ENEMY_WARRIORS = {
-  48: "marine",
-  105: "zergling",
-};
-
-function isValidTarget(unit) {
-  return !DUMMY_TARGETS[unit.unitType] && (unit.displayType === 1) && !unit.isHallucination;
-}
-
-function isLightTarget(unit) {
-  return LIGHT_ENEMY_WARRIORS[unit.unitType];
-}
 
 function weaponTime(unit) {
   if (unit.unitType === 73) {
@@ -174,17 +100,16 @@ function distance(a, b) {
   return Math.sqrt(dx * dx + dy * dy) - a.radius - b.radius;
 }
 
+// TODO: Instead of just walking in the opposite direction, choose a better position considering the enemy units and landscape.
 function stepback(unit, enemy) {
   let dx = unit.pos.x - enemy.pos.x;
   let dy = unit.pos.y - enemy.pos.y;
 
   if (Math.abs(dx) >= Math.abs(dy)) {
     dy /= Math.abs(dx);
-    dy += Math.sign(unit.pos.y - armyY);
     dx = Math.sign(dx);
   } else {
     dx /= Math.abs(dy);
-    dx += Math.sign(unit.pos.x - armyX);
     dy = Math.sign(dy);
   }
 
@@ -220,7 +145,7 @@ function calculateMatrix(units, enemies) {
   for (const unitIndex in units) {
     const unit = units[unitIndex];
     const unitDamage = DAMAGE[unit.unitType];
-    const unitIsRanged = IS_RANGED[unit.unitType];
+    const unitIsRanged = (RANGE[unit.unitType] >= 1);
 
     matrix.unitEngaged[unitIndex] = false;
     matrix.unitDamage[unitIndex] = unitDamage;
@@ -343,48 +268,6 @@ async function fight(client, pair) {
       await command(client, [pair.unit.tag], 16, undefined, stepback(pair.unit, pair.enemy));
     }
   }
-}
-
-async function micro(model, client) {
-  const enemies = model.observation.enemyUnits.filter(isValidTarget);
-  if (!enemies.length) return false;
-  orderTargets(enemies);
-
-  const units = model.observation.ownUnits.filter(unit => MICRO_FIGHT_WARRIORS[unit.unitType]);
-
-  if (units.length < enemies.length) {
-    // Support with close-by workers
-    const workers = model.observation.ownUnits.filter(unit => (WORKERS[unit.unitType] && near(unit, armyX, armyY, 20))).sort((a, b) => a.tag.localeCompare(b.tag));
-
-    if (workers.length) {
-      // Limit mobilized workers to 3 per enemy
-      let workersLimit = enemies.length * 3;
-
-      if (units.length) {
-        // Reduce mobilized workers when there are own warriors and when enemy uses light warriors
-        const lightEnemies = model.observation.enemyUnits.filter(isLightTarget);
-        workersLimit = Math.max((enemies.length * 2 - lightEnemies.length - units.length * 2 + 1) * 2, 0);
-      }
-      if (workers.length > workersLimit) {
-        workers.length = workersLimit;
-      }
-    }
-    for (const worker of workers) {
-      model.get(worker.tag).set("isMobilized", true);
-      units.push(worker);
-    }
-  }
-  if (!units.length) return false;
-
-  const matrix = calculateMatrix(units, enemies);
-
-  let pair;
-  while (pair = chooseFightPair(matrix, units, enemies)) {
-    await fight(client, pair);
-    updateMatrix(matrix, pair);
-  }
-
-  return true;
 }
 
 function near(unit, x, y, distance) {
