@@ -5,7 +5,7 @@ export default async function(model, client) {
   const deployment = model.add("Troops deployment").values(100);
 
   const deploymentPos = pos(grid, findDeployment(deployment));
-  const unitTags = units(model);
+  const unitTags = units(model, grid, deploymentPos);
 
   if (unitTags && unitTags.length) {
     command(client, unitTags, 16, deploymentPos);
@@ -46,9 +46,18 @@ function pos(grid, coordinates) {
   return { x: x, y: y};
 }
 
-// TODO: Return only the units which are not near their target deployment position and are not ordered to go to it
-function units(model) {
-  return model.observation.ownUnits.filter(unit => WARRIORS[unit.unitType]).map(unit => unit.tag);
+function units(model, grid, pos) {
+  return model.observation.ownUnits.filter(unit => WARRIORS[unit.unitType]).filter(unit => (!near(unit, grid, pos) && !moving(unit, grid, pos))).map(unit => unit.tag);
+}
+
+function near(unit, grid, pos) {
+  return (Math.abs(unit.pos.x - pos.x) <= grid.cellWidth / 2) && (Math.abs(unit.pos.y - pos.y) <= grid.cellHeight / 2);
+}
+
+function moving(unit, grid, pos) {
+  if (!unit.orders.length || (unit.orders[0].abilityId !== 16)) return false;
+  const target = unit.orders[0].targetWorldSpacePos;
+  return (Math.abs(target.x - pos.x) <= grid.cellWidth / 2) && (Math.abs(target.y - pos.y) <= grid.cellHeight / 2);
 }
 
 async function command(client, unitTags, abilityId, targetWorldSpacePos) {
