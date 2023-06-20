@@ -19,7 +19,9 @@ function makeGrid(map) {
     width: map.get("width"),
     height: map.get("height"),
     cellWidth: map.get("cellWidth"),
+    cellWidthHalf: map.get("cellWidth") / 2,
     cellHeight: map.get("cellHeight"),
+    cellHeightHalf: map.get("cellHeight") / 2,
   };
 }
 
@@ -47,17 +49,24 @@ function pos(grid, coordinates) {
 }
 
 function units(model, grid, pos) {
-  return model.observation.ownUnits.filter(unit => WARRIORS[unit.unitType]).filter(unit => (!near(unit, grid, pos) && !moving(unit, grid, pos))).map(unit => unit.tag);
+  return model.observation.ownUnits.filter(unit => WARRIORS[unit.unitType]).filter(unit => (!near(unit, grid, pos) && !engaged(unit, grid, pos))).map(unit => unit.tag);
 }
 
 function near(unit, grid, pos) {
-  return (Math.abs(unit.pos.x - pos.x) <= grid.cellWidth / 2) && (Math.abs(unit.pos.y - pos.y) <= grid.cellHeight / 2);
+  return (Math.abs(unit.pos.x - pos.x) <= grid.cellWidthHalf) && (Math.abs(unit.pos.y - pos.y) <= grid.cellHeightHalf);
 }
 
-function moving(unit, grid, pos) {
-  if (!unit.orders.length || (unit.orders[0].abilityId !== 16)) return false;
-  const target = unit.orders[0].targetWorldSpacePos;
-  return (Math.abs(target.x - pos.x) <= grid.cellWidth / 2) && (Math.abs(target.y - pos.y) <= grid.cellHeight / 2);
+function engaged(unit, grid, pos) {
+  if (!unit.orders.length) {
+    return false;
+  }
+
+  if (unit.orders[0].abilityId === 16) {
+    const target = unit.orders[0].targetWorldSpacePos;
+    return (Math.abs(target.x - pos.x) <= grid.cellWidthHalf) && (Math.abs(target.y - pos.y) <= grid.cellHeightHalf);
+  }
+
+  return true;
 }
 
 async function command(client, unitTags, abilityId, targetWorldSpacePos) {

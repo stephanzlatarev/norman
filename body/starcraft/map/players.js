@@ -1,11 +1,16 @@
 
 export function mapPlayers(model, gameInfo, observation) {
   const owner = observation.playerCommon.playerId;
+  model.add("Game").set("owner", owner);
+
   const enemy = getEnemyId(gameInfo, owner);
+  model.add("Enemy").set("owner", enemy)
+
   const enemyBase = gameInfo.startRaw.startLocations[0];
 
-  model.add("Game").set("owner", owner);
-  model.add("Enemy").set("owner", enemy).set("baseX", enemyBase.x).set("baseY", enemyBase.y);
+  if (enemyBase) {
+    model.get("Enemy").set("baseX", enemyBase.x).set("baseY", enemyBase.y);
+  }
 
   mapPlayableArea(model, gameInfo);
 }
