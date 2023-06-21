@@ -1,9 +1,9 @@
-import { DUMMY_TARGETS, LOOPS_PER_STEP, STEPS_PER_SECOND } from "../units.js";
+import { IS_MILITARY, LOOPS_PER_STEP, STEPS_PER_SECOND } from "../units.js";
 
 export default async function(model, client) {
   const airUnits = model.observation.ownUnits.filter(unit => AIR_UNITS[unit.unitType]);
   const landUnits = model.observation.ownUnits.filter(unit => LAND_UNITS[unit.unitType]);
-  const enemyWarriors = model.observation.enemyUnits.filter(unit => (!DUMMY_TARGETS[unit.unitType] && (unit.displayType === 1) && !unit.isHallucination));
+  const enemyWarriors = model.observation.enemyUnits.filter(unit => (IS_MILITARY[unit.unitType] && (unit.displayType === 1) && !unit.isHallucination));
 
   if (!landUnits.length && !airUnits.length) {
     // We don't have warriors yet! Do nothing here.
