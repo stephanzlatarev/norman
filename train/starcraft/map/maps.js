@@ -20,7 +20,7 @@ export function map(mapName) {
   const data = read()[mapName];
 
   return new Map(
-    { startRaw: { placementGrid: data.grid } },
+    { startRaw: { placementGrid: data.grid, playableArea: data.area } },
     { rawData: { units: data.units },
   });
 }

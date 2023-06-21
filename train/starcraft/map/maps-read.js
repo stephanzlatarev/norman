@@ -55,7 +55,7 @@ async function go() {
     console.log(line.join(""));
   }
 
-  store(MAP, { grid: gameInfo.startRaw.placementGrid, units: units });
+  store(MAP, { area: gameInfo.startRaw.playableArea, grid: gameInfo.startRaw.placementGrid, units: units });
 
   await client.quit();
 }

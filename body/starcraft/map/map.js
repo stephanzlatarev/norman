@@ -91,7 +91,7 @@ export default class Map {
         if (type === "mineral") {
           add(map, "M", x - 1, y, 2, 1);
         } else if (type === "vespene") {
-          add(map, "M", x - 1, y - 1, 3, 3);
+          add(map, "V", x - 1, y - 1, 3, 3);
         } else if (dimensions) {
           add(map, "X", Math.floor(x - dimensions.w / 2), Math.floor(y - dimensions.h / 2), dimensions.w, dimensions.h);
         } else if (!NEUTRAL_MOVING_UNIT[unit.unitType]) {
