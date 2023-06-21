@@ -14,7 +14,7 @@ const HEATMAP = []; for (let i = 0; i < 100; i++) HEATMAP.push(0);
 export function observeHeatmap(model, observation) {
   updateKnowns(model, observation);
 
-  const grid = makeGrid(model.get("Map"));
+  const grid = model.get("Map").data;
 
   const ownMilitary = makeHeatmap(grid, model.knowns.ownMilitary);
   const ownEconomy = makeHeatmap(grid, model.knowns.ownEconomy);
@@ -88,17 +88,6 @@ function removeMissingUnits(collection, observers) {
 
 function near(x1, y1, x2, y2, distance) {
   return (Math.abs(x1 - x2) <= distance) && (Math.abs(y1 - y2) <= distance);
-}
-
-function makeGrid(map) {
-  return {
-    left: map.get("left"),
-    top: map.get("top"),
-    width: map.get("width"),
-    height: map.get("height"),
-    cellWidth: map.get("cellWidth"),
-    cellHeight: map.get("cellHeight"),
-  };
 }
 
 function makeHeatmap(grid, units) {

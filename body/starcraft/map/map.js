@@ -57,6 +57,7 @@ export default class Map {
     const minerals = this.units.filter(unit => (unit.type === "mineral"));
     const vespenes = this.units.filter(unit => (unit.type === "vespene"));
 
+    this.grid = mapPlayableAreaToGrid(gameInfo);
     this.clusters = clusterResources(findClusters(minerals, vespenes));
     this.nexuses = this.clusters.map(cluster => findNexusLocation(this, cluster));
     this.bases = findBasePlots(this, 10);
@@ -327,4 +328,24 @@ function findPlot(index, prefix, startX, startY, endX, endY, width, height) {
       }
     }
   }
+}
+
+function mapPlayableAreaToGrid(gameInfo) {
+  const playArea = gameInfo.startRaw.playableArea;
+
+  const left = playArea.p0.x;
+  const top = playArea.p0.y;
+  const width = playArea.p1.x - playArea.p0.x;
+  const height = playArea.p1.y - playArea.p0.y;
+
+  return {
+    left: left,
+    top: top,
+    width: width,
+    height: height,
+    cellWidth: width / 10,
+    cellWidthHalf: width / 20,
+    cellHeight: height / 10,
+    cellHeightHalf: height / 20,
+  };
 }

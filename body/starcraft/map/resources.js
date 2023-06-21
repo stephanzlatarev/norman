@@ -4,9 +4,18 @@ import { mapClusterResources, mapHarvest } from "./harvest.js";
 export function mapResources(model, gameInfo, observation) {
   const map = new Map(gameInfo, observation);
 
+  mapGrid(model, map);
   mapBases(model, map);
   mapNexuses(model, map);
   mapAssimilators(model, map);
+}
+
+function mapGrid(model, map) {
+  const node = model.add("Map");
+
+  for (const key in map.grid) {
+    node.set(key, map.grid[key]);
+  }
 }
 
 function mapBases(model, map) {

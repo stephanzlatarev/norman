@@ -1,7 +1,7 @@
 import { WARRIORS } from "../units.js";
 
 export default async function(model, client) {
-  const grid = makeGrid(model.get("Map"));
+  const grid = model.get("Map").data;
   const deployment = model.add("Troops deployment").values(100);
 
   const deploymentPos = pos(grid, findDeployment(deployment));
@@ -10,19 +10,6 @@ export default async function(model, client) {
   if (unitTags && unitTags.length) {
     command(client, unitTags, 16, deploymentPos);
   }
-}
-
-function makeGrid(map) {
-  return {
-    left: map.get("left"),
-    top: map.get("top"),
-    width: map.get("width"),
-    height: map.get("height"),
-    cellWidth: map.get("cellWidth"),
-    cellWidthHalf: map.get("cellWidth") / 2,
-    cellHeight: map.get("cellHeight"),
-    cellHeightHalf: map.get("cellHeight") / 2,
-  };
 }
 
 function findDeployment(deployment) {
