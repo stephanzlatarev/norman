@@ -4,12 +4,12 @@ import Map from "../../../body/starcraft/map/map.js";
 const MAPS_FILE = "./train/starcraft/map/maps.json";
 
 export const MAPS = [
-  "BerlingradAIE",
-  "HardwireAIE",
-  "WaterfallAIE",
-  "StargazersAIE",
-  "MoondanceAIE",
-  "InsideAndOutAIE",
+  "GresvanAIE",
+  "GoldenauraAIE",
+  "InfestationStationAIE",
+  "RoyalBloodAIE",
+  "DragonScalesAIE",
+  "AncientCisternAIE",
 ];
 
 export function read() {
@@ -36,5 +36,5 @@ export function store(mapName, data) {
 
   fs.writeFileSync(MAPS_FILE, JSON.stringify(maps));
 
-  console.log("Successfully updated map", MAP);
+  console.log("Successfully updated maps:", MAPS.join(", "));
 }
