@@ -14,15 +14,19 @@ const HEATMAP = []; for (let i = 0; i < 100; i++) HEATMAP.push(0);
 export function observeHeatmap(model, observation) {
   updateKnowns(model, observation);
 
-  const grid = model.get("Map").data;
+  const map = model.get("Map");
+  const grid = map.data;
 
   const ownMilitary = makeHeatmap(grid, model.knowns.ownMilitary);
   const ownEconomy = makeHeatmap(grid, model.knowns.ownEconomy);
   const enemyMilitary = makeHeatmap(grid, model.knowns.enemyMilitary);
   const enemyEconomy = makeHeatmap(grid, model.knowns.enemyEconomy);
 
-  scaleHeatmaps(ownMilitary, enemyMilitary);
-  scaleHeatmaps(ownEconomy, enemyEconomy);
+  const militaryScale = scaleHeatmaps(ownMilitary, enemyMilitary);
+  const economyScale = scaleHeatmaps(ownEconomy, enemyEconomy);
+
+  map.set("Military scale", militaryScale);
+  map.set("Economy scale", economyScale);
 
   addToMemory(model, "Heatmap own military", ownMilitary);
   addToMemory(model, "Heatmap own economy", ownEconomy);
@@ -103,6 +107,8 @@ function makeHeatmap(grid, units) {
 function addToHeatmap(grid, heatmap, unit) {
   const x = Math.floor((unit.pos.x - grid.left) / grid.cellWidth);
   const y = Math.floor((unit.pos.y - grid.top) / grid.cellHeight);
+  const spot = x + y * 10;
+
   let value = 1;
 
   if (unit.healthMax) {
@@ -111,7 +117,9 @@ function addToHeatmap(grid, heatmap, unit) {
     value = health;
   }
 
-  heatmap[y * 10 + x] += value;
+  heatmap[spot] += value;
+  unit.heatmapPosition = spot;
+  unit.heatmapValue = value;
 }
 
 function scaleHeatmaps(...heatmaps) {
@@ -128,6 +136,8 @@ function scaleHeatmaps(...heatmaps) {
       heatmap[i] /= scale;
     }
   }
+
+  return scale;
 }
 
 function addToMemory(memory, label, heatmap) {
@@ -136,26 +146,4 @@ function addToMemory(memory, label, heatmap) {
   for (let i = 0; i < heatmap.length; i++) {
     node.set(i, heatmap[i]);
   }
-}
-
-function show(title, heatmap) {
-  console.log("= __________________________________________ =", title);
-  console.log(" |                                          | ");
-  for (let offset = 90; offset >= 0; offset -= 10) {
-    const line = [];
-    for (let x = 0; x < 10; x++) {
-      const v = heatmap[offset + x];
-      if (v > 0) {
-        let c = "" + Math.floor(v * 10);
-        while (c.length < 4) c = " " + c;
-        line.push(c);
-      } else {
-        line.push("    ");
-      }
-    }
-    console.log(" |", line.join(""), "|");
-  }
-  console.log(" |__________________________________________| ");
-  console.log("=                                            =");
-  console.log();
 }
