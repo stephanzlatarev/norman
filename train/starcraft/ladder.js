@@ -1,21 +1,15 @@
 import fs from "fs";
 import https from "https";
 
-const BOT_ID = 518;
-const BOT_NAME = "norman";
-const COMPETITION = 20;
+const COMPETITION = 22;
+const BOTS = {
+  518: "norman",
+  605: "nida",
+}
+
 const LIMIT = 1000;
 const SECRETS = JSON.parse(fs.readFileSync("./train/starcraft/secrets.json"));
 const COOKIES = [];
-
-const MAPS = {
-  65: "BerlingradAIE",
-  66: "HardwireAIE",
-  69: "WaterfallAIE",
-  70: "StargazersAIE",
-  71: "MoondanceAIE",
-  72: "InsideAndOutAIE",
-};
 
 function call(method, path, data) {
   const json = JSON.stringify(data ? data : "");
@@ -68,16 +62,39 @@ async function go() {
   console.log("Reading ladder data...");
 
   await call("POST", "/api/auth/login/", SECRETS);
+  const maps = getMaps((await call("GET", "/api/maps/")).results);
+  const since = (await call("GET", "/api/competitions/" + COMPETITION + "/")).date_opened;
   const bots = getBots((await call("GET", "/api/bots/?limit=1000")).results);
   const ranks = getRanks((await call("GET", "/api/competition-participations/?competition=" + COMPETITION)).results);
-  const count = (await call("GET", "/api/matches/?limit=1&bot=" + BOT_ID)).count;
-  const offset = Math.max(count - LIMIT, 0);
-  const matches = await call("GET", "/api/matches/?offset=" + offset + "&limit=" + LIMIT + "&bot=" + BOT_ID);
-  console.log("Received:", matches.results.length, "of", matches.count);
 
-  const stats = getStats(matches.results);
+  for (const id in BOTS) {
+    await goBot(since, maps, bots, ranks, Number(id), BOTS[id]);
+  }
+}
+
+async function goBot(since, maps, bots, ranks, botId, botName) {
+  const count = (await call("GET", "/api/matches/?limit=1&bot=" + botId)).count;
+  const offset = Math.max(count - LIMIT, 0);
+  const matches = await call("GET", "/api/matches/?offset=" + offset + "&limit=" + LIMIT + "&bot=" + botId);
+  const matchesList = matches.results.filter(match => (match.created.localeCompare(since) > 0))
+
+  const stats = getStats(botId, botName, matchesList);
   const rates = getSuccessRateByDivision(stats, bots, ranks);
-  showStats(stats, bots, ranks, rates);
+
+  console.log();
+  console.log(botName);
+  console.log();
+  showStats(stats, maps, bots, ranks, rates);
+}
+
+function getMaps(list) {
+  const maps = {};
+
+  for (const item of list) {
+    maps[item.id] = item.name;
+  }
+
+  return maps;
 }
 
 function getBots(list) {
@@ -104,20 +121,20 @@ function getRanks(list) {
   return bots;
 }
 
-function getStats(matches) {
+function getStats(botId, botName, matches) {
   const stats = {};
 
   for (let i = matches.length - 1; i >= 0; i--) {
     const match = matches[i];
     if (!match.result) continue;
 
-    const opponent = (match.result.bot2_name === BOT_NAME) ? match.result.bot1_name : match.result.bot2_name;
+    const opponent = (match.result.bot2_name === botName) ? match.result.bot1_name : match.result.bot2_name;
     if (!stats[opponent]) stats[opponent] = { matches: 0, wins: 0, streak: true, winStreak: 0, lossStreak: 0, streakMaps: [], lossMaps: [] };
     if (stats[opponent].matches >= 10) continue;
 
     const data = stats[opponent];
     data.matches++;
-    if (match.result.winner === BOT_ID) {
+    if (match.result.winner === botId) {
       data.wins++;
       if (data.streak) {
         if (data.lossStreak === 0) {
@@ -162,7 +179,7 @@ function getSuccessRateByDivision(stats, bots, ranks) {
   return rates;
 }
 
-function showStats(stats, bots, ranks, rates) {
+function showStats(stats, maps, bots, ranks, rates) {
   const lines = [];
   for (const opponent in stats) {
     const data = stats[opponent];
@@ -184,11 +201,11 @@ function showStats(stats, bots, ranks, rates) {
     if (data.wins === data.matches) {
       console.log(cell(data.opponent, 25), "V", (data.matches < 10) ? "\t matches: " + data.matches : "");
     } else {
-      const maps = [data.streakMaps.sort().map(id => MAPS[id]).join(", "), data.lossMaps.sort().map(id => MAPS[id]).join(", ")].join(" | ");
+      const losses = [data.streakMaps.sort().map(id => maps[id]).join(", "), data.lossMaps.sort().map(id => maps[id]).join(", ")].join(" | ");
       console.log(cell(data.opponent, 25), percentage(data),
         "\t", "matches:", (data.matches < 10) ? data.matches : "V",
         "\t", "streak:", Math.max(data.winStreak, data.lossStreak), (data.winStreak > data.lossStreak) ? "wins" : "losses",
-        "\t", "loss maps:", maps
+        "\t", "loss maps:", losses
       );
     }
   }
