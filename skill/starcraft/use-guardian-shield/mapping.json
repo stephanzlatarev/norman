@@ -3,7 +3,7 @@
 
   "given": {
     "nodes": {
-      "FIGHT": { "label": "fight opponent", "goal": true }
+      "FIGHT": { "label": "win the game", "goal": true }
     },
     "infos": [
       { "node": "FIGHT" }
@@ -12,16 +12,11 @@
 
   "when": {
     "nodes": {
-      "SENTRY": { "type:sentry": true, "canUseGuardianShield": true, "guardian-shield": false },
-      "ENEMY": { "label": "Enemy" }
+      "SENTRY": { "type:sentry": true, "canUseGuardianShield": true, "guardian-shield": false }
     },
     "infos": [
-      { "node": "SENTRY", "label": "energy" },
-      { "node": "SENTRY", "label": "x" },
-      { "node": "SENTRY", "label": "y" },
-      { "node": "ENEMY", "label": "warriorCount" },
-      { "node": "ENEMY", "label": "warriorX" },
-      { "node": "ENEMY", "label": "warriorY" }
+      { "node": "SENTRY", "label": "orderAbilityId" },
+      { "node": "SENTRY", "label": "energy" }
     ]
   },
 
