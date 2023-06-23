@@ -1,5 +1,6 @@
 import fs from "fs";
 import https from "https";
+import ttys from "ttys";
 
 const COMPETITION = 22;
 const BOTS = {
@@ -7,6 +8,7 @@ const BOTS = {
   605: "nida",
 }
 
+const TRACE = false;
 const LIMIT = 1000;
 const SECRETS = JSON.parse(fs.readFileSync("./train/starcraft/secrets.json"));
 const COOKIES = [];
@@ -35,7 +37,7 @@ function call(method, path, data) {
       });
 
       response.on("end", () => {
-        console.log("<<", response.statusCode);
+        if (TRACE) console.log("<<", response.statusCode);
         const cookies = response.headers["set-cookie"];
         if (cookies && cookies.length) for (const cookie of cookies) COOKIES.push(cookie);
 
@@ -51,8 +53,8 @@ function call(method, path, data) {
       reject(error);
     });
 
-    console.log(">>", method, path);
-    console.log(">>", json);
+    if (TRACE) console.log(">>", method, path);
+    if (TRACE) console.log(">>", json);
     request.write(json);
     request.end();
   });
@@ -62,32 +64,33 @@ async function go() {
   console.log("Reading ladder data...");
 
   await call("POST", "/api/auth/login/", SECRETS);
-  const maps = getMaps((await call("GET", "/api/maps/")).results);
-  const since = (await call("GET", "/api/competitions/" + COMPETITION + "/")).date_opened;
+  const mapNames = getMapNames((await call("GET", "/api/maps/")).results);
+  const competition = await call("GET", "/api/competitions/" + COMPETITION + "/");
   const bots = getBots((await call("GET", "/api/bots/?limit=1000")).results);
   const ranks = getRanks((await call("GET", "/api/competition-participations/?competition=" + COMPETITION)).results);
 
   for (const id in BOTS) {
-    await goBot(since, maps, bots, ranks, Number(id), BOTS[id]);
+    await goBot(competition, mapNames, bots, ranks, Number(id), BOTS[id]);
   }
 }
 
-async function goBot(since, maps, bots, ranks, botId, botName) {
+async function goBot(competition, mapNames, bots, ranks, botId, botName) {
   const count = (await call("GET", "/api/matches/?limit=1&bot=" + botId)).count;
   const offset = Math.max(count - LIMIT, 0);
   const matches = await call("GET", "/api/matches/?offset=" + offset + "&limit=" + LIMIT + "&bot=" + botId);
-  const matchesList = matches.results.filter(match => (match.created.localeCompare(since) > 0))
+  const matchesList = matches.results.filter(match => (match.round && (match.created.localeCompare(competition.date_opened) > 0)));
 
-  const stats = getStats(botId, botName, matchesList);
+  const { stats, maps } = getStats(botId, botName, matchesList);
   const rates = getSuccessRateByDivision(stats, bots, ranks);
 
   console.log();
   console.log(botName);
   console.log();
-  showStats(stats, maps, bots, ranks, rates);
+  showStats(stats, maps.map(id => mapNames[id]), mapNames, bots, ranks, rates);
+  console.log();
 }
 
-function getMaps(list) {
+function getMapNames(list) {
   const maps = {};
 
   for (const item of list) {
@@ -123,40 +126,34 @@ function getRanks(list) {
 
 function getStats(botId, botName, matches) {
   const stats = {};
+  const maps = {};
 
   for (let i = matches.length - 1; i >= 0; i--) {
     const match = matches[i];
     if (!match.result) continue;
 
     const opponent = (match.result.bot2_name === botName) ? match.result.bot1_name : match.result.bot2_name;
-    if (!stats[opponent]) stats[opponent] = { matches: 0, wins: 0, streak: true, winStreak: 0, lossStreak: 0, streakMaps: [], lossMaps: [] };
+    if (!stats[opponent]) stats[opponent] = { maps: [], results: [], matches: 0, wins: 0 };
     if (stats[opponent].matches >= 10) continue;
 
     const data = stats[opponent];
+
     data.matches++;
+    data.maps.push(match.map);
+    maps[match.map] = true;
+
     if (match.result.winner === botId) {
       data.wins++;
-      if (data.streak) {
-        if (data.lossStreak === 0) {
-          data.winStreak++;
-        } else {
-          data.streak = false;
-        }
-      }
+      data.results.push(true);
     } else {
-      if (data.streak) {
-        if (data.winStreak === 0) {
-          data.lossStreak++;
-          if (data.streakMaps.indexOf(match.map) < 0) data.streakMaps.push(match.map);
-        } else {
-          data.streak = false;
-        }
-      }
-      if ((data.streakMaps.indexOf(match.map) < 0) && (data.lossMaps.indexOf(match.map) < 0)) data.lossMaps.push(match.map);
+      data.results.push(false);
     }
   }
 
-  return stats;
+  return {
+    stats: stats,
+    maps: Object.keys(maps),
+  };
 }
 
 function getSuccessRateByDivision(stats, bots, ranks) {
@@ -179,7 +176,7 @@ function getSuccessRateByDivision(stats, bots, ranks) {
   return rates;
 }
 
-function showStats(stats, maps, bots, ranks, rates) {
+function showStats(stats, competitionMaps, mapNames, bots, ranks, rates) {
   const lines = [];
   for (const opponent in stats) {
     const data = stats[opponent];
@@ -195,20 +192,45 @@ function showStats(stats, maps, bots, ranks, rates) {
   for (const data of lines) {
     if (data.division !== division) {
       division = data.division;
-      console.log(" ====== Division", division, "======", percentage(rates[data.division]), "win rate");
+      console.log(" ====== Division", division, "====== ", percentageAsText(rates[data.division]), "win rate");
     }
 
-    if (data.wins === data.matches) {
-      console.log(cell(data.opponent, 25), "V", (data.matches < 10) ? "\t matches: " + data.matches : "");
-    } else {
-      const losses = [data.streakMaps.sort().map(id => maps[id]).join(", "), data.lossMaps.sort().map(id => maps[id]).join(", ")].join(" | ");
-      console.log(cell(data.opponent, 25), percentage(data),
-        "\t", "matches:", (data.matches < 10) ? data.matches : "V",
-        "\t", "streak:", Math.max(data.winStreak, data.lossStreak), (data.winStreak > data.lossStreak) ? "wins" : "losses",
-        "\t", "loss maps:", losses
-      );
-    }
+    line(competitionMaps, mapNames, data);
   }
+}
+
+function line(competitionMaps, mapNames, data) {
+  ttys.stdout.write(cell(data.opponent, 25));
+
+  ttys.stdout.write("  ");
+  ttys.stdout.write("\x1b[48;2;" + percentageAsColor(data) + "m");
+  ttys.stdout.write(percentageAsText(data));
+  ttys.stdout.write("\x1b[0m");
+
+  ttys.stdout.write("  ");
+  for (let i = data.results.length; i < 10; i++) ttys.stdout.write(" ");
+  for (const win of data.results) {
+    ttys.stdout.write(win ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
+    ttys.stdout.write(" ");
+  }
+  ttys.stdout.write("\x1b[0m");
+
+  ttys.stdout.write("  ");
+  for (const mapName of competitionMaps) {
+    for (let i = 0; i < Math.max(data.maps.length, 10); i++) {
+      if (mapNames[data.maps[i]] === mapName) {
+        ttys.stdout.write(data.results[i] ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
+      } else {
+        ttys.stdout.write("\x1b[0m");
+      }
+      ttys.stdout.write((i < mapName.length) ? mapName[i] : " ");
+    }
+    ttys.stdout.write("\x1b[0m");
+    ttys.stdout.write("  ");
+  }
+
+  ttys.stdout.write("\x1b[0m");
+  ttys.stdout.write("\n");
 }
 
 function cell(text, size) {
@@ -218,7 +240,12 @@ function cell(text, size) {
   return line;
 }
 
-function percentage(data) {
+function percentageAsColor(data) {
+  const p = Math.floor(data.wins*160/data.matches);
+  return (160 - p) + ";" + p + ";0";
+}
+
+function percentageAsText(data) {
   if (data.wins === data.matches) return "100%";
   const p = Math.floor(data.wins*100/data.matches);
   if (p < 10) return "  " + p + "%";
