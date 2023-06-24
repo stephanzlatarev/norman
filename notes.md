@@ -1,22 +1,20 @@
 
-============= MILESTONE 2 - Event-based memory
-
-- update Goals. They are passive.
-
-- update Skills. They are passive. They use memory patterns to listen for changes and reactively make updates to memory.
-- prevent skills from infinite loops when listening for memory changes and applying memory changes.
-
-- test that Body receives all updates from skills before applying changes in memory to world. Bodies are active.
-
-- test that norman closes when all bodies have detached. In the arena, when the game is over then norman will exit. When testing with a monitor, norman will never exit.
-
-- test that norman says "gg" when game is over.
-
-- add stats body to print every second cpu usage for top 5 skills, as milliseconds and percentage, as well as overall norman.js cpu usage, as millis and percentage. Activate the stats for the arena games.
-
 ============= MILESTONE 3 - Reach ELO 1600 in StarCraft II
 
+- try rotation mining. Probes which have just returned harvest are queued to mineral fields which will be free at the time of arrival of the probes. Notes:
+  - body observe monitors how many workers are needed to harvest minerals and vespene depending on the available mineral fields and assimilators.
+  - skill assigns workers as harvesters to nexus. body skill is responsible to queue the workers to the free resources.
+  - when a new assimilator is created the body skill will assign one worker immediately, then the second worker will be assigned just in time for its arrival.
+  - speed mining works when two probes are in 0.1 distance from each other and move (abilityId: 16) at the same time for at least one game loop. This accelerates the probe returning harvest immediately and reduces the time to reach the nexus by 10 game loops. However, it has to be done exactly when this probe switches fromt ability 298 to 299. It also loses one game loop of harvest time for the other probe. Overall, check whether circle path of several probes over several mineral fields to better utilize the harvest time for mineral fields of all distances would yield better results.
+- add learning skill for micro-managing fights. It works on given "fight flags" in memory with zoomed-in heatmap.
+- convert "plan investments" skills to learning skill
+
 ============= MILESTONE 4 - Add ability to train skills with samples given in the Web UI
+
+- Store playbooks with each learning skill
+- Visualize inputs to selected skill in body/monitor. Allow to pause, step forward and step back
+- Create playbook move for input as visualzied in body/monitor
+- Train brain on playbooks with mirrors described in the descriptor of the skill. Duplicates and conflicts are removed
 
 ============= MILESTONE 5 - Add Gherkin to describe skills. Internally convert to the json description
 
@@ -25,33 +23,33 @@ Example: **x**  _is_  **zealot**, **x**'s  _health_  is  **100**, **x**  _busy_ 
 ============= MILESTONE 6 - Match skills to goals by outcomes instead of by label
 
 ============= MILESTONE 7 - Self-learning
-Each skill knows what outcomes its promises. It will know what is the likelyhood for successfully delivering the outcomes. When in use we can see if the observed success rate deviates from the expected success rate.
+Each skill knows what outcomes it promises. It will know what the likelihood for successfully delivering the outcomes is. When in use we can see if the observed success rate deviates from the expected success rate.
 When so, extract samples of failure and add them to the learning set. It can ask supervisor for suggested reaction, or it can experiment.
 
 ============= FIXES & IMPROVEMENTS
 
+- restore mothership time-warp ability
+- improve sentry guardian-shield ability to optimize impact
 - add 2nd and 3rd level air weapons and armor upgrades
 - check for range of enemy and stay away from that range when stalking
-- military.js to observe alpha (leader, x, y) and bravo (leader, x, y) army where alpha is between homebase and enemy and bravo is on the other side of the enemy. Rally units accordingly. Attack with alpha and bravo at the same time
-- add DEBUG and INFO log option for starcraft/unit
 - when detaching the game make related goals disappear
 - remove memory nodes for detached bodies
 - when a goal completes and is removed, then remove all its memory traces
-- optional and provisional paths for memory layers should tell which part is optional or provisional, e.g. { path: [GOAL, has, SUBGOAL], provision: [has, SUBGOAL] } to provision a node and link to it but { path: [PROBE, go, DIRECTION], provision: [go] } to provision link to an existing node.
-- see if check for unchanged memory for skill pattern will speed up skill "assign-probe-to-mineral-field"
-  or check if can replace it with "know when to manage probes"?
-- when a new nexus is created, take the probes which harvest distant mineral fields and redirect them to harvest the closest mineral fields of the new nexus
-- improve skill "know how to select mineral field for harvest" to select the mineral field that is closest to nexus and then closest to probe
-- improve skill "build a pylon" with goal sequence "Select nexus", "Map area around nexus", "Select location", "Select builder"
-- add a "guard" body to help defending the base
-  - the guard line should be a walking path close to all own nexuses
-  - the guard line will be pylons and cannons which secure end-to-end visibility
-  - the guard line is used to rally army when stalking
-  - enemy attacking a guard triggers "enemy alert"
-- add skill "manage military operations" with goals "defend", "stalk", "push", "attack"
-  - split combat units among "guard", "scouts", "army", "fleet"
-  - total attack should consider strength of units - one carrier is better than one zealot
-- sometimes army rallies to a stalking point at the side of the enemy (maybe because there is own unit there) but the rest of the units need to walk pass the enemy to get there. Make sure stalking location is always in the direction of the base, so it is always in a path between the base and the enemy.
 - a nexus built at the place of a destroyed nexus should reconnect to left-over structures
-- more than one sentry uses guardian shield because when distance is smaller the new choice uses the shield but the old one still uses the shield too.
-- speed mining works when two probes are in 0.1 distance from each other and move (abilityId: 16) at the same time for at least one game loop. This accelerates the probe returning harvest immediately and reduces the time to reach the nexus by 10 game loops. However, it has to be done exactly when this probe switches fromt ability 298 to 299. It also loses one game loop of harvest time for the other probe. Overall, check whether circle path of several probes over several mineral fields to better utilize the harvest time for mineral fields of all distances would yield better results.
+  
+- add memory test that memory doesn't send events for a removed memory node. A pattern doesn't return it as a match. A pattern doesn't create it with pattern.write() for either info on the node, or info on a label of the node, or a path with the node. 
+- add pattern test when a matching root node is found, then all its shoots get procedures to detect breakage of the match
+- add pattern test when a node is candidate root but not a complete match, then all its shoots get procedures to detect completion of the match
+- add pattern test when a match or cnadidate root node is deleted, then all its shoots lose the procedures
+- add pattern test on notifications. pause and resume non embeded and embeded. check that when paused then no notifications are sent and that after resume the blocked notifications are sent
+- add pattern test that when there are two matches then no new memory node is created on write
+- add test when pattern node has attributes other than the label and identiying a root depends on type EVENT_UPDATE_NODE event, e.g. Nodes: {"GOAL":{"label":"Greet","goal":true}}
+- [test node.js] add test for one node link to another. when removing the second node, the first one should lose the link. Use "removed" field on the node and check for it when get returns such a node
+- add test when pattern match is made after satisfying a path starting with a root node
+- add test when pattern match is made after satisfying a path starting with a non-root node
+- add test when pattern match disappears after : 1) removing a root node 2) changing link of a root node 3) changing link of a path node. Add variants: A) info is on a root node B) info is on path node
+- add test when one path will select one non-root node and another path will select another node for the same node key. The result should not be included in the matches.
+- add pattern test and improve pattern.addProcedure from pattern.fix - should remove previously added procedures. should not create duplicate procedures for the same node. Maybe allow pattern.fix without procedures, because skill doesn't need updates on the fixture nodes as they will be recycled anyway.
+- add method to patterns to use given model so that nodes created by a pattern.write() are created in the correct model.
+- memory to remember what labels each pattern is interested in and ivoke onChange only for those labels
+- procedures in patterns for nodes to not copy but refer to master list of procedures
