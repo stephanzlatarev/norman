@@ -31,7 +31,7 @@ export default async function(client, hotspot) {
 
   let pair;
   while (pair = chooseFightPair(matrix, hotspot.warriors, hotspot.enemies)) {
-    await fight(client, pair);
+    await fight(hotspot, client, pair);
 
     updateMatrix(matrix, pair);
   }
@@ -69,15 +69,17 @@ function distance(a, b) {
 }
 
 // TODO: Instead of just walking in the opposite direction, choose a better position considering the enemy units and landscape.
-function stepback(unit, enemy) {
+function stepback(hotspot, unit, enemy) {
   let dx = unit.pos.x - enemy.pos.x;
   let dy = unit.pos.y - enemy.pos.y;
 
   if (Math.abs(dx) >= Math.abs(dy)) {
     dy /= Math.abs(dx);
+    dy += Math.sign(unit.pos.y - hotspot.pos.y);
     dx = Math.sign(dx);
   } else {
     dx /= Math.abs(dy);
+    dx += Math.sign(unit.pos.x - hotspot.pos.x);
     dy = Math.sign(dy);
   }
 
@@ -223,7 +225,7 @@ function chooseFightPair(matrix, units, enemies) {
   }
 }
 
-async function fight(client, pair) {
+async function fight(hotspot, client, pair) {
   if (pair.time < 1) {
     await command(client, [pair.unit.tag], 3674, pair.enemy.tag);
   } else {
@@ -233,7 +235,7 @@ async function fight(client, pair) {
     if (walk > range) {
       await command(client, [pair.unit.tag], 3674, pair.enemy.tag);
     } else {
-      await command(client, [pair.unit.tag], 16, undefined, stepback(pair.unit, pair.enemy));
+      await command(client, [pair.unit.tag], 16, undefined, stepback(hotspot, pair.unit, pair.enemy));
     }
   }
 }
