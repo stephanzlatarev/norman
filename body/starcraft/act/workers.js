@@ -90,6 +90,7 @@ export default async function(model, client, units) {
   }
 }
 
+// TODO: Move this to observe
 function isResourceDepleted(model, harvest) {
   const tag = String(harvest.get("tag"));
 
