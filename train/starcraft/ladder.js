@@ -208,9 +208,10 @@ function line(competitionMaps, mapNames, data) {
   ttys.stdout.write("\x1b[0m");
 
   ttys.stdout.write("  ");
-  for (let i = data.results.length; i < 10; i++) ttys.stdout.write(" ");
-  for (const win of data.results) {
-    ttys.stdout.write(win ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
+  for (let i = 9; i >= 0; i--) {
+    if (i < data.results.length) {
+      ttys.stdout.write(data.results[i] ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
+    }
     ttys.stdout.write(" ");
   }
   ttys.stdout.write("\x1b[0m");
@@ -218,8 +219,8 @@ function line(competitionMaps, mapNames, data) {
   ttys.stdout.write("  ");
   for (const mapName of competitionMaps) {
     for (let i = 0; i < Math.max(data.maps.length, 10); i++) {
-      if (mapNames[data.maps[i]] === mapName) {
-        ttys.stdout.write(data.results[i] ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
+      if ((9 - i < data.maps.length) && (mapNames[data.maps[9 - i]] === mapName)) {
+        ttys.stdout.write(data.results[9 - i] ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
       } else {
         ttys.stdout.write("\x1b[0m");
       }
