@@ -211,9 +211,18 @@ function supportDefenders(modes) {
 }
 
 function supportAttackers(modes) {
-  // TODO: Implemented this
-  // Move units from a support hotspot to an adjacent attack hotspot
-  // Recalculate mode of hotspots
+  if (!modes.attack.length || !modes.support.length) return;
+
+  for (const source of modes.support) {
+    if (!source.warriors.length) continue;
+
+    for (const target of modes.attack) {
+      if ((Math.abs(target.x - source.x) > 1) || (Math.abs(target.y - source.y) > 1)) continue;
+
+      target.warriors.push(...source.warriors);
+      source.warriors.length = 0;
+    }
+  }
 }
 
 function mobilizeWorkers(client, hotspots) {
