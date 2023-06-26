@@ -124,7 +124,7 @@ class Hotspot {
     this.dummies.push(dummy);
 
     if (!dummy.pos) {
-      dummy.pos = { x: this.x, y: this.y };
+      dummy.pos = this.pos;
     }
   }
 }
