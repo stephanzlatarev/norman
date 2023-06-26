@@ -1,5 +1,6 @@
 import { IS_MILITARY } from "../units.js";
 import attack from "./attack.js";
+import defend from "./defend.js";
 import { Hotspots } from "./hotspots.js";
 
 // The minimum considered troops deployment value
@@ -83,8 +84,7 @@ async function issueAttackCommands(client, hotspots) {
 
 async function issueDefendCommands(client, hotspots) {
   for (const hotspot of hotspots) {
-    // TODO: Replace this with defend movements - units keep outside range of enemies and shoot those in range
-    await attack(client, hotspot);
+    await defend(client, hotspot);
   }
 }
 

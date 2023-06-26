@@ -12,6 +12,42 @@ export const RESOURCES = {
   608: "vespene", 880: "vespene", 881: "vespene",
 };
 
+export const SPEED = {
+  10: (2.62 / STEPS_PER_SECOND), // mothership
+  73: (3.15 / STEPS_PER_SECOND), // zealot
+  74: (4.13 / STEPS_PER_SECOND), // stalker
+  76: (3.94 / STEPS_PER_SECOND), // templar
+  77: (3.50 / STEPS_PER_SECOND), // sentry
+  78: (5.95 / STEPS_PER_SECOND), // phoenix
+  79: (2.62 / STEPS_PER_SECOND), // carrier
+  80: (3.85 / STEPS_PER_SECOND), // voidray
+  84: (3.94 / STEPS_PER_SECOND), // probe
+};
+
+export const RANGE = {
+  10: 7.0, // mothership
+  73: 0.1, // zealot
+  74: 6.0, // stalker
+  76: 0.1, // templar
+  77: 5.0, // sentry
+  78: 5.0, // phoenix
+  79: 8.0, // carrier
+  80: 6.0, // voidray
+  84: 0.1, // probe
+};
+
+export const DAMAGE = {
+  10:  6, // mothership
+  73:  8, // zealot
+  74: 13, // stalker
+  74: 45, // templar
+  77:  6, // sentry
+  78:  5, // phoenix
+  79:  5, // carrier
+  80:  6, // voidray
+  84:  5, // voidray
+};
+
 export const OWN_UNITS = {
    0: "base",
   10: "mothership",

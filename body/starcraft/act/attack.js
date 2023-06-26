@@ -1,27 +1,6 @@
-import { LOOPS_PER_STEP, STEPS_PER_SECOND } from "../units.js";
+import { SPEED, RANGE, DAMAGE, LOOPS_PER_STEP, STEPS_PER_SECOND } from "../units.js";
 
 const GANG = 4;
-
-const SPEED = {
-  73: (3.15 / STEPS_PER_SECOND), // zealot
-  74: (3.15 / STEPS_PER_SECOND), // stalker
-  76: (3.94 / STEPS_PER_SECOND), // templar
-  77: (4.15 / STEPS_PER_SECOND), // sentry
-};
-
-const RANGE = {
-  73: 0.1, // zealot
-  74: 6.0, // stalker
-  76: 0.1, // templar
-  77: 5.0, // sentry
-};
-
-const DAMAGE = {
-  73:  8, // zealot
-  74: 13, // stalker
-  74: 45, // templar
-  77:  6, // sentry
-};
 
 const SENTRY_COOLDOWN = 0.71 / STEPS_PER_SECOND;
 const ZEALOT_COOLDOWN = 13 + LOOPS_PER_STEP;
