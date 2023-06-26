@@ -26,6 +26,11 @@ Example: **x**  _is_  **zealot**, **x**'s  _health_  is  **100**, **x**  _busy_ 
 Each skill knows what outcomes it promises. It will know what the likelihood for successfully delivering the outcomes is. When in use we can see if the observed success rate deviates from the expected success rate.
 When so, extract samples of failure and add them to the learning set. It can ask supervisor for suggested reaction, or it can experiment.
 
+============= MILESTONE 8 - Compose and decompose skills
+Each skill can be decomposed to sub-skills.
+Demonstrate by decomposing starcraft/deploy-troops to independently learnable and practiced skills "attack", "defend", "destroy", "scout", "bluff", etc.
+
+
 ============= FIXES & IMPROVEMENTS
 
 - restore mothership time-warp ability
