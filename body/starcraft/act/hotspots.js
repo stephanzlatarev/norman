@@ -47,7 +47,8 @@ export class Hotspots {
     const transports = createTransports(this.hotspots, createTroops(this.hotspots, this.heatscale));
 
     consolidateNearbyHotspots(this.hotspots, transports);
-    calculateModeOfHotspots(this.hotspots);
+
+    const modes = calculateModeOfHotspots(this.hotspots);
 
     // TODO: Deploy support-mode hotspots to help adjacent defend-mode hotspots
     // Return any troops transported from these defend-mode hotspots to the support-mode hotspots. Are there any such
@@ -58,10 +59,8 @@ export class Hotspots {
     // console.log(this.hotspots.map(h => h.warriors.length + " vs " + h.enemies.length + " / " + h.dummies.length).join(", "));
 
     return {
+      ...modes,
       deploy: transports,
-      attack: this.hotspots.filter(hotspot => (hotspot.mode === "attack")),
-      defend: this.hotspots.filter(hotspot => (hotspot.mode === "defend")),
-      destroy: this.hotspots.filter(hotspot => (hotspot.mode === "destroy")),
     };
   }
 
@@ -76,9 +75,16 @@ class Hotspot {
     this.x = spot % 10;
     this.y = Math.floor(spot / 10);
 
+    this.bounds = {
+      top: grid.top + grid.cellHeight * this.y,
+      left: grid.left + grid.cellWidth * this.x,
+      width: grid.cellWidth,
+      height: grid.cellHeight,
+    };
+
     this.pos = {
-      x: grid.left + grid.cellWidth * this.x + grid.cellWidthHalf,
-      y: grid.top + grid.cellHeight * this.y + grid.cellHeightHalf,
+      x: this.bounds.left + grid.cellWidthHalf,
+      y: this.bounds.top + grid.cellHeightHalf,
     };
 
     this.warriors = [];
@@ -220,6 +226,8 @@ function isInFightingRange(a, b) {
 }
 
 function calculateModeOfHotspots(hotspots) {
+  const modes = { attack: [], defend: [], destroy: [], support: [] };
+
   for (const hotspot of hotspots) {
     if (!hotspot.warriors.length) continue;
 
@@ -234,5 +242,9 @@ function calculateModeOfHotspots(hotspots) {
     } else {
       hotspot.mode = "support";
     }
+
+    modes[hotspot.mode].push(hotspot);
   }
+
+  return modes;
 }
