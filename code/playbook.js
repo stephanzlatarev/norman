@@ -22,20 +22,46 @@ export default class Playbook {
   }
 
   add(input, output, comment) {
-    const inputBase64 = Buffer.from(new Float32Array(input).buffer).toString("base64");
+    const inputFloat32 = new Float32Array(input);
+    const inputBase64 = Buffer.from(inputFloat32.buffer).toString("base64");
 
-    if (this.hashes[inputBase64]) return false;
+    if (this.hashes[inputBase64]) return;
+
+    const outputFloat32 = new Float32Array(output);
+    const outputBase64 = Buffer.from(outputFloat32.buffer).toString("base64");
+    const play = {
+      input: inputFloat32,
+      inputBase64: inputBase64,
+      output: outputFloat32,
+      outputBase64: outputBase64,
+      comment: comment,
+    };
 
     this.hashes[inputBase64] = true;
-    this.plays.push({
-      input: input,
-      inputBase64: inputBase64,
-      output: output,
-      outputBase64: Buffer.from(new Float32Array(output).buffer).toString("base64"),
-      comment: comment,
-    });
+    this.plays.push(play);
 
-    return true;
+    return play;
+  }
+
+  clear() {
+    this.plays = [];
+    this.hashes = {};
+
+    return this;
+  }
+
+  mirror(mirrors) {
+    const plays = [...this.plays];
+
+    this.clear();
+
+    for (const play of plays) {
+      for (const mirror of mirrors) {
+        this.add(mirror(play.input), mirror(play.output));
+      }
+    }
+
+    return this;
   }
 
   reduce(size) {

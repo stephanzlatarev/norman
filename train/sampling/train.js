@@ -1,5 +1,7 @@
 import fs from "fs";
 import * as tf from "@tensorflow/tfjs-node-gpu";
+import Playbook from "../../code/playbook.js";
+import mirrors from "./mirrors.js";
 
 const INPUT_SIZE = 400;
 const OUTPUT_SIZE = 100;
@@ -9,15 +11,15 @@ const ACTIVATION_FUNCTION = "sigmoid";
 const OPTIMIZER_FUNCTION = "adam";
 const LOSS_FUNCTION = "meanSquaredError";
 
-async function run(model, samples, input, output) {
+async function run(model, playbook, input, output) {
   tf.engine().startScope();
 
   const info = await model.fit(input, output, { epochs: LEARNING_EPOCHS, batchSize: LEARNING_BATCH, shuffle: true, verbose: false });
-  const predictions = await model.predict(input, { batchSize: samples.input.length }).array();
+  const predictions = await model.predict(input, { batchSize: playbook.input.length }).array();
 
   const result = {
     loss: info.history.loss.reduce((best, current) => Math.min(current, best), Infinity),
-    error: error(samples.output, predictions),
+    error: error(playbook.output, predictions),
   };
 
   tf.engine().endScope();
@@ -39,7 +41,15 @@ function error(output, predictions) {
   }
   errors.sort((a, b) => (a - b));
 
+  let pass = 0;
+  for (const error of errors) {
+    if (error < 0.01) {
+      pass++;
+    }
+  }
+
   return {
+    pass: pass / errors.length,
     best: errors[0],
     a: errors[Math.floor(errors.length * 0.9)],
     b: errors[Math.floor(errors.length * 0.99)],
@@ -79,30 +89,37 @@ async function save(model, file) {
   });
 }
 
+function show(iteration, result) {
+  const line = [new Date().toISOString().split("T")[1].split(".")[0], iteration];
+
+  const error = result.error;
+  line.push("best: " + error.best.toFixed(5));
+  line.push(error.a.toFixed(2));
+  line.push(error.b.toFixed(2));
+  line.push(error.c.toFixed(2));
+  line.push(error.d.toFixed(2));
+  line.push("worst: " + error.worst.toFixed(5));
+  line.push("pass: " + (error.pass * 100).toFixed(2) + "%");
+
+  line.push("loss: " + result.loss);
+
+  console.log(line.join("\t"));
+}
+
 async function train() {
+  const playbook = new Playbook("starcraft/deploy-troops").mirror(mirrors).read();
+  console.log("Traing with playbook of", playbook.input.length, "plays");
+
   const file = "./train/sampling/brain.tf";
-  const samples = JSON.parse(fs.readFileSync("./train/sampling/samples.json", "utf8"));
-  const input = tf.tensor(samples.input, [samples.input.length, INPUT_SIZE]);
-  const output = tf.tensor(samples.output, [samples.output.length, OUTPUT_SIZE]);
   const model = fs.existsSync(file) ? await load(file) : create();
+  const input = tf.tensor(playbook.input, [playbook.input.length, INPUT_SIZE]);
+  const output = tf.tensor(playbook.output, [playbook.output.length, OUTPUT_SIZE]);
 
   let iteration = 0;
   while (++iteration > 0) {
-    const attempt = await run(model, samples, input, output);
+    const attempt = await run(model, playbook, input, output);
 
-    const line = [new Date().toISOString().split("T")[1].split(".")[0], iteration];
-
-    const error = attempt.error;
-    line.push("best: " + error.best.toFixed(5));
-    line.push(error.a.toFixed(2));
-    line.push(error.b.toFixed(2));
-    line.push(error.c.toFixed(2));
-    line.push(error.d.toFixed(2));
-    line.push("worst: " + error.worst.toFixed(5));
-
-    line.push("loss: " + attempt.loss);
-
-    console.log(line.join("\t"));
+    show(iteration, attempt);
 
     await save(model, file);
   }

@@ -33,8 +33,10 @@ function mirror(data, mirror) {
   const result = [...data];
 
   if (mirror) {
-    for (let index = 0; index < data.length; index++) {
-      result[index] = data[mirror(index)];
+    for (let page = 0; page < data.length; page += 100) {
+      for (let index = 0; index < 100; index++) {
+        result[page + index] = data[page + mirror(index)];
+      }
     }
   }
 
