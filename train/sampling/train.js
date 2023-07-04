@@ -7,7 +7,8 @@ const INPUT_SIZE = 400;
 const OUTPUT_SIZE = 100;
 const LEARNING_EPOCHS = 10;
 const LEARNING_BATCH = 1024;
-const ACTIVATION_FUNCTION = "sigmoid";
+const HIDDEN_ACTIVATION_FUNCTION = "relu";
+const OUTPUT_ACTIVATION_FUNCTION = "sigmoid";
 const OPTIMIZER_FUNCTION = "adam";
 const LOSS_FUNCTION = "meanSquaredError";
 
@@ -42,14 +43,18 @@ function error(output, predictions) {
   errors.sort((a, b) => (a - b));
 
   let pass = 0;
+  let fail = 0;
   for (const error of errors) {
     if (error < 0.01) {
       pass++;
+    } else if (error > 0.99) {
+      fail++;
     }
   }
 
   return {
     pass: pass / errors.length,
+    fail: fail,
     best: errors[0],
     a: errors[Math.floor(errors.length * 0.9)],
     b: errors[Math.floor(errors.length * 0.99)],
@@ -61,8 +66,9 @@ function error(output, predictions) {
 
 function create() {
   const model = tf.sequential();
-  model.add(tf.layers.dense({ inputShape: [INPUT_SIZE], units: 400, activation: ACTIVATION_FUNCTION }));
-  model.add(tf.layers.dense({ units: OUTPUT_SIZE, activation: ACTIVATION_FUNCTION }));
+  model.add(tf.layers.dense({ inputShape: [INPUT_SIZE], units: 400, activation: HIDDEN_ACTIVATION_FUNCTION }));
+  model.add(tf.layers.dense({ units: 400, activation: HIDDEN_ACTIVATION_FUNCTION }));
+  model.add(tf.layers.dense({ units: OUTPUT_SIZE, activation: OUTPUT_ACTIVATION_FUNCTION }));
   model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
   return model;
 }
@@ -100,6 +106,7 @@ function show(iteration, result) {
   line.push(error.d.toFixed(2));
   line.push("worst: " + error.worst.toFixed(5));
   line.push("pass: " + (error.pass * 100).toFixed(2) + "%");
+  line.push("fail: " + error.fail);
 
   line.push("loss: " + result.loss);
 
@@ -108,7 +115,7 @@ function show(iteration, result) {
 
 async function train() {
   const playbook = new Playbook("starcraft/deploy-troops").mirror(mirrors).read();
-  console.log("Traing with playbook of", playbook.input.length, "plays");
+  console.log("Training with playbook of", playbook.input.length, "plays");
 
   const file = "./train/sampling/brain.tf";
   const model = fs.existsSync(file) ? await load(file) : create();

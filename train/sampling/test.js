@@ -36,6 +36,7 @@ function compare(input, output, predictions) {
       prediction: predictions[i],
       error: error,
       pass: (error < 0.01),
+      distance: Infinity,
     });
   }
 
@@ -77,43 +78,67 @@ async function test(title, model, playbook) {
   return result;
 }
 
-async function train() {
+async function go() {
   const file = "./train/sampling/brain.tf";
   const model = await load(file);
-  const results = [];
+  const samples = [];
+  const sorted = [];
+
+  await test("All:\t", model, new Playbook("starcraft/deploy-troops").mirror(mirrors).read());
 
   for (let i = 0; i < mirrors.length; i++) {
-    results.push(await test("Mirror: " + i, model, new Playbook("starcraft/deploy-troops").mirror([mirrors[i]]).read()));
+    const result = await test("Mirror: " + i, model, new Playbook("starcraft/deploy-troops").mirror([mirrors[i]]).read());
+    samples.push([...result]);
+    result.sort((a, b) => (b.error - a.error));
+    sorted.push(result);
   }
 
-  await test("All:", model, new Playbook("starcraft/deploy-troops").mirror(mirrors).read());
+  for (const list of sorted) {
+    for (const sample of list) {
+      if (!sample.pass) {
+        display([...sample.input, ...sample.output, ...sample.prediction], 10, 10);
+      }
+    }
+  }
 
-  for (let i = 0; i < results[0].length; i++) {
-//    let isInteresting = results[0][i].pass;
-//    if (isInteresting) {
-//      for (let j = 1; j < 8; j++) {
-//        if (results[j][i].pass) {
-//          isInteresting = false;
-//          break;
-//        }
-//      }
-//    }
-    let isInteresting = false;
-    for (let j = 0; j < 8; j++) {
-      if (results[j][i].error > 0.9) {
-        isInteresting = true;
-        break;
-      }
+//  const mirrorOfWorstCase = sorted.reduce((mirror, samples, index, array) => ((samples[0].error > array[mirror][0].error) ? index : mirror));
+  sorted.sort((a, b) => (b[0].error - a[0].error));
+
+  const worst = sorted[0][0];
+  console.log();
+  console.log("Worst case error:", worst.error);
+  display([...worst.input, ...worst.output, ...worst.prediction], 10, 10);
+
+  console.log();
+  console.log("Closest samples of same mirror by error:");
+  for (let i = 1; i <= 5; i++) {
+    const sample = sorted[0][i];
+    console.log("Error:", sample.error);
+    display([...sample.input, ...sample.output, ...sample.prediction], 10, 10);
+  }
+
+  for (const samples of sorted) {
+    for (const sample of samples) {
+      sample.distance = (sample !== worst) ? distance(sample.input, worst.input) : Infinity;
     }
-    if (isInteresting) {
-      console.log("Sample #", i);
-      for (let j = 0; j < 8; j++) {
-        console.log("Mirror #", j);
-        display([...results[j][i].input, ...results[j][i].output, ...results[j][i].prediction], 10, 10);
-      }
-      break;
-    }
+    samples.sort((a, b) => (a.distance - b.distance));
+  }
+
+  console.log();
+  console.log("Closest samples of same mirror by input:");
+  for (let i = 1; i <= 5; i++) {
+    const sample = sorted[0][i];
+    console.log("Error:", sample.error, "Distance:", sample.distance);
+    display([...sample.input, ...sample.output, ...sample.prediction], 10, 10);
   }
 }
 
-train();
+function distance(a, b) {
+  let d = 0;
+  for (let i = 0; i < a.length; i++) {
+    d += Math.abs(a[i] - b[i]);
+  }
+  return d;
+}
+
+go();

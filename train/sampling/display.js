@@ -24,7 +24,7 @@ export default function display(data, cols, rows) {
 }
 
 function cell(value, color) {
-  const c = Math.floor(Math.min(value * 256, 255));
+  const c = light(value);
 
   let rgb;
   if (color === 0) {
@@ -45,4 +45,10 @@ function cell(value, color) {
 
   ttys.stdout.write("\x1b[48;2;" + rgb.join(";") + "m");
   ttys.stdout.write(" ");
+}
+
+function light(value) {
+  if (value < 0.01) return 0;
+  if (value < 0.1) return 80 + Math.floor(value * 400);        // 80 - 120
+  return Math.min(255, 120 + Math.floor((value - 0.1) * 150)); // 120 - 256
 }
