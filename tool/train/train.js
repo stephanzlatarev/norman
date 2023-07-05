@@ -66,8 +66,7 @@ function error(output, predictions) {
 
 function create() {
   const model = tf.sequential();
-  model.add(tf.layers.dense({ inputShape: [INPUT_SIZE], units: 400, activation: HIDDEN_ACTIVATION_FUNCTION }));
-  model.add(tf.layers.dense({ units: 400, activation: HIDDEN_ACTIVATION_FUNCTION }));
+  model.add(tf.layers.dense({ inputShape: [INPUT_SIZE], units: INPUT_SIZE, activation: HIDDEN_ACTIVATION_FUNCTION }));
   model.add(tf.layers.dense({ units: OUTPUT_SIZE, activation: OUTPUT_ACTIVATION_FUNCTION }));
   model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
   return model;

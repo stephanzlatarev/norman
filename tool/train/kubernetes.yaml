@@ -1,20 +1,6 @@
 
 ---
 
-kind: Service
-apiVersion: v1
-metadata:
-  name: trainer
-spec:
-  type: LoadBalancer
-  selector:
-    statefulset.kubernetes.io/pod-name: trainer-0
-  ports:
-    - port: 80
-      targetPort: 80
-
----
-
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
@@ -22,7 +8,7 @@ metadata:
   labels:
     module: trainer
 spec:
-  replicas: 3
+  replicas: 6
   serviceName: trainer
   selector:
     matchLabels:
