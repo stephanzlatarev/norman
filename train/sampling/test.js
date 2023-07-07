@@ -84,6 +84,8 @@ async function go() {
   const samples = [];
   const sorted = [];
 
+  model.summary();
+
   await test("All:\t", model, new Playbook("starcraft/deploy-troops").mirror(mirrors).read());
 
   for (let i = 0; i < mirrors.length; i++) {
