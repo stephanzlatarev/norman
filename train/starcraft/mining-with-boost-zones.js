@@ -489,16 +489,11 @@ function shouldPushToMine(worker) {
   // The worker should be within boost distance from harvest location
   if (calculateDistance(worker.pos, worker.job.harvestLocation) >= boost.distance) return false;
 
-//console.log("\t", calculateDistance(worker.pos, worker.job.harvestLocation), boost.distance,
-//  "left:", boost.L1 ? "" + calculateSide(boost.L1, boost.L2, worker.pos) + "=?=" + boost.inside : "-",
-//  "right:", boost.R1 ? "" + calculateSide(boost.R1, boost.R2, worker.pos) + "=?=" + boost.inside : "-",
-//);
+  // If the boost zone has left border - the line between points L1 and L2 - the worker must be inside
+  if (boost.L1 && (calculateSide(boost.L1, boost.L2, worker.pos) !== boost.inside)) return false;
 
-//  // If the boost zone has left border - the line between points L1 and L2 - the worker must be inside
-//  if (boost.L1 && (calculateSide(boost.L1, boost.L2, worker.pos) !== boost.inside)) return false;
-//
-//  // If the boost zone has right border - the line between points R1 and R2 - the worker must be inside
-//  if (boost.R1 && (calculateSide(boost.R1, boost.R2, worker.pos) !== boost.inside)) return false;
+  // If the boost zone has right border - the line between points R1 and R2 - the worker must be inside
+  if (boost.R1 && (calculateSide(boost.R1, boost.R2, worker.pos) !== boost.inside)) return false;
 
   return true;
 }
