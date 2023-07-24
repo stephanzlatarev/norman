@@ -1,5 +1,5 @@
 
-const DEPOT_TYPES = { 59: "nexus" };
+const DEPOTS = { 59: "nexus" };
 const RADIUS_WORKER = 0.375;
 const RADIUS_MINERAL = 1.125 / 2;
 const RADIUS_DEPOT = 2.75;
@@ -14,41 +14,36 @@ const Action = {
   PushToDepot: "PushToDepot",
 };
 
-let depot;
+const depots = {};
 
 async function mine(client, time, units) {
-  if (!depot) {
-    for (const tag in units) {
-      if (DEPOT_TYPES[units[tag].unitType]) {
-        depot = new Depot(units[tag]);
-
-        for (const mineTag in units) {
-          if (units[mineTag].unitType === 341) {
-            depot.assignMine(time, units[mineTag]);
-          }
-        }
-
-        for (const workerTag in units) {
-          if (units[workerTag].unitType === 84) {
-            depot.assignWorker(units[workerTag]);
-          }
-        }
-
-        break;
-      }
+  for (const tag in units) {
+    if (!depots[tag] && DEPOTS[units[tag].unitType]) {
+      depots[tag] = new Depot(units[tag], findUnits(units, (unit) => (unit.unitType === 341)), findUnits(units, (unit) => (unit.unitType === 84)));
     }
   }
 
-  await depot.mine(client, time, units);
+  for (const tag in depots) {
+    if (units[tag]) {
+      await depots[tag].mine(client, time, units);
+    } else {
+      // TODO: Transfer all workers of this depot to other depots
+      delete depots[tag];
+    }
+  }
 }
 
 class Depot {
 
-  constructor(unit) {
+  constructor(unit, mines, workers) {
     this.tag = unit.tag;
     this.pos = { x: unit.pos.x, y: unit.pos.y };
     this.workers = {};
     this.mines = {};
+    this.monitorData = { minute: -1, minerals: -1, ready: false };
+
+    for (const mine of mines) this.assignMine(0, mine);
+    for (const worker of workers) this.assignWorker(worker);
   }
 
   assignWorker(unit) {
@@ -103,7 +98,11 @@ class Depot {
   async mine(client, time, units) {
     this.syncUnits(units);
 
-    await this.commandWorkers(client, time, units);
+    if (this.mineCount) {
+      await this.commandWorkers(client, time, units);
+    }
+
+    this.monitor(time);
   }
 
   checkOutMine(time, job) {
@@ -166,6 +165,14 @@ class Depot {
         mineCount++;
       } else {
         delete this.mines[mineTag];
+
+        for (const workerTag in this.workers) {
+          const worker = this.workers[workerTag];
+
+          if (worker.job && (worker.job.mineTag === mineTag)) {
+            worker.job = null;
+          }
+        }
       }
     }
 
@@ -265,6 +272,53 @@ class Depot {
     return job;
   }
 
+  monitor(time) {
+    const minute = Math.floor(time / 22.4 / 60);
+    if (minute === this.monitorData.minute) return;
+
+    let minerals = 0;
+    let mineralMines = 0;
+    let timeUsed = 0;
+    let timeBlocked = 0;
+    let timeIdle = 0;
+    for (const mineTag in this.mines) {
+      const mine = this.mines[mineTag];
+
+      minerals += mine.content;
+      mineralMines++;
+
+      timeUsed += mine.time.used;
+      timeBlocked += mine.time.blocked;
+      timeIdle += mine.time.idle;
+    }
+
+    if (this.monitorData.ready && mineralMines) {
+      const harvestMinerals = this.monitorData.minerals - minerals;
+      const efficiency = timeUsed * 100 / (timeUsed + timeBlocked + timeIdle);
+
+      console.log(
+        "Harvest at depot", this.tag, "with", mineralMines, "mineral fields", "and", Object.keys(this.workers).length, "workers", "is",
+        Math.floor(harvestMinerals), "minerals at", efficiency.toFixed(2) + "% efficiency",
+      );
+    }
+
+    this.monitorData.ready = true;
+    this.monitorData.minute = minute;
+    this.monitorData.minerals = minerals;
+  }
+}
+
+function findUnits(units, filter) {
+  const list = [];
+
+  for (const tag in units) {
+    const unit = units[tag];
+    if (filter(unit)) {
+      list.push(unit);
+    }
+  }
+
+  return list;
 }
 
 function calculateDistance(a, b) {
@@ -320,6 +374,7 @@ const GAME_CONFIG = {
     { type: 2, race: 4, difficulty: 1 }
   ]
 };
+const SLOW_DOWN = 0;
 
 const client = starcraft();
 
@@ -362,45 +417,10 @@ async function go() {
     const units = {};
     for (const unit of observation.rawData.units) units[unit.tag] = unit;
 
-    traceHarvest(observation, time);
-
     await mine(client, time, units);
 
-    // Slow game down to close to real time
-    await new Promise(r => setTimeout(r, 40));
+    if (SLOW_DOWN) await new Promise(r => setTimeout(r, SLOW_DOWN));
   }
-}
-
-let lastTraceSecond;
-let lastTraceMineralContent;
-
-function traceHarvest(observation, time) {
-  const second = Math.floor(time / 22.4);
-  const mines = observation.rawData.units.filter(unit => (unit.unitType === 341));
-  const workers = observation.rawData.units.filter(unit => (unit.unitType === 84));
-
-  if ((second !== lastTraceSecond) && (second % 60 === 0)) {
-    const mineralContent = measureMineralContent(mines);
-    const mineralHarvest = lastTraceMineralContent ? lastTraceMineralContent - mineralContent : 0;
-
-    console.log(
-      "Mines:", mines.length, "Workers:", workers.length,
-      "Harvest:", mineralHarvest.toFixed(2), "/", (mines.length * 5 * 30.15).toFixed(2), "minerals per minute",
-    );
-
-    lastTraceSecond = second;
-    lastTraceMineralContent = mineralContent;
-  }
-}
-
-function measureMineralContent(mines) {
-  let content = 0;
-
-  for (const mine of mines) {
-    content += mine.mineralContents;
-  }
-
-  return content;
 }
 
 go();
