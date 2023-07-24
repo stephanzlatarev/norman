@@ -1,5 +1,9 @@
 
 const DEPOTS = { 59: "nexus" };
+const WORKERS = { 84: "probe" };
+
+const LIMIT_WORKERS = 72;
+
 const RADIUS_WORKER = 0.375;
 const RADIUS_MINERAL = 1.125 / 2;
 const RADIUS_DEPOT = 2.75;
@@ -15,17 +19,32 @@ const Action = {
 };
 
 const depots = {};
+const workers = {};
 
-async function mine(client, time, units) {
+async function mine(client, observation, map, units) {
+  const time = observation.gameLoop;
+
   for (const tag in units) {
-    if (!depots[tag] && DEPOTS[units[tag].unitType]) {
-      depots[tag] = new Depot(units[tag], findUnits(units, (unit) => (unit.unitType === 341)), findUnits(units, (unit) => (unit.unitType === 84)));
+    const unit = units[tag];
+
+    if (!depots[tag] && DEPOTS[unit.unitType]) {
+      depots[tag] = new Depot(unit, getMinesOfDepotFromMap(map, unit, units));
+    }
+  }
+
+  for (const tag in units) {
+    const unit = units[tag];
+    if (!workers[unit.tag] && WORKERS[unit.unitType]) {
+      findDepotForNewWorker(unit).assignWorker(unit);
+      workers[unit.tag] = true;
     }
   }
 
   for (const tag in depots) {
     if (units[tag]) {
-      await depots[tag].mine(client, time, units);
+      const depot = depots[tag];
+      await depot.mine(client, time, units);
+      await depot.produce(client, observation, units[tag]);
     } else {
       // TODO: Transfer all workers of this depot to other depots
       delete depots[tag];
@@ -33,9 +52,20 @@ async function mine(client, time, units) {
   }
 }
 
+function getMinesOfDepotFromMap(map, depot, units) {
+  const cluster = map.clusters.find(cluster => (cluster.nexus && (cluster.nexus.x === depot.pos.x) && (cluster.nexus.x === depot.pos.x)));
+  return cluster.resources.filter(resource => (resource.type === "mineral")).map(resource => units[resource.tag]);
+}
+
+function findDepotForNewWorker() {
+  for (const tag in depots) {
+    return depots[tag];
+  }
+}
+
 class Depot {
 
-  constructor(unit, mines, workers) {
+  constructor(unit, mines) {
     this.tag = unit.tag;
     this.pos = { x: unit.pos.x, y: unit.pos.y };
     this.workers = {};
@@ -43,7 +73,6 @@ class Depot {
     this.monitorData = { minute: -1, minerals: -1, ready: false };
 
     for (const mine of mines) this.assignMine(0, mine);
-    for (const worker of workers) this.assignWorker(worker);
   }
 
   assignWorker(unit) {
@@ -103,6 +132,30 @@ class Depot {
     }
 
     this.monitor(time);
+  }
+
+  async produce(client, observation, unit) {
+    const hasReachedLimit = observation.playerCommon.foodWorkers >= LIMIT_WORKERS;
+    const hasMinerals = observation.playerCommon.minerals >= 50;
+    const hasFood = observation.playerCommon.foodCap - observation.playerCommon.foodUsed >= 1;
+    const isBusy = !!unit.orders.length;
+
+    if (!hasReachedLimit && hasMinerals && hasFood && !isBusy) {
+      await client.action({ actions: [{ actionRaw: { unitCommand: { unitTags: [unit.tag], abilityId: 1006, queueCommand: false } } }]});
+
+      if (!this.hasSetRallyPoint) {
+        const mine = this.mineLine[Math.floor(this.mineLine.length / 2)];
+        await client.action({ actions: [{ actionRaw: { unitCommand: { unitTags: [unit.tag], abilityId: 3690, targetWorldSpacePos: mine.storeLocation, queueCommand: false } } }]});
+        this.hasSetRallyPoint = true;
+      }
+
+      if (!unit.buffIds.length) {
+        await client.action({ actions: [{ actionRaw: { unitCommand: { unitTags: [unit.tag], abilityId: 3755, targetUnitTag: unit.tag, queueCommand: true } } }]});
+      }
+
+      observation.playerCommon.minerals -= 50;
+      observation.playerCommon.foodUsed += 1;
+    }
   }
 
   checkOutMine(time, job) {
@@ -182,6 +235,7 @@ class Depot {
       }
 
       this.mineCount = mineCount;
+      this.mineLine = getLineOfMines(this, Object.values(this.mines));
     }
   }
 
@@ -242,9 +296,22 @@ class Depot {
     let jobWorkStart;
     let jobWaitTime;
 
+    // Limit selection to the nearby mines
+    let minMineIndex = 0;
+    let maxMineIndex = this.mineCount;
+    if (worker.lastMineTag) {
+      const lastMine = this.mines[worker.lastMineTag];
+      if (lastMine) {
+        minMineIndex = Math.max(lastMine.index - 3, minMineIndex);
+        maxMineIndex = Math.min(lastMine.index + 3, maxMineIndex);
+      }
+    }
+
     // Select mine
     for (const mineTag in this.mines) {
       const mine = this.mines[mineTag];
+      if ((mine.index < minMineIndex) || (mine.index > maxMineIndex)) continue;
+
       const routeDuration = calculateRouteDuration(worker, this, mine);
       const estimatedArrivalTime = time + routeDuration;
       const thisWorkStart = Math.max(mine.freeCheckInTime, estimatedArrivalTime);
@@ -269,6 +336,7 @@ class Depot {
     jobMine.freeCheckInTime = jobWorkStart + DRILL_TIME;
 
     worker.job = job;
+    worker.lastMineTag = jobMine.tag;
     return job;
   }
 
@@ -308,19 +376,6 @@ class Depot {
   }
 }
 
-function findUnits(units, filter) {
-  const list = [];
-
-  for (const tag in units) {
-    const unit = units[tag];
-    if (filter(unit)) {
-      list.push(unit);
-    }
-  }
-
-  return list;
-}
-
 function calculateDistance(a, b) {
   return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
@@ -357,18 +412,49 @@ function calculateRouteDuration(worker, depot, mine) {
   return duration;
 }
 
+function calculateSide(a, b, c) {
+  return Math.sign((b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y));
+}
+
+function getLineOfMines(depot, mines) {
+  const line = [];
+
+  for (const mine of mines) {
+    let isMineAddedToLine = false;
+
+    for (let i = 0; i < line.length; i++) {
+      if (calculateSide(line[i].pos, depot.pos, mine.pos) < 0) {
+        line.splice(i, 0, mine);
+        isMineAddedToLine = true;
+        break;
+      }
+    }
+
+    if (!isMineAddedToLine) {
+      line.push(mine);
+    }
+  }
+
+  for (let i = 0; i < line.length; i++) {
+    line[i].index = i;
+  }
+
+  return line;
+}
+
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
 import { spawn } from "child_process";
 import starcraft from "@node-sc2/proto";
+import Map from "../../body/starcraft/map/map.js";
 
 const GAME_CONFIG = {
   path: "C:\\games\\StarCraft II",
   "version": "Base90136",
   realtime: false,
-  "localMap": { "mapPath": "mining.SC2Map" },
+  "localMap": { "mapPath": "GresvanAIE.SC2Map" },
   playerSetup: [
     { type: 1, race: 3 },
     { type: 2, race: 4, difficulty: 1 }
@@ -409,15 +495,21 @@ async function startGame() {
 async function go() {
   await startGame();
 
+  let map;
+
   while (true) {
     await client.step({ count: 1 });
 
     const observation = (await client.observation()).observation;
-    const time = observation.gameLoop;
+
+    if (!map) {
+      map = new Map(await client.gameInfo(), observation);
+    }
+
     const units = {};
     for (const unit of observation.rawData.units) units[unit.tag] = unit;
 
-    await mine(client, time, units);
+    await mine(client, observation, map, units);
 
     if (SLOW_DOWN) await new Promise(r => setTimeout(r, SLOW_DOWN));
   }
