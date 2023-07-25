@@ -34,7 +34,7 @@ async function mine(client, observation, map, units) {
       delete pos.builderTag;
       pos.tag = tag;
 
-      const mines = cluster.resources.filter(resource => (resource.type === "mineral")).map(resource => findMineralField(resource, units));
+      const mines = cluster.resources.filter(resource => (resource.type === "mineral")).map(resource => findMineralField(resource, units)).filter(one => !!one);
       const depot = new Depot(pos, unit, mines);
       depots[tag] = depot;
 
@@ -381,7 +381,8 @@ class Depot {
       }
 
       if (!worker.job) {
-        if (this.workerCount > this.workerLimit) {
+        if ((this.workerCount > this.workerLimit) || (worker.action === Action.BuildExpansion)) {
+          worker.action = null;
           transferWorker(worker, this);
         } else if (backlogJob && (await backlogJob(worker))) {
           worker.job = {};
@@ -469,11 +470,11 @@ class Depot {
 
     if (this.monitorData.ready && mineralMines) {
       const harvestMinerals = this.monitorData.minerals - minerals;
-      const efficiency = timeUsed * 100 / (timeUsed + timeBlocked + timeIdle);
+      const utilization = timeUsed * 100 / (timeUsed + timeBlocked + timeIdle);
 
       console.log(
         "Harvest at depot", this.tag, "with", mineralMines, "mineral fields", "and", Object.keys(this.workers).length, "workers", "is",
-        Math.floor(harvestMinerals), "minerals at", efficiency.toFixed(2) + "% efficiency",
+        Math.floor(harvestMinerals), "minerals at", utilization.toFixed(2) + "% utilization",
       );
     }
 
@@ -561,7 +562,7 @@ const GAME_CONFIG = {
   path: "C:\\games\\StarCraft II",
   "version": "Base90136",
   realtime: false,
-  "localMap": { "mapPath": "GresvanAIE.SC2Map" },
+  "localMap": { "mapPath": "MoondanceAIE.SC2Map" },
   playerSetup: [
     { type: 1, race: 3 },
     { type: 2, race: 4, difficulty: 1 }
