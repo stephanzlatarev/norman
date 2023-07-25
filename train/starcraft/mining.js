@@ -16,6 +16,7 @@ const Action = {
   Pack: "Pack",
   ApproachDepot: "ApproachDepot",
   PushToDepot: "PushToDepot",
+  BuildExpansion: "BuildExpansion",
 };
 
 const depots = {};
@@ -27,49 +28,118 @@ async function mine(client, observation, map, units) {
   for (const tag in units) {
     const unit = units[tag];
 
-    if (!depots[tag] && DEPOTS[unit.unitType]) {
-      depots[tag] = new Depot(unit, getMinesOfDepotFromMap(map, unit, units));
+    if ((unit.buildProgress >= 1) && !depots[tag] && DEPOTS[unit.unitType]) {
+      const cluster = map.clusters.find(cluster => (cluster.nexus && (cluster.nexus.x === unit.pos.x) && (cluster.nexus.y === unit.pos.y)));
+      const pos = cluster.nexus;
+      delete pos.builderTag;
+      pos.tag = tag;
+
+      const mines = cluster.resources.filter(resource => (resource.type === "mineral")).map(resource => findMineralField(resource, units));
+      const depot = new Depot(pos, unit, mines);
+      depots[tag] = depot;
+
+      if (pos.d === undefined) {
+        for (const nexus of map.nexuses) {
+          nexus.d = calculateDistance(nexus, pos);
+        }
+      }
     }
   }
 
   for (const tag in units) {
     const unit = units[tag];
     if (!workers[unit.tag] && WORKERS[unit.unitType]) {
-      findDepotForNewWorker(unit).assignWorker(unit);
+      transferWorker(unit);
       workers[unit.tag] = true;
     }
   }
 
+  const expansionJob = expand(client, observation, map, units);
   for (const tag in depots) {
+    const depot = depots[tag];
+
     if (units[tag]) {
-      const depot = depots[tag];
-      await depot.mine(client, time, units);
+      await depot.mine(client, time, units, expansionJob);
       await depot.produce(client, observation, units[tag]);
     } else {
-      // TODO: Transfer all workers of this depot to other depots
+      for (const workerTag in depot.workers) {
+        transferWorker(depot.workers[workerTag], depot);
+      }
+      delete depots[tag].pos.tag;
       delete depots[tag];
     }
   }
 }
 
-function getMinesOfDepotFromMap(map, depot, units) {
-  const cluster = map.clusters.find(cluster => (cluster.nexus && (cluster.nexus.x === depot.pos.x) && (cluster.nexus.x === depot.pos.x)));
-  return cluster.resources.filter(resource => (resource.type === "mineral")).map(resource => units[resource.tag]);
+function findMineralField(resource, units) {
+  if (units[resource.tag]) return units[resource.tag];
+
+  for (const tag in units) {
+    const unit = units[tag];
+
+    if ((unit.pos.x === resource.x) && (unit.pos.y === resource.y)) {
+      return unit;
+    }
+  }
 }
 
-function findDepotForNewWorker() {
+function expand(client, observation, map, units) {
+  const hasMinerals = observation.playerCommon.minerals >= 400;
+  if (!hasMinerals) return;
+
+  const location = findExpansionLocation(map, units);
+  if (location) {
+    return async function(worker) {
+      if (units[location.builderTag]) return false;
+      await client.action({ actions: [{ actionRaw: { unitCommand: { unitTags: [worker.tag], abilityId: 880, targetWorldSpacePos: location, queueCommand: false } } }]});
+      location.builderTag = worker.tag;
+      observation.playerCommon.minerals -= 400;
+      return true;
+    }
+  }
+}
+
+function findExpansionLocation(map, units) {
+  const locations = map.nexuses.filter(nexus => (!nexus.tag && (!nexus.builderTag || !units[nexus.builderTag]))).sort((a, b) => (a.d - b.d));
+  return locations.length ? locations[0] : null;
+}
+
+function transferWorker(worker, fromDepot) {
+  let bestDistance = Infinity;
+  let bestDepot;
+
   for (const tag in depots) {
-    return depots[tag];
+    const depot = depots[tag];
+
+    if (depot.workerCount < depot.workerLimit) {
+      const thisDistance = calculateDistance(depot.pos, worker.pos);
+
+      if (thisDistance < bestDistance) {
+        bestDepot = depot;
+        bestDistance = thisDistance;
+      }
+    }
+  }
+
+  if (fromDepot) {
+    if (bestDepot !== fromDepot) {
+      fromDepot.unassignWorker(worker);
+      bestDepot.assignWorker(worker);
+    }
+  } else if (bestDepot) {
+    bestDepot.assignWorker(worker);
   }
 }
 
 class Depot {
 
-  constructor(unit, mines) {
+  constructor(pos, unit, mines) {
     this.tag = unit.tag;
-    this.pos = { x: unit.pos.x, y: unit.pos.y };
+    this.pos = pos;
     this.workers = {};
     this.mines = {};
+    this.workerCount = 0;
+    this.workerLimit = Infinity;
     this.monitorData = { minute: -1, minerals: -1, ready: false };
 
     for (const mine of mines) this.assignMine(0, mine);
@@ -81,6 +151,12 @@ class Depot {
       pos: { x: unit.pos.x, y: unit.pos.y },
       job: null,
     };
+    this.workerCount = Object.keys(this.workers).length;
+  }
+
+  unassignWorker(unit) {
+    delete this.workers[unit.tag];
+    this.workerCount--;
   }
 
   assignMine(time, unit) {
@@ -124,14 +200,14 @@ class Depot {
     mine.boost = mine.harvestToStoreDistance / 2;
   }
 
-  async mine(client, time, units) {
+  async mine(client, time, units, backlogJob) {
     this.syncUnits(units);
 
-    if (this.mineCount) {
-      await this.commandWorkers(client, time, units);
-    }
+    if (this.mineCount && this.workerCount) {
+      await this.commandWorkers(client, time, backlogJob);
 
-    this.monitor(time);
+      this.monitor(time);
+    }
   }
 
   async produce(client, observation, unit) {
@@ -195,6 +271,7 @@ class Depot {
   }
 
   syncUnits(units) {
+    let workerCount = 0;
     for (const workerTag in this.workers) {
       const unit = units[workerTag];
 
@@ -203,27 +280,47 @@ class Depot {
         worker.pos.x = unit.pos.x;
         worker.pos.y = unit.pos.y;
         worker.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
+        workerCount++;
       } else {
         delete this.workers[workerTag];
       }
     }
+    this.workerCount = workerCount;
 
     let mineCount = 0;
     for (const mineTag in this.mines) {
       const unit = units[mineTag];
+      const mine = this.mines[mineTag];
 
       if (unit) {
-        const mine = this.mines[mineTag];
         mine.content = unit.mineralContents;
         mineCount++;
       } else {
         delete this.mines[mineTag];
 
-        for (const workerTag in this.workers) {
-          const worker = this.workers[workerTag];
+        let newTag;
+        for (const tag in units) {
+          const unit = units[tag];
 
-          if (worker.job && (worker.job.mineTag === mineTag)) {
-            worker.job = null;
+          if ((mine.unitPos.x === unit.pos.x) && (mine.unitPos.y === unit.pos.y)) {
+            newTag = tag;
+            break;
+          }
+        }
+
+        if (newTag) {
+          mine.content = units[newTag].mineralContents;
+          mineCount++;
+
+          mine.tag = newTag;
+          this.mines[newTag] = mine;
+        } else {
+          for (const workerTag in this.workers) {
+            const worker = this.workers[workerTag];
+
+            if (worker.job && (worker.job.mineTag === mineTag)) {
+              worker.job = null;
+            }
           }
         }
       }
@@ -236,10 +333,11 @@ class Depot {
 
       this.mineCount = mineCount;
       this.mineLine = getLineOfMines(this, Object.values(this.mines));
+      this.workerLimit = mineCount * 2 + 2;
     }
   }
 
-  async commandWorkers(client, time) {
+  async commandWorkers(client, time, backlogJob) {
     for (const workerTag in this.workers) {
       const worker = this.workers[workerTag];
 
@@ -277,15 +375,24 @@ class Depot {
           ]});
         } else if ((worker.action === Action.PushToDepot) && (order.abilityId === 298)) {
           worker.job = null;
+        } else if ((worker.action === Action.BuildExpansion) && !order.abilityId) {
+          worker.job = null;
         }
       }
 
       if (!worker.job) {
-        worker.job = this.createJob(time, worker);
-        worker.action = Action.ApproachMine;
-        await client.action({ actions: [
-          { actionRaw: { unitCommand: { unitTags: [workerTag], abilityId: 1, targetUnitTag: worker.job.mineTag, queueCommand: false } } },
-        ]});
+        if (this.workerCount > this.workerLimit) {
+          transferWorker(worker, this);
+        } else if (backlogJob && (await backlogJob(worker))) {
+          worker.job = {};
+          worker.action = Action.BuildExpansion;
+        } else {
+          worker.job = this.createJob(time, worker);
+          worker.action = Action.ApproachMine;
+          await client.action({ actions: [
+            { actionRaw: { unitCommand: { unitTags: [workerTag], abilityId: 1, targetUnitTag: worker.job.mineTag, queueCommand: false } } },
+          ]});
+        }
       }
     }
   }
