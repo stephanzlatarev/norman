@@ -63,9 +63,7 @@ async function go() {
       units.set(unit.tag, unit);
     }
 
-    economy.sync(units);
-    await economy.run(time, observation);
-    economy.monitor(time);
+    await economy.run(time, observation, units);
 
     if (SLOW_DOWN) await new Promise(r => setTimeout(r, SLOW_DOWN));
 

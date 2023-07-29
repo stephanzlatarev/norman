@@ -1,5 +1,6 @@
 import Depot from "./depot.js";
 import Worker from "./worker.js";
+import Monitor from "./monitor.js";
 
 const WORKERS = { 84: "probe" };
 
@@ -20,6 +21,14 @@ export default class Economy {
 
       this.depots.push(new Depot(base, pos, mineralFields));
     }
+  }
+
+  async run(time, observation, units) {
+    this.sync(units);
+
+    await this.manage(time, observation);
+
+    Monitor.show();
   }
 
   sync(units) {
@@ -48,7 +57,7 @@ export default class Economy {
     }
   }
 
-  async run(time, observation) {
+  async manage(time, observation) {
     let miningOpportunities;
 
     for (const worker of this.workers) {
@@ -113,32 +122,6 @@ export default class Economy {
     }
   }
 
-  monitor(time) {
-    const epoch = Math.floor(time / MINUTE);
-    if (epoch === this.epoch) return;
-
-    for (const depot of this.depots) {
-      if (!depot.isActive) continue;
-
-      const workerCount = this.workers.filter(worker => (worker.depot === depot)).length;
-      if (!workerCount) continue;
-
-      const data = depot.monitor(epoch, MINUTE);
-      console.log(
-        "Harvest at depot", depot.tag,
-        "with", workerCount, "/", depot.workerLimit, "workers",
-        "and", data.mineralMines, "mineral fields",
-        "is", data.harvestedMinerals, "minerals",
-        "at", data.utilization.toFixed(2) + "% utilization",
-      );
-    }
-
-    for (const worker of this.workers) {
-// TODO: Monitor percentage of waste, idle time and blocks of workers.
-    }
-
-    this.epoch = epoch;
-  }
 }
 
 function findMiningOpportunities(depots, workers) {

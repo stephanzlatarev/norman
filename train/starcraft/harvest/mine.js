@@ -1,3 +1,4 @@
+import Monitor from "./monitor.js";
 
 const RADIUS_WORKER = 0.375;
 const RADIUS_MINERAL = 1.125 / 2;
@@ -15,7 +16,6 @@ export default class Mine {
     this.bookings = new Map();
     this.lastCheckOutTime = 0;
     this.freeCheckInTime = 0;
-    this.monitor = { idle: 0, blocked: 0, used: 0 };
 
     this.position(depot, line);
   }
@@ -85,12 +85,12 @@ export default class Mine {
     const jobReservationTime = Math.max(booking.arrivalTime, this.lastCheckOutTime);
     const jobDrillStartTime = time - DRILL_TIME;
 
-    this.monitor.used += DRILL_TIME;
+    Monitor.add(Monitor.Mines, this.tag, Monitor.Used, DRILL_TIME);
     if (jobReservationTime < jobDrillStartTime) {
-      this.monitor.idle += (jobReservationTime - this.lastCheckOutTime);
-      this.monitor.blocked += jobDrillStartTime - jobReservationTime;
+      Monitor.add(Monitor.Workers, worker.tag, Monitor.Idle, (jobReservationTime - this.lastCheckOutTime));
+      Monitor.add(Monitor.Workers, worker.tag, Monitor.Blocked, (jobDrillStartTime - jobReservationTime));
     } else {
-      this.monitor.idle += (jobDrillStartTime - this.lastCheckOutTime);
+      Monitor.add(Monitor.Workers, worker.tag, Monitor.Idle, (jobDrillStartTime - this.lastCheckOutTime));
     }
 
     // Calculate next free check-in time

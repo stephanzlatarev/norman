@@ -18,8 +18,7 @@ export default class Worker {
     this.target = null;
     this.progress = null;
 
-    // TODO: Monitor activity of worker: blocked when waiting for a mine, idle when not having a job, waste when decelerating 
-    this.monitoring = { waste: 0, idle: 0, blocked: 0, used: 0 };
+    // TODO: Monitor activity of worker: blocked when waiting for a mine, idle when not having a job, waste when decelerating
   }
 
   init(unit) {

@@ -21,14 +21,6 @@ export default class Depot {
     }
     for (let i = 0; i < this.mines.length; i++) this.mines[i].index = i;
     this.workerLimit = calculateWorkerLimit(this);
-
-    this.monitoring = {
-      epoch: undefined,
-      mineralMines: this.mines.length,
-      remainingMinerals: 0,
-      harvestedMinerals: 0,
-      utilization: 0
-    };
   }
 
   sync(units) {
@@ -124,35 +116,6 @@ export default class Depot {
     }
   }
 
-  monitor(epoch, duration) {
-    if (epoch === this.monitoring.epoch) return this.monitoring;
-
-    let mineralMines = 0;
-    let remainingMinerals = 0;
-    let timeUsed = 0;
-
-    for (const mine of this.mines) {
-      mineralMines++;
-      remainingMinerals += mine.content;
-
-      timeUsed += mine.monitor.used;
-
-      mine.monitor.used = 0;
-      mine.monitor.blocked = 0;
-      mine.monitor.idle = 0;
-    }
-
-    const harvestedMinerals = this.monitoring.remainingMinerals ? this.monitoring.remainingMinerals - remainingMinerals : 0;
-    const utilization = timeUsed * 100 / duration / this.mines.length;
-
-    return (this.monitoring = {
-      epoch: epoch,
-      mineralMines: mineralMines,
-      remainingMinerals: remainingMinerals,
-      harvestedMinerals: harvestedMinerals,
-      utilization: utilization,
-    });
-  }
 }
 
 function calculateWorkerLimit(depot) {
