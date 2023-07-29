@@ -1,0 +1,76 @@
+import { spawn } from "child_process";
+import starcraft from "@node-sc2/proto";
+import { default as GameMap } from "../../../body/starcraft/map/map.js";
+import Economy from "./economy.js";
+
+const GAME_CONFIG = {
+  path: "C:\\games\\StarCraft II",
+  "version": "Base90136",
+  realtime: false,
+  "localMap": { "mapPath": "MoondanceAIE.SC2Map" },
+  playerSetup: [
+    { type: 1, race: 3 },
+    { type: 2, race: 4, difficulty: 1 }
+  ]
+};
+const SLOW_DOWN = 0;
+
+const client = starcraft();
+
+async function startGame() {
+  console.log("Starting StarCraft II game...");
+
+  spawn("..\\Versions\\" + GAME_CONFIG.version + "\\SC2.exe", [
+    "-displaymode", "0", "-windowx", "0", "-windowy", "0",
+    "-windowwidth", "1920", "-windowwidth", "1440",
+    "-listen", "127.0.0.1", "-port", "5000"
+  ], {
+    cwd: GAME_CONFIG.path + "\\Support"
+  });
+
+  for (let i = 0; i < 12; i++) {
+    try {
+      await client.connect({ host: "localhost", port: 5000 });
+      break;
+    } catch (_) {
+      await new Promise(r => setTimeout(r, 5000));
+    }
+  }
+
+  await client.createGame(GAME_CONFIG);
+
+  await client.joinGame({
+    race: GAME_CONFIG.playerSetup[0].race,
+    options: { raw: true },
+  });
+}
+
+async function go() {
+  await startGame();
+
+  await client.step({ count: 1 });
+  const observation = (await client.observation()).observation;
+  const map = new GameMap(await client.gameInfo(), observation);
+  const base = observation.rawData.units.find(unit => (unit.unitType === 59));
+  const economy = new Economy(client, map, base);
+
+  while (true) {
+    const observation = (await client.observation()).observation;
+    const time = observation.gameLoop;
+
+    const units = new Map();
+    for (const unit of observation.rawData.units) {
+      units.set(unit.tag, unit);
+    }
+
+    economy.sync(units);
+    await economy.run(time, observation);
+    economy.monitor(time);
+
+    if (SLOW_DOWN) await new Promise(r => setTimeout(r, SLOW_DOWN));
+
+    await client.step({ count: 1 });
+  }
+}
+
+go();
