@@ -78,7 +78,7 @@ export default class Worker {
       return false;
     } else {
       for (const [tag, unit] of units) {
-        if (WORKERS[unit.unitType] && !knownWorkerTags.has(tag)) {
+        if (WORKERS[unit.unitType] && !knownWorkerTags.has(tag) && (!this.depot || near(unit.pos, this.depot.pos))) {
           this.init(unit);
           this.isActive = true;
           break;
@@ -100,4 +100,8 @@ export default class Worker {
     return (this.progress && (this.progress.jobStatus === Status.Progressing)) && (!this.depot || this.depot.isActive);
   }
 
+}
+
+function near(a, b) {
+  return ((Math.abs(a.x - b.x) < 10) && (Math.abs(a.y - b.y) < 10));
 }

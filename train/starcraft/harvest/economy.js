@@ -107,9 +107,9 @@ export default class Economy {
       opportunity.depot.hire(time, worker);
       takeMiningOpportunity(miningOpportunities, opportunity.depot);
       return miningOpportunities;
-    } else {
-      return miningOpportunities;
     }
+
+    return miningOpportunities;
   }
 
   async createWorker(observation) {
@@ -150,7 +150,9 @@ function findMiningOpportunities(depots, workers) {
   const opportunities = new Map();
 
   for (const depot of depots) {
-    opportunities.set(depot, { depot: depot, busy: 0, idle: 0 });
+    if (depot.isActive) {
+      opportunities.set(depot, { depot: depot, busy: 0, idle: 0 });
+    }
   }
 
   for (const worker of workers) {
