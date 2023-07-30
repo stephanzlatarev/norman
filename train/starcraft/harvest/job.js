@@ -128,16 +128,22 @@ export const ExpansionJob = new Job(
     function(worker, _, depots) {
       if (worker.order.abilityId !== 880) return false;
 
-      const target = worker.target;
-      const distanceToTarget = squareDistance(worker.pos, target.pos);
+      if (worker.progress.recheck) {
+        worker.progress.recheck--;
+      } else {
+        worker.progress.recheck = 50;
 
-      for (const depot of depots) {
-        if (!depot.isActive && !depot.isBuilding && !depot.cooldown && (squareDistance(worker.pos, depot.pos) < distanceToTarget)) {
-          const progress = { ...worker.progress };
-          target.cancelBuild();
-          depot.build(worker);
-          worker.progress = progress;
-          return false;
+        const target = worker.target;
+        const distanceToTarget = squareDistance(worker.pos, target.pos);
+
+        for (const depot of depots) {
+          if (!depot.isActive && !depot.isBuilding && !depot.cooldown && (squareDistance(worker.pos, depot.pos) < distanceToTarget)) {
+            const progress = { ...worker.progress };
+            target.cancelBuild();
+            depot.build(worker);
+            worker.progress = progress;
+            return false;
+          }
         }
       }
 
