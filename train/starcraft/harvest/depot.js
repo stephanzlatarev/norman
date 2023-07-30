@@ -7,13 +7,15 @@ export default class Depot {
     this.pos = pos;
     this.distance = Math.sqrt((base.pos.x - pos.x) * (base.pos.x - pos.x) + (base.pos.y - pos.y) * (base.pos.y - pos.y));
 
+    if (!this.distance) {
+      this.tag = base.tag;
+    }
+
     this.isBuilding = false;
     this.isActive = false;
     this.isProducing = false;
     this.isBoosted = false;
     this.hasSetRallyPoint = false;
-
-    this.tag = undefined;
 
     this.mines = [];
     const line = getLineOfMineralFields(this, mineralFields.map(field => ({ tag: field.tag, pos: { x: field.x, y: field.y } })));
