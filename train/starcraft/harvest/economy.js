@@ -184,7 +184,7 @@ function findMiningOpportunities(depots, workers) {
   }
 
   for (const [depot, opportunity] of opportunities) {
-    if ((opportunity.busy + opportunity.idle) >= depot.workerLimit) {
+    if (opportunity.busy >= depot.workerLimit) {
       opportunities.delete(depot);
     }
   }
@@ -198,7 +198,7 @@ function takeMiningOpportunity(opportunities, depot) {
   if (opportunity) {
     opportunity.busy++;
 
-    if ((opportunity.busy + opportunity.idle) >= depot.workerLimit) {
+    if (opportunity.busy >= depot.workerLimit) {
       opportunities.delete(depot);
     }
   }
@@ -206,7 +206,7 @@ function takeMiningOpportunity(opportunities, depot) {
 
 function shouldDepotKeepWorker(opportunities, depot) {
   const opportunity = opportunities.get(depot);
-  return (depot.workerLimit > (opportunity ? opportunity.busy : 0));
+  return opportunity ? (depot.workerLimit > opportunity.busy) : false;
 }
 
 function getClosestMiningOpportunity(opportunities, worker) {
@@ -214,6 +214,8 @@ function getClosestMiningOpportunity(opportunities, worker) {
   let closestDistance = Infinity;
 
   for (const [depot, opportunity] of opportunities) {
+    if (opportunity.busy + opportunity.idle >= depot.workerLimit) continue;
+
     const distance = squareDistance(depot.pos, worker.pos);
 
     if (distance < closestDistance) {

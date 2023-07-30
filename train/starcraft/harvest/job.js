@@ -78,7 +78,7 @@ export const MiningJob = new Job(
   new Task("approach mine",
     (worker) => [{ abilityId: 1, targetUnitTag: worker.target.tag }],
     (worker) => (squareDistance(worker.pos, worker.target.route.harvestPoint) < worker.target.route.boost * worker.target.route.boost),
-    (worker) => ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag)),
+    (worker) => (((worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag) || (worker.order.abilityId === 299))),
   ),
   new Task("push to mine",
     (worker) => [
