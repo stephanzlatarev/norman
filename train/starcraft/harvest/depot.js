@@ -24,7 +24,7 @@ export default class Depot {
     this.workerLimit = calculateWorkerLimit(this);
   }
 
-  sync(units) {
+  sync(units, resources) {
     let unit;
 
     if (this.tag) {
@@ -86,7 +86,7 @@ export default class Depot {
     for (let i = this.mines.length - 1; i >= 0; i--) {
       const mine = this.mines[i];
 
-      if (!mine.sync(units)) {
+      if (!mine.sync(resources)) {
         this.mines.splice(i, 1);
         minesAreLess = true;
       }
@@ -140,7 +140,11 @@ export default class Depot {
 
   async produce(client) {
     if (this.isActive && !this.isProducing) {
-      await client.action({ actions: [{ actionRaw: { unitCommand: { unitTags: [this.tag], abilityId: 1006, queueCommand: false } } }]});
+      const response = await client.action({ actions: [{ actionRaw: { unitCommand: { unitTags: [this.tag], abilityId: 1006, queueCommand: false } } }]});
+
+      if (response.result[0] !== 1) {
+        return false;
+      }
 
       if (!this.hasSetRallyPoint) {
         const mine = this.mines[Math.floor(this.mines.length / 2)];

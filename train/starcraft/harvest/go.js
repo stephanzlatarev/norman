@@ -59,11 +59,19 @@ async function go() {
     const time = observation.gameLoop;
 
     const units = new Map();
+    const enemies = new Map();
+    const resources = new Map();
     for (const unit of observation.rawData.units) {
-      units.set(unit.tag, unit);
+      if (unit.owner === 1) {
+        units.set(unit.tag, unit);
+      } else if (unit.owner === 2) {
+        enemies.set(unit.tag, unit);
+      } else {
+        resources.set(unit.tag, unit);
+      }
     }
 
-    await economy.run(time, observation, units);
+    await economy.run(time, observation, units, resources, enemies);
 
     if (SLOW_DOWN) await new Promise(r => setTimeout(r, SLOW_DOWN));
 

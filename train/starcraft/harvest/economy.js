@@ -21,8 +21,8 @@ export default class Economy {
     }
   }
 
-  async run(time, observation, units) {
-    this.sync(units);
+  async run(time, observation, units, resources, enemies) {
+    this.sync(units, resources);
 
     await this.expand(time, observation);
     // TODO: Equip. Build assimilators
@@ -38,7 +38,7 @@ export default class Economy {
     Monitor.show();
   }
 
-  sync(units) {
+  sync(units, resources) {
     if (!this.workers.length) {
       for (const [_, unit] of units) {
         if (WORKERS[unit.unitType]) {
@@ -58,7 +58,7 @@ export default class Economy {
     for (let i = this.depots.length - 1; i >= 0; i--) {
       const depot = this.depots[i];
 
-      if (!depot.sync(units)) {
+      if (!depot.sync(units, resources)) {
         this.depots.splice(i, 1);
       }
     }
