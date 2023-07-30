@@ -12,13 +12,13 @@ class Job {
     this.tasks = tasks;
   }
 
-  async perform(client, time, worker, enemies) {
+  async perform(client, time, worker, depots, enemies) {
     if (worker.progress && (worker.progress.jobStatus === Status.Complete)) return Status.Complete;
-    if (!worker.progress) worker.progress = { taskIndex: 0, taskStatus: Status.New, jobStatus: Status.New };
+    if (!worker.progress || !worker.progress.taskStatus) worker.progress = { taskIndex: 0, taskStatus: Status.New, jobStatus: Status.New };
 
     const task = this.tasks[worker.progress.taskIndex];
 
-    await task.perform(client, time, worker, enemies);
+    await task.perform(client, time, worker, depots, enemies);
 
     if (worker.progress.taskStatus === Status.Complete) {
       worker.progress.taskIndex++;
@@ -46,7 +46,7 @@ class Task {
     this.isCancelled = isCancelled;
   }
 
-  async perform(client, time, worker, enemies) {
+  async perform(client, time, worker, depots, enemies) {
     if ((worker.progress.taskStatus === Status.Progressing) && this.isComplete(worker, time)) {
       return (worker.progress.taskStatus = Status.Complete);
     }
@@ -54,7 +54,7 @@ class Task {
       return (worker.progress.taskStatus = Status.Complete);
     }
 
-    if ((worker.progress.taskStatus === Status.New) || (this.isProgressing && !this.isProgressing(worker, time))) {
+    if ((worker.progress.taskStatus === Status.New) || (this.isProgressing && !this.isProgressing(worker, time, depots))) {
       const commands = this.commands(worker);
 
       if (commands.length) {
@@ -122,12 +122,40 @@ export const MiningJob = new Job(
 
 export const ExpansionJob = new Job(
   new Task("build depot",
-    (worker) => [
-      { abilityId: 880, targetWorldSpacePos: worker.target.pos },
-    ],
+    (worker) => [{ abilityId: (worker.order.abilityId !== 880) ? 880 : 16, targetWorldSpacePos: worker.target.pos }],
     (worker) => (typeof(worker.target.isBuilding) === "string"),
-    () => true,
-    shouldCancelExpansionJob,
+
+    function(worker, _, depots) {
+      if (worker.order.abilityId !== 880) return false;
+
+      const target = worker.target;
+      const distanceToTarget = squareDistance(worker.pos, target.pos);
+
+      for (const depot of depots) {
+        if (!depot.isActive && !depot.isBuilding && !depot.cooldown && (squareDistance(worker.pos, depot.pos) < distanceToTarget)) {
+          const progress = { ...worker.progress };
+          target.cancelBuild();
+          depot.build(worker);
+          worker.progress = progress;
+          return false;
+        }
+      }
+
+      return true;
+    },
+
+    function(worker, enemies) {
+      if (!enemies) return false;
+
+      for (const [_, enemy] of enemies) {
+        if (isNear(enemy.pos, worker.pos) || isNear(enemy.pos, worker.target.pos)) {
+          worker.target.cancelBuild();
+          return true;
+        }
+      }
+
+      return false;
+    },
   ),
 );
 
@@ -137,17 +165,4 @@ function squareDistance(a, b) {
 
 function isNear(a, b) {
   return (Math.abs(a.x - b.x) < 10) && (Math.abs(a.y - b.y) < 10);
-}
-
-function shouldCancelExpansionJob(worker, enemies) {
-  if (!enemies) return false;
-
-  for (const [_, enemy] of enemies) {
-    if (isNear(enemy.pos, worker.pos) || isNear(enemy.pos, worker.target.pos)) {
-      worker.target.cancelBuild();
-      return true;
-    }
-  }
-
-  return false;
 }

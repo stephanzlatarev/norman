@@ -93,7 +93,7 @@ export default class Worker {
     this.depot = depot;
     this.job = job;
     this.target = target;
-    this.progress = null;
+    this.progress = { jobStatus: Status.New };
   }
 
   isWorking() {

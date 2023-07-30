@@ -24,14 +24,14 @@ export default class Economy {
   async run(time, observation, units, resources, enemies) {
     this.sync(units, resources);
 
-    await this.expand(time, observation);
+    await this.expand(observation);
     // TODO: Equip. Build assimilators
     await this.mine(time);
     await this.hire(observation);
 
     for (const worker of this.workers) {
       if (worker.isActive && worker.job) {
-        await worker.job.perform(this.client, time, worker, enemies);
+        await worker.job.perform(this.client, time, worker, this.depots, enemies);
       }
     }
 
@@ -64,15 +64,13 @@ export default class Economy {
     }
   }
 
-  async expand(time, observation) {
+  async expand(observation) {
     if (observation.playerCommon.minerals >= 400) {
       const expansionSite = findClosestExpansionSite(this.depots);
       const builder = expansionSite ? findClosestAvailableWorker(this.workers, expansionSite) : null;
 
       if (builder) {
         expansionSite.build(builder);
-        await builder.job.perform(this.client, time, builder);
-
         observation.playerCommon.minerals -= 400;
       }
     }
