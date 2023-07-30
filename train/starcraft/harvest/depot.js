@@ -37,14 +37,21 @@ export default class Depot {
         this.isActive = false;
         return true;
       }
-    } else {
+    } else if (this.isBuilding) {
       if (typeof(this.isBuilding) === "boolean") {
-        for (const [tag, unit] of units) {
-          if ((this.pos.x === unit.pos.x) && (this.pos.y === unit.pos.y)) {
-            this.isBuilding = tag;
-            this.isActive = false;
-            break;
+        if (this.builder.isActive) {
+          for (const [tag, unit] of units) {
+            if ((this.pos.x === unit.pos.x) && (this.pos.y === unit.pos.y)) {
+              this.isBuilding = tag;
+              this.isActive = false;
+              delete this.builder;
+              break;
+            }
           }
+        } else {
+          this.isBuilding = false;
+          this.isActive = false;
+          delete this.builder;
         }
       }
 
@@ -66,6 +73,9 @@ export default class Depot {
       if (!unit) {
         return true;
       }
+    } else {
+      this.isActive = false;
+      return true;
     }
 
     this.isProducing = !!unit.orders.length;
@@ -97,6 +107,7 @@ export default class Depot {
   build(worker) {
     worker.startJob(null, ExpansionJob, this);
     this.isBuilding = true;
+    this.builder = worker;
   }
 
   hire(time, worker) {

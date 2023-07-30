@@ -120,9 +120,8 @@ export const ExpansionJob = new Job(
   new Task("build depot",
     (worker) => [
       { abilityId: 880, targetWorldSpacePos: worker.target.pos },
-      { abilityId: 16, targetWorldSpacePos: worker.lastpos },
     ],
-    (worker) => (worker.order.abilityId === 16),
+    (worker) => (typeof(worker.target.isBuilding) === "string"),
   ),
 );
 

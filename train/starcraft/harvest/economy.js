@@ -24,7 +24,16 @@ export default class Economy {
   async run(time, observation, units) {
     this.sync(units);
 
-    await this.manage(time, observation);
+    await this.expand(time, observation);
+    // TODO: Equip. Build assimilators
+    await this.mine(time);
+    await this.hire(observation);
+
+    for (const worker of this.workers) {
+      if (worker.isActive && worker.job) {
+        await worker.job.perform(this.client, time, worker);
+      }
+    }
 
     Monitor.show();
   }
@@ -55,76 +64,55 @@ export default class Economy {
     }
   }
 
-  async manage(time, observation) {
-    let miningOpportunities;
+  async expand(time, observation) {
+    if (observation.playerCommon.minerals >= 400) {
+      const expansionSite = findClosestExpansionSite(this.depots);
+      const builder = expansionSite ? findClosestAvailableWorker(this.workers, expansionSite) : null;
+
+      if (builder) {
+        expansionSite.build(builder);
+        await builder.job.perform(this.client, time, builder);
+
+        observation.playerCommon.minerals -= 400;
+      }
+    }
+  }
+
+  async mine(time) {
+    const miningOpportunities = findMiningOpportunities(this.depots, this.workers);
 
     for (const worker of this.workers) {
-      if (!worker.isActive) continue;
+      if (worker.isActive && !worker.isWorking() && miningOpportunities.size) {
+        if (worker.depot && shouldDepotKeepWorker(miningOpportunities, worker.depot)) {
+          worker.depot.hire(time, worker);
+          takeMiningOpportunity(miningOpportunities, worker.depot);
+        } else {
+          const opportunity = getClosestMiningOpportunity(miningOpportunities, worker);
 
-      if (!worker.isWorking()) {
-        miningOpportunities = this.assignWorker(time, worker, observation, miningOpportunities);
-      }
-
-      if (worker.job) {
-        await worker.job.perform(this.client, time, worker);
-      }
-    }
-
-    if (this.workers.length < LIMIT_WORKERS) {
-      await this.createWorker(observation);
-    }
-  }
-
-  assignWorker(time, worker, observation, miningOpportunities) {
-    if (!miningOpportunities) {
-      // First priority: Build a new depot at an expansion location
-      if (observation.playerCommon.minerals >= 400) {
-        const expansionSite = findClosestExpansionSite(this.depots);
-
-        if (expansionSite) {
-          expansionSite.build(worker);
-          observation.playerCommon.minerals -= 400;
-          return;
+          if (opportunity) {
+            opportunity.depot.hire(time, worker);
+            takeMiningOpportunity(miningOpportunities, opportunity.depot);
+          }
         }
       }
-
-      // Next priority: Build an assimilator at an existing depot
-
-      // The following options depend on opportunities for mining
-      miningOpportunities = findMiningOpportunities(this.depots, this.workers);
     }
-
-    // Next priority: Mine at the same depot
-    if (worker.depot && shouldDepotKeepWorker(miningOpportunities, worker.depot)) {
-      worker.depot.hire(time, worker);
-      takeMiningOpportunity(miningOpportunities, worker.depot);
-      return miningOpportunities;
-    }
-
-    // Next priority: Transfer to the closest depot which needs workers
-    const opportunity = getClosestMiningOpportunity(miningOpportunities, worker);
-    if (opportunity) {
-      opportunity.depot.hire(time, worker);
-      takeMiningOpportunity(miningOpportunities, opportunity.depot);
-      return miningOpportunities;
-    }
-
-    return miningOpportunities;
   }
 
-  async createWorker(observation) {
-    const hasMinerals = (observation.playerCommon.minerals >= 50);
-    const hasFood = ((observation.playerCommon.foodCap - observation.playerCommon.foodUsed) >= 1);
+  async hire(observation) {
+    if (this.workers.length < LIMIT_WORKERS) {
+      const hasMinerals = (observation.playerCommon.minerals >= 50);
+      const hasFood = ((observation.playerCommon.foodCap - observation.playerCommon.foodUsed) >= 1);
 
-    if (hasMinerals && hasFood) {
-      for (const depot of this.depots) {
-        const ok = await depot.produce(this.client);
+      if (hasMinerals && hasFood) {
+        for (const depot of this.depots) {
+          const ok = await depot.produce(this.client);
 
-        if (ok) {
-          this.workers.push(new Worker(null, depot));
+          if (ok) {
+            this.workers.push(new Worker(null, depot));
 
-          observation.playerCommon.minerals -= 50;
-          observation.playerCommon.foodUsed += 1;
+            observation.playerCommon.minerals -= 50;
+            observation.playerCommon.foodUsed += 1;
+          }
         }
       }
     }
@@ -144,6 +132,32 @@ function findClosestExpansionSite(depots) {
   }
 
   return closestDepot;
+}
+
+function findClosestAvailableWorker(workers, site) {
+  const depots = new Set();
+  for (const worker of workers) {
+    if (worker.depot && worker.isActive && worker.depot.isActive) {
+      depots.add(worker.depot);
+    }
+  }
+
+  let closestDepot;
+  let closestDistance = Infinity;
+  for (const depot of depots) {
+    const distance = squareDistance(depot.pos, site.pos);
+
+    if (distance < closestDistance) {
+      closestDepot = depot;
+      closestDistance = distance;
+    }
+  }
+
+  for (const worker of workers) {
+    if ((worker.depot === closestDepot) && worker.isActive && !worker.isWorking()) {
+      return worker;
+    }
+  }
 }
 
 function findMiningOpportunities(depots, workers) {

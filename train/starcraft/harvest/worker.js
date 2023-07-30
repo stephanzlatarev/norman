@@ -97,7 +97,9 @@ export default class Worker {
   }
 
   isWorking() {
-    return (this.progress && (this.progress.jobStatus === Status.Progressing)) && (!this.depot || this.depot.isActive);
+    const hasJob = (this.progress && ((this.progress.jobStatus === Status.Progressing) || (this.progress.jobStatus === Status.New)));
+    const jobIsActive = (!this.depot || this.depot.isActive);
+    return hasJob && jobIsActive;
   }
 
 }
