@@ -10,7 +10,7 @@ const GAME_CONFIG = {
   "localMap": { "mapPath": "MoondanceAIE.SC2Map" },
   playerSetup: [
     { type: 1, race: 3 },
-    { type: 2, race: 4, difficulty: 1 }
+    { type: 2, race: 2, difficulty: 1 }
   ]
 };
 const SLOW_DOWN = 0;

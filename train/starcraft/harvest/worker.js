@@ -7,14 +7,14 @@ const knownWorkerTags = new Set();
 
 export default class Worker {
 
-  constructor(unit) {
+  constructor(unit, depot) {
     if (unit) {
       this.init(unit);
     }
 
     this.isActive = !!unit;
 
-    this.depot = null;
+    this.depot = depot;
     this.job = null;
     this.target = null;
     this.progress = null;
@@ -57,12 +57,17 @@ export default class Worker {
         this.lastorder = this.order;
         this.lastpos.x = unit.pos.x;
         this.lastpos.y = unit.pos.y;
+
+        return true;
       } else {
         this.isActive = false;
         knownWorkerTags.delete(this.tag);
-      }
 
-      return !!unit;
+        return false;
+      }
+    } else if (this.depot && !this.depot.isActive) {
+      // The depot was destroyed while building this worker
+      return false;
     } else {
       for (const [tag, unit] of units) {
         if (WORKERS[unit.unitType] && !knownWorkerTags.has(tag)) {
@@ -84,7 +89,7 @@ export default class Worker {
   }
 
   isWorking() {
-    return (this.progress && (this.progress.jobStatus === Status.Progressing));
+    return (this.progress && (this.progress.jobStatus === Status.Progressing)) && (!this.depot || this.depot.isActive);
   }
 
 }

@@ -113,16 +113,15 @@ export default class Economy {
   }
 
   async createWorker(observation) {
-    const hasReachedLimit = observation.playerCommon.foodWorkers >= LIMIT_WORKERS;
-    const hasMinerals = observation.playerCommon.minerals >= 50;
-    const hasFood = observation.playerCommon.foodCap - observation.playerCommon.foodUsed >= 1;
+    const hasMinerals = (observation.playerCommon.minerals >= 50);
+    const hasFood = ((observation.playerCommon.foodCap - observation.playerCommon.foodUsed) >= 1);
 
-    if (!hasReachedLimit && hasMinerals && hasFood) {
+    if (hasMinerals && hasFood) {
       for (const depot of this.depots) {
         const ok = await depot.produce(this.client);
 
         if (ok) {
-          this.workers.push(new Worker());
+          this.workers.push(new Worker(null, depot));
 
           observation.playerCommon.minerals -= 50;
           observation.playerCommon.foodUsed += 1;
@@ -158,10 +157,12 @@ function findMiningOpportunities(depots, workers) {
     if (worker.depot && worker.job) {
       const opportunity = opportunities.get(worker.depot);
 
-      if (worker.isWorking()) {
-        opportunity.busy++;
-      } else {
-        opportunity.idle++;
+      if (opportunity) {
+        if (worker.isWorking()) {
+          opportunity.busy++;
+        } else {
+          opportunity.idle++;
+        }
       }
     }
   }

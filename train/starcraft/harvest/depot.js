@@ -30,14 +30,19 @@ export default class Depot {
     if (this.tag) {
       unit = units.get(this.tag);
 
-      if (!unit) {
-        return (this.isActive = false);
+      if (unit) {
+        this.isActive = true;
+      } else {
+        this.tag = undefined;
+        this.isActive = false;
+        return true;
       }
     } else {
       if (typeof(this.isBuilding) === "boolean") {
         for (const [tag, unit] of units) {
           if ((this.pos.x === unit.pos.x) && (this.pos.y === unit.pos.y)) {
             this.isBuilding = tag;
+            this.isActive = false;
             break;
           }
         }
@@ -46,9 +51,14 @@ export default class Depot {
       if (typeof(this.isBuilding) === "string") {
         const buildingUnit = units.get(this.isBuilding);
 
-        if (buildingUnit.buildProgress >= 1) {
-          this.tag = this.isBuilding;
+        if (!buildingUnit) {
+          this.isActive = false;
           this.isBuilding = false;
+        } else if (buildingUnit.buildProgress >= 1) {
+          this.tag = this.isBuilding;
+          this.isActive = true;
+          this.isBuilding = false;
+          this.hasSetRallyPoint = false;
           unit = buildingUnit;
         }
       }
@@ -58,7 +68,6 @@ export default class Depot {
       }
     }
 
-    this.isActive = true;
     this.isProducing = !!unit.orders.length;
     this.isBoosted = !!unit.buffIds.length;
 
