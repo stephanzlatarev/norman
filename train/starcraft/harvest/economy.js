@@ -31,7 +31,7 @@ export default class Economy {
 
     for (const worker of this.workers) {
       if (worker.isActive && worker.job) {
-        await worker.job.perform(this.client, time, worker);
+        await worker.job.perform(this.client, time, worker, enemies);
       }
     }
 

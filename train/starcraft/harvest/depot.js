@@ -119,6 +119,12 @@ export default class Depot {
     this.builder = worker;
   }
 
+  cancelBuild() {
+    this.isBuilding = false;
+    this.cooldown = COOLDOWN_BUILD;
+    delete this.builder;
+  }
+
   hire(time, worker) {
     // Limit selection to the mines close to the last worked on mine, if any
     let minMineIndex = 0;

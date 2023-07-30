@@ -12,13 +12,13 @@ class Job {
     this.tasks = tasks;
   }
 
-  async perform(client, time, worker) {
+  async perform(client, time, worker, enemies) {
     if (worker.progress && (worker.progress.jobStatus === Status.Complete)) return Status.Complete;
     if (!worker.progress) worker.progress = { taskIndex: 0, taskStatus: Status.New, jobStatus: Status.New };
 
     const task = this.tasks[worker.progress.taskIndex];
 
-    await task.perform(client, time, worker);
+    await task.perform(client, time, worker, enemies);
 
     if (worker.progress.taskStatus === Status.Complete) {
       worker.progress.taskIndex++;
@@ -38,15 +38,19 @@ class Job {
 
 class Task {
 
-  constructor(label, commands, isComplete, isProgressing) {
+  constructor(label, commands, isComplete, isProgressing, isCancelled) {
     this.label = label;
     this.commands = commands;
     this.isProgressing = isProgressing;
     this.isComplete = isComplete;
+    this.isCancelled = isCancelled;
   }
 
-  async perform(client, time, worker) {
+  async perform(client, time, worker, enemies) {
     if ((worker.progress.taskStatus === Status.Progressing) && this.isComplete(worker, time)) {
+      return (worker.progress.taskStatus = Status.Complete);
+    }
+    if (this.isCancelled && this.isCancelled(worker, enemies)) {
       return (worker.progress.taskStatus = Status.Complete);
     }
 
@@ -122,9 +126,28 @@ export const ExpansionJob = new Job(
       { abilityId: 880, targetWorldSpacePos: worker.target.pos },
     ],
     (worker) => (typeof(worker.target.isBuilding) === "string"),
+    () => true,
+    shouldCancelExpansionJob,
   ),
 );
 
 function squareDistance(a, b) {
   return ((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+}
+
+function isNear(a, b) {
+  return (Math.abs(a.x - b.x) < 10) && (Math.abs(a.y - b.y) < 10);
+}
+
+function shouldCancelExpansionJob(worker, enemies) {
+  if (!enemies) return false;
+
+  for (const [_, enemy] of enemies) {
+    if (isNear(enemy.pos, worker.pos) || isNear(enemy.pos, worker.target.pos)) {
+      worker.target.cancelBuild();
+      return true;
+    }
+  }
+
+  return false;
 }
