@@ -12,6 +12,7 @@ export default {
 
   Blocked: "blocked",
   Idle: "idle",
+  Slowing: "slowing",
   Used: "used",
 
   add: function(group, object, metric, value) {

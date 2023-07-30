@@ -1,3 +1,4 @@
+import Monitor from "./monitor.js";
 import { Status } from "./job.js";
 
 const WORKERS = { 84: "probe" };
@@ -17,14 +18,14 @@ export default class Worker {
     this.job = null;
     this.target = null;
     this.progress = null;
-
-    // TODO: Monitor activity of worker: blocked when waiting for a mine, idle when not having a job, waste when decelerating
   }
 
   init(unit) {
     this.tag = unit.tag;
     this.pos = { x: unit.pos.x, y: unit.pos.y };
+    this.lastpos = { x: unit.pos.x, y: unit.pos.y };
     this.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
+    this.lastorder = this.order;
 
     knownWorkerTags.add(unit.tag);
   }
@@ -37,7 +38,18 @@ export default class Worker {
         this.pos.x = unit.pos.x;
         this.pos.y = unit.pos.y;
         this.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
-        // TODO: Monitor acceleration using speed = squared distance between current and previous position
+
+        const speed = ((this.pos.x - this.lastpos.x) * (this.pos.x - this.lastpos.x) + (this.pos.y - this.lastpos.y) * (this.pos.y - this.lastpos.y));
+        const acceleration = speed - this.speed;
+        if ((speed > 0) && (acceleration < 0) && (this.order.abilityId === this.lastorder.abilityId) && (this.speed / speed > 1.01)) {
+          Monitor.add(Monitor.Workers, this.tag, Monitor.Slowing, 1);
+        }
+
+        this.lastorder = this.order;
+        this.lastpos.x = unit.pos.x;
+        this.lastpos.y = unit.pos.y;
+        this.speed = speed;
+        this.acceleration = acceleration;
       } else {
         this.isActive = false;
         knownWorkerTags.delete(this.tag);
