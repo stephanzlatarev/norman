@@ -125,7 +125,7 @@ function findClosestExpansionSite(depots) {
   let closestDistance = Infinity;
 
   for (const depot of depots) {
-    if (!depot.isActive && !depot.isBuilding && (depot.distance < closestDistance)) {
+    if (!depot.isActive && !depot.isBuilding && !depot.cooldown && (depot.distance < closestDistance)) {
       closestDepot = depot;
       closestDistance = depot.distance;
     }

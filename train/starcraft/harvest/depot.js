@@ -1,6 +1,8 @@
 import Mine from "./mine.js";
 import { ExpansionJob, MiningJob } from "./job.js";
 
+const COOLDOWN_BUILD = Math.floor(22.4 * 20);
+
 export default class Depot {
 
   constructor(base, pos, mineralFields) {
@@ -16,6 +18,7 @@ export default class Depot {
     this.isProducing = false;
     this.isBoosted = false;
     this.hasSetRallyPoint = false;
+    this.cooldown = 0;
 
     this.mines = [];
     const line = getLineOfMineralFields(this, mineralFields.map(field => ({ tag: field.tag, pos: { x: field.x, y: field.y } })));
@@ -37,6 +40,7 @@ export default class Depot {
       } else {
         this.tag = undefined;
         this.isActive = false;
+        this.cooldown = COOLDOWN_BUILD;
         return true;
       }
     } else if (this.isBuilding) {
@@ -53,6 +57,7 @@ export default class Depot {
         } else {
           this.isBuilding = false;
           this.isActive = false;
+          this.cooldown = COOLDOWN_BUILD;
           delete this.builder;
         }
       }
@@ -63,6 +68,7 @@ export default class Depot {
         if (!buildingUnit) {
           this.isActive = false;
           this.isBuilding = false;
+          this.cooldown = COOLDOWN_BUILD;
         } else if (buildingUnit.buildProgress >= 1) {
           this.tag = this.isBuilding;
           this.isActive = true;
@@ -77,6 +83,7 @@ export default class Depot {
       }
     } else {
       this.isActive = false;
+      this.cooldown = Math.max(this.cooldown - 1, 0);
       return true;
     }
 
