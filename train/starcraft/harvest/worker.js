@@ -58,6 +58,14 @@ export default class Worker {
         this.lastpos.x = unit.pos.x;
         this.lastpos.y = unit.pos.y;
 
+        if (unit.isSelected) {
+          const trace = ["[worker " + this.tag + "]"];
+          trace.push("speed:", (this.acceleration * 100000).toFixed(2) + ">>" + (this.speed * 100000).toFixed(2));
+          if (this.order) trace.push("order:", JSON.stringify(this.order));
+          if (this.progress) trace.push("job:", JSON.stringify(this.progress));
+          console.log(trace.join(" "));
+        }
+
         return true;
       } else {
         this.isActive = false;
