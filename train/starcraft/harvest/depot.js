@@ -133,7 +133,7 @@ export default class Depot {
 
       if (!this.hasSetRallyPoint) {
         const mine = this.mines[Math.floor(this.mines.length / 2)];
-        await client.action({ actions: [{ actionRaw: { unitCommand: { unitTags: [this.tag], abilityId: 3690, targetWorldSpacePos: mine.storePoint, queueCommand: false } } }]});
+        await client.action({ actions: [{ actionRaw: { unitCommand: { unitTags: [this.tag], abilityId: 3690, targetWorldSpacePos: mine.route.storePoint, queueCommand: false } } }]});
         this.hasSetRallyPoint = true;
       }
 
