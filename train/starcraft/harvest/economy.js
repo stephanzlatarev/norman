@@ -4,9 +4,7 @@ import Monitor from "./monitor.js";
 
 const WORKERS = { 84: "probe" };
 
-const LIMIT_WORKERS = 72;
-
-const MINUTE = Math.floor(60 * 22.4);
+const LIMIT_WORKERS = 200;
 
 export default class Economy {
 
@@ -64,10 +62,12 @@ export default class Economy {
       if (!worker.isActive) continue;
 
       if (!worker.isWorking()) {
-        miningOpportunities = this.assignWorker(time, worker, miningOpportunities);
+        miningOpportunities = this.assignWorker(time, worker, observation, miningOpportunities);
       }
 
-      await worker.job.perform(this.client, time, worker);
+      if (worker.job) {
+        await worker.job.perform(this.client, time, worker);
+      }
     }
 
     if (this.workers.length < LIMIT_WORKERS) {
@@ -75,13 +75,22 @@ export default class Economy {
     }
   }
 
-  assignWorker(time, worker, miningOpportunities) {
-    // First priority: Build a new depot at an expansion location
-
-    // Next priority: Build an assimilator at an existing depot
-
-    // The following options depend on opportunities for mining
+  assignWorker(time, worker, observation, miningOpportunities) {
     if (!miningOpportunities) {
+      // First priority: Build a new depot at an expansion location
+      if (observation.playerCommon.minerals >= 400) {
+        const expansionSite = findClosestExpansionSite(this.depots);
+
+        if (expansionSite) {
+          expansionSite.build(worker);
+          observation.playerCommon.minerals -= 400;
+          return;
+        }
+      }
+
+      // Next priority: Build an assimilator at an existing depot
+
+      // The following options depend on opportunities for mining
       miningOpportunities = findMiningOpportunities(this.depots, this.workers);
     }
 
@@ -124,6 +133,20 @@ export default class Economy {
 
 }
 
+function findClosestExpansionSite(depots) {
+  let closestDepot;
+  let closestDistance = Infinity;
+
+  for (const depot of depots) {
+    if (!depot.isActive && !depot.isBuilding && (depot.distance < closestDistance)) {
+      closestDepot = depot;
+      closestDistance = depot.distance;
+    }
+  }
+
+  return closestDepot;
+}
+
 function findMiningOpportunities(depots, workers) {
   const opportunities = new Map();
 
@@ -154,15 +177,19 @@ function findMiningOpportunities(depots, workers) {
 
 function takeMiningOpportunity(opportunities, depot) {
   const opportunity = opportunities.get(depot);
-  opportunity.busy++;
 
-  if ((opportunity.busy + opportunity.idle) >= depot.workerLimit) {
-    opportunities.delete(depot);
+  if (opportunity) {
+    opportunity.busy++;
+
+    if ((opportunity.busy + opportunity.idle) >= depot.workerLimit) {
+      opportunities.delete(depot);
+    }
   }
 }
 
 function shouldDepotKeepWorker(opportunities, depot) {
-  return (opportunities.get(depot).busy < depot.workerLimit);
+  const opportunity = opportunities.get(depot);
+  return (depot.workerLimit > (opportunity ? opportunity.busy : 0));
 }
 
 function getClosestMiningOpportunity(opportunities, worker) {

@@ -39,17 +39,24 @@ export default class Worker {
         this.pos.y = unit.pos.y;
         this.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
 
-        const speed = ((this.pos.x - this.lastpos.x) * (this.pos.x - this.lastpos.x) + (this.pos.y - this.lastpos.y) * (this.pos.y - this.lastpos.y));
-        const acceleration = speed - this.speed;
-        if ((speed > 0) && (acceleration < 0) && (this.order.abilityId === this.lastorder.abilityId) && (this.speed / speed > 1.01)) {
-          Monitor.add(Monitor.Workers, this.tag, Monitor.Slowing, 1);
+        if (this.order.abilityId) {
+          const speed = ((this.pos.x - this.lastpos.x) * (this.pos.x - this.lastpos.x) + (this.pos.y - this.lastpos.y) * (this.pos.y - this.lastpos.y));
+          const acceleration = speed - this.speed;
+          if ((speed > 0) && (acceleration < 0) && (this.order.abilityId === this.lastorder.abilityId) && (this.speed / speed > 1.01)) {
+            Monitor.add(Monitor.Workers, this.tag, Monitor.Slowing, 1);
+          }
+
+          this.speed = speed;
+          this.acceleration = acceleration;
+        } else {
+          Monitor.add(Monitor.Workers, this.tag, Monitor.Idle, 1);
+          this.speed = 0;
+          this.acceleration = 0;
         }
 
         this.lastorder = this.order;
         this.lastpos.x = unit.pos.x;
         this.lastpos.y = unit.pos.y;
-        this.speed = speed;
-        this.acceleration = acceleration;
       } else {
         this.isActive = false;
         knownWorkerTags.delete(this.tag);

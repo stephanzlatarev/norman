@@ -41,9 +41,7 @@ export default class Mine {
 
     if (!unit) {
       // Check if the unit changed tag
-      for (const entry of units) {
-        const one = entry[1];
-
+      for (const [_, one] of units) {
         if ((this.unit.pos.x === one.pos.x) && (this.unit.pos.y === one.pos.y)) {
           unit = one;
           break;
@@ -55,9 +53,15 @@ export default class Mine {
       }
     }
 
-    this.content = unit ? unit.mineralContents : 0;
+    if (unit && (unit.displayType === 1)) {
+      this.content = unit.mineralContents;
+    } else if (unit) {
+      this.content = Infinity;
+    } else {
+      this.content = 0;
+    }
 
-    return !!unit;
+    return (unit && this.content);
   }
 
   draftBooking(time, worker) {

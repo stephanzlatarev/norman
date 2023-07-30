@@ -1,12 +1,13 @@
 import Mine from "./mine.js";
-import { MiningJob } from "./job.js";
+import { ExpansionJob, MiningJob } from "./job.js";
 
 export default class Depot {
 
   constructor(base, pos, mineralFields) {
     this.pos = pos;
-//    this.distance = calculateDistance(base.pos, pos);
+    this.distance = Math.sqrt((base.pos.x - pos.x) * (base.pos.x - pos.x) + (base.pos.y - pos.y) * (base.pos.y - pos.y));
 
+    this.isBuilding = false;
     this.isActive = false;
     this.isProducing = false;
     this.isBoosted = false;
@@ -24,24 +25,38 @@ export default class Depot {
   }
 
   sync(units) {
-    if (!this.tag) {
-      // TODO: Start checking for the nexus only after a job for building it is complete
-      // TODO: Check if progress is 1 and only then activate it
-      // Check if the depot has been built
-      for (const [tag, unit] of units) {
-        if ((this.pos.x === unit.pos.x) && (this.pos.y === unit.pos.y)) {
-          this.tag = tag;
-          break;
+    let unit;
+
+    if (this.tag) {
+      unit = units.get(this.tag);
+
+      if (!unit) {
+        return (this.isActive = false);
+      }
+    } else {
+      if (typeof(this.isBuilding) === "boolean") {
+        for (const [tag, unit] of units) {
+          if ((this.pos.x === unit.pos.x) && (this.pos.y === unit.pos.y)) {
+            this.isBuilding = tag;
+            break;
+          }
         }
       }
 
-      if (!this.tag) {
+      if (typeof(this.isBuilding) === "string") {
+        const buildingUnit = units.get(this.isBuilding);
+
+        if (buildingUnit.buildProgress >= 1) {
+          this.tag = this.isBuilding;
+          this.isBuilding = false;
+          unit = buildingUnit;
+        }
+      }
+
+      if (!unit) {
         return true;
       }
     }
-
-    const unit = units.get(this.tag);
-    if (!unit || (unit.buildProgress < 1)) return (this.isActive = false);
 
     this.isActive = true;
     this.isProducing = !!unit.orders.length;
@@ -52,7 +67,7 @@ export default class Depot {
     for (let i = this.mines.length - 1; i >= 0; i--) {
       const mine = this.mines[i];
 
-      if (!mine.sync(units) || !mine.content) {
+      if (!mine.sync(units)) {
         this.mines.splice(i, 1);
         minesAreLess = true;
       }
@@ -68,6 +83,11 @@ export default class Depot {
     this.workerLimit = calculateWorkerLimit(this);
 
     return !!this.mines.length;
+  }
+
+  build(worker) {
+    worker.startJob(null, ExpansionJob, this);
+    this.isBuilding = true;
   }
 
   hire(time, worker) {

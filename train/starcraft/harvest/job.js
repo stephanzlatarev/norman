@@ -13,6 +13,7 @@ class Job {
   }
 
   async perform(client, time, worker) {
+    if (worker.progress && (worker.progress.jobStatus === Status.Complete)) return Status.Complete;
     if (!worker.progress) worker.progress = { taskIndex: 0, taskStatus: Status.New, jobStatus: Status.New };
 
     const task = this.tasks[worker.progress.taskIndex];
@@ -112,6 +113,16 @@ export const MiningJob = new Job(
       { abilityId: 1, targetUnitTag: worker.target.tag },
     ],
     (worker) => (worker.order.abilityId === 298),
+  ),
+);
+
+export const ExpansionJob = new Job(
+  new Task("build depot",
+    (worker) => [
+      { abilityId: 880, targetWorldSpacePos: worker.target.pos },
+      { abilityId: 16, targetWorldSpacePos: worker.lastpos },
+    ],
+    (worker) => (worker.order.abilityId === 16),
   ),
 );
 
