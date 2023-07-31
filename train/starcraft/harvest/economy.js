@@ -61,6 +61,7 @@ export default class Economy {
     for (let i = this.depots.length - 1; i >= 0; i--) {
       const depot = this.depots[i];
 
+      depot.isUnderAttack = false;
       if (!depot.sync(units, resources)) {
         this.depots.splice(i, 1);
       }
@@ -78,9 +79,12 @@ export default class Economy {
 
     const targets = [];
     for (const [tag, enemy] of this.enemies) {
-      if (enemy.sync(enemies)) {
-        // if close to depot, add to list of targets near depot
-        targets.push(enemy);
+      if (enemy.sync(this.depots, enemies)) {
+        if (enemy.depot) enemy.depot.isUnderAttack = true;
+
+        if (enemy.shouldBeAttacked()) {
+          targets.push(enemy);
+        }
       } else {
         this.enemies.delete(tag);
       }
@@ -88,11 +92,20 @@ export default class Economy {
 
     if (!targets.length) return;
 
+    let target = targets[targets.length - 1];
     for (const worker of this.workers) {
-      if (worker.isActive && worker.depot && !worker.isWorking()) {
-        targets[0].attack(worker);
-        targets.splice(0, 1);
-        if (!targets.length) break;
+      if (worker.isActive && (worker.depot === target.depot) && !worker.isWorking()) {
+        target.attack(worker);
+
+        if (!target.shouldBeAttacked()) {
+          targets.length = targets.length - 1;
+
+          if (targets.length) {
+            target = targets[targets.length - 1];
+          } else {
+            break;
+          }
+        }
       }
     }
   }
@@ -245,7 +258,7 @@ function getClosestMiningOpportunity(opportunities, worker) {
   let closestDistance = Infinity;
 
   for (const [depot, opportunity] of opportunities) {
-    if (opportunity.busy + opportunity.idle >= depot.workerLimit) continue;
+    if (depot.isUnderAttack || (opportunity.busy + opportunity.idle >= depot.workerLimit)) continue;
 
     const distance = squareDistance(depot.pos, worker.pos);
 

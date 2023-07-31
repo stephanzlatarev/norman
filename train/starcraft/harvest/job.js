@@ -168,7 +168,7 @@ export const ExpansionJob = new Job(
 export const AttackJob = new Job(
   new Task("attack",
     (worker) => [{ abilityId: 1, targetUnitTag: (worker.canAttack ? worker.target.tag : worker.depot.getRallyMine().tag) }],
-    (worker) => !worker.target.isActive,
+    (worker) => !worker.target.isThreat(),
     (worker) => (worker.canAttack ? (worker.order.abilityId === 23) : (worker.order.abilityId === 298)),
   )
 );
