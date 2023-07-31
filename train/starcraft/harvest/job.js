@@ -165,6 +165,13 @@ export const ExpansionJob = new Job(
   ),
 );
 
+export const AssimilatorJob = new Job(
+  new Task("build assimilator",
+    (worker) => [{ abilityId: 882, targetUnitTag: worker.target.tag }],
+    (worker) => !!worker.target.isBuilding,
+  )
+);
+
 export const AttackJob = new Job(
   new Task("attack",
     (worker) => [{ abilityId: 1, targetUnitTag: (worker.canAttack ? worker.target.tag : worker.depot.getRallyMine().tag) }],

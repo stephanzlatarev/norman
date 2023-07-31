@@ -1,4 +1,5 @@
 import Monitor from "./monitor.js";
+import { AssimilatorJob } from "./job.js";
 
 const RADIUS_WORKER = 0.375;
 const RADIUS_MINERAL = 1.125 / 2;
@@ -7,9 +8,13 @@ const DRILL_TIME = 46;
 
 export default class Mine {
 
-  constructor(unit, depot, line) {
-    this.unit = { pos: unit.pos };
-    this.tag = unit.tag;
+  constructor(source, depot, line) {
+    this.source = source;
+    this.tag = source.tag;
+
+    this.isMineral = (source.type === "mineral");
+    this.isActive = this.isMineral;
+    this.isBuilding = false;
 
     this.content = Infinity;
 
@@ -21,7 +26,7 @@ export default class Mine {
   }
 
   position(depot, line) {
-    this.pos = getMineCenter(this.unit, depot, line);
+    this.pos = getMineCenter(this.source, depot, line);
 
     const harvestPoint = calculatePathEnd(depot.pos, this.pos, RADIUS_WORKER + RADIUS_MINERAL);
     const storePoint = calculatePathEnd(this.pos, depot.pos, RADIUS_WORKER + RADIUS_DEPOT);
@@ -36,32 +41,70 @@ export default class Mine {
     };
   }
 
-  sync(units) {
-    let unit = units.get(this.tag);
+  build(worker) {
+    worker.startJob(worker.depot, AssimilatorJob, this);
+    this.builder = worker;
+  }
 
-    if (!unit) {
-      // Check if the unit changed tag
-      for (const [_, one] of units) {
-        if ((this.unit.pos.x === one.pos.x) && (this.unit.pos.y === one.pos.y)) {
-          unit = one;
-          break;
+  sync(units, resources) {
+    let unit;
+
+    if (this.isMineral) {
+      unit = resources.get(this.tag);
+
+      if (!unit) {
+        // Check if the mineral field changed tag
+        unit = findUnitAtPoint(resources, this.source);
+
+        if (unit) {
+          this.tag = unit.tag;
+        }
+      }
+
+      if (unit && (unit.displayType === 1)) {
+        this.content = unit.mineralContents;
+      } else if (unit) {
+        this.content = Infinity;
+      } else {
+        this.content = 0;
+        this.isActive = false;
+      }
+
+      return (unit && this.content);      
+    } else {
+      unit = units.get(this.tag);
+
+      if (this.isActive && !unit) {
+        return (this.isActive = false);
+      } else if (this.builder) {
+        unit = findUnitAtPoint(units, this.source);
+
+        if (unit) {
+          this.tag = unit.tag;
+          this.isBuilding = true;
+          delete this.builder;
+        } else if (!this.builder.isActive) {
+          this.isBuilding = false;
+          delete this.builder;
+        }
+      } else if (this.isBuilding && unit && (unit.buildProgress >= 1)) {
+        this.isActive = true;
+        this.isBuilding = false;
+      } else if (!resources.get(this.source.tag)) {
+        // Check if the vespene geyser changed tag
+        let source = findUnitAtPoint(resources, this.source);
+
+        if (source) {
+          this.tag = source.tag;
         }
       }
 
       if (unit) {
-        this.tag = unit.tag;
+        this.content = unit.vespeneContents;
       }
-    }
 
-    if (unit && (unit.displayType === 1)) {
-      this.content = unit.mineralContents;
-    } else if (unit) {
-      this.content = Infinity;
-    } else {
-      this.content = 0;
+      return this.content ? true : (this.isActive = false);
     }
-
-    return (unit && this.content);
   }
 
   draftBooking(time, worker) {
@@ -137,25 +180,25 @@ function calculatePathEnd(from, to, radius) {
   };
 }
 
-function getMineCenter(unit, depot, line) {
-  const distanceX = Math.abs(depot.pos.x - unit.pos.x);
+function getMineCenter(source, depot, line) {
+  const distanceX = Math.abs(depot.pos.x - source.x);
 
   let offsetX = 0;
 
   if (distanceX > 2) {
-    offsetX = (depot.pos.x - unit.pos.x > 0) ? 0.5 : -0.5;
+    offsetX = (depot.pos.x - source.x > 0) ? 0.5 : -0.5;
   } else {
     // Check if an adjacent mine is blocking this mine from one side
-    const blockingSpotY = unit.pos.y + Math.sign(depot.pos.y - unit.pos.y);
-    const blockingSpotLeftX = unit.pos.x - 1;
-    const blockingSpotRightX = unit.pos.x + 1;
+    const blockingSpotY = source.y + Math.sign(depot.pos.y - source.y);
+    const blockingSpotLeftX = source.x - 1;
+    const blockingSpotRightX = source.x + 1;
 
     for (const one of line) {
-      if (one.pos.y === blockingSpotY) {
-        if (one.pos.x === blockingSpotRightX) {
+      if (one.y === blockingSpotY) {
+        if (one.x === blockingSpotRightX) {
           offsetX = -0.5;
           break;
-        } else if (one.pos.x === blockingSpotLeftX) {
+        } else if (one.x === blockingSpotLeftX) {
           offsetX = 0.5;
           break;
         }
@@ -164,7 +207,15 @@ function getMineCenter(unit, depot, line) {
   }
 
   return {
-    x: unit.pos.x + offsetX,
-    y: unit.pos.y
+    x: source.x + offsetX,
+    y: source.y
   };
+}
+
+function findUnitAtPoint(units, pos) {
+  for (const [_, one] of units) {
+    if ((pos.x === one.pos.x) && (pos.y === one.pos.y)) {
+      return one;
+    }
+  }
 }

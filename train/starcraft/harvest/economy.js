@@ -16,10 +16,7 @@ export default class Economy {
     this.enemies = new Map();
 
     for (const cluster of map.clusters.filter(cluster => !!cluster.nexus)) {
-      const pos = cluster.nexus;
-      const mineralFields = cluster.resources.filter(resource => (resource.type === "mineral"));
-
-      this.depots.push(new Depot(base, pos, mineralFields));
+      this.depots.push(new Depot(base, cluster.nexus, cluster.resources));
     }
   }
 
@@ -28,7 +25,7 @@ export default class Economy {
 
     this.defend(enemies);
     this.expand(observation);
-    // TODO: Equip. Build assimilators
+    this.equip(observation);
     this.mine(time);
     await this.hire(observation);
 
@@ -122,6 +119,18 @@ export default class Economy {
     }
   }
 
+  equip(observation) {
+    if (observation.playerCommon.minerals >= 75) {
+      const mine = findAssimilatorConstructionSite(this.depots);
+      const builder = mine ? findClosestAvailableWorker(this.workers, mine) : null;
+
+      if (builder) {
+        mine.build(builder);
+        observation.playerCommon.minerals -= 75;
+      }
+    }
+  }
+
   mine(time) {
     const miningOpportunities = findMiningOpportunities(this.depots, this.workers);
 
@@ -176,6 +185,19 @@ function findClosestExpansionSite(depots) {
   }
 
   return closestDepot;
+}
+
+function findAssimilatorConstructionSite(depots) {
+  for (const depot of depots) {
+    if (depot.isActive && (depot.harvesters >= 12)) {
+      for (const mine of depot.mines) {
+        if (mine.isMineral) continue;
+        if (!mine.isActive && !mine.isBuilding && !mine.builder) {
+          return mine;
+        }
+      }
+    }
+  }
 }
 
 function findClosestAvailableWorker(workers, site) {

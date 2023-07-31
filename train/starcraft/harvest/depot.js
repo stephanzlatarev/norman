@@ -5,7 +5,7 @@ const COOLDOWN_BUILD = Math.floor(22.4 * 20);
 
 export default class Depot {
 
-  constructor(base, pos, mineralFields) {
+  constructor(base, pos, sources) {
     this.pos = pos;
     this.distance = Math.sqrt((base.pos.x - pos.x) * (base.pos.x - pos.x) + (base.pos.y - pos.y) * (base.pos.y - pos.y));
 
@@ -20,10 +20,11 @@ export default class Depot {
     this.hasSetRallyPoint = false;
     this.cooldown = 0;
 
+    this.harvesters = 0;
     this.mines = [];
-    const line = getLineOfMineralFields(this, mineralFields.map(field => ({ tag: field.tag, pos: { x: field.x, y: field.y } })));
-    for (const field of line) {
-      this.mines.push(new Mine(field, this, line));
+    const line = getLineOfSources(this, sources);
+    for (const source of line) {
+      this.mines.push(new Mine(source, this, line));
     }
     for (let i = 0; i < this.mines.length; i++) this.mines[i].index = i;
     this.workerLimit = calculateWorkerLimit(this);
@@ -89,13 +90,14 @@ export default class Depot {
 
     this.isProducing = !!unit.orders.length;
     this.isBoosted = !!unit.buffIds.length;
+    this.harvesters = unit.assignedHarvesters;
 
     let minesAreLess = false;
 
     for (let i = this.mines.length - 1; i >= 0; i--) {
       const mine = this.mines[i];
 
-      if (!mine.sync(resources)) {
+      if (!mine.sync(units, resources)) {
         this.mines.splice(i, 1);
         minesAreLess = true;
       }
@@ -104,7 +106,7 @@ export default class Depot {
 
     if (minesAreLess) {
       for (const mine of this.mines) {
-        mine.position(this, getLineOfMineralFields(this, this.mines));
+        mine.position(this, getLineOfSources(this, this.mines));
       }
     }
 
@@ -139,6 +141,8 @@ export default class Depot {
     let bestBooking;
     for (let index = minMineIndex; index <= maxMineIndex; index++) {
       const mine = this.mines[index];
+      if (!mine.isActive) continue;
+
       const booking = mine.draftBooking(time, worker);
 
       if (!bestMine || (booking.waitDuration < bestBooking.waitDuration) ||
@@ -185,22 +189,22 @@ function calculateWorkerLimit(depot) {
   return depot.tag ? depot.mines.length * 2 + 2 : 0;
 }
 
-function getLineOfMineralFields(depot, fields) {
+function getLineOfSources(depot, sources) {
   const line = [];
 
-  for (const field of fields) {
-    let isFieldAddedToLine = false;
+  for (const source of sources) {
+    let isSourceAddedToLine = false;
 
     for (let i = 0; i < line.length; i++) {
-      if (calculateSide(line[i].pos, depot.pos, field.pos) < 0) {
-        line.splice(i, 0, field);
-        isFieldAddedToLine = true;
+      if (calculateSide(line[i], depot.pos, source) < 0) {
+        line.splice(i, 0, source);
+        isSourceAddedToLine = true;
         break;
       }
     }
 
-    if (!isFieldAddedToLine) {
-      line.push(field);
+    if (!isSourceAddedToLine) {
+      line.push(source);
     }
   }
 
