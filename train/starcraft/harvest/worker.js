@@ -63,7 +63,8 @@ export default class Worker {
         this.lastpos.x = unit.pos.x;
         this.lastpos.y = unit.pos.y;
 
-        if (unit.isSelected) {
+        this.isSelected = unit.isSelected;
+        if (this.isSelected) {
           const trace = ["[worker " + this.tag + "]"];
           trace.push("speed:", (this.acceleration * 100000).toFixed(2) + ">>" + (this.speed * 100000).toFixed(2));
           if (this.order) trace.push("order:", JSON.stringify(this.order));

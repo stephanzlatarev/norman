@@ -65,6 +65,11 @@ class Task {
         }
 
         const response = await client.action({ actions: actions });
+
+        if (worker.isSelected) {
+          console.log(worker.tag, JSON.stringify(commands), ">>", JSON.stringify(response), "|", worker.target ? worker.target.tag : "-");
+        }
+
         for (const result of response.result) {
           if (result !== 1) {
             return (worker.progress.taskStatus = Status.Failed);
@@ -92,7 +97,7 @@ export const MiningJob = new Job(
     (worker) => ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag)),
   ),
   new Task("drill",
-    () => [],
+    (worker) => [{ abilityId: 1, targetUnitTag: worker.target.tag }],
     (worker) => (worker.order.abilityId === 299),
     (worker) => ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag)),
   ),
