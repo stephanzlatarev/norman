@@ -2,6 +2,7 @@ import Monitor from "./monitor.js";
 import { Status } from "./job.js";
 
 const WORKERS = { 84: "probe" };
+const COOLDOWN_WEAPON = 10;
 
 const knownWorkerTags = new Set();
 
@@ -18,6 +19,8 @@ export default class Worker {
     this.job = null;
     this.target = null;
     this.progress = null;
+
+    this.canAttack = true;
   }
 
   init(unit) {
@@ -38,6 +41,8 @@ export default class Worker {
         this.pos.x = unit.pos.x;
         this.pos.y = unit.pos.y;
         this.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
+
+        this.canAttack = (unit.weaponCooldown <= COOLDOWN_WEAPON);
 
         if (this.order.abilityId) {
           const speed = ((this.pos.x - this.lastpos.x) * (this.pos.x - this.lastpos.x) + (this.pos.y - this.lastpos.y) * (this.pos.y - this.lastpos.y));

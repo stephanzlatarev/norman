@@ -1,4 +1,5 @@
 import Depot from "./depot.js";
+import Enemy from "./enemy.js";
 import Worker from "./worker.js";
 import Monitor from "./monitor.js";
 
@@ -12,6 +13,7 @@ export default class Economy {
     this.client = client;
     this.depots = [];
     this.workers = [];
+    this.enemies = new Map();
 
     for (const cluster of map.clusters.filter(cluster => !!cluster.nexus)) {
       const pos = cluster.nexus;
@@ -24,9 +26,10 @@ export default class Economy {
   async run(time, observation, units, resources, enemies) {
     this.sync(units, resources);
 
-    await this.expand(observation);
+    this.defend(enemies);
+    this.expand(observation);
     // TODO: Equip. Build assimilators
-    await this.mine(time);
+    this.mine(time);
     await this.hire(observation);
 
     for (const worker of this.workers) {
@@ -64,7 +67,37 @@ export default class Economy {
     }
   }
 
-  async expand(observation) {
+  defend(enemies) {
+    if (!enemies.size) return;
+
+    for (const [tag, enemy] of enemies) {
+      if (!enemy.isFlying && !this.enemies.has(tag)) {
+        this.enemies.set(tag, new Enemy(enemy));
+      }
+    }
+
+    const targets = [];
+    for (const [tag, enemy] of this.enemies) {
+      if (enemy.sync(enemies)) {
+        // if close to depot, add to list of targets near depot
+        targets.push(enemy);
+      } else {
+        this.enemies.delete(tag);
+      }
+    }
+
+    if (!targets.length) return;
+
+    for (const worker of this.workers) {
+      if (worker.isActive && worker.depot && !worker.isWorking()) {
+        targets[0].attack(worker);
+        targets.splice(0, 1);
+        if (!targets.length) break;
+      }
+    }
+  }
+
+  expand(observation) {
     if (observation.playerCommon.minerals >= 400) {
       const expansionSite = findClosestExpansionSite(this.depots);
       const builder = expansionSite ? findClosestAvailableWorker(this.workers, expansionSite) : null;
@@ -76,7 +109,7 @@ export default class Economy {
     }
   }
 
-  async mine(time) {
+  mine(time) {
     const miningOpportunities = findMiningOpportunities(this.depots, this.workers);
 
     for (const worker of this.workers) {
