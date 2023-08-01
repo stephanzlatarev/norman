@@ -2,6 +2,7 @@ import Mine from "./mine.js";
 import { ExpansionJob, MiningJob } from "./job.js";
 
 const COOLDOWN_BUILD = Math.floor(22.4 * 20);
+const CHANGE_LANE_LIMIT = 2;
 
 export default class Depot {
 
@@ -132,8 +133,8 @@ export default class Depot {
     let minMineIndex = 0;
     let maxMineIndex = this.mines.length - 1;
     if (worker.target instanceof Mine) {
-      minMineIndex = Math.max(worker.target.index - 3, minMineIndex);
-      maxMineIndex = Math.min(worker.target.index + 3, maxMineIndex);
+      minMineIndex = Math.max(worker.target.index - CHANGE_LANE_LIMIT, minMineIndex);
+      maxMineIndex = Math.min(worker.target.index + CHANGE_LANE_LIMIT, maxMineIndex);
     }
 
     // Select mine
