@@ -101,10 +101,11 @@ export default class Worker {
     }
   }
 
-  startJob(depot, job, target) {
+  startJob(depot, job, target, route) {
     this.depot = depot;
     this.job = job;
     this.target = target;
+    this.route = route;
     this.progress = { jobStatus: Status.New };
   }
 

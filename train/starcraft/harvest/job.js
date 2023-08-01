@@ -84,12 +84,12 @@ class Task {
 export const MiningJob = new Job(
   new Task("approach mine",
     (worker) => [{ abilityId: 298, targetUnitTag: worker.target.tag }],
-    (worker) => (squareDistance(worker.pos, worker.depot.pos) > worker.target.route.boost * worker.target.route.boost),
+    (worker) => (squareDistance(worker.pos, worker.depot.pos) > worker.route.boostSquareDistance),
     (worker) => (((worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag) || (worker.order.abilityId === 299))),
   ),
   new Task("push to mine",
     (worker) => [
-      { abilityId: 16, targetWorldSpacePos: worker.target.route.harvestPoint },
+      { abilityId: 16, targetWorldSpacePos: worker.route.harvestPoint },
       { abilityId: 298, targetUnitTag: worker.target.tag },
     ],
     (worker) => ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag)),
@@ -111,11 +111,11 @@ export const MiningJob = new Job(
   ),
   new Task("approach depot",
     (worker) => [{ abilityId: 1, targetUnitTag: worker.depot.tag }],
-    (worker) => (squareDistance(worker.pos, worker.depot.pos) < worker.target.route.boost * worker.target.route.boost),
+    (worker) => (squareDistance(worker.pos, worker.depot.pos) < worker.route.boostSquareDistance),
   ),
   new Task("push to depot",
     (worker) => [
-      { abilityId: 1, targetWorldSpacePos: worker.target.route.storePoint },
+      { abilityId: 16, targetWorldSpacePos: worker.route.storePoint },
       { abilityId: 1, targetUnitTag: worker.depot.tag },
       { abilityId: 1, targetUnitTag: worker.target.tag },
     ],

@@ -27,19 +27,9 @@ export default class Mine {
   }
 
   position(depot, line) {
+    this.depot = depot;
     this.pos = getMineCenter(this.source, depot, line);
-
-    const harvestPoint = calculatePathEnd(depot.pos, this.pos, OFFSET_MINERAL);
-    const storePoint = calculatePathEnd(this.pos, depot.pos, OFFSET_DEPOT);
-    const distance = calculateDistance(harvestPoint, storePoint);
-
-    this.route = {
-      harvestPoint: harvestPoint,
-      storePoint: storePoint,
-      distance: distance,
-      walkTime: estimateWalkTime(distance),
-      boost: OFFSET_BOOST,
-    };
+    this.storePoint = calculatePathEnd(this.pos, depot.pos, OFFSET_DEPOT);
   }
 
   build(worker) {
@@ -109,18 +99,19 @@ export default class Mine {
   }
 
   draftBooking(time, worker) {
-    const routeDistance = calculateDistance(worker.pos, this.route.harvestPoint);
-    const routeDuration = estimateWalkTime(routeDistance);
-    const estimatedArrivalTime = time + routeDuration;
+    const harvestPoint = calculatePathEnd(worker.pos, this.pos, OFFSET_MINERAL);
+    const distanceToHarvestPoint = calculateDistance(worker.pos, harvestPoint);
+    const durationToHarvestPoint = estimateWalkTime(distanceToHarvestPoint);
+    const estimatedArrivalTime = time + durationToHarvestPoint;
+    const storePoint = calculatePathEnd(harvestPoint, this.depot.pos, OFFSET_DEPOT);
 
     return {
-from: show(worker.pos),
-to: show(this.route.harvestPoint),
-distance: routeDistance ? routeDistance.toFixed(4) : "-",
-duration: routeDuration,
+      harvestPoint: harvestPoint,
+      boostSquareDistance: OFFSET_BOOST * OFFSET_BOOST,
       arrivalTime: estimatedArrivalTime,
       checkInTime: Math.max(this.freeCheckInTime, estimatedArrivalTime),
       waitDuration: Math.max(this.freeCheckInTime - estimatedArrivalTime, 0),
+      storePoint: storePoint,
     }
   }
 

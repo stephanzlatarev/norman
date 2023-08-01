@@ -157,9 +157,9 @@ export default class Depot {
     // Hire worker
     if (bestMine) {
       bestMine.makeReservation(worker, bestBooking);
-      worker.startJob(this, MiningJob, bestMine);
+      worker.startJob(this, MiningJob, bestMine, bestBooking);
 
-      worker.trace("select job:", JSON.stringify(bestBooking));
+      worker.trace("mining route:", JSON.stringify(bestBooking));
     }
   }
 
@@ -172,7 +172,7 @@ export default class Depot {
       }
 
       if (!this.hasSetRallyPoint) {
-        const rallyPoint = this.getRallyMine().route.storePoint;
+        const rallyPoint = this.getRallyMine().storePoint;
         await client.action({ actions: [{ actionRaw: { unitCommand: { unitTags: [this.tag], abilityId: 3690, targetWorldSpacePos: rallyPoint, queueCommand: false } } }]});
         this.hasSetRallyPoint = true;
       }
