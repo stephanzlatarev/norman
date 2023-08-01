@@ -1,9 +1,10 @@
 import Monitor from "./monitor.js";
 import { AssimilatorJob } from "./job.js";
 
-const RADIUS_WORKER = 0.375;
-const RADIUS_MINERAL = 1.125 / 2;
-const RADIUS_DEPOT = 2.75;
+const OFFSET_MINERAL = 0.81;
+const OFFSET_DEPOT = 2.82;
+const OFFSET_BOOST = 4.6;
+
 const DRILL_TIME = 46;
 
 export default class Mine {
@@ -28,8 +29,8 @@ export default class Mine {
   position(depot, line) {
     this.pos = getMineCenter(this.source, depot, line);
 
-    const harvestPoint = calculatePathEnd(depot.pos, this.pos, RADIUS_WORKER + RADIUS_MINERAL);
-    const storePoint = calculatePathEnd(this.pos, depot.pos, RADIUS_WORKER + RADIUS_DEPOT);
+    const harvestPoint = calculatePathEnd(depot.pos, this.pos, OFFSET_MINERAL);
+    const storePoint = calculatePathEnd(this.pos, depot.pos, OFFSET_DEPOT);
     const distance = calculateDistance(harvestPoint, storePoint);
 
     this.route = {
@@ -37,7 +38,7 @@ export default class Mine {
       storePoint: storePoint,
       distance: distance,
       walkTime: estimateWalkTime(distance),
-      boost: Math.max(distance / 2, 1.75),
+      boost: OFFSET_BOOST,
     };
   }
 
@@ -108,11 +109,15 @@ export default class Mine {
   }
 
   draftBooking(time, worker) {
-    const routeDistance = (worker.target === this) ? this.harvestToStoreWalkTime : calculateDistance(worker.pos, this.route.harvestPoint);
+    const routeDistance = calculateDistance(worker.pos, this.route.harvestPoint);
     const routeDuration = estimateWalkTime(routeDistance);
     const estimatedArrivalTime = time + routeDuration;
 
     return {
+from: show(worker.pos),
+to: show(this.route.harvestPoint),
+distance: routeDistance ? routeDistance.toFixed(4) : "-",
+duration: routeDuration,
       arrivalTime: estimatedArrivalTime,
       checkInTime: Math.max(this.freeCheckInTime, estimatedArrivalTime),
       waitDuration: Math.max(this.freeCheckInTime - estimatedArrivalTime, 0),
@@ -134,10 +139,10 @@ export default class Mine {
 
     Monitor.add(Monitor.Mines, this.tag, Monitor.Used, DRILL_TIME);
     if (jobReservationTime < jobDrillStartTime) {
-      Monitor.add(Monitor.Workers, worker.tag, Monitor.Idle, (jobReservationTime - this.lastCheckOutTime));
-      Monitor.add(Monitor.Workers, worker.tag, Monitor.Blocked, (jobDrillStartTime - jobReservationTime));
+      Monitor.add(Monitor.Mines, this.tag, Monitor.Idle, (jobReservationTime - this.lastCheckOutTime));
+      Monitor.add(Monitor.Mines, this.tag, Monitor.Blocked, (jobDrillStartTime - jobReservationTime));
     } else {
-      Monitor.add(Monitor.Workers, worker.tag, Monitor.Idle, (jobDrillStartTime - this.lastCheckOutTime));
+      Monitor.add(Monitor.Mines, this.tag, Monitor.Idle, (jobDrillStartTime - this.lastCheckOutTime));
     }
 
     // Calculate next free check-in time
@@ -151,7 +156,7 @@ export default class Mine {
       arrivals.sort();
       let freeCheckInTime = time;
       for (const arrivalTime of arrivals) {
-        freeCheckInTime = Math.max(freeCheckInTime, arrivalTime + DRILL_TIME);
+        freeCheckInTime = Math.max(freeCheckInTime, arrivalTime) + DRILL_TIME;
       }
       this.freeCheckInTime = freeCheckInTime;
     } else {
@@ -218,4 +223,10 @@ function findUnitAtPoint(units, pos) {
       return one;
     }
   }
+}
+
+
+/// TODO: Remove with tracing
+function show(pos) {
+  return (pos) ? pos.x.toFixed(2) + ":" + pos.y.toFixed(2) : "-";
 }

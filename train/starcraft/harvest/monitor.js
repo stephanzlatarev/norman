@@ -39,18 +39,19 @@ export default {
     if (((tick++) % PERIOD) === 0) {
       // Show monitored data
       for (const [group, data] of monitors) {
-        const line = [group];
-
         const count = objects.get(group).size;
-        if (count > 1) {
-          line.push("(" + count + ")");
-        }
+        const line = [];
 
         for (const key in data) {
-          line.push((data[key] * 100 / count / PERIOD).toFixed(2) + "%", key);
+          line.push((data[key] * 100 / count / PERIOD).toFixed(2) + "% " + key);
         }
 
-        console.log(line.join(" "));
+        if (count > 1) {
+          console.log(group, "(" + count + ")", line.join(", "));
+          // TODO: Show object with highest and object with lowest value for each metric
+        } else {
+          console.log(group, line.join(", "));
+        } 
       }
 
       // Reset monitors

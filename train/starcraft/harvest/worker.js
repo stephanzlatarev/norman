@@ -51,6 +51,8 @@ export default class Worker {
             Monitor.add(Monitor.Workers, this.tag, Monitor.Slowing, 1);
           }
 
+          Monitor.add(Monitor.Workers, this.tag, getActivityLabel(this.order.abilityId, this.order.targetUnitTag, speed, acceleration), 1);
+
           this.speed = speed;
           this.acceleration = acceleration;
         } else {
@@ -63,14 +65,17 @@ export default class Worker {
         this.lastpos.x = unit.pos.x;
         this.lastpos.y = unit.pos.y;
 
-        this.isSelected = unit.isSelected;
-        if (this.isSelected) {
-          const trace = ["[worker " + this.tag + "]"];
+        this.tracing = unit.isSelected;
+
+        { // Tracing. Remove when ready to upload to norman 
+          const trace = [];
           trace.push("speed:", (this.acceleration * 100000).toFixed(2) + ">>" + (this.speed * 100000).toFixed(2));
-          if (this.order) trace.push("order:", JSON.stringify(this.order));
-          if (this.progress) trace.push("job:", JSON.stringify(this.progress));
-          console.log(trace.join(" "));
-        }
+          if (this.order) trace.push("order:", this.order.abilityId);
+          if (this.order && this.order.targetUnitTag) trace.push(this.order.targetUnitTag);
+          if (this.order && this.order.targetWorldSpacePos) trace.push(this.order.targetWorldSpacePos.x.toFixed(2) + ":" + this.order.targetWorldSpacePos.y.toFixed(2));
+          if (this.progress) trace.push(`job: ${this.progress.jobStatus} task: ${this.progress.taskIndex} ${this.progress.taskStatus}`);
+          this.trace(trace.join(" "));
+        } // Tracing. Remove when ready to upload to norman
 
         return true;
       } else {
@@ -108,8 +113,37 @@ export default class Worker {
     return hasJob && jobIsActive;
   }
 
+  // TODO: Remove when ready to upload to norman
+  trace() {
+    if (this.tracing) {
+      let distance = "-";
+      if (this.depot) {
+        const dx = this.depot.pos.x;
+        const dy = this.depot.pos.y;
+        const wx = this.pos.x;
+        const wy = this.pos.y;
+        distance = Math.sqrt((wx - dx) * (wx - dx) + (wy - dy) * (wy - dy)).toFixed(4);
+      }
+      console.log(`[worker ${this.tag} ${this.pos.x.toFixed(2)}:${this.pos.y.toFixed(2)} ${distance}]`, ...arguments);
+    }
+  }
+
 }
 
 function near(a, b) {
   return ((Math.abs(a.x - b.x) < 10) && (Math.abs(a.y - b.y) < 10));
+}
+
+function getActivityLabel(abilityId, targetUnitTag, speed, acceleration) {
+  switch (abilityId) {
+    case 16: return "pushing";
+    case 298: return (speed > 0) ? "approching mine" : "gathering";
+    case 299: {
+      if (targetUnitTag) {
+        return (speed > 0) ? "approching depot" : "storing";
+      } else {
+        return "packing";
+      }
+    }
+  }
 }

@@ -3,11 +3,13 @@ import starcraft from "@node-sc2/proto";
 import { default as GameMap } from "../../../body/starcraft/map/map.js";
 import Economy from "./economy.js";
 
+const print = console.log;
+
 const GAME_CONFIG = {
   path: "C:\\games\\StarCraft II",
   "version": "Base90136",
   realtime: false,
-  "localMap": { "mapPath": "MoondanceAIE.SC2Map" },
+  "localMap": { "mapPath": "mining.SC2Map" },
   playerSetup: [
     { type: 1, race: 3 },
     { type: 2, race: 2, difficulty: 1 }
@@ -16,6 +18,7 @@ const GAME_CONFIG = {
 const SLOW_DOWN = 0;
 
 const client = starcraft();
+let time = 0;
 
 async function startGame() {
   console.log("Starting StarCraft II game...");
@@ -45,8 +48,21 @@ async function startGame() {
   });
 }
 
+function clock() {
+  const seconds = Math.floor(time / 22.4);
+  const minutes = Math.floor(seconds / 60);
+  return twodigits(minutes) + ":" + twodigits(seconds % 60) + "/" + time;
+}
+
+function twodigits(value) {
+  if (value < 10) return "0" + value;
+  return value;
+}
+
 async function go() {
   await startGame();
+
+  console.log = function() { print(clock(), ...arguments); };
 
   await client.step({ count: 1 });
   const observation = (await client.observation()).observation;
@@ -56,7 +72,8 @@ async function go() {
 
   while (true) {
     const observation = (await client.observation()).observation;
-    const time = observation.gameLoop;
+
+    time = observation.gameLoop;
 
     const units = new Map();
     const enemies = new Map();

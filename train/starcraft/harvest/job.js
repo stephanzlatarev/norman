@@ -66,9 +66,7 @@ class Task {
 
         const response = await client.action({ actions: actions });
 
-        if (worker.isSelected) {
-          console.log(worker.tag, JSON.stringify(commands), ">>", JSON.stringify(response), "|", worker.target ? worker.target.tag : "-");
-        }
+        worker.trace(show(commands), ">>", JSON.stringify(response));
 
         for (const result of response.result) {
           if (result !== 1) {
@@ -85,35 +83,35 @@ class Task {
 
 export const MiningJob = new Job(
   new Task("approach mine",
-    (worker) => [{ abilityId: 1, targetUnitTag: worker.target.tag }],
-    (worker) => (squareDistance(worker.pos, worker.target.route.harvestPoint) < worker.target.route.boost * worker.target.route.boost),
+    (worker) => [{ abilityId: 298, targetUnitTag: worker.target.tag }],
+    (worker) => (squareDistance(worker.pos, worker.depot.pos) > worker.target.route.boost * worker.target.route.boost),
     (worker) => (((worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag) || (worker.order.abilityId === 299))),
   ),
   new Task("push to mine",
     (worker) => [
-      { abilityId: 1, targetWorldSpacePos: worker.target.route.harvestPoint },
-      { abilityId: 1, targetUnitTag: worker.target.tag },
+      { abilityId: 16, targetWorldSpacePos: worker.target.route.harvestPoint },
+      { abilityId: 298, targetUnitTag: worker.target.tag },
     ],
     (worker) => ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag)),
   ),
   new Task("drill",
-    (worker) => [{ abilityId: 1, targetUnitTag: worker.target.tag }],
-    (worker) => (worker.order.abilityId === 299),
-    (worker) => ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag)),
-  ),
-  new Task("pack",
-    () => [],
+    (worker) => [{ abilityId: 298, targetUnitTag: worker.target.tag }],
     (worker, time) => {
-      if ((worker.order.abilityId === 299) && worker.order.targetUnitTag) {
+      if (worker.order.abilityId === 299) {
         worker.target.checkOut(time, worker);
         return true;
       }
       return false;
-    }
+    },
+    (worker) => ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag)),
+  ),
+  new Task("pack",
+    () => [],
+    (worker) => ((worker.order.abilityId === 299) && worker.order.targetUnitTag),
   ),
   new Task("approach depot",
     (worker) => [{ abilityId: 1, targetUnitTag: worker.depot.tag }],
-    (worker) => (squareDistance(worker.pos, worker.target.route.storePoint) < worker.target.route.boost * worker.target.route.boost),
+    (worker) => (squareDistance(worker.pos, worker.depot.pos) < worker.target.route.boost * worker.target.route.boost),
   ),
   new Task("push to depot",
     (worker) => [
@@ -191,4 +189,18 @@ function squareDistance(a, b) {
 
 function isNear(a, b) {
   return (Math.abs(a.x - b.x) < 10) && (Math.abs(a.y - b.y) < 10);
+}
+
+
+
+/// TODO: Remove with tracing
+function show(commands) {
+  const list = [];
+  for (const command of commands) {
+    let target = "";
+    if (command.targetUnitTag) target = command.targetUnitTag;
+    if (command.targetWorldSpacePos) target = command.targetWorldSpacePos.x.toFixed(2) + ":" + command.targetWorldSpacePos.y.toFixed(2);
+    list.push(command.abilityId + " -> " + target);
+  }
+  return list.join(" >> ");
 }

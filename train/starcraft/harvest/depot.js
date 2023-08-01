@@ -145,6 +145,8 @@ export default class Depot {
 
       const booking = mine.draftBooking(time, worker);
 
+      worker.trace("  opportunity:", JSON.stringify(booking));
+
       if (!bestMine || (booking.waitDuration < bestBooking.waitDuration) ||
           ((booking.waitDuration === bestBooking.waitDuration) && (booking.checkInTime < bestBooking.checkInTime))) {
         bestMine = mine;
@@ -155,6 +157,8 @@ export default class Depot {
     // Hire worker
     bestMine.makeReservation(worker, bestBooking);
     worker.startJob(this, MiningJob, bestMine);
+
+    worker.trace("select job:", JSON.stringify(bestBooking));
   }
 
   async produce(client) {
