@@ -132,11 +132,9 @@ export default class Mine {
     const jobDrillStartTime = time - DRILL_TIME;
 
     Monitor.add(Monitor.Mines, this.tag, Monitor.Used, DRILL_TIME);
+    Monitor.add(Monitor.Mines, this.tag, Monitor.Idle, (jobDrillStartTime - this.lastCheckOutTime));
     if (jobReservationTime < jobDrillStartTime) {
-      Monitor.add(Monitor.Mines, this.tag, Monitor.Idle, (jobReservationTime - this.lastCheckOutTime));
       Monitor.add(Monitor.Mines, this.tag, Monitor.Blocked, (jobDrillStartTime - jobReservationTime));
-    } else {
-      Monitor.add(Monitor.Mines, this.tag, Monitor.Idle, (jobDrillStartTime - this.lastCheckOutTime));
     }
 
     // Calculate next free check-in time
