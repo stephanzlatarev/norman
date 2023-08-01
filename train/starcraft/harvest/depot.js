@@ -155,10 +155,12 @@ export default class Depot {
     }
 
     // Hire worker
-    bestMine.makeReservation(worker, bestBooking);
-    worker.startJob(this, MiningJob, bestMine);
+    if (bestMine) {
+      bestMine.makeReservation(worker, bestBooking);
+      worker.startJob(this, MiningJob, bestMine);
 
-    worker.trace("select job:", JSON.stringify(bestBooking));
+      worker.trace("select job:", JSON.stringify(bestBooking));
+    }
   }
 
   async produce(client) {

@@ -45,18 +45,19 @@ export default class Worker {
         this.canAttack = (unit.weaponCooldown <= COOLDOWN_WEAPON);
 
         if (this.order.abilityId) {
+          const step = (this.order.abilityId === this.lastorder.abilityId) ? this.step + 1 : 0;
           const speed = ((this.pos.x - this.lastpos.x) * (this.pos.x - this.lastpos.x) + (this.pos.y - this.lastpos.y) * (this.pos.y - this.lastpos.y));
           const acceleration = speed - this.speed;
-          if ((speed > 0) && (acceleration < 0) && (this.order.abilityId === this.lastorder.abilityId) && (this.speed / speed > 1.01)) {
-            Monitor.add(Monitor.Workers, this.tag, Monitor.Slowing, 1);
-          }
 
-          Monitor.add(Monitor.Workers, this.tag, getActivityLabel(this.order.abilityId, this.order.targetUnitTag, speed, acceleration), 1);
+          Monitor.add(Monitor.Workers, this.tag, getMetric(this, step, speed, acceleration), 1);
 
+          this.step = step;
           this.speed = speed;
           this.acceleration = acceleration;
         } else {
           Monitor.add(Monitor.Workers, this.tag, Monitor.Idle, 1);
+
+          this.step = 0;
           this.speed = 0;
           this.acceleration = 0;
         }
@@ -134,12 +135,14 @@ function near(a, b) {
   return ((Math.abs(a.x - b.x) < 10) && (Math.abs(a.y - b.y) < 10));
 }
 
-function getActivityLabel(abilityId, targetUnitTag, speed, acceleration) {
-  switch (abilityId) {
+function getMetric(worker, step, speed, acceleration) {
+  if ((step > 1) && (speed > 0) && (-acceleration/speed > 0.1)) return "slowing";
+
+  switch (worker.order.abilityId) {
     case 16: return "pushing";
     case 298: return (speed > 0) ? "approching mine" : "gathering";
     case 299: {
-      if (targetUnitTag) {
+      if (worker.order.targetUnitTag) {
         return (speed > 0) ? "approching depot" : "storing";
       } else {
         return "packing";
