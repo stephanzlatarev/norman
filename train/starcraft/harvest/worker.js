@@ -49,7 +49,8 @@ export default class Worker {
           const speed = ((this.pos.x - this.lastpos.x) * (this.pos.x - this.lastpos.x) + (this.pos.y - this.lastpos.y) * (this.pos.y - this.lastpos.y));
           const acceleration = speed - this.speed;
 
-          Monitor.add(Monitor.Workers, this.tag, getMetric(this, step, speed, acceleration), 1);
+          const metric = getMetric(this, step, speed, acceleration);
+          if (metric) Monitor.add(Monitor.Workers, this.tag, metric, 1);
 
           this.step = step;
           this.speed = speed;
@@ -137,17 +138,11 @@ function near(a, b) {
 }
 
 function getMetric(worker, step, speed, acceleration) {
-  if ((step > 1) && (speed > 0) && (-acceleration/speed > 0.1)) return "slowing";
-
-  switch (worker.order.abilityId) {
-    case 16: return "pushing";
-    case 298: return (speed > 0) ? "approching mine" : "gathering";
-    case 299: {
-      if (worker.order.targetUnitTag) {
-        return (speed > 0) ? "approching depot" : "storing";
-      } else {
-        return "packing";
-      }
+  if ((step > 1) && (speed > 0) && (-acceleration/speed > 0.1)) {
+    switch (worker.order.abilityId) {
+      case 16: return "slow push " + (worker.progress ? worker.progress.taskIndex : "x");
+      case 298: return "slow to mine";
+      case 299: return "slow to depot";
     }
   }
 }

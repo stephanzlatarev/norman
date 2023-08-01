@@ -1,9 +1,9 @@
 import Monitor from "./monitor.js";
 import { AssimilatorJob } from "./job.js";
 
-const OFFSET_MINERAL = 0.81;
-const OFFSET_DEPOT = 2.82;
-const OFFSET_BOOST = 4.6;
+const OFFSET_MINERAL = 0.95;
+const OFFSET_DEPOT = 3.0;
+const OFFSET_BOOST = 0.2;
 
 const DRILL_TIME = 46;
 
@@ -100,6 +100,8 @@ export default class Mine {
 
   draftBooking(time, worker) {
     const harvestPoint = calculatePathEnd(worker.pos, this.pos, OFFSET_MINERAL);
+    const boostPoint = calculatePathMid(worker.pos, harvestPoint);
+    const boostDistance = calculateDistance(this.depot.pos, boostPoint);
     const distanceToHarvestPoint = calculateDistance(worker.pos, harvestPoint);
     const durationToHarvestPoint = estimateWalkTime(distanceToHarvestPoint);
     const estimatedArrivalTime = time + durationToHarvestPoint;
@@ -107,11 +109,12 @@ export default class Mine {
 
     return {
       harvestPoint: harvestPoint,
-      boostSquareDistance: OFFSET_BOOST * OFFSET_BOOST,
+      boostToMineSquareDistance: (boostDistance - OFFSET_BOOST) * (boostDistance - OFFSET_BOOST),
       arrivalTime: estimatedArrivalTime,
       checkInTime: Math.max(this.freeCheckInTime, estimatedArrivalTime),
       waitDuration: Math.max(this.freeCheckInTime - estimatedArrivalTime, 0),
       storePoint: storePoint,
+      boostToDepotSquareDistance: (boostDistance + OFFSET_BOOST) * (boostDistance + OFFSET_BOOST),
     }
   }
 
@@ -165,6 +168,10 @@ function calculateDistance(a, b) {
 
 function estimateWalkTime(distance) {
   return (distance >= 1.45) ? 17 + Math.ceil((distance - 1.45) / 0.1756) : 17;
+}
+
+function calculatePathMid(from, to) {
+  return { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
 }
 
 function calculatePathEnd(from, to, radius) {
