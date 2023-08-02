@@ -191,7 +191,7 @@ function findAssimilatorConstructionSite(depots) {
   for (const depot of depots) {
     if (depot.isActive && (depot.harvesters >= 12)) {
       for (const mine of depot.mines) {
-        if (mine.isMineral) continue;
+        if (mine.isMineral || !mine.content) continue;
         if (!mine.isActive && !mine.isBuilding && !mine.builder) {
           return mine;
         }

@@ -9,7 +9,7 @@ const OFFSET_BOOST = 0.2;
 const MINERAL_DRILL_PACK = 5;
 const MINERAL_DRILL_TIME = 46;
 const VESPENE_DRILL_PACK = 4;
-const VESPENE_DRILL_TIME = 31;
+const VESPENE_DRILL_TIME = 32;
 
 export default class Mine {
 
@@ -67,7 +67,7 @@ export default class Mine {
         this.isActive = false;
       }
 
-      return (unit && this.content);      
+      return (unit && this.content);
     } else {
       unit = units.get(this.tag);
 
@@ -81,7 +81,7 @@ export default class Mine {
           this.tag = source.tag;
         }
 
-        return false;
+        return !!this.tag;
       }
 
       if (this.builder) {
@@ -102,11 +102,12 @@ export default class Mine {
         this.isBuilding = false;
       }
 
-      if (unit) {
+      if (this.isActive) {
         this.content = unit.vespeneContents;
+        return this.content ? true : (this.isActive = false);
+      } else {
+        return true;
       }
-
-      return this.content ? true : (this.isActive = false);
     }
   }
 

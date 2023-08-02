@@ -97,3 +97,10 @@ async function go() {
 }
 
 go();
+
+/*
+// Use with test map mining.SC2Map in Mine.constructor
+if (source.type === "vespene") {
+  this.builder = { isActive: true };
+}
+*/
