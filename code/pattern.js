@@ -148,6 +148,8 @@ export default class Pattern {
     if (this.callback && this.hasNotifications) {
       const time = Date.now();
 
+      this.hasNotifications = false;
+
       if (this.callback.length) {
         let hasCalledCallbackNow = false;
 
@@ -166,7 +168,6 @@ export default class Pattern {
       }
 
       this.consumedTime += Date.now() - time;
-      this.hasNotifications = false;
     }
   }
 
