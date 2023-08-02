@@ -176,6 +176,7 @@ function mapNexuses(model, map) {
       const ok = mapClusterResources(model, cluster);
 
       if (ok) {
+        nexus.resources = cluster;
         nexus.set("set-rally-point", model.add("Cluster-" + cluster.index));
 
         if (!map.areBasesSorted) {

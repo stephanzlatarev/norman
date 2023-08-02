@@ -296,6 +296,14 @@ function findNexusLocation(map, cluster) {
   cluster.x = cluster.nexus.x + Math.sign(cluster.x - cluster.nexus.x) * 3;
   cluster.y = cluster.nexus.y + Math.sign(cluster.y - cluster.nexus.y) * 3;
 
+  // Calculate distance to nexus for each resource in the cluster
+  for (const resource of cluster.resources) {
+    const dx = resource.x - cluster.nexus.x;
+    const dy = resource.y - cluster.nexus.y;
+
+    resource.d = Math.sqrt(dx * dx + dy * dy);
+  }
+
   return cluster.nexus;
 }
 

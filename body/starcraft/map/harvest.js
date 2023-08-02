@@ -16,13 +16,10 @@ export function mapClusterResources(model, cluster) {
   }
 
   for (const resource of cluster.resources) {
-    const dx = resource.x - cluster.nexus.x;
-    const dy = resource.y - cluster.nexus.y;
-
     model.add(resource.tag).set("tag", Number(resource.tag))
       .set("class", RESOURCE).set("type", model.add(resource.type)).set("harvested", false)
       .set("isLocation", true).set("x", resource.x).set("y", resource.y)
-      .set("distanceToNexus", Math.sqrt(dx * dx + dy * dy));
+      .set("distanceToNexus", resource.d);
   }
 
   cluster.isMapped = true;
