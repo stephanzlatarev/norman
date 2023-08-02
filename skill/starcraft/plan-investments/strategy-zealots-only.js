@@ -1,11 +1,9 @@
 import Strategy from "./strategy.js";
 
-const UNITS = ["zealots"];
-
-export default class SingleBase extends Strategy {
+export default class ZealotsOnly extends Strategy {
 
   units() {
-    return UNITS;
+    return ["zealots"];
   }
 
 }

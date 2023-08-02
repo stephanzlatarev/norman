@@ -2,7 +2,8 @@ import starcraft from "@node-sc2/proto";
 import read from "./map/read.js";
 import observe from "./observe/observe.js";
 import act from "./act/act.js";
-import { LOOPS_PER_STEP, LOOPS_PER_SECOND } from "./units.js";
+import Economy from "./economy/economy.js";
+import { LOOPS_PER_STEP, LOOPS_PER_SECOND, WORKERS } from "./units.js";
 
 const print = console.log;
 
@@ -17,7 +18,11 @@ export default class Game {
 
     await this.connect();
 
-    read(this.model, await this.client.gameInfo(), (await this.client.observation()).observation);
+    const observation = (await this.client.observation()).observation;
+    const base = observation.rawData.units.find(unit => (unit.unitType === 59));
+    const map = read(this.model, await this.client.gameInfo(), observation, { x: base.pos.x, y: base.pos.y });
+
+    this.economy = new Economy(this.client, map, base);
 
     setTimeout(this.run.bind(this));
   }
@@ -49,6 +54,31 @@ export default class Game {
 
         // Act on skills reaction
         await act(this.model, this.client, images);
+
+        // Run the economy body system
+        const time = this.model.observation.gameLoop;
+        const units = new Map();
+        const enemies = new Map();
+        const resources = new Map();
+        for (const unit of this.model.observation.rawData.units) {
+          if (unit.owner === owner) {
+            if (WORKERS[unit.unitType]) {
+              unit.isBusy = !!this.model.get(unit.tag).get("isProducer");
+            }
+            units.set(unit.tag, unit);
+          } else if (unit.owner === enemy) {
+            enemies.set(unit.tag, unit);
+          } else {
+            resources.set(unit.tag, unit);
+          }
+        }
+        await this.economy.run(time, this.model.observation, units, resources, enemies);
+        for (const [tag, hasJob] of this.economy.jobs()) {
+          const image = this.model.get(tag);
+          if (image) {
+            image.set("isWorker", hasJob);
+          }
+        }
 
         // Step in the game
         await this.client.step({ count: LOOPS_PER_STEP });

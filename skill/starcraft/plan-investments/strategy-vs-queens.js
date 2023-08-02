@@ -1,15 +1,12 @@
 import Strategy from "./strategy.js";
 
 const UNITS = [
-  "nexuses", "pylons", "probes",
-  "gateways", "zealots",
+  "pylons", "gateways", "zealots",
   "forges", "groundWeapons", "groundArmor", "shields",
 ];
 
 const LIMIT = {
-  nexuses: 4,
   pylons: 18,
-  probes: 70,
   gateways: 18,
   forges: 1,
   groundWeapons: 1,
@@ -19,7 +16,6 @@ const LIMIT = {
 
 const CONDITION = {
   pylons: canBuildPylon,
-  probes: canTrainProbe,
   gateways: canBuildGateway,
   zealots: canTrainZealot,
   forges: canBuildForge,
@@ -42,16 +38,13 @@ export default class CounterQueensRush extends Strategy {
   }
 
 }
+
 function hasAllNexuses(situation) {
-  return (situation.inventory.nexuses >= LIMIT.nexuses);
+  return (situation.inventory.nexuses >= 4);
 }
 
 function canBuildPylon(situation) {
   return hasAllNexuses(situation) && (situation.progress.pylons + situation.ordered.pylons < 1);
-}
-
-function canTrainProbe(situation) {
-  return (situation.progress.probes < situation.complete.nexuses);
 }
 
 function canBuildGateway(situation) {

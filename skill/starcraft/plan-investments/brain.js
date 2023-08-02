@@ -202,6 +202,7 @@ export default class Brain {
     }
 
     // Check if new bases are needed
+    let isPowerAvailable = true;
     if ((situation.total.pylons >= situation.complete.bases * 3) || (poweredBuildings >= situation.complete.bases * 3)) {
       if (!situation.progress.bases) {
         if (situation.resources.minerals >= MINERALS.bases) {
@@ -210,6 +211,8 @@ export default class Brain {
           // Don't build anything else
           return;
         }
+      } else {
+        isPowerAvailable = false;
       }
     }
 
@@ -223,6 +226,7 @@ export default class Brain {
     for (const unit of units) {
       // Check if pre-requisites are not met
       if (PREREQUISITE[unit] && !PREREQUISITE[unit](situation)) continue;
+      if (POWERED[unit] && !isPowerAvailable) continue;
 
       // Check if available resources are sufficient
       if (MINERALS[unit] && (situation.resources.minerals < MINERALS[unit])) continue;

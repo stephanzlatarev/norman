@@ -1,10 +1,7 @@
 
 export default class Brain {
 
-  react(locationX, locationY, thisProbeX, thisProbeY, thisProbeTask, distanceSelectedProbe) {
-    // Don't interrupt a probe which is doing something else
-    if (thisProbeTask === 299) return;
-
+  react(locationX, locationY, thisProbeX, thisProbeY, distanceSelectedProbe) {
     const distanceThisProbe = distance(thisProbeX, thisProbeY, locationX, locationY);
 
     if (!distanceSelectedProbe) {

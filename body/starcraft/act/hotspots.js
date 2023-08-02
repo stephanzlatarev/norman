@@ -53,9 +53,6 @@ export class Hotspots {
     // TODO: Deploy support-mode hotspots to help adjacent defend-mode hotspots
     // Return any troops transported from these defend-mode hotspots to the support-mode hotspots. Are there any such
 
-    // TODO: Mobilize workers - If warriors are not enough and there are workers, then mobilize some of them
-    // Mark the mobilized workers with isMobilized=true
-
     // console.log(this.hotspots.map(h => h.warriors.length + " vs " + h.enemies.length + " / " + h.dummies.length).join(", "));
 
     return {

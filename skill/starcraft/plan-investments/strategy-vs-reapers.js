@@ -1,7 +1,7 @@
 import Strategy from "./strategy.js";
 
 const UNITS = [
-  "pylons", "gateways", "stalkers", "sentries", "probes"
+  "pylons", "gateways", "stalkers", "sentries"
 ];
 
 const CONDITION = {
@@ -12,7 +12,6 @@ const CONDITION = {
 const LIMIT = {
   pylons: 12,
   gateways: 4,
-  probes: 22,
 };
 
 const PARALLEL = {

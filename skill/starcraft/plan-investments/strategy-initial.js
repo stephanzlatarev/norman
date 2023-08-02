@@ -1,17 +1,12 @@
 import Strategy from "./strategy.js";
 
 const BUILDORDER = [
-  "bases", "probes", "probes",
-  "gateways", "probes",
-  "assimilators", "probes",
-  "bases", "probes", "probes", "probes", "zealots",
-  "cybernetics",
-  "assimilators",
-  "gateways", "probes", "zealots",
-  "pylons", "probes",
-  "robotics", "stalkers", "probes", "stalkers", "sentries", "sentries",
-  "nexuses", "observers", "stalkers",
-  "pylons", "stalkers", "stalkers", "stalkers", "stalkers", "stalkers",
+  "bases", "gateways", "cybernetics", "zealots",
+  "gateways", "zealots",
+  "pylons", "robotics",
+  "stalkers", "stalkers", "sentries", "sentries", "observers", "stalkers",
+  "pylons",
+  "stalkers", "stalkers", "stalkers", "stalkers", "stalkers",
 ];
 
 export default class Initial extends Strategy {

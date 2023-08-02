@@ -1,10 +1,9 @@
 import Strategy from "./strategy.js";
 
-const UNITS = ["pylons", "probes", "gateways", "zealots", "stalkers", "robotics", "observers"];
+const UNITS = ["pylons", "gateways", "zealots", "stalkers", "robotics", "observers"];
 
 const LIMIT = {
   pylons: 6,
-  probes: (situation) => (16 + situation.total.assimilators * 3),
   gateways: 3,
   robotics: (situation) => ((situation.complete.assimilators && (situation.total.zealots + situation.total.stalkers >= 24)) ? 1 : 0),
   observers: 1,

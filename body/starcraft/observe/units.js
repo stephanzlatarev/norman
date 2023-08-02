@@ -107,10 +107,7 @@ export function observeUnits(model, observation) {
     }
 
     // Handle special cases
-    if (unitType === "assimilator") {
-      image.set("isUtilized", (unit.assignedHarvesters >= unit.idealHarvesters));
-      image.set("isDepleted", (unit.vespeneContents <= 0));
-    } else if (unitType === "sentry") {
+    if (unitType === "sentry") {
       image.set("canUseGuardianShield", unit.energy > 75);
       image.set("guardian-shield", !!unit.buffIds.length);
     } else if (unitType === "mothership") {
