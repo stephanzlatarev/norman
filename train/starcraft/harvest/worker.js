@@ -42,6 +42,7 @@ export default class Worker {
         this.pos.y = unit.pos.y;
         this.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
 
+        this.isObserved = true;
         this.canAttack = (unit.weaponCooldown <= COOLDOWN_WEAPON);
 
         if (this.order.abilityId) {
@@ -80,6 +81,8 @@ export default class Worker {
         } // Tracing. Remove when ready to upload to norman
 
         return true;
+      } else if (this.canBeMissingInObservation) {
+        return true;
       } else {
         this.isActive = false;
         knownWorkerTags.delete(this.tag);
@@ -112,7 +115,7 @@ export default class Worker {
 
   isWorking() {
     const hasJob = (this.progress && ((this.progress.jobStatus === Status.Progressing) || (this.progress.jobStatus === Status.New)));
-    const jobIsActive = (!this.depot || this.depot.isActive);
+    const jobIsActive = (!this.depot || !!this.depot.isActive);
     return hasJob && jobIsActive;
   }
 

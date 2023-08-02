@@ -28,7 +28,7 @@ export default class Depot {
       this.mines.push(new Mine(source, this, line));
     }
     for (let i = 0; i < this.mines.length; i++) this.mines[i].index = i;
-    this.workerLimit = calculateWorkerLimit(this);
+    this.workerLimit = 0;
   }
 
   sync(units, resources) {
@@ -42,6 +42,7 @@ export default class Depot {
       } else {
         this.tag = undefined;
         this.isActive = false;
+        this.workerLimit = 0;
         this.cooldown = COOLDOWN_BUILD;
         return true;
       }
@@ -93,12 +94,23 @@ export default class Depot {
     this.isBoosted = !!unit.buffIds.length;
     this.harvesters = unit.assignedHarvesters;
 
+    let workerLimit = 0;
+    let workerBonusMineral = 0;
+    let workerBonusVespene = 0;
     let minesAreLess = false;
 
     for (let i = this.mines.length - 1; i >= 0; i--) {
       const mine = this.mines[i];
 
-      if (!mine.sync(units, resources)) {
+      if (mine.sync(units, resources)) {
+        if (mine.isMineral) {
+          workerLimit += 2;
+          workerBonusMineral = 2;
+        } else {
+          workerLimit += 3;
+          workerBonusVespene = 1;
+        }
+      } else {
         this.mines.splice(i, 1);
         minesAreLess = true;
       }
@@ -111,7 +123,7 @@ export default class Depot {
       }
     }
 
-    this.workerLimit = calculateWorkerLimit(this);
+    this.workerLimit = workerLimit + workerBonusMineral + workerBonusVespene;
 
     return !!this.mines.length;
   }
@@ -146,8 +158,6 @@ export default class Depot {
 
       const booking = mine.draftBooking(time, worker);
 
-      worker.trace("  opportunity:", JSON.stringify(booking));
-
       if (!bestMine || (booking.waitDuration < bestBooking.waitDuration) ||
           ((booking.waitDuration === bestBooking.waitDuration) && (booking.checkInTime < bestBooking.checkInTime))) {
         bestMine = mine;
@@ -159,8 +169,6 @@ export default class Depot {
     if (bestMine) {
       bestMine.makeReservation(worker, bestBooking);
       worker.startJob(this, MiningJob, bestMine, bestBooking);
-
-      worker.trace("mining route:", JSON.stringify(bestBooking));
     }
   }
 
@@ -190,10 +198,6 @@ export default class Depot {
     return this.mines[Math.floor(this.mines.length / 2)];
   }
 
-}
-
-function calculateWorkerLimit(depot) {
-  return depot.tag ? depot.mines.length * 2 + 2 : 0;
 }
 
 function getLineOfSources(depot, sources) {

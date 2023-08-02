@@ -2,10 +2,14 @@ import Monitor from "./monitor.js";
 import { AssimilatorJob } from "./job.js";
 
 const OFFSET_MINERAL = 0.95;
+const OFFSET_VESPENE = 1.95;
 const OFFSET_DEPOT = 3.0;
 const OFFSET_BOOST = 0.2;
 
-const DRILL_TIME = 46;
+const MINERAL_DRILL_PACK = 5;
+const MINERAL_DRILL_TIME = 46;
+const VESPENE_DRILL_PACK = 4;
+const VESPENE_DRILL_TIME = 31;
 
 export default class Mine {
 
@@ -20,6 +24,8 @@ export default class Mine {
     this.content = Infinity;
 
     this.bookings = new Map();
+    this.drillPack = this.isMineral ? MINERAL_DRILL_PACK : VESPENE_DRILL_PACK;
+    this.drillTime = this.isMineral ? MINERAL_DRILL_TIME : VESPENE_DRILL_TIME;
     this.lastCheckOutTime = 0;
     this.freeCheckInTime = 0;
 
@@ -67,7 +73,18 @@ export default class Mine {
 
       if (this.isActive && !unit) {
         return (this.isActive = false);
-      } else if (this.builder) {
+      } else if (!this.isActive && !this.builder && !this.isBuilding && !resources.get(this.source.tag)) {
+        // Check if the vespene geyser changed tag
+        const source = findUnitAtPoint(resources, this.source);
+
+        if (source) {
+          this.tag = source.tag;
+        }
+
+        return false;
+      }
+
+      if (this.builder) {
         unit = findUnitAtPoint(units, this.source);
 
         if (unit) {
@@ -78,16 +95,11 @@ export default class Mine {
           this.isBuilding = false;
           delete this.builder;
         }
-      } else if (this.isBuilding && unit && (unit.buildProgress >= 1)) {
+      }
+
+      if (this.isBuilding && unit && (unit.buildProgress >= 1)) {
         this.isActive = true;
         this.isBuilding = false;
-      } else if (!resources.get(this.source.tag)) {
-        // Check if the vespene geyser changed tag
-        let source = findUnitAtPoint(resources, this.source);
-
-        if (source) {
-          this.tag = source.tag;
-        }
       }
 
       if (unit) {
@@ -99,13 +111,19 @@ export default class Mine {
   }
 
   draftBooking(time, worker) {
-    const harvestPoint = calculatePathEnd(worker.pos, this.pos, OFFSET_MINERAL);
+    const harvestPoint = calculatePathEnd(worker.pos, this.pos, this.isMineral ? OFFSET_MINERAL : OFFSET_VESPENE);
     const boostPoint = calculatePathMid(worker.pos, harvestPoint);
     const boostDistance = calculateDistance(this.depot.pos, boostPoint);
     const distanceToHarvestPoint = calculateDistance(worker.pos, harvestPoint);
     const durationToHarvestPoint = estimateWalkTime(distanceToHarvestPoint);
     const estimatedArrivalTime = time + durationToHarvestPoint;
     const storePoint = calculatePathEnd(harvestPoint, this.depot.pos, OFFSET_DEPOT);
+
+    if (estimatedArrivalTime > this.freeCheckInTime) {
+      Monitor.add(Monitor.Mines, this.tag, "late", (estimatedArrivalTime - this.freeCheckInTime));
+    } else if (this.freeCheckInTime > estimatedArrivalTime) {
+      Monitor.add(Monitor.Mines, this.tag, "wait", (this.freeCheckInTime - estimatedArrivalTime));
+    }
 
     return {
       harvestPoint: harvestPoint,
@@ -120,7 +138,7 @@ export default class Mine {
 
   makeReservation(worker, booking) {
     this.bookings.set(worker, booking);
-    this.freeCheckInTime = booking.checkInTime + DRILL_TIME;
+    this.freeCheckInTime = booking.checkInTime + this.drillTime;
   }
 
   checkOut(time, worker) {
@@ -129,16 +147,16 @@ export default class Mine {
 
     // Calculate how much time this mine was idle or blocked
     const jobReservationTime = Math.max(booking.arrivalTime, this.lastCheckOutTime);
-    const jobDrillStartTime = time - DRILL_TIME;
+    const jobDrillStartTime = time - this.drillTime;
 
-    Monitor.add(Monitor.Mines, this.tag, Monitor.Used, DRILL_TIME);
+    Monitor.add(Monitor.Mines, this.tag, Monitor.Used, this.drillTime);
     Monitor.add(Monitor.Mines, this.tag, Monitor.Idle, (jobDrillStartTime - this.lastCheckOutTime));
     if (jobReservationTime < jobDrillStartTime) {
       Monitor.add(Monitor.Mines, this.tag, Monitor.Blocked, (jobDrillStartTime - jobReservationTime));
     }
 
     // Calculate next free check-in time
-    if (this.content > 5) {
+    if (this.content > this.drillPack) {
       const arrivals = [];
       for (const [worker, booking] of this.bookings) {
         if (worker.isActive) {
@@ -148,7 +166,7 @@ export default class Mine {
       arrivals.sort();
       let freeCheckInTime = time;
       for (const arrivalTime of arrivals) {
-        freeCheckInTime = Math.max(freeCheckInTime, arrivalTime) + DRILL_TIME;
+        freeCheckInTime = Math.max(freeCheckInTime, arrivalTime) + this.drillTime;
       }
       this.freeCheckInTime = freeCheckInTime;
     } else {
@@ -219,10 +237,4 @@ function findUnitAtPoint(units, pos) {
       return one;
     }
   }
-}
-
-
-/// TODO: Remove with tracing
-function show(pos) {
-  return (pos) ? pos.x.toFixed(2) + ":" + pos.y.toFixed(2) : "-";
 }
