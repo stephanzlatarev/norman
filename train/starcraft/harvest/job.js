@@ -13,11 +13,14 @@ class Job {
   }
 
   async perform(client, time, worker, depots, enemies) {
-    if (worker.progress && (worker.progress.jobStatus === Status.Complete)) return Status.Complete;
     if (!worker.progress || !worker.progress.taskStatus) worker.progress = { taskIndex: 0, taskStatus: Status.New, jobStatus: Status.New };
+    if (worker.progress.jobStatus === Status.Complete) return Status.Complete;
+    if (worker.progress.jobStatus === Status.Failed) return Status.Failed;
 
     const task = this.tasks[worker.progress.taskIndex];
     const status = await task.perform(client, time, worker, depots, enemies);
+
+    worker.progress.taskStatus = status;
 
     if (status === Status.Complete) {
       worker.progress.taskIndex++;
@@ -30,7 +33,6 @@ class Job {
       return (worker.progress.jobStatus = Status.Failed);
     }
 
-    worker.progress.taskStatus = status;
     return (worker.progress.jobStatus = Status.Progressing);
   }
 
@@ -46,11 +48,7 @@ class Task {
   async perform(client, time, worker, depots, enemies) {
     const status = this.proceed(worker, worker.progress.taskStatus, time, depots, enemies);
 
-    if (status === Status.Complete) {
-      return (worker.progress.taskStatus = Status.Complete);
-    } else if (status === Status.Progressing) {
-      return (worker.progress.taskStatus = Status.Progressing);
-    } else if (Array.isArray(status)) {
+    if (Array.isArray(status)) {
       const commands = status;
       const actions = [];
 
@@ -70,17 +68,21 @@ class Task {
       }
 
       return (worker.progress.taskStatus = Status.Progressing);
+    } else if (Status[status]) {
+      return status;
     }
 
-    console.log("Unknown status:", status);
-    return (worker.progress.taskStatus = Status.Failed);
+    console.log("Unknown task status:", status);
+    return Status.Failed;
   }
 
 }
 
 export const MiningJob = new Job(
   new Task("approach mine", (worker, status) => {
-    if ((status === Status.Progressing) && (squareDistance(worker.pos, worker.depot.pos) > worker.route.boostToMineSquareDistance)) {
+    if (!worker.target.content) {
+      return Status.Failed;
+    } else if ((status === Status.Progressing) && (squareDistance(worker.pos, worker.depot.pos) > worker.route.boostToMineSquareDistance)) {
       return Status.Complete;
     } else if ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag)) {
       return Status.Progressing;
@@ -88,6 +90,10 @@ export const MiningJob = new Job(
     return [{ abilityId: 298, targetUnitTag: worker.target.tag }];
   }),
   new Task("push to mine", (worker, status) => {
+    if (worker.isObserved && !worker.target.content) {
+      return Status.Failed;
+    }
+
     worker.canBeMissingInObservation = (worker.target.source.type === "vespene");
     if ((status === Status.Progressing) && (!worker.isObserved || (worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag))) {
       return Status.Complete;
@@ -100,7 +106,10 @@ export const MiningJob = new Job(
     ];
   }),
   new Task("drill", (worker, status, time) => {
-    if ((status === Status.Progressing) && (worker.order.abilityId === 299)) {
+    if (worker.isObserved && !worker.target.content) {
+      worker.canBeMissingInObservation = false;
+      return Status.Failed;
+    } else if ((status === Status.Progressing) && (worker.order.abilityId === 299)) {
       worker.target.checkOut(time, worker);
       return Status.Complete;
     } else if (!worker.isObserved || ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === worker.target.tag))) {
