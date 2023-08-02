@@ -4,8 +4,10 @@ import Worker from "./worker.js";
 import Monitor from "./monitor.js";
 import { WORKERS } from "../units.js";
 
-const LIMIT_WORKERS = 72;
+const LIMIT_WORKERS = 75;
 const THRESHOLD_INITIAL_BUILD_ORDER = 14;
+const THRESHOLD_FREE_JOBS_FOR_EXPANSION = 16;
+const THRESHOLD_EXPAND_AT_WILL = 1200;
 const THRESHOLD_HARVESTERS_FOR_ASSIMILATOR = 15;
 
 export default class Economy {
@@ -126,7 +128,10 @@ export default class Economy {
   }
 
   expand(observation) {
-    if (observation.playerCommon.minerals >= 400) {
+    if (
+      (observation.playerCommon.minerals >= THRESHOLD_EXPAND_AT_WILL) ||
+      ((observation.playerCommon.minerals >= 400) && (countFreeJobs(this.depots, this.workers) <= THRESHOLD_FREE_JOBS_FOR_EXPANSION))
+    ) {
       const expansionSite = findClosestExpansionSite(this.depots);
       const builder = expansionSite ? findClosestAvailableWorker(this.workers, expansionSite) : null;
 
@@ -189,6 +194,16 @@ export default class Economy {
     }
   }
 
+}
+
+function countFreeJobs(depots, workers) {
+  let jobs = 0;
+
+  for (const depot of depots) {
+    jobs += depot.workerLimit;
+  }
+
+  return Math.max(jobs - workers.length, 0);
 }
 
 function findClosestExpansionSite(depots) {
