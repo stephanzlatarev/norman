@@ -195,9 +195,9 @@ export default class Brain {
       const count = situation.ordered[unit];
 
       if (count) {
-        situation.resources.minerals -= MINERALS[unit] * count;
-        situation.resources.vespene -= VESPENE[unit] * count;
-        situation.resources.food -= FOOD[unit] * count;
+        if (MINERALS[unit]) situation.resources.minerals -= MINERALS[unit] * count;
+        if (VESPENE[unit]) situation.resources.vespene -= VESPENE[unit] * count;
+        if (FOOD[unit]) situation.resources.food -= FOOD[unit] * count;
       }
     }
 
