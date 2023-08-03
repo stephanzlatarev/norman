@@ -17,7 +17,7 @@ export default async function(client, hotspot) {
 async function command(client, unitTag, abilityId, targetUnitTag, targetWorldSpacePos) {
   const command = { unitTags: [unitTag], abilityId: abilityId, targetUnitTag: targetUnitTag, targetWorldSpacePos: targetWorldSpacePos, queueCommand: false };
   const response = await client.action({ actions: [{ actionRaw: { unitCommand: command } }] });
-  if (response.result[0] !== 1) console.log(JSON.stringify(command), ">>", JSON.stringify(response));
+  if (response.result[0] !== 1) console.log("defend:", JSON.stringify(command), ">>", JSON.stringify(response));
 }
 
 function findCenterOfEnemies(enemies) {

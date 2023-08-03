@@ -19,7 +19,7 @@ export default async function(client, hotspot) {
 async function command(client, unitTags, abilityId, targetUnitTag, targetWorldSpacePos) {
   const command = { unitTags: unitTags, abilityId: abilityId, targetUnitTag: targetUnitTag, targetWorldSpacePos: targetWorldSpacePos, queueCommand: false };
   const response = await client.action({ actions: [{ actionRaw: { unitCommand: command } }] });
-  if (response.result[0] !== 1) console.log(JSON.stringify(command), ">>", JSON.stringify(response));
+  if (response.result[0] !== 1) console.log("attack:", JSON.stringify(command), ">>", JSON.stringify(response));
 }
 
 function weaponTime(unit) {
@@ -144,6 +144,7 @@ function getFightPair(matrix, units, unitIndex, enemies, enemyIndex) {
   };
 }
 
+// TODO: Make sure our unit can attack the enemy unit. Add matrix.canAttack which checks if enemy isFlying the CAN_HIT_AIR[unit]. Same as for !isFlying for phoenixes
 function chooseFightPair(matrix, units, enemies) {
   let bestUnitIndex;
   let bestEnemyIndex;
