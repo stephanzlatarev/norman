@@ -198,6 +198,7 @@ export default class Pattern {
 
   remove(object) {
     if (object === this) {
+      this.callback = null;
       this.memory.remove(this);
     }
   }

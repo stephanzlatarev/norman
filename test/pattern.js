@@ -479,9 +479,18 @@ describe("Memory patterns", function() {
         infos: [ { node: "OBJECT", length: 5 } ]
       }).listen(callback);
 
-      for (let i = 0; i < 5; i++) {
+      // Set values at different indexes
+      for (let i = 1; i < 5; i++) {
         notification = "<last notification>";
         object.set(i, i);
+        await memory.notifyPatternListeners();
+        assert.equal(notification, "[]", "Notification is not as expected");
+      }
+
+      // Set different values
+      for (let i = 0; i < 5; i++) {
+        notification = "<last notification>";
+        object.set(3, i);
         await memory.notifyPatternListeners();
         assert.equal(notification, "[]", "Notification is not as expected");
       }
@@ -701,13 +710,15 @@ describe("Memory patterns", function() {
       assertPatternMatch(when, [[1]]);
 
       // Time goes by
-      game.set("time", 10);
-      await memory.notifyPatternListeners();
+      for (let time = 2; time < 22; time++) {
+        game.set("time", time);
+        await memory.notifyPatternListeners();
+      }
 
       // More time goes by
       game.set("time", 22);
       await memory.notifyPatternListeners();
-      assert.equal(notificationsWhen, 2, "When pattern didn't notify about changes");
+      assert.equal(notificationsWhen, 22, "When pattern didn't notify about changes");
       assertPatternMatch(when, [[22]]);
       for (const take of when) then.fix(take);
 

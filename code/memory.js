@@ -91,7 +91,7 @@ export default class Memory {
   }
 
   async notifyPatternListeners() {
-    for (const pattern of this.patterns) {
+    for (const pattern of [...this.patterns]) {
       await pattern.notifyListener();
     }
   }
