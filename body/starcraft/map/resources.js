@@ -117,7 +117,8 @@ function selectNewBase(model, map) {
   let closestDistance = Infinity;
 
   for (const base of map.bases) {
-    if (!closestBase || ((base.squareDistanceToHomeBase < closestDistance) && !model.memory.one({ x: base.centerX, y: base.centerY }))) {
+    if (model.memory.one({ x: base.centerX, y: base.centerY })) continue;
+    if (!closestBase || (base.squareDistanceToHomeBase < closestDistance)) {
       closestBase = base;
       closestDistance = base.squareDistanceToHomeBase;
     }
