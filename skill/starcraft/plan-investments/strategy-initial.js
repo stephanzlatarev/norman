@@ -2,9 +2,11 @@ import Strategy from "./strategy.js";
 
 const BUILDORDER = [
   "bases", "gateways",
-  "bases", "cybernetics", "zealots", "gateways", "zealots",
-  "robotics", "pylons",
-  "stalkers", "stalkers", "sentries", "observers",
+  "bases", "cybernetics", "zealots",
+  "gateways", "zealots",
+  "robotics",
+  "pylons", "stalkers", "stalkers",
+  "pylons", "observers", "sentries",
   "nexuses",
 ];
 
