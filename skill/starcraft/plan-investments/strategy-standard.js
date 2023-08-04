@@ -17,10 +17,10 @@ const CONDITION = {
 
 const LIMIT = {
   pylons: (situation) => ((220 - situation.complete.nexuses * 15) / 8),
-  gateways: (situation) => Math.min(situation.total.nexuses * 2, 5),
+  gateways: (situation) => Math.ceil(situation.total.probes / 15 - situation.total.stargates),
   forges: 1,
   beacons: 1,
-  stargates: (situation) => Math.min(situation.complete.nexuses, 4),
+  stargates: (situation) => Math.ceil(situation.total.probes / 15 - situation.total.gateways),
   cybernetics: 1,
   robotics: 1,
   motherships: 1,
