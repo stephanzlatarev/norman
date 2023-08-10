@@ -7,4 +7,5 @@ sandbox
 todo.txt
 secrets.json
 samples*
+tool/train/skill/
 train/**/*.tf

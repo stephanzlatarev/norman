@@ -1,8 +1,14 @@
 import fs from "fs";
 import * as tf from "@tensorflow/tfjs-node";
-import Playbook from "./playbook.js";
-import mirrors from "./mirrors.js";
 
+// TODO: Load all javascript files with name starting with "playbook-"
+import playbook1 from "./skill/playbook-initial-rush.js";
+import playbook2 from "./skill/playbook-create-frontline.js";
+
+const BRAIN = "/data/brain.tf";
+const PLAYBOOKS = [playbook1, playbook2];
+
+const SAMPLES_COUNT = 5000;
 const INPUT_SIZE = 400;
 const OUTPUT_SIZE = 100;
 const LEARNING_EPOCHS = 10;
@@ -12,15 +18,39 @@ const OUTPUT_ACTIVATION_FUNCTION = "sigmoid";
 const OPTIMIZER_FUNCTION = "adam";
 const LOSS_FUNCTION = "meanSquaredError";
 
-async function run(model, playbook, input, output) {
+function generateSamples() {
+  const input = [];
+  const output = [];
+
+  for (const playbook of PLAYBOOKS) {
+    for (let i = 0; i < SAMPLES_COUNT; i++) {
+      const sample = playbook();
+      input.push(sample.input);
+      output.push(sample.output);
+    }
+  }
+
+  return {
+    length: input.length,
+    input: input,
+    inputSize: INPUT_SIZE,
+    output: output,
+    outputSize: OUTPUT_SIZE,
+  };
+}
+
+async function run(model) {
   tf.engine().startScope();
 
+  const samples = generateSamples();
+  const input = tf.tensor(samples.input, [samples.input.length, samples.inputSize]);
+  const output = tf.tensor(samples.output, [samples.output.length, samples.outputSize]);
   const info = await model.fit(input, output, { epochs: LEARNING_EPOCHS, batchSize: LEARNING_BATCH, shuffle: true, verbose: false });
-  const predictions = await model.predict(input, { batchSize: playbook.input.length }).array();
+  const predictions = await model.predict(input, { batchSize: samples.input.length }).array();
 
   const result = {
     loss: info.history.loss.reduce((best, current) => Math.min(current, best), Infinity),
-    error: error(playbook.output, predictions),
+    error: error(samples.output, predictions),
   };
 
   tf.engine().endScope();
@@ -113,23 +143,17 @@ function show(iteration, result) {
 }
 
 async function train() {
-  const playbook = new Playbook().mirror(mirrors).read();
-  console.log("Training with playbook of", playbook.input.length, "plays");
-
-  const file = "/data/brain.tf";
-  const model = fs.existsSync(file) ? await load(file) : create();
-  const input = tf.tensor(playbook.input, [playbook.input.length, INPUT_SIZE]);
-  const output = tf.tensor(playbook.output, [playbook.output.length, OUTPUT_SIZE]);
+  const model = fs.existsSync(BRAIN) ? await load(BRAIN) : create();
 
   model.summary();
 
   let iteration = 0;
   while (++iteration > 0) {
-    const attempt = await run(model, playbook, input, output);
+    const attempt = await run(model);
 
     show(iteration, attempt);
 
-    await save(model, file);
+    await save(model, BRAIN);
   }
 }
 

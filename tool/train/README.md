@@ -1,7 +1,6 @@
 To train a brain based on playbooks:
 
-1. Add all play books (with file extension ".book") into this folder
-1. Add mirror.js with all applicable mirrors
+1. Copy a skill into a folder named `skill` within this folder
 1. Build and deploy the trainer with `./deploy.bat`
 
 To download the brain:

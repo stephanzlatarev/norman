@@ -8,7 +8,7 @@ metadata:
   labels:
     module: trainer
 spec:
-  replicas: 6
+  replicas: 3
   serviceName: trainer
   selector:
     matchLabels:
