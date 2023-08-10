@@ -7,20 +7,20 @@ export async function loadSkills(memory) {
 }
 
 async function loadFolder(memory, folder) {
-  const subfolders = fs.readdirSync(folder, { withFileTypes: true }).filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
+  const mapping = folder + "/mapping.json";
 
-  if (subfolders.length) {
-    for (const subfolder of subfolders) {
-      await loadFolder(memory, folder + "/" + subfolder);
+  if (fs.existsSync(mapping)) {
+    const descriptor = JSON.parse(fs.readFileSync(mapping));
+
+    if (descriptor.label && descriptor.given && descriptor.when && descriptor.then) {
+      await loadSkill(memory, folder, descriptor);
     }
   } else {
-    const mapping = folder + "/mapping.json";
+    const subfolders = fs.readdirSync(folder, { withFileTypes: true }).filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
 
-    if (fs.existsSync(mapping)) {
-      const descriptor = JSON.parse(fs.readFileSync(mapping));
-
-      if (descriptor.label && descriptor.given && descriptor.when && descriptor.then) {
-        await loadSkill(memory, folder, descriptor);
+    if (subfolders.length) {
+      for (const subfolder of subfolders) {
+        await loadFolder(memory, folder + "/" + subfolder);
       }
     }
   }
