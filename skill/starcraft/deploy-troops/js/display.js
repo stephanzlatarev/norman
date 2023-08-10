@@ -1,4 +1,3 @@
-import ttys from "ttys";
 
 export default function display(data, cols, rows) {
   const pages = Math.floor(data.length / cols / rows);
@@ -10,17 +9,17 @@ export default function display(data, cols, rows) {
       }
     }
 
-    ttys.stdout.write("\x1b[0m");
-    ttys.stdout.write("|\n");
+    process.stdout.write("\x1b[0m");
+    process.stdout.write("|\n");
   }
 
   for (let col = 0; col < cols; col++) {
-    ttys.stdout.write("+");
+    process.stdout.write("+");
     for (let page = 1; page < pages; page++) {
-      ttys.stdout.write("-");
+      process.stdout.write("-");
     }
   }
-  ttys.stdout.write("/\n");
+  process.stdout.write("/\n");
 }
 
 function cell(value, color) {
@@ -43,8 +42,8 @@ function cell(value, color) {
     rgb = [c, c, c];
   }
 
-  ttys.stdout.write("\x1b[48;2;" + rgb.join(";") + "m");
-  ttys.stdout.write(" ");
+  process.stdout.write("\x1b[48;2;" + rgb.join(";") + "m");
+  process.stdout.write(" ");
 }
 
 function light(value) {

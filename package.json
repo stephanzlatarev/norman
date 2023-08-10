@@ -14,7 +14,6 @@
   },
   "devDependencies": {
     "mocha": "^10.2.0",
-    "nodemon": "^2.0.18",
-    "ttys": "^0.0.3"
+    "nodemon": "^2.0.18"
   }
 }
