@@ -1,6 +1,5 @@
 import fs from "fs";
 import https from "https";
-import ttys from "ttys";
 
 const COMPETITION = 22;
 const BOTS = {
@@ -200,38 +199,38 @@ function showStats(stats, competitionMaps, mapNames, bots, ranks, rates) {
 }
 
 function line(competitionMaps, mapNames, data) {
-  ttys.stdout.write(cell(data.opponent, 25));
+  process.stdout.write(cell(data.opponent, 25));
 
-  ttys.stdout.write("  ");
-  ttys.stdout.write("\x1b[48;2;" + percentageAsColor(data) + "m");
-  ttys.stdout.write(percentageAsText(data));
-  ttys.stdout.write("\x1b[0m");
+  process.stdout.write("  ");
+  process.stdout.write("\x1b[48;2;" + percentageAsColor(data) + "m");
+  process.stdout.write(percentageAsText(data));
+  process.stdout.write("\x1b[0m");
 
-  ttys.stdout.write("  ");
+  process.stdout.write("  ");
   for (let i = 9; i >= 0; i--) {
     if (i < data.results.length) {
-      ttys.stdout.write(data.results[i] ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
+      process.stdout.write(data.results[i] ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
     }
-    ttys.stdout.write(" ");
+    process.stdout.write(" ");
   }
-  ttys.stdout.write("\x1b[0m");
+  process.stdout.write("\x1b[0m");
 
-  ttys.stdout.write("  ");
+  process.stdout.write("  ");
   for (const mapName of competitionMaps) {
     for (let i = 0; i < Math.max(data.maps.length, 10); i++) {
       if ((9 - i < data.maps.length) && (mapNames[data.maps[9 - i]] === mapName)) {
-        ttys.stdout.write(data.results[9 - i] ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
+        process.stdout.write(data.results[9 - i] ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
       } else {
-        ttys.stdout.write("\x1b[0m");
+        process.stdout.write("\x1b[0m");
       }
-      ttys.stdout.write((i < mapName.length) ? mapName[i] : " ");
+      process.stdout.write((i < mapName.length) ? mapName[i] : " ");
     }
-    ttys.stdout.write("\x1b[0m");
-    ttys.stdout.write("  ");
+    process.stdout.write("\x1b[0m");
+    process.stdout.write("  ");
   }
 
-  ttys.stdout.write("\x1b[0m");
-  ttys.stdout.write("\n");
+  process.stdout.write("\x1b[0m");
+  process.stdout.write("\n");
 }
 
 function cell(text, size) {
