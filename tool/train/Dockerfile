@@ -5,6 +5,7 @@ WORKDIR /app
 COPY ./package.json .
 RUN npm install
 
-COPY . .
+COPY ./train.js ./train.js
+COPY ./skill ./skill/
 
 CMD [ "node", "./train.js" ]
