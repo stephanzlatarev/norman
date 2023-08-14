@@ -4,10 +4,11 @@ import * as tf from "@tensorflow/tfjs-node";
 const BRAIN = "/data/brain.tf";
 const PLAYBOOKS = "./skill/playbook/";
 
-const SAMPLES_COUNT = 5000;
+const SAMPLES_COUNT = 10000;
+const CHALLENGER_HANDICAP = 100;
 const INPUT_SIZE = 400;
 const OUTPUT_SIZE = 100;
-const LEARNING_EPOCHS = 10;
+const LEARNING_EPOCHS = 100;
 const LEARNING_BATCH = 1024;
 const HIDDEN_ACTIVATION_FUNCTION = "relu";
 const OUTPUT_ACTIVATION_FUNCTION = "sigmoid";
@@ -23,19 +24,22 @@ async function loadPlaybooks() {
     playbooks.push({
       name: script.substring(0, script.length - 3),
       sample: module.default,
+      share: 1 / scripts.length,
     });
   }
 
   return playbooks;
 }
 
-function generateSamples(playbooks) {
+function generateSamples(playbooks, share) {
   const source = [];
   const input = [];
   const output = [];
 
   for (const playbook of playbooks) {
-    for (let i = 0; i < SAMPLES_COUNT; i++) {
+    const count = SAMPLES_COUNT * (share ? share[playbook.name] : 1 / playbooks.length);
+
+    for (let i = 0; i < count; i++) {
       const sample = playbook.sample();
       source.push(playbook.name);
       input.push(sample.input);
@@ -53,66 +57,44 @@ function generateSamples(playbooks) {
   };
 }
 
-async function run(playbooks, model) {
-  tf.engine().startScope();
-
-  const samples = generateSamples(playbooks);
-  const input = tf.tensor(samples.input, [samples.input.length, samples.inputSize]);
-  const output = tf.tensor(samples.output, [samples.output.length, samples.outputSize]);
-  const info = await model.fit(input, output, { epochs: LEARNING_EPOCHS, batchSize: LEARNING_BATCH, shuffle: true, verbose: false });
-  const predictions = await model.predict(input, { batchSize: samples.input.length }).array();
-
-  const result = {
-    loss: info.history.loss.reduce((best, current) => Math.min(current, best), Infinity),
-    error: error(samples, predictions),
-  };
-
-  tf.engine().endScope();
-
-  return result;
-}
-
 function error(samples, predictions) {
-  const errors = { total: [] };
   const result = {};
 
   for (let i = 0; i < predictions.length; i++) {
-    let error = 0;
+    const playbook = samples.source[i];
 
+    let error = 0;
     for (let j = 0; j < predictions[i].length; j++) {
       error = Math.max(error, Math.abs(samples.output[i][j] - predictions[i][j]));
     }
 
-    errors.total.push(error);
-    if (!errors[samples.source[i]]) errors[samples.source[i]] = [];
-    errors[samples.source[i]].push(error);
-  }
-
-  for (const key in errors) {
-    const errs = errors[key];
-    errs.sort((a, b) => (a - b));
-
-    let pass = 0;
-    let fail = 0;
-    for (const error of errs) {
-      if (error < 0.01) {
-        pass++;
-      } else if (error > 0.99) {
-        fail++;
-      }
+    let stats = result[playbook];
+    if (!stats) {
+      stats = { share: 0, error: 0, pass: 0, fail: 0, count: 0 };
+      result[playbook] = stats;
     }
-
-    result[key] = {
-      pass: pass / errs.length,
-      fail: fail,
-      best: errs[0],
-      a: errs[Math.floor(errs.length * 0.9)],
-      b: errs[Math.floor(errs.length * 0.99)],
-      c: errs[Math.floor(errs.length * 0.999)],
-      d: errs[Math.floor(errs.length * 0.9999)],
-      worst: errs[errs.length - 1],
-    };
+    stats.count++;
+    stats.error += error;
+    if (error < 0.01) {
+      stats.pass++;
+    } else if (error > 0.99) {
+      stats.fail++;
+    }
   }
+
+  let errorSum = 0;
+  let errorCount = 0;
+  for (const playbook in result) {
+    const stats = result[playbook];
+    stats.pass /= stats.count;
+    stats.error /= stats.count;
+    stats.share = stats.count / predictions.length;
+
+    errorSum += stats.error;
+    errorCount++;
+  }
+
+  result.error = errorCount ? errorSum / errorCount : Infinity;
 
   return result;
 }
@@ -122,6 +104,7 @@ function create() {
   model.add(tf.layers.dense({ inputShape: [INPUT_SIZE], units: INPUT_SIZE, activation: HIDDEN_ACTIVATION_FUNCTION }));
   model.add(tf.layers.dense({ units: OUTPUT_SIZE, activation: OUTPUT_ACTIVATION_FUNCTION }));
   model.compile({ optimizer: OPTIMIZER_FUNCTION, loss: LOSS_FUNCTION });
+  model.summary();
   return model;
 }
 
@@ -147,41 +130,108 @@ async function save(model, file) {
   });
 }
 
-function show(iteration, results) {
-  console.log(new Date().toISOString().split("T")[1].split(".")[0], "iteration:", iteration, "loss:", results.loss);
+async function train() {
+  const playbooks = await loadPlaybooks();
+  let controlSamples = generateSamples(playbooks);
 
-  for (const key in results.error) {
-    const line = [""];
-    const error = results.error[key];
+  const share = {};
+  for (const playbook of playbooks) share[playbook.name] = 1 / playbooks.length;
 
-    line.push("best: " + error.best.toFixed(5));
-    line.push(error.a.toFixed(2));
-    line.push(error.b.toFixed(2));
-    line.push(error.c.toFixed(2));
-    line.push(error.d.toFixed(2));
-    line.push("worst: " + error.worst.toFixed(5));
-    line.push("pass: " + (error.pass * 100).toFixed(2) + "%");
-    line.push("fail: " + error.fail);
+  let leaderModel = fs.existsSync(BRAIN) ? await load(BRAIN) : create();
+  let leaderStudySamples = generateSamples(playbooks, share);
 
-    line.push(key);
+  let challengerModel = fs.existsSync(BRAIN) ? await load(BRAIN) : create();
+  let challengerStudySamples = generateSamples(playbooks, share);
 
-    console.log(line.join("\t"));
+  let challengerHandicap = 0;
+  let challengerBestError = Infinity;
+  let wip = playbooks.length;
+  while (wip) {
+    const leaderStats = await run(leaderModel, leaderStudySamples, controlSamples);
+    show("L", playbooks, leaderStats);
+
+    const challengerStats = await run(challengerModel, challengerStudySamples, controlSamples);
+    show("C", playbooks, challengerStats);
+
+    if (challengerStats.error < challengerBestError) {
+      challengerBestError = challengerStats.error;
+      challengerHandicap = 0;
+    } else {
+      challengerHandicap++;
+    }
+
+    if (leaderStats.error / challengerStats.error > 1.01) {
+      console.log("Challenger becomes the new leader. Control samples are changed.");
+      const oldLeaderModel = leaderModel;
+
+      leaderModel = challengerModel;
+      leaderStudySamples = challengerStudySamples;
+
+      wip = updatePlaybookShare(share, challengerStats.controlAfter);
+
+      challengerModel = oldLeaderModel;
+      challengerStudySamples = generateSamples(playbooks, share);
+      challengerBestError = Infinity;
+      challengerHandicap = 0;
+
+      controlSamples = generateSamples(playbooks);
+    } else if (challengerHandicap > CHALLENGER_HANDICAP) {
+      console.log("Challenger changes its study samples.");
+      wip = updatePlaybookShare(share, leaderStats.controlAfter);
+      challengerStudySamples = generateSamples(playbooks, share);
+      challengerBestError = Infinity;
+      challengerHandicap = 0;
+    }
+
+    await save(leaderModel, BRAIN);
   }
 }
 
-async function train() {
-  const playbooks = await loadPlaybooks();
-  const model = fs.existsSync(BRAIN) ? await load(BRAIN) : create();
+function updatePlaybookShare(share, stats) {
+  let wip = 0;
 
-  model.summary();
+  for (const playbook in share) wip += (1.0 - stats[playbook].pass);
+  for (const playbook in share) share[playbook] = (1.0 - stats[playbook].pass) / wip;
 
-  let iteration = 0;
-  while (++iteration > 0) {
-    const attempt = await run(playbooks, model);
+  return wip;
+}
 
-    show(iteration, attempt);
+async function run(model, studySamples, controlSamples) {
+  tf.engine().startScope();
 
-    await save(model, BRAIN);
+  const controlSamplesCount = controlSamples.input.length;
+  const inputControlSamples = tf.tensor(controlSamples.input, [controlSamplesCount, controlSamples.inputSize]);
+  const studySamplesCount = studySamples.input.length;
+  const inputStudySamples = tf.tensor(studySamples.input, [studySamplesCount, studySamples.inputSize]);
+  const outputStudySamples = tf.tensor(studySamples.output, [studySamplesCount, studySamples.outputSize]);
+
+  const controlBefore = error(controlSamples, await model.predict(inputControlSamples, { batchSize: controlSamplesCount }).array());
+  const studyBefore = error(studySamples, await model.predict(inputStudySamples, { batchSize: studySamplesCount }).array());
+
+  await model.fit(inputStudySamples, outputStudySamples, { epochs: LEARNING_EPOCHS, batchSize: LEARNING_BATCH, shuffle: true, verbose: false });
+
+  const controlAfter = error(controlSamples, await model.predict(inputControlSamples, { batchSize: controlSamplesCount }).array());
+  const studyAfter = error(studySamples, await model.predict(inputStudySamples, { batchSize: studySamplesCount }).array());
+
+  tf.engine().endScope();
+
+  return { studyBefore: studyBefore, studyAfter: studyAfter, controlBefore: controlBefore, controlAfter: controlAfter, error: controlAfter.error };
+}
+
+function show(title, playbooks, stats) {
+  for (const playbook of playbooks) {
+    const sa = stats.studyAfter[playbook.name];
+    const ps = sa.pass - stats.studyBefore[playbook.name].pass;
+    const pss = (ps >= 0) ? (ps !== 0) ? "+" : " " : "";
+    const share = sa.share;
+    const ca = stats.controlAfter[playbook.name];
+    const pc = ca.pass - stats.controlBefore[playbook.name].pass;
+    const pcs = (pc >= 0) ? (pc !== 0) ? "+" : " " : "";
+
+    console.log(`[${title} ${Math.round(share * 100)}%]`, playbook.name, "\t",
+      `${(sa.pass * 100).toFixed(2)}% (${pss}${(ps * 100).toFixed(2)}%) ${sa.error.toExponential(4)}`, "/",
+      `${(ca.pass * 100).toFixed(2)}% (${pcs}${(pc * 100).toFixed(2)}%) ${ca.error.toExponential(4)}`
+    );
   }
 }
 
