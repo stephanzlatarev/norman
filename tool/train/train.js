@@ -1,7 +1,7 @@
 import fs from "fs";
 import * as tf from "@tensorflow/tfjs-node";
 
-const BRAIN = "/data/brain.tf";
+const BRAIN = (fs.existsSync("/data") ? "/data" : ".") + "/brain.tf";
 const PLAYBOOKS = "./skill/playbook/";
 
 const SAMPLES_COUNT = 10000;
