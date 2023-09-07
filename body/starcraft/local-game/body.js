@@ -22,7 +22,7 @@ export default class LocalGame extends Game {
 
     for (let i = 0; i < 12; i++) {
       try {
-        await this.client.connect({ host: "localhost", port: 5000 });
+        await this.client.connect({ host: "127.0.0.1", port: 5000 });
         break;
       } catch (_) {
         await new Promise(r => setTimeout(r, 5000));
