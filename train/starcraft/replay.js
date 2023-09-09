@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 import starcraft from "@node-sc2/proto";
 
 const SC2_HOME = "C:\\games\\StarCraft II";
-const SC2_VERSION = "Base90136";
+const SC2_VERSION = "Base90870";
 
 const client = starcraft();
 
