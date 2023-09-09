@@ -76,8 +76,8 @@ async function go() {
 async function goBot(competition, mapNames, bots, ranks, botId, botName) {
   const count = (await call("GET", "/api/matches/?limit=1&bot=" + botId)).count;
   const offset = Math.max(count - LIMIT, 0);
-  const matches = await call("GET", "/api/matches/?offset=" + offset + "&limit=" + LIMIT + "&bot=" + botId);
-  const matchesList = matches.results.filter(match => (match.round && (match.created.localeCompare(competition.date_opened) > 0)));
+  const matches = await call("GET", "/api/matches/?ordering=started&offset=" + offset + "&limit=" + LIMIT + "&bot=" + botId);
+  const matchesList = matches.results.filter(match => (match.round && (match.created.localeCompare(competition.date_opened) > 0) && match.result));
 
   const { stats, maps } = getStats(botId, botName, matchesList);
   const rates = getSuccessRateByDivision(stats, bots, ranks);
@@ -129,8 +129,6 @@ function getStats(botId, botName, matches) {
 
   for (let i = matches.length - 1; i >= 0; i--) {
     const match = matches[i];
-    if (!match.result) continue;
-
     const opponent = (match.result.bot2_name === botName) ? match.result.bot1_name : match.result.bot2_name;
     if (!stats[opponent]) stats[opponent] = { maps: [], results: [], matches: 0, wins: 0 };
     if (stats[opponent].matches >= 10) continue;
