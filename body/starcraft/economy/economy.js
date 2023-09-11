@@ -176,19 +176,19 @@ export default class Economy {
 
   async hire(observation) {
     if (this.workers.length < LIMIT_WORKERS) {
-      const hasMinerals = (observation.playerCommon.minerals >= 50);
-      const hasFood = ((observation.playerCommon.foodCap - observation.playerCommon.foodUsed) >= 1);
+      let freeJobs = countFreeJobs(this.depots, this.workers);
 
-      if (hasMinerals && hasFood) {
-        for (const depot of this.depots) {
-          const ok = await depot.produce(this.client);
+      for (const depot of this.depots) {
+        if (freeJobs < 1) break;
+        if (observation.playerCommon.minerals < 50) break;
+        if ((observation.playerCommon.foodCap - observation.playerCommon.foodUsed) < 1) break;
 
-          if (ok) {
-            this.workers.push(new Worker(null, depot));
+        if (await depot.produce(this.client)) {
+          this.workers.push(new Worker(null, depot));
 
-            observation.playerCommon.minerals -= 50;
-            observation.playerCommon.foodUsed += 1;
-          }
+          observation.playerCommon.minerals -= 50;
+          observation.playerCommon.foodUsed += 1;
+          freeJobs--;
         }
       }
     }
