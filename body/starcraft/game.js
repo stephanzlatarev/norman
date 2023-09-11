@@ -19,7 +19,7 @@ export default class Game {
     await this.connect();
 
     const observation = (await this.client.observation()).observation;
-    const base = observation.rawData.units.find(unit => (unit.unitType === 59));
+    const base = observation.rawData.units.find(unit => (unit.unitType === 59)) || { pos: { x: 0, y: 0 } };
     const map = read(this.model, await this.client.gameInfo(), observation, { x: base.pos.x, y: base.pos.y });
 
     this.economy = new Economy(this.client, map, base);
