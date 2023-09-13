@@ -11,6 +11,9 @@ const MINERAL_DRILL_TIME = 46;
 const VESPENE_DRILL_PACK = 4;
 const VESPENE_DRILL_TIME = 32;
 
+const MINERAL_WORKER_LIMIT = 2;
+const VESPENE_WORKER_LIMIT = 3;
+
 export default class Mine {
 
   constructor(source, depot, line) {
@@ -19,6 +22,7 @@ export default class Mine {
 
     this.isMineral = (source.type === "mineral");
     this.isActive = this.isMineral;
+    this.workerLimit = this.isMineral ? MINERAL_WORKER_LIMIT : 0;
     this.isBuilding = false;
 
     this.content = Infinity;
@@ -65,6 +69,7 @@ export default class Mine {
       } else {
         this.content = 0;
         this.isActive = false;
+        this.workerLimit = 0;
       }
 
       return (unit && this.content);
@@ -72,7 +77,9 @@ export default class Mine {
       unit = units.get(this.tag);
 
       if (this.isActive && !unit) {
-        return (this.isActive = false);
+        this.isActive = false;
+        this.workerLimit = 0;
+        return false;
       } else if (!this.isActive && !this.builder && !this.isBuilding && !resources.get(this.source.tag)) {
         // Check if the vespene geyser changed tag
         const source = findUnitAtPoint(resources, this.source);
@@ -99,12 +106,20 @@ export default class Mine {
 
       if (this.isBuilding && unit && (unit.buildProgress >= 1)) {
         this.isActive = true;
+        this.workerLimit = VESPENE_WORKER_LIMIT;
         this.isBuilding = false;
       }
 
       if (this.isActive) {
         this.content = unit.vespeneContents;
-        return this.content ? true : (this.isActive = false);
+
+        if (this.content) {
+          return true;
+        } else {
+          this.isActive = false;
+          this.workerLimit = 0;
+          return false;
+        }
       } else {
         return true;
       }

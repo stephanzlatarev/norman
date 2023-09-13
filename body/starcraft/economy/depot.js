@@ -29,6 +29,8 @@ export default class Depot {
     }
     for (let i = 0; i < this.mines.length; i++) this.mines[i].index = i;
     this.workerLimit = 0;
+    this.workerLimitMineral = 0;
+    this.workerLimitVespene = 0;
   }
 
   sync(units, resources) {
@@ -43,6 +45,8 @@ export default class Depot {
         this.tag = undefined;
         this.isActive = false;
         this.workerLimit = 0;
+        this.workerLimitMineral = 0;
+        this.workerLimitVespene = 0;
         this.cooldown = COOLDOWN_BUILD;
         return true;
       }
@@ -95,6 +99,8 @@ export default class Depot {
     this.harvesters = unit.assignedHarvesters;
 
     let workerLimit = 0;
+    let workerLimitMineral = 0;
+    let workerLimitVespene = 0;
     let workerBonusMineral = 0;
     let workerBonusVespene = 0;
     let minesAreLess = false;
@@ -103,12 +109,16 @@ export default class Depot {
       const mine = this.mines[i];
 
       if (mine.sync(units, resources)) {
-        if (mine.isMineral) {
-          workerLimit += 2;
-          workerBonusMineral = 2;
-        } else {
-          workerLimit += 3;
-          workerBonusVespene = 1;
+        workerLimit += mine.workerLimit;
+
+        if (mine.workerLimit) {
+          if (mine.isMineral) {
+            workerLimitMineral += mine.workerLimit;
+            workerBonusMineral = 2;
+          } else {
+            workerLimitVespene += mine.workerLimit;
+            workerBonusVespene = 1;
+          }
         }
       } else {
         this.mines.splice(i, 1);
@@ -124,6 +134,8 @@ export default class Depot {
     }
 
     this.workerLimit = workerLimit + workerBonusMineral + workerBonusVespene;
+    this.workerLimitMineral = workerLimitMineral + workerBonusMineral;
+    this.workerLimitVespene = workerLimitVespene + workerBonusVespene;
 
     return !!this.mines.length;
   }

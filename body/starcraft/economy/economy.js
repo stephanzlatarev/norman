@@ -5,10 +5,10 @@ import Monitor from "./monitor.js";
 import { WORKERS } from "../units.js";
 
 const LIMIT_WORKERS = 75;
+const RATIO_VESPENE_TO_MINERAL_JOBS = (2 * 3 + 1) / (8 * 2 + 2);
 const THRESHOLD_INITIAL_BUILD_ORDER = 14;
 const THRESHOLD_FREE_JOBS_FOR_EXPANSION = 16;
 const THRESHOLD_EXPAND_AT_WILL = 1200;
-const THRESHOLD_HARVESTERS_FOR_ASSIMILATOR = 15;
 
 export default class Economy {
 
@@ -143,14 +143,15 @@ export default class Economy {
   }
 
   equip(observation) {
-    if (observation.playerCommon.minerals >= 75) {
-      const mine = findAssimilatorConstructionSite(this.depots);
-      const builder = mine ? findClosestAvailableWorker(this.workers, mine) : null;
+    if (observation.playerCommon.minerals < 75) return;
+    if (countVespeneToMineralJobsRatio(this.depots, this.workers) >= RATIO_VESPENE_TO_MINERAL_JOBS) return;
 
-      if (builder) {
-        mine.build(builder);
-        observation.playerCommon.minerals -= 75;
-      }
+    const mine = findAssimilatorConstructionSite(this.depots);
+    const builder = mine ? findClosestAvailableWorker(this.workers, mine) : null;
+
+    if (builder) {
+      mine.build(builder);
+      observation.playerCommon.minerals -= 75;
     }
   }
 
@@ -206,6 +207,20 @@ function countFreeJobs(depots, workers) {
   return Math.max(jobs - workers.length, 0);
 }
 
+function countVespeneToMineralJobsRatio(depots, workers) {
+  let jobsMineral = 0;
+  let jobsVespene = 0;
+
+  for (const depot of depots) {
+    jobsMineral += depot.workerLimitMineral;
+    jobsVespene += depot.workerLimitVespene;
+  }
+
+  jobsMineral = Math.min(jobsMineral, Math.max(workers.length - jobsVespene, 0));
+
+  return jobsMineral ? jobsVespene / jobsMineral : 0;
+}
+
 function findClosestExpansionSite(depots) {
   let closestDepot;
   let closestDistance = Infinity;
@@ -221,21 +236,24 @@ function findClosestExpansionSite(depots) {
 }
 
 function findAssimilatorConstructionSite(depots) {
+  let site;
+
   for (const depot of depots) {
-    if (depot.isActive && (depot.harvesters >= THRESHOLD_HARVESTERS_FOR_ASSIMILATOR)) {
-      let site;
-
+    if (depot.isActive) {
       for (const mine of depot.mines) {
+        // Skip mineral fields and depleted vespene geysers
         if (mine.isMineral || !mine.content) continue;
-        if (mine.builder || mine.isBuilding) return;
-        if (!mine.isActive && !mine.isBuilding && !mine.builder) {
-          site = mine;
-        }
-      }
 
-      return site;
+        // If an assimilator is already being built, then don't start another
+        if (mine.builder || mine.isBuilding) return;
+
+        // Otherwise, this is a good construction site. Don't return it immediately and check if another is being built
+        if (!mine.isActive) site = mine;
+      }
     }
   }
+
+  return site;
 }
 
 function findClosestAvailableWorker(workers, site) {
