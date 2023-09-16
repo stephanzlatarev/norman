@@ -1,6 +1,5 @@
-import { SIZE } from "./battlefield.js";
 
-export const EMPTY = heatmap(SIZE * SIZE, 0);
+export const EMPTY = heatmap(100, 0);
 
 export function random(positions, count) {
   if (count >= 1) {
@@ -22,7 +21,7 @@ export function add(heatmap, positions, value) {
       add(heatmap, position, value);
     }
   } else {
-    const spot = positions.x + positions.y * SIZE;
+    const spot = positions.x + positions.y * 10;
     heatmap[spot] = Math.min(heatmap[spot] + value, 1);
   }
 }
@@ -38,24 +37,22 @@ function heatmap(size, value) {
 }
 
 export const ALL_POSITIONS = [];
-for (let x = 0; x < SIZE; x++) {
-  for (let y = 0; y < SIZE; y++) {
+for (let x = 0; x < 10; x++) {
+  for (let y = 0; y < 10; y++) {
     ALL_POSITIONS.push({ x: x, y: y });
   }
 }
 
 export const ENEMY_POSITIONS = [];
-const ENEMY_SIDE = Math.floor(SIZE / 2) - 1;
-for (let x = 0; x <= ENEMY_SIDE; x++) {
-  for (let y = 0; y <= ENEMY_SIDE; y++) {
+for (let x = 0; x < 4; x++) {
+  for (let y = 0; y < 4; y++) {
     ENEMY_POSITIONS.push({ x: x, y: y });
   }
 }
 
 export const OWN_POSITIONS = [];
-const OWN_SIDE = Math.floor(SIZE / 2) + 1;
-for (let x = OWN_SIDE; x < SIZE; x++) {
-  for (let y = OWN_SIDE; y < SIZE; y++) {
+for (let x = 6; x < 10; x++) {
+  for (let y = 6; y < 10; y++) {
     OWN_POSITIONS.push({ x: x, y: y });
   }
 }

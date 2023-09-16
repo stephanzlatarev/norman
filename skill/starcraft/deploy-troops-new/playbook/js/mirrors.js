@@ -1,4 +1,3 @@
-import { SIZE } from "./battlefield.js";
 
 const LENSES = [
   null,
@@ -13,29 +12,29 @@ const LENSES = [
 ];
 
 function index2spot(index) {
-  return { x: index % SIZE, y: Math.floor(index / SIZE) };
+  return { x: index % 10, y: Math.floor(index / 10) };
 }
 
 function spot2index(spot) {
-  return spot.x + spot.y * SIZE;
+  return spot.x + spot.y * 10;
 }
 
 // Flip from left to right
 function flip(spot) {
-  return { x: SIZE - 1 - spot.x, y: spot.y };
+  return { x: 9 - spot.x, y: spot.y };
 }
 
 // Rotate by 90 degrees
 function rotate(spot) {
-  return { x: SIZE - 1 - spot.y, y: spot.x };
+  return { x: 9 - spot.y, y: spot.x };
 }
 
 function mirror(data, mirror) {
   const result = [...data];
 
   if (mirror) {
-    for (let page = 0; page < data.length; page += SIZE * SIZE) {
-      for (let index = 0; index < SIZE * SIZE; index++) {
+    for (let page = 0; page < data.length; page += 100) {
+      for (let index = 0; index < 100; index++) {
         result[page + index] = data[page + mirror(index)];
       }
     }

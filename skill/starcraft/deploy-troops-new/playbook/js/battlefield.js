@@ -1,5 +1,4 @@
-
-export const SIZE = 10;
+import display from "./display.js";
 
 export default class Battlefield {
 
@@ -24,9 +23,9 @@ export default class Battlefield {
     // Calculate enemy pressure at frontline
     for (const point of this.enemyPositions.line) {
       const pressure = this.enemyMilitary[point.spot];
-      if (isAtFrontLine(this.front, point.x + 1, point.y)) this.front.pressure[point.x + 1 + point.y * SIZE] += pressure;
-      if (isAtFrontLine(this.front, point.x, point.y + 1)) this.front.pressure[point.x + point.y * SIZE + SIZE] += pressure;
-      if (isAtFrontLine(this.front, point.x + 1, point.y + 1)) this.front.pressure[point.x + 1 + point.y * SIZE + SIZE] += pressure;
+      if (isAtFrontLine(this.front, point.x + 1, point.y)) this.front.pressure[point.x + 1 + point.y * 10] += pressure;
+      if (isAtFrontLine(this.front, point.x, point.y + 1)) this.front.pressure[point.x + point.y * 10 + 10] += pressure;
+      if (isAtFrontLine(this.front, point.x + 1, point.y + 1)) this.front.pressure[point.x + 1 + point.y * 10 + 10] += pressure;
     }
 
     // Populate enemy warriors and economy behind the frontline
@@ -49,16 +48,16 @@ export default class Battlefield {
         this.ownEconomy[this.ownPositions.base[epos].spot] = 1;
       }
     } else {
-      this.ownEconomy[SIZE * SIZE - 1] = 1;
+      this.ownEconomy[99] = 1;
     }
 
     // Calculate optimal counter deployment at frontline
     let maxPressure = 0;
     for (const point of this.ownPositions.line) {
       let pressure = 0;
-      if (isAtFrontLine(this.front, point.x - 1, point.y)) pressure += this.front.pressure[point.x - 1 + point.y * SIZE];
-      if (isAtFrontLine(this.front, point.x, point.y - 1)) pressure += this.front.pressure[point.x + point.y * SIZE - SIZE];
-      if (isAtFrontLine(this.front, point.x - 1, point.y - 1)) pressure += this.front.pressure[point.x - 1 + point.y * SIZE - SIZE];
+      if (isAtFrontLine(this.front, point.x - 1, point.y)) pressure += this.front.pressure[point.x - 1 + point.y * 10];
+      if (isAtFrontLine(this.front, point.x, point.y - 1)) pressure += this.front.pressure[point.x + point.y * 10 - 10];
+      if (isAtFrontLine(this.front, point.x - 1, point.y - 1)) pressure += this.front.pressure[point.x - 1 + point.y * 10 - 10];
 
       this.front.pressure[point.spot] = pressure;
       maxPressure = Math.max(maxPressure, pressure);
@@ -70,9 +69,12 @@ export default class Battlefield {
     return this;
   }
 
+  display() {
+    display([...this.ownMilitary, ...this.ownEconomy, ...this.enemyMilitary, ...this.enemyEconomy, ...this.deployment], 10, 10);
+  }
 }
 
-const HEATMAP_SIZE = SIZE * SIZE;
+const HEATMAP_SIZE = 100;
 const EMPTY_HEATMAP = heatmap(0);
 
 function heatmap(value) {
@@ -86,21 +88,21 @@ function heatmap(value) {
 }
 
 function createFrontline() {
-  const anchor = Math.floor(Math.random() * (SIZE - 2)) + 1;
-  const center = { x: anchor, y: anchor, spot: anchor + anchor * SIZE };
+  const anchor = Math.floor(Math.random() * 8) + 1;
+  const center = { x: anchor, y: anchor, spot: anchor + anchor * 10 };
 
   const line = [center];
   const field = heatmap(null);
 
   // Stretch left and down
   let point = center;
-  while ((point.x > 0) && (point.y < SIZE - 1)) {
+  while ((point.x > 0) && (point.y < 9)) {
     if (Math.random() < 0.5) {
       // Go left
       point = { x: point.x - 1, y: point.y, spot: point.spot - 1 };
     } else {
       // Go down
-      point = { x: point.x, y: point.y + 1, spot: point.spot + SIZE };
+      point = { x: point.x, y: point.y + 1, spot: point.spot + 10 };
     }
     line.push(point);
   }
@@ -108,13 +110,13 @@ function createFrontline() {
 
   // Stretch right and up
   point = center;
-  while ((point.x < SIZE - 1) && (point.y > 0)) {
+  while ((point.x < 9) && (point.y > 0)) {
     if (Math.random() < 0.5) {
       // Go right
       point = { x: point.x + 1, y: point.y, spot: point.spot + 1 };
     } else {
       // Go up
-      point = { x: point.x, y: point.y - 1, spot: point.spot - SIZE };
+      point = { x: point.x, y: point.y - 1, spot: point.spot - 10 };
     }
     line.push(point);
   }
@@ -131,13 +133,13 @@ function getEnemyPositions(front) {
   const base = [];
   const line = [];
 
-  for (let x = 0; x < SIZE; x++) {
+  for (let x = 0; x < 10; x++) {
     if (isAtFrontLine(front, x, 0)) break;
 
-    for (let y = 0; y < SIZE; y++) {
+    for (let y = 0; y < 10; y++) {
       if (isAtFrontLine(front, x, y)) break;
 
-      const point = { x: x, y: y, spot: x + y * SIZE };
+      const point = { x: x, y: y, spot: x + y * 10 };
       if (isAtFrontLine(front, x + 1, y) || isAtFrontLine(front, x, y + 1)) {
         line.push(point);
       } else {
@@ -153,13 +155,13 @@ function getOwnPositions(front) {
   const base = [];
   const line = [];
 
-  for (let x = SIZE - 1; x >= 0; x--) {
-    if (isAtFrontLine(front, x, SIZE - 1)) break;
+  for (let x = 9; x >= 0; x--) {
+    if (isAtFrontLine(front, x, 9)) break;
 
-    for (let y = SIZE - 1; y >= 0; y--) {
+    for (let y = 9; y >= 0; y--) {
       if (isAtFrontLine(front, x, y)) break;
 
-      const point = { x: x, y: y, spot: x + y * SIZE };
+      const point = { x: x, y: y, spot: x + y * 10 };
       if (isAtFrontLine(front, x - 1, y) || isAtFrontLine(front, x, y - 1)) {
         line.push(point);
       } else {
@@ -172,7 +174,7 @@ function getOwnPositions(front) {
 }
 
 function isAtFrontLine(front, x, y) {
-  if ((x < 0) || (x >= SIZE) || (y < 0) || (y >= SIZE)) return false;
+  if ((x < 0) || (x >= 10) || (y < 0) || (y >= 10)) return false;
 
-  return (front.field[x + y * SIZE] === "x");
+  return (front.field[x + y * 10] === "x");
 }

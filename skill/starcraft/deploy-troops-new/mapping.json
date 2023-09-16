@@ -1,0 +1,34 @@
+{
+  "-label": "deploy troops",
+
+  "given": {
+    "nodes": {
+      "GOAL": { "label": "win the game", "goal": true }
+    },
+    "infos": [
+      { "node": "GOAL" }
+    ]
+  },
+
+  "when": {
+    "nodes": {
+      "TROOPS": { "label": "Troops deployment" },
+      "OWN_MILITARY": { "label": "Heatmap own military" },
+      "OWN_ECONOMY": { "label": "Heatmap own economy" },
+      "ENEMY_MILITARY": { "label": "Heatmap enemy military" },
+      "ENEMY_ECONOMY": { "label": "Heatmap enemy economy" }
+    },
+    "infos": [
+      { "node": "OWN_MILITARY", "length": 100 },
+      { "node": "OWN_ECONOMY", "length": 100 },
+      { "node": "ENEMY_MILITARY", "length": 100 },
+      { "node": "ENEMY_ECONOMY", "length": 100 }
+    ]
+  },
+
+  "then": {
+    "infos": [
+      { "node": "TROOPS", "length": 100 }
+    ]
+  }
+}
