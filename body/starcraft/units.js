@@ -45,7 +45,19 @@ export const DAMAGE = {
   78:  5, // phoenix
   79:  5, // carrier
   80:  6, // voidray
-  84:  5, // voidray
+  84:  5, // probe
+};
+
+export const DAMAGE_PER_STEP = {
+  10: (22.8 / STEPS_PER_SECOND), // mothership
+  73: (18.6 / STEPS_PER_SECOND), // zealot
+  74: ( 9.7 / STEPS_PER_SECOND), // stalker
+  74: (37.2 / STEPS_PER_SECOND), // templar
+  77: ( 8.4 / STEPS_PER_SECOND), // sentry
+  78: (12.7 / STEPS_PER_SECOND), // phoenix
+  79: (37.4 / STEPS_PER_SECOND), // carrier
+  80: (16.8 / STEPS_PER_SECOND), // voidray
+  84: (4.67 / STEPS_PER_SECOND), // probe
 };
 
 export const OWN_UNITS = {
