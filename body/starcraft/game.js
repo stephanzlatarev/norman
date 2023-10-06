@@ -4,7 +4,7 @@ import observe from "./observe/observe.js";
 import act from "./act/act.js";
 import Combat from "./combat/combat.js";
 import Economy from "./economy/economy.js";
-import { LOOPS_PER_STEP, LOOPS_PER_SECOND, WARRIORS, WORKERS } from "./units.js";
+import { LOOPS_PER_STEP, LOOPS_PER_SECOND, WORKERS } from "./units.js";
 
 const print = console.log;
 
@@ -23,7 +23,8 @@ export default class Game {
     const base = observation.rawData.units.find(unit => (unit.unitType === 59)) || { pos: { x: 0, y: 0 } };
     const map = read(this.model, await this.client.gameInfo(), observation, { x: base.pos.x, y: base.pos.y });
 
-    this.combat = new Combat(this.client);
+    this.units = new Map();
+    this.combat = new Combat();
     this.economy = new Economy(this.client, map, base);
 
     setTimeout(this.run.bind(this));
@@ -60,11 +61,13 @@ export default class Game {
 
         const time = this.model.observation.gameLoop;
         const units = new Map();
-        const warriors = new Map();
         const enemies = new Map();
         const resources = new Map();
-        const obstacles = new Map();
+        const alive = new Map();
         for (const unit of this.model.observation.rawData.units) {
+          sync(unit, this.units);
+          alive.set(unit.tag, true);
+
           if (unit.owner === owner) {
             if (this.model.unitImages && WORKERS[unit.unitType]) {
               const image = this.model.unitImages[unit.tag];
@@ -74,17 +77,17 @@ export default class Game {
             }
 
             units.set(unit.tag, unit);
-
-            if (WARRIORS[unit.unitType]) {
-              warriors.set(unit.tag, unit);
-            } else {
-              obstacles.set(unit.tag, unit);
-            }
           } else if (unit.owner === enemy) {
             enemies.set(unit.tag, unit);
           } else {
             resources.set(unit.tag, unit);
-            obstacles.set(unit.tag, unit);
+          }
+        }
+
+        // Remove dead units
+        for (const tag of this.units.keys()) {
+          if (!alive.get(tag)) {
+            this.units.delete(tag);
           }
         }
 
@@ -98,7 +101,7 @@ export default class Game {
         }
 
         // Run the combat body system
-        await this.combat.run(warriors, enemies, obstacles);
+        await combat(this);
 
         // Step in the game
         await this.client.step({ count: LOOPS_PER_STEP });
@@ -123,6 +126,42 @@ export default class Game {
     }
   }
 
+}
+
+function sync(unit, units) {
+  let image = units.get(unit.tag);
+
+  if (image) {
+    image.pos = unit.pos;
+    image.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
+    image.health = unit.health;
+    image.shield = unit.shield;
+  } else {
+    units.set(unit.tag, {
+      tag: unit.tag,
+      kind: { damage: (unit.unitType === 73) },
+      owner: unit.owner,
+      pos: unit.pos,
+      order: unit.orders.length ? unit.orders[0] : { abilityId: 0 },
+      radius: unit.radius,
+      health: unit.health,
+      shield: unit.shield,
+    });
+  }
+}
+
+async function combat(game) {
+  const commands = game.combat.run(game.units);
+  const actions = commands.map(command => ({ actionRaw: { unitCommand: command } }));
+  const response = await game.client.action({ actions: actions });
+
+  for (let i = 0; i < response.result.length; i++) {
+    const result = response.result[i];
+
+    if (result !== 1) {
+      console.log(JSON.stringify(commands[i]), ">>", result);
+    }
+  }
 }
 
 function twodigits(value) {
