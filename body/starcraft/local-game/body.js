@@ -1,5 +1,6 @@
 import { spawn } from "child_process";
 import Game from "../game.js";
+import Trace from "./trace.js";
 
 export default class LocalGame extends Game {
 
@@ -7,6 +8,10 @@ export default class LocalGame extends Game {
     super(model);
 
     this.config = config;
+
+    if (this.config.trace) {
+      this.trace = new Trace();
+    }
   }
 
   async connect() {
@@ -35,6 +40,22 @@ export default class LocalGame extends Game {
       race: this.config.playerSetup[0].race,
       options: { raw: true },
     });
+  }
+
+  async step() {
+    if (this.trace) await this.trace.show(this.client);
+
+    await super.step();
+  }
+
+  async command(commands) {
+    await super.command(commands);
+
+    if (this.trace && this.units) {
+      for (const command of commands) {
+        this.trace.command(command, this.units);
+      }
+    }
   }
 
 }

@@ -101,10 +101,10 @@ export default class Game {
         }
 
         // Run the combat body system
-        await combat(this);
+        await this.command(this.combat.run(this.units));
 
         // Step in the game
-        await this.client.step({ count: LOOPS_PER_STEP });
+        await this.step();
       }
     } catch (error) {
       console.log(error);
@@ -113,6 +113,23 @@ export default class Game {
     }
 
     this.detach();
+  }
+
+  async step() {
+    await this.client.step({ count: LOOPS_PER_STEP });
+  }
+
+  async command(commands) {
+    const actions = commands.map(command => ({ actionRaw: { unitCommand: command } }));
+    const response = await this.client.action({ actions: actions });
+
+    for (let i = 0; i < response.result.length; i++) {
+      const result = response.result[i];
+
+      if (result !== 1) {
+        console.log(JSON.stringify(commands[i]), ">>", result);
+      }
+    }
   }
 
   async detach() {
@@ -147,20 +164,6 @@ function sync(unit, units) {
       health: unit.health,
       shield: unit.shield,
     });
-  }
-}
-
-async function combat(game) {
-  const commands = game.combat.run(game.units);
-  const actions = commands.map(command => ({ actionRaw: { unitCommand: command } }));
-  const response = await game.client.action({ actions: actions });
-
-  for (let i = 0; i < response.result.length; i++) {
-    const result = response.result[i];
-
-    if (result !== 1) {
-      console.log(JSON.stringify(commands[i]), ">>", result);
-    }
   }
 }
 
