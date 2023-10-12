@@ -43,7 +43,9 @@ export default class LocalGame extends Game {
   }
 
   async step() {
-    if (this.trace) await this.trace.show(this.client);
+    if (this.trace) {
+      await this.trace.step(this.client);
+    }
 
     await super.step();
   }

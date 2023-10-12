@@ -10,12 +10,18 @@ export default class Trace {
   constructor() {
     this.lines = [];
     this.spheres = [];
+    this.selection = null;
   }
 
   command(command, units) {
+    const commandedUnitTag = command.unitTags[0];
+
+    if (!this.selection) this.selection = getSelection(units);
+    if (this.selection && !this.selection[commandedUnitTag]) return;
+
     if (command.abilityId === 3674) {
-      const start = units.get(command.unitTags[0]).pos;
-      const end = units.get(command.targetUnitTag).pos;
+      const start = units.get(commandedUnitTag).body;
+      const end = units.get(command.targetUnitTag).body;
       this.arrow(Trace.COLOR.ATTACK, start, end);
     }
   }
@@ -31,13 +37,28 @@ export default class Trace {
     }
   }
 
-  async show(client) {
+  async step(client) {
     await client.debug({ debug: [{ draw: { lines: this.lines, spheres: this.spheres } }] });
 
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     this.lines.length = 0;
     this.spheres.length = 0;
+    this.selection = null;
   }
 
+}
+
+function getSelection(units) {
+  const selection = {};
+  let isSelected = false;
+
+  for (const unit of units.values()) {
+    if (unit.isSelected) {
+      selection[unit.tag] = true;
+      isSelected = true;
+    }
+  }
+
+  return isSelected ? selection : false;
 }
