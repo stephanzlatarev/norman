@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 import starcraft from "@node-sc2/proto";
 
 const SC2_HOME = "C:\\games\\StarCraft II";
-const SC2_VERSION = "Base90870";
+const SC2_VERSION = "Base91115";
 
 const client = starcraft();
 
@@ -18,7 +18,7 @@ async function play(args) {
 
   spawn("..\\Versions\\" + SC2_VERSION + "\\SC2_x64.exe", [
     "-displaymode", "0", "-windowx", "0", "-windowy", "0",
-    "-windowwidth", "1920", "-windowwidth", "1440",
+    "-windowwidth", "1920", "-windowheight", "1440",
     "-listen", "127.0.0.1", "-port", "5000"
   ], {
     cwd: SC2_HOME + "\\Support64"
