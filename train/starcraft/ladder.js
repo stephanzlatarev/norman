@@ -1,14 +1,15 @@
 import fs from "fs";
 import https from "https";
 
-const COMPETITION = 22;
+const COMPETITION = 23;
 const BOTS = {
-  518: "norman",
+//  518: "norman",
   605: "nida",
 }
 
 const TRACE = false;
 const LIMIT = 1000;
+const HISTORY = 30;
 const SECRETS = JSON.parse(fs.readFileSync("./train/starcraft/secrets.json"));
 const COOKIES = [];
 
@@ -131,7 +132,7 @@ function getStats(botId, botName, matches) {
     const match = matches[i];
     const opponent = (match.result.bot2_name === botName) ? match.result.bot1_name : match.result.bot2_name;
     if (!stats[opponent]) stats[opponent] = { maps: [], results: [], matches: 0, wins: 0 };
-    if (stats[opponent].matches >= 10) continue;
+    if (stats[opponent].matches >= HISTORY) continue;
 
     const data = stats[opponent];
 
@@ -205,7 +206,7 @@ function line(competitionMaps, mapNames, data) {
   process.stdout.write("\x1b[0m");
 
   process.stdout.write("  ");
-  for (let i = 9; i >= 0; i--) {
+  for (let i = HISTORY - 1; i >= 0; i--) {
     if (i < data.results.length) {
       process.stdout.write(data.results[i] ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
     }
@@ -215,9 +216,9 @@ function line(competitionMaps, mapNames, data) {
 
   process.stdout.write("  ");
   for (const mapName of competitionMaps) {
-    for (let i = 0; i < Math.max(data.maps.length, 10); i++) {
-      if ((9 - i < data.maps.length) && (mapNames[data.maps[9 - i]] === mapName)) {
-        process.stdout.write(data.results[9 - i] ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
+    for (let i = 0; i < Math.max(data.maps.length, HISTORY); i++) {
+      if ((9 - i < data.maps.length) && (mapNames[data.maps[HISTORY - i - 1]] === mapName)) {
+        process.stdout.write(data.results[HISTORY - i - 1] ? "\x1b[48;2;0;160;0m": "\x1b[48;2;160;0;0m");
       } else {
         process.stdout.write("\x1b[0m");
       }
