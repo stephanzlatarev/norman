@@ -1,10 +1,15 @@
+import Mission from "./mission.js";
 
 export default function(missions, commands) {
   for (const mission of missions) {
     const target = mission.target;
 
     for (const warrior of mission.warriors) {
-      createAttackCommand(commands, warrior, target);
+      if (mission.type === Mission.Scout) {
+        createMoveCommand(commands, warrior, target);
+      } else {
+        createAttackCommand(commands, warrior, target);
+      }
     }
   }
 }

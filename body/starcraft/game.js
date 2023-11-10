@@ -101,7 +101,7 @@ export default class Game {
         }
 
         // Run the combat body system
-        await this.command(this.combat.run(time, this.units));
+        await this.command(this.combat.run(time, this.units, getHackMissions(units, enemies)));
 
         // Step in the game
         await this.step();
@@ -202,3 +202,19 @@ function twodigits(value) {
   if (value < 10) return "0" + value;
   return value;
 }
+
+// Hack bot micro arena
+
+let isScoutMissionComplete = false;
+function getHackMissions(units, enemies) {
+  if (!isScoutMissionComplete) {
+    if ((enemies.size > 1) || Array.from(units.values()).find(one => ((Math.abs(one.pos.x - 36) < 1) && (Math.abs(one.pos.y - 32) < 1)))) {
+      isScoutMissionComplete = true;
+    } else {
+      return [{ type: "scout", x: 36, y: 32 }];
+    }
+  }
+
+  return null;
+}
+

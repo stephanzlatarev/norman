@@ -2,7 +2,11 @@ import Mission from "./mission.js";
 
 let base;
 
-export default function(units) {
+export default function(units, plans) {
+  if (plans && plans.length) {
+    return convertPlansToMissions(plans);
+  }
+
   if (!base) {
     base = selectBase(units);
   }
@@ -12,6 +16,16 @@ export default function(units) {
 
   if (target) {
     missions.push(new Mission(Mission.Assault, target));
+  }
+
+  return missions;
+}
+
+function convertPlansToMissions(plans) {
+  const missions = [];
+
+  for (const plan of plans) {
+    missions.push(new Mission(plan.type, plan));
   }
 
   return missions;

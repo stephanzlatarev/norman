@@ -6,10 +6,10 @@ const LOG = false;
 
 export default class Combat {
 
-  run(time, units) {
+  run(time, units, plans) {
     if (!units.size) return [];
 
-    const missions = plan(units);
+    const missions = plan(units, plans);
     const commands = [];
 
     if (missions.length) {

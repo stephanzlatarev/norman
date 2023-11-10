@@ -1,10 +1,10 @@
 
 export default class Mission {
 
-  static Assault = Symbol("assault");
-  static Diversion = Symbol("diversion");
-  static Future = Symbol("future");
-  static Scout = Symbol("scout");
+  static Assault = "assault";
+  static Diversion = "diversion";
+  static Future = "future";
+  static Scout = "scout";
 
   constructor(type, target) {
     this.type = type;
@@ -18,10 +18,20 @@ export default class Mission {
 
   describe() {
     return {
-      type: this.type.description,
-      target: (this.target && this.target.tag) ? this.target.tag : null,
+      type: this.type,
+      target: describeTarget(this.target),
       warriors: this.warriors.map(warrior => warrior.tag),
     };
   }
 
+}
+
+function describeTarget(target) {
+  if (!target) {
+    return null;
+  } else if (target.tag) {
+    return target.tag;
+  } else if (target.x && target.y) {
+    return target.x.toFixed(2) + ":" + target.y.toFixed(2);
+  }
 }
