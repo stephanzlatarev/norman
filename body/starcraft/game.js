@@ -65,7 +65,7 @@ export default class Game {
         const resources = new Map();
         const alive = new Map();
         for (const unit of this.model.observation.rawData.units) {
-          sync(unit, this.units);
+          sync(unit, this.units, owner, enemy);
           alive.set(unit.tag, true);
 
           if (unit.owner === owner) {
@@ -101,7 +101,7 @@ export default class Game {
         }
 
         // Run the combat body system
-        await this.command(this.combat.run(this.units));
+        await this.command(this.combat.run(time, this.units));
 
         // Step in the game
         await this.step();
@@ -145,26 +145,57 @@ export default class Game {
 
 }
 
-function sync(unit, units) {
+function sync(unit, units, owner, enemy) {
   let image = units.get(unit.tag);
 
-  if (image) {
-    image.pos = unit.pos;
-    image.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
-    image.health = unit.health;
-    image.shield = unit.shield;
-  } else {
-    units.set(unit.tag, {
+  if (!image) {
+    const body = getBody(unit);
+    const weapon = getWeapon(unit);
+    const armor = {};
+
+    image = {
       tag: unit.tag,
-      kind: { damage: (unit.unitType === 73) },
-      owner: unit.owner,
-      pos: unit.pos,
-      order: unit.orders.length ? unit.orders[0] : { abilityId: 0 },
-      radius: unit.radius,
-      health: unit.health,
-      shield: unit.shield,
-    });
+      nick: unit.tag.slice(unit.tag.length - 3),
+      type: unit.unitType,
+      isOwn: (unit.owner === owner),
+      isWarrior: (unit.owner === owner) && (weapon.damage > 0),
+      isEnemy: (unit.owner === enemy),
+      body: { ...body },
+      armor: { ...armor },
+      weapon: { ...weapon },
+    };
+
+    units.set(unit.tag, image);
   }
+
+  image.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
+  image.body.x = unit.pos.x;
+  image.body.y = unit.pos.y;
+  image.armor.health = unit.health + unit.shield;
+  image.weapon.cooldown = getCooldown(unit, image.weapon);
+  image.isSelected = unit.isSelected;
+}
+
+// TODO: Read from the game
+function getBody(unit) {
+  if (unit.unitType === 73) return { radius: 0.5, speed: 2.25 / 16 };
+  if (unit.unitType === 74) return { radius: 0.75, speed: 2.95 / 16 };
+
+  return { radius: 0.5, speed: 2.25 / 16 };
+}
+
+//TODO: Read from the game
+function getWeapon(unit) {
+  if (unit.unitType === 60) return { damage: 0, range: 0, isMelee: false, isRanged: false, speed: 0, attacks: 0 };
+  if (unit.unitType === 73) return { damage: 8, range: 0.1, isMelee: true, isRanged: false, speed: 16 * 1.20 / 2, attacks: 2 };
+  if (unit.unitType === 74) return { damage: 13, range: 6.0, isMelee: false, isRanged: true, speed: 25 * 1.20, attacks: 1 };
+
+  return { damage: 8, range: 0.1, isMelee: true, isRanged: false, speed: 16 * 1.20 / 2, attacks: 2 };
+}
+
+function getCooldown(unit, weapon) {
+  if ((weapon.attacks > 1) && (unit.weaponCooldown > weapon.speed)) return 0;
+  return unit.weaponCooldown;
 }
 
 function twodigits(value) {

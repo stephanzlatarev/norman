@@ -1,39 +1,45 @@
+import command from "./command.js";
 import engage from "./engage.js";
-import maneuver from "./maneuver.js";
+import plan from "./plan.js";
+
+const LOG = false;
 
 export default class Combat {
 
-  run(units) {
-    // Update combat properties of units
-    for (const unit of units.values()) {
-      sync(unit);
+  run(time, units) {
+    if (!units.size) return [];
+
+    const missions = plan(units);
+    const commands = [];
+
+    if (missions.length) {
+      engage(units, missions);
+      command(missions, commands);
     }
 
-    // Body skill "engage"
-    const fights = engage(units);
+    if (LOG) log(time, units, missions, commands);
 
-    // Body skill "maneuver"
-    return maneuver(fights);
+    return commands;
   }
 
 }
 
-function sync(unit) {
-  if (unit.combat) {
-    // Update combat properties
-    unit.combat.health = unit.health + unit.shield;
-    unit.combat.order = null;
-  } else {
-    // Initialize combat properties
-    unit.combat = {
-      // Fixed properties
-      isWarrior: (unit.owner === 1) && unit.kind && (unit.kind.damage > 0),
-      isEnemy: (unit.owner === 2),
-      isObstacle: !unit.kind || !unit.kind.damage,
+function log(time, units, missions, commands) {
+  const logs = [];
 
-      // Changing properties
-      health: unit.health + unit.shield,
-      order: null,
-    };
+  logs.push("# Time " + time);
+
+  for (const unit of units.values()) {
+    logs.push(JSON.stringify(unit));
   }
+
+  for (const mission of missions) {
+    logs.push(JSON.stringify(mission.describe()));
+  }
+
+  for (const command of commands) {
+    logs.push(JSON.stringify(command));
+  }
+
+  console.log(logs.join("\n"));
 }
