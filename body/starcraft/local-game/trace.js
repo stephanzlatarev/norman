@@ -7,7 +7,8 @@ export default class Trace {
     COOLDOWN: { r: 100, g: 100, b: 255 },
   };
 
-  constructor() {
+  constructor(speed) {
+    this.speed = speed;
     this.lines = [];
     this.spheres = [];
     this.selection = null;
@@ -40,7 +41,7 @@ export default class Trace {
   async step(client) {
     await client.debug({ debug: [{ draw: { lines: this.lines, spheres: this.spheres } }] });
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, this.speed));
 
     this.lines.length = 0;
     this.spheres.length = 0;
