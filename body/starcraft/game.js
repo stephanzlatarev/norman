@@ -101,7 +101,7 @@ export default class Game {
         }
 
         // Run the combat body system
-        await this.command(this.combat.run(time, this.units, getHackMissions(units, enemies)));
+        await this.command(await this.combat.run(time, this.units, getHackMissions(units, enemies)));
 
         // Step in the game
         await this.step();

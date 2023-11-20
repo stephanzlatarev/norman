@@ -6,7 +6,7 @@ const LOG = false;
 
 export default class Combat {
 
-  run(time, units, plans) {
+  async run(time, units, plans) {
     if (!units.size) return [];
 
     const missions = plan(units, plans);
@@ -14,7 +14,7 @@ export default class Combat {
 
     if (missions.length) {
       engage(units, missions);
-      command(missions, commands);
+      await command(missions, commands, units);
     }
 
     if (LOG) log(time, units, missions, commands);

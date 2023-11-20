@@ -3,43 +3,44 @@ import Mission from "./mission.js";
 let base;
 
 export default function(units, plans) {
-  if (plans && plans.length) {
-    return convertPlansToMissions(plans);
-  }
-
-  if (!base) {
-    base = selectBase(units);
-  }
-
   const missions = [];
+
+  if (plans && plans.length) {
+    convertPlansToMissions(plans, missions);
+  } else {
+    // TODO: Move this outside the else condition.
+    // TODO: Create a mission with all enemies as targets for all warriors that have no assignments 
+    createDefaultMissions(units, missions)
+  }
+
+  return missions;
+}
+
+function convertPlansToMissions(plans, missions) {
+  for (const plan of plans) {
+    missions.push(new Mission(plan.type, plan));
+  }
+}
+
+// TODO: If there's an enemy unit attack it. If not scout around
+function createDefaultMissions(units, missions) {
   const target = findClosestEnemy(units);
 
   if (target) {
     missions.push(new Mission(Mission.Assault, target));
   }
-
-  return missions;
-}
-
-function convertPlansToMissions(plans) {
-  const missions = [];
-
-  for (const plan of plans) {
-    missions.push(new Mission(plan.type, plan));
-  }
-
-  return missions;
-}
-
-function selectBase(units) {
-  for (const unit of units.values()) {
-    if (unit.isOwn && !unit.isWarrior) {
-      return unit;
-    }
-  }
 }
 
 function findClosestEnemy(units) {
+  if (!base) {
+    for (const unit of units.values()) {
+      if (unit.isOwn && !unit.isWarrior) {
+        base = unit;
+        break;
+      }
+    }
+  }
+
   if (base) {
     let bestTarget;
     let bestDistance = Infinity;
