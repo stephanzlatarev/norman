@@ -3,11 +3,7 @@ import { observeUnits } from "./units.js";
 export default function(model, observation) {
   observeBasics(model, observation);
 
-  const units = observeUnits(model, observation);
-
-  observeHeatmap(model, observation);
-
-  return units;
+  return observeUnits(model, observation);
 }
 
 function observeBasics(model, observation) {
