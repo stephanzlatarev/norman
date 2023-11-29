@@ -1,4 +1,3 @@
-import { observeHeatmap } from "./heatmap.js";
 import { observeUnits } from "./units.js";
 
 export default function(model, observation) {
