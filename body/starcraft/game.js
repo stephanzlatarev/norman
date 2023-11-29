@@ -4,7 +4,7 @@ import observe from "./observe/observe.js";
 import act from "./act/act.js";
 import Combat from "./combat/combat.js";
 import Economy from "./economy/economy.js";
-import { LOOPS_PER_STEP, LOOPS_PER_SECOND, WORKERS } from "./units.js";
+import { LOOPS_PER_STEP, LOOPS_PER_SECOND, WORKERS, WARRIORS } from "./units.js";
 
 const print = console.log;
 
@@ -26,6 +26,9 @@ export default class Game {
     this.units = new Map();
     this.combat = new Combat();
     this.economy = new Economy(this.client, map, base);
+
+    // TODO: Turn this into a mind skill
+    this.missions = (base && base.tag) ? noMissions : getHackMissions;
 
     setTimeout(this.run.bind(this));
   }
@@ -101,7 +104,7 @@ export default class Game {
         }
 
         // Run the combat body system
-        await this.command(await this.combat.run(time, this.units, getHackMissions(units, enemies)));
+        await this.command(await this.combat.run(time, this.units, this.missions(units, enemies)));
 
         // Step in the game
         await this.step();
@@ -177,20 +180,15 @@ function sync(unit, units, owner, enemy) {
 }
 
 // TODO: Read from the game
-function getBody(unit) {
-  if (unit.unitType === 73) return { radius: 0.5, speed: 2.25 / 16 };
-  if (unit.unitType === 74) return { radius: 0.75, speed: 2.95 / 16 };
-
+function getBody() {
   return { radius: 0.5, speed: 2.25 / 16 };
 }
 
 //TODO: Read from the game
 function getWeapon(unit) {
-  if (unit.unitType === 60) return { damage: 0, range: 0, isMelee: false, isRanged: false, speed: 0, attacks: 0 };
-  if (unit.unitType === 73) return { damage: 8, range: 0.1, isMelee: true, isRanged: false, speed: 16 * 1.20 / 2, attacks: 2 };
-  if (unit.unitType === 74) return { damage: 13, range: 6.0, isMelee: false, isRanged: true, speed: 25 * 1.20, attacks: 1 };
+  if (WARRIORS[unit.unitType]) return { damage: 8, range: 0.1, isMelee: true, isRanged: false, speed: 16 * 1.20 / 2, attacks: 2 };
 
-  return { damage: 8, range: 0.1, isMelee: true, isRanged: false, speed: 16 * 1.20 / 2, attacks: 2 };
+  return { damage: 0, range: 0, isMelee: false, isRanged: false, speed: 0, attacks: 0 };
 }
 
 function getCooldown(unit, weapon) {
@@ -218,3 +216,6 @@ function getHackMissions(units, enemies) {
   return null;
 }
 
+function noMissions() {
+  return null;
+}
