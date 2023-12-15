@@ -24,6 +24,7 @@ async function commandAssaultMission(commands, mission, units) {
       warriors.push(warrior);
       inputs.push(situation);
     } else {
+      // TODO: Change this to a move command to avoid targeting warriors to units they cannot attack, e.g. phoenix vs marine
       createAttackCommand(commands, warrior, mission.target);
     }
   }
@@ -47,7 +48,7 @@ function commandScoutMission(commands, mission) {
 }
 
 function createAttackCommand(commands, warrior, targetUnit) {
-  if ((warrior.order.abilityId !== 3674) || (warrior.order.targetUnitTag !== targetUnit.tag)) {
+  if ((warrior.order.abilityId !== 23) || (warrior.order.targetUnitTag !== targetUnit.tag)) {
     commands.push({ unitTags: [warrior.tag], abilityId: 3674, targetUnitTag: targetUnit.tag, queueCommand: false });
   }
 }
@@ -63,24 +64,72 @@ function isSamePosition(a, b) {
 }
 
 function createSituation(warrior, units) {
-  const grid = array(882);
-  let isEnemyInSight = false;
+  const situation = array(156);
+  const byApproximateDistanceToWarrior = (a, b) => byApproximateDistance(warrior.body, a.body, b.body);
+  const warriors = [];
+  const enemyWarriors = [];
+  const enemyStructures = [];
 
   for (const unit of units.values()) {
     if (unit === warrior) continue;
 
-    const c = cell(unit.body.x - warrior.body.x, unit.body.y - warrior.body.y);
-    if ((c < 0) || (c >= grid.length)) continue;
-
-    if (unit.isWarrior) {
-      grid[c + 441] += unit.armor.health;
+    if (unit.isWarrior && unit.weapon.damage) {
+      warriors.push(unit);
     } else if (unit.isEnemy) {
-      grid[c] += unit.armor.health;
-      isEnemyInSight = true;
+      if (unit.weapon.damage) {
+        enemyWarriors.push(unit);
+      } else {
+        enemyStructures.push(unit);
+      }
     }
   }
+
+  const enemies = enemyWarriors.length ? enemyWarriors : enemyStructures;
+  enemies.sort(byApproximateDistanceToWarrior);
+  warriors.sort(byApproximateDistanceToWarrior);
+
+  situation[0] = warrior.body.radius;
+  situation[1] = warrior.body.speed;
+  situation[2] = warrior.armor.health;
+  situation[3] = warrior.weapon.damage;
+  situation[4] = warrior.weapon.range;
+  situation[5] = warrior.weapon.cooldown;
+
+  for (let i = 0; (i < warriors.length) && (i < 10); i++) {
+    const support = warriors[i];
+    const offset = 6 + i * 8;
+
+    situation[offset] = support.body.x - warrior.body.x;
+    situation[offset + 1] = support.body.y - warrior.body.y;
+    situation[offset + 2] = support.body.radius;
+    situation[offset + 3] = support.body.speed;
+    situation[offset + 4] = support.armor.health;
+    situation[offset + 5] = support.weapon.damage;
+    situation[offset + 6] = support.weapon.range;
+    situation[offset + 7] = support.weapon.cooldown;
+  }
+
+  for (let i = 0; (i < enemies.length) && (i < 10); i++) {
+    const enemy = enemies[i];
+    const offset = 86 + i * 7;
+
+    situation[offset] = enemy.body.x - warrior.body.x;
+    situation[offset + 1] = enemy.body.y - warrior.body.y;
+    situation[offset + 2] = enemy.body.radius;
+    situation[offset + 3] = enemy.body.speed;
+    situation[offset + 4] = enemy.armor.health;
+    situation[offset + 5] = enemy.weapon.damage;
+    situation[offset + 6] = enemy.weapon.range;
+  }
   
-  return isEnemyInSight ? grid : null;
+  return enemies.length ? situation : null;
+}
+
+function byApproximateDistance(center, a, b) {
+  const da = Math.max(Math.abs(a.x - center.x), Math.abs(a.y - center.y));
+  const db = Math.max(Math.abs(b.x - center.x), Math.abs(b.y - center.y));
+
+  return da - db;
 }
 
 function findTarget(warrior, direction, units) {
@@ -91,6 +140,7 @@ function findTarget(warrior, direction, units) {
 
   // TODO: When warrior's weapon is loaded and there are enemy units within range, then prefer one with lowest health as target.
   for (const unit of units.values()) {
+    // TODO: If warrior cannot attack this enemy unit, e.g. phoenix vs marine, then skip it and find another
     if (unit.isEnemy) {
       const distance = calculateDistance(unit.body, pos);
 
@@ -112,11 +162,6 @@ function array(size) {
   }
 
   return array;
-}
-
-function cell(x, y) {
-  if ((x < -10) || (x > 10) || (y < -10) || (y > 10)) return -1;
-  return Math.round(21 * (10 + Math.round(y)) + (10 + Math.round(x)));
 }
 
 function calculateDistance(a, b) {

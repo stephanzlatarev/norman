@@ -4,7 +4,7 @@ import observe from "./observe/observe.js";
 import act from "./act/act.js";
 import Combat from "./combat/combat.js";
 import Economy from "./economy/economy.js";
-import { LOOPS_PER_STEP, LOOPS_PER_SECOND, WORKERS, WARRIORS } from "./units.js";
+import { LOOPS_PER_STEP, LOOPS_PER_SECOND, WORKERS, IS_MILITARY } from "./units.js";
 
 const print = console.log;
 
@@ -186,7 +186,7 @@ function getBody() {
 
 //TODO: Read from the game
 function getWeapon(unit) {
-  if (WARRIORS[unit.unitType]) return { damage: 8, range: 0.1, isMelee: true, isRanged: false, speed: 16 * 1.20 / 2, attacks: 2 };
+  if (IS_MILITARY[unit.unitType]) return { damage: 8, range: 0.1, isMelee: true, isRanged: false, speed: 16 * 1.20 / 2, attacks: 2 };
 
   return { damage: 0, range: 0, isMelee: false, isRanged: false, speed: 0, attacks: 0 };
 }
