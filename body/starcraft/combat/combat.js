@@ -1,45 +1,92 @@
 import command from "./command.js";
-import engage from "./engage.js";
-import plan from "./plan.js";
 
-const LOG = false;
+let base;
 
 export default class Combat {
 
-  async run(time, units, plans) {
-    if (!units.size) return [];
+  run(commands, units) {
+    if (units.size) {
+      identifyBase(units);
 
-    const missions = plan(units, plans);
-    const commands = [];
+      const buildings = listBuildings(units);
+      const enemy = findEnemy(units, buildings);
 
-    if (missions.length) {
-      engage(units, missions);
-      await command(missions, commands, units);
+      if (enemy) {
+        const warriors = listWarriors(units);
+
+        if (warriors.length) {
+          command(commands, warriors, enemy);
+        }
+      }
     }
-
-    if (LOG) log(time, units, missions, commands);
-
-    return commands;
   }
 
 }
 
-function log(time, units, missions, commands) {
-  const logs = [];
+function identifyBase(units) {
+  if (!base) {
+    for (const unit of units.values()) {
+      if (unit.isOwn && !unit.isWarrior) {
+        base = unit;
+        return;
+      }
+    }
+  }
+}
 
-  logs.push("# Time " + time);
+function listWarriors(units) {
+  const warriors = [];
 
   for (const unit of units.values()) {
-    logs.push(JSON.stringify(unit));
+    if (unit.isWarrior) {
+      warriors.push(unit);
+    }
   }
 
-  for (const mission of missions) {
-    logs.push(JSON.stringify(mission.describe()));
+  return warriors;
+}
+
+function listBuildings(units) {
+  const buildings = [];
+
+  for (const unit of units.values()) {
+    if (unit.isOwn && !unit.isWarrior) {
+      buildings.push(unit);
+    }
   }
 
-  for (const command of commands) {
-    logs.push(JSON.stringify(command));
-  }
+  return buildings;
+}
 
-  console.log(logs.join("\n"));
+// Finds one enemy that is close to our buildings
+function findEnemy(units, buildings) {
+  if (base) {
+    let bestTarget;
+    let bestDistance = Infinity;
+
+    for (const unit of units.values()) {
+      if (unit.isEnemy && isCloseToBuildings(unit, buildings)) {
+        const distance = calculateDistance(unit.body, base.body);
+
+        if (distance < bestDistance) {
+          bestTarget = unit;
+          bestDistance = distance;
+        }
+      }
+    }
+
+    return bestTarget;
+  }
+}
+
+function isCloseToBuildings(enemy, buildings) {
+  for (const building of buildings) {
+    if ((Math.abs(enemy.body.x - building.body.x) < 20) && (Math.abs(enemy.body.y - building.body.y) < 20)) {
+      return true;
+    }
+  }
+}
+
+function calculateDistance(a, b) {
+  return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }

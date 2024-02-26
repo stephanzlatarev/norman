@@ -95,6 +95,7 @@ export default class Game {
 
         // Run the tactics body system
         const missions = this.tactics.run();
+        const commands = [];
 
         // Run the economy body system
         await this.economy.run(time, this.model.observation, units, resources, enemies);
@@ -104,8 +105,12 @@ export default class Game {
             image.set("isWorker", hasJob);
           }
         }
+
         // Run the combat body system
-        await this.command(await this.combat.run(time, this.units, missions));
+        this.combat.run(commands, this.units, missions);
+
+        // Execute all commands
+        await this.command(commands);
 
         // Step in the game
         await this.step();
