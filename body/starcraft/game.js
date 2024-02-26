@@ -4,6 +4,7 @@ import observe from "./observe/observe.js";
 import act from "./act/act.js";
 import Combat from "./combat/combat.js";
 import Economy from "./economy/economy.js";
+import Tactics from "./tactics/tactics.js";
 import { LOOPS_PER_STEP, LOOPS_PER_SECOND, WORKERS, IS_MILITARY } from "./units.js";
 
 const print = console.log;
@@ -24,11 +25,9 @@ export default class Game {
     const map = read(this.model, await this.client.gameInfo(), observation, { x: base.pos.x, y: base.pos.y });
 
     this.units = new Map();
+    this.tactics = new Tactics();
     this.combat = new Combat();
     this.economy = new Economy(this.client, map, base);
-
-    // TODO: Turn this into a mind skill
-    this.missions = (base && base.tag) ? noMissions : getHackMissions;
 
     setTimeout(this.run.bind(this));
   }
@@ -94,6 +93,9 @@ export default class Game {
           }
         }
 
+        // Run the tactics body system
+        const missions = this.tactics.run();
+
         // Run the economy body system
         await this.economy.run(time, this.model.observation, units, resources, enemies);
         for (const [tag, hasJob] of this.economy.jobs()) {
@@ -102,9 +104,8 @@ export default class Game {
             image.set("isWorker", hasJob);
           }
         }
-
         // Run the combat body system
-        await this.command(await this.combat.run(time, this.units, this.missions(units, enemies)));
+        await this.command(await this.combat.run(time, this.units, missions));
 
         // Step in the game
         await this.step();
@@ -199,23 +200,4 @@ function getCooldown(unit, weapon) {
 function twodigits(value) {
   if (value < 10) return "0" + value;
   return value;
-}
-
-// Hack bot micro arena
-
-let isScoutMissionComplete = false;
-function getHackMissions(units, enemies) {
-  if (!isScoutMissionComplete) {
-    if ((enemies.size > 1) || Array.from(units.values()).find(one => ((Math.abs(one.pos.x - 36) < 1) && (Math.abs(one.pos.y - 32) < 1)))) {
-      isScoutMissionComplete = true;
-    } else {
-      return [{ type: "scout", x: 36, y: 32 }];
-    }
-  }
-
-  return null;
-}
-
-function noMissions() {
-  return null;
 }
