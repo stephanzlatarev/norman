@@ -1,13 +1,7 @@
 import Strategy from "./strategy.js";
 
 const BUILDORDER = [
-  "bases", "gateways",
-  "bases", "cybernetics", "zealots",
-  "gateways", "zealots",
-  "robotics",
-  "pylons", "stalkers", "stalkers",
-  "pylons", "observers", "sentries",
-  "nexuses",
+  "bases", "gateways", "nexuses", "cybernetics",
 ];
 
 export default class Initial extends Strategy {
