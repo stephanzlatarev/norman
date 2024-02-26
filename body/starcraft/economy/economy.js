@@ -4,7 +4,7 @@ import Worker from "./worker.js";
 import Monitor from "./monitor.js";
 import { WORKERS } from "../units.js";
 
-const LIMIT_WORKERS = 75;
+const LIMIT_WORKERS = 100;
 const RATIO_VESPENE_TO_MINERAL_JOBS = (2 * 3 + 1) / (8 * 2 + 2);
 const THRESHOLD_INITIAL_BUILD_ORDER = 15;
 const THRESHOLD_FREE_JOBS_FOR_EXPANSION = 16;
