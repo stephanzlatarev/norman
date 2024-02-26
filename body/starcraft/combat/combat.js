@@ -1,21 +1,31 @@
-import command from "./command.js";
+import { createAttackCommand, createMoveCommand } from "./command.js";
 
+let mode;
 let base;
+let rally;
 
 export default class Combat {
 
-  run(commands, units) {
+  run(commands, units, supply) {
     if (units.size) {
       identifyBase(units);
 
-      const buildings = listBuildings(units);
-      const enemy = findEnemy(units, buildings);
+      const warriors = listWarriors(units);
 
-      if (enemy) {
-        const warriors = listWarriors(units);
+      if (warriors.length) {
+        const buildings = listBuildings(units);
+        const enemy = findEnemy(units, buildings, getIsInAttackMode(supply));
 
-        if (warriors.length) {
-          command(commands, warriors, enemy);
+        if (enemy) {
+          for (const warrior of warriors) {
+            createAttackCommand(commands, warrior, enemy.body);
+          }
+
+          rally = { x: enemy.body.x, y: enemy.body.y };
+        } else {
+          for (const warrior of warriors) {
+            createMoveCommand(commands, warrior, rally);
+          }
         }
       }
     }
@@ -23,11 +33,22 @@ export default class Combat {
 
 }
 
+function getIsInAttackMode(supply) {
+  if (supply < 160) {
+    mode = null;
+  } else if (supply >= 195) {
+    mode = "attack";
+  }
+
+  return (mode === "attack");
+}
+
 function identifyBase(units) {
   if (!base) {
     for (const unit of units.values()) {
       if (unit.isOwn && !unit.isWarrior) {
         base = unit;
+        rally = base.body;
         return;
       }
     }
@@ -59,13 +80,13 @@ function listBuildings(units) {
 }
 
 // Finds one enemy that is close to our buildings
-function findEnemy(units, buildings) {
+function findEnemy(units, buildings, isInAttackMode) {
   if (base) {
     let bestTarget;
     let bestDistance = Infinity;
 
     for (const unit of units.values()) {
-      if (unit.isEnemy && isCloseToBuildings(unit, buildings)) {
+      if (unit.isEnemy && (isInAttackMode || isCloseToBuildings(unit, buildings))) {
         const distance = calculateDistance(unit.body, base.body);
 
         if (distance < bestDistance) {
@@ -81,7 +102,7 @@ function findEnemy(units, buildings) {
 
 function isCloseToBuildings(enemy, buildings) {
   for (const building of buildings) {
-    if ((Math.abs(enemy.body.x - building.body.x) < 20) && (Math.abs(enemy.body.y - building.body.y) < 20)) {
+    if ((Math.abs(enemy.body.x - building.body.x) < 15) && (Math.abs(enemy.body.y - building.body.y) < 15)) {
       return true;
     }
   }
