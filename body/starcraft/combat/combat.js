@@ -1,39 +1,50 @@
 import { createAttackCommand, createMoveCommand } from "./command.js";
 
+const DEFENSE_SQUARE_DISTANCE = 15 * 15;
+
 let mode;
 let base;
-let rally;
 
 export default class Combat {
 
   run(commands, units, supply) {
-    if (units.size) {
-      identifyBase(units);
+    if (!units.size) return;
+    if (!findBase(units)) return;
 
-      const warriors = listWarriors(units);
+    const warriors = listWarriors(units);
+    if (!warriors.length) return;
 
-      if (warriors.length) {
-        const buildings = listBuildings(units);
-        const enemy = findEnemy(units, buildings, getIsInAttackMode(supply));
+    const enemy = findClosestEnemy(units);
+    if (!enemy) return;
 
-        if (enemy) {
-          for (const warrior of warriors) {
-            createAttackCommand(commands, warrior, enemy.body);
-          }
-
-          rally = { x: enemy.body.x, y: enemy.body.y };
-        } else {
-          for (const warrior of warriors) {
-            createMoveCommand(commands, warrior, rally);
-          }
-        }
-      }
+    if (isInAttackMode(supply)) {
+      return attack(commands, warriors, enemy);
     }
+
+    const { closestBuilding, closestSquareDistance } = findClosestBuilding(units, enemy);
+
+    if (closestSquareDistance < DEFENSE_SQUARE_DISTANCE) {
+      return attack(commands, warriors, enemy);
+    }
+
+    return rally(commands, warriors, closestBuilding);
   }
 
 }
 
-function getIsInAttackMode(supply) {
+function attack(commands, warriors, target) {
+  for (const warrior of warriors) {
+    createAttackCommand(commands, warrior, target.body);
+  }
+}
+
+function rally(commands, warriors, target) {
+  for (const warrior of warriors) {
+    createMoveCommand(commands, warrior, target.body);
+  }
+}
+
+function isInAttackMode(supply) {
   if (supply < 160) {
     mode = null;
   } else if (supply >= 195) {
@@ -43,16 +54,17 @@ function getIsInAttackMode(supply) {
   return (mode === "attack");
 }
 
-function identifyBase(units) {
+function findBase(units) {
   if (!base) {
     for (const unit of units.values()) {
       if (unit.isOwn && !unit.isWarrior) {
         base = unit;
-        rally = base.body;
-        return;
+        break;
       }
     }
   }
+
+  return base;
 }
 
 function listWarriors(units) {
@@ -67,47 +79,43 @@ function listWarriors(units) {
   return warriors;
 }
 
-function listBuildings(units) {
-  const buildings = [];
+// Finds the closest enemy that is close to our buildings
+function findClosestEnemy(units) {
+  let closestEnemy;
+  let closestSquareDistance = Infinity;
+
+  for (const unit of units.values()) {
+    if (unit.isEnemy) {
+      const squareDistance = calculateSquareDistance(unit.body, base.body);
+
+      if (squareDistance < closestSquareDistance) {
+        closestEnemy = unit;
+        closestSquareDistance = squareDistance;
+      }
+    }
+  }
+
+  return closestEnemy;
+}
+
+function findClosestBuilding(units, enemy) {
+  let closestBuilding;
+  let closestSquareDistance = Infinity;
 
   for (const unit of units.values()) {
     if (unit.isOwn && !unit.isWarrior) {
-      buildings.push(unit);
-    }
-  }
+      const squareDistance = calculateSquareDistance(unit.body, enemy.body);
 
-  return buildings;
-}
-
-// Finds one enemy that is close to our buildings
-function findEnemy(units, buildings, isInAttackMode) {
-  if (base) {
-    let bestTarget;
-    let bestDistance = Infinity;
-
-    for (const unit of units.values()) {
-      if (unit.isEnemy && (isInAttackMode || isCloseToBuildings(unit, buildings))) {
-        const distance = calculateDistance(unit.body, base.body);
-
-        if (distance < bestDistance) {
-          bestTarget = unit;
-          bestDistance = distance;
-        }
+      if (squareDistance < closestSquareDistance) {
+        closestBuilding = unit;
+        closestSquareDistance = squareDistance;
       }
     }
-
-    return bestTarget;
   }
+
+  return { closestBuilding, closestSquareDistance };
 }
 
-function isCloseToBuildings(enemy, buildings) {
-  for (const building of buildings) {
-    if ((Math.abs(enemy.body.x - building.body.x) < 15) && (Math.abs(enemy.body.y - building.body.y) < 15)) {
-      return true;
-    }
-  }
-}
-
-function calculateDistance(a, b) {
-  return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+function calculateSquareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
