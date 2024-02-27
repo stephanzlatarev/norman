@@ -1,9 +1,9 @@
 import fs from "fs";
 import https from "https";
 
-const COMPETITION = 23;
+const COMPETITION = 25;
 const BOTS = {
-//  518: "norman",
+  518: "norman",
   605: "nida",
 }
 
