@@ -202,7 +202,7 @@ export const AttackJob = new Job(
       if (worker.order.abilityId === 23) {
         return Status.Progressing;
       }
-      return [{ abilityId: 1, targetUnitTag: worker.target.tag }];
+      return [{ abilityId: 3674, targetWorldSpacePos: worker.target.pos }];
     } else {
       if (worker.order.abilityId === 298) {
         return Status.Progressing;
