@@ -97,6 +97,11 @@ export default class Game {
         const missions = this.tactics.run();
         const commands = [];
 
+        // Run the missions
+        for (const mission of missions) {
+          mission.run(commands, this.model, units);
+        }
+
         // Run the economy body system
         await this.economy.run(time, this.model.observation, units, resources, enemies);
         for (const [tag, hasJob] of this.economy.jobs()) {
@@ -107,7 +112,7 @@ export default class Game {
         }
 
         // Run the combat body system
-        this.combat.run(commands, this.units, this.model, this.model.observation.playerCommon.foodUsed, missions);
+        this.combat.run(commands, this.units, this.model, this.model.observation.playerCommon.foodUsed);
 
         // Execute all commands
         await this.command(commands);

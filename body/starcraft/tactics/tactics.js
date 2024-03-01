@@ -1,9 +1,11 @@
+import DelayFirstEnemyExpansionMission from "./delay-first-enemy-expansion-mission.js";
+
+const mission1 = new DelayFirstEnemyExpansionMission();
 
 export default class Tactics {
 
-  // Returns a list of missions for the observed situation
   run() {
-    return [];
+    return mission1.complete ? [] : [mission1];
   }
 
 }
