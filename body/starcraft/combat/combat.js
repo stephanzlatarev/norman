@@ -3,22 +3,26 @@ import { createAttackCommand, createMoveCommand } from "./command.js";
 const DEFENSE_SQUARE_DISTANCE = 15 * 15;
 
 let mode;
-let base;
+let ownBase;
+let enemyBase;
 
 export default class Combat {
 
-  run(commands, units, supply) {
+  run(commands, units, model, supply) {
     if (!units.size) return;
-    if (!findBase(units)) return;
+    if (!findOwnBase(units)) return;
 
     const warriors = listWarriors(units);
     if (!warriors.length) return;
 
-    const enemy = findClosestEnemy(units);
+    const enemy = findClosestEnemy(units) || findEnemyBase(model);
     if (!enemy) return;
 
     if (isInAttackMode(supply)) {
       return attack(commands, warriors, enemy);
+    } else if (enemy === enemyBase) {
+      // Must be in attack mode to attack enemy base
+      return;
     }
 
     const { closestBuilding, closestSquareDistance } = findClosestBuilding(units, enemy);
@@ -54,17 +58,32 @@ function isInAttackMode(supply) {
   return (mode === "attack");
 }
 
-function findBase(units) {
-  if (!base) {
+function findOwnBase(units) {
+  if (!ownBase) {
     for (const unit of units.values()) {
       if (unit.isOwn && !unit.isWarrior) {
-        base = unit;
+        ownBase = unit;
         break;
       }
     }
   }
 
-  return base;
+  return ownBase;
+}
+
+function findEnemyBase(model) {
+  if (!enemyBase) {
+    const enemy = model.get("Enemy");
+
+    enemyBase = {
+      body: {
+        x: enemy.get("baseX"),
+        y: enemy.get("baseY"),
+      }
+    };
+  }
+
+  return enemyBase;
 }
 
 function listWarriors(units) {
@@ -86,7 +105,7 @@ function findClosestEnemy(units) {
 
   for (const unit of units.values()) {
     if (unit.isEnemy) {
-      const squareDistance = calculateSquareDistance(unit.body, base.body);
+      const squareDistance = calculateSquareDistance(unit.body, ownBase.body);
 
       if (squareDistance < closestSquareDistance) {
         closestEnemy = unit;

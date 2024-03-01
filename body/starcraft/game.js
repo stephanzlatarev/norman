@@ -107,7 +107,7 @@ export default class Game {
         }
 
         // Run the combat body system
-        this.combat.run(commands, this.units, this.model.observation.playerCommon.foodUsed, missions);
+        this.combat.run(commands, this.units, this.model, this.model.observation.playerCommon.foodUsed, missions);
 
         // Execute all commands
         await this.command(commands);
