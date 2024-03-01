@@ -6,7 +6,6 @@ import { WORKERS } from "../units.js";
 
 const LIMIT_WORKERS = 100;
 const RATIO_VESPENE_TO_MINERAL_JOBS = (2 * 3 + 1) / (8 * 2 + 2);
-const THRESHOLD_INITIAL_BUILD_ORDER = 15;
 const THRESHOLD_FREE_JOBS_FOR_EXPANSION = 16;
 const THRESHOLD_EXPAND_AT_WILL = 1200;
 
@@ -27,13 +26,10 @@ export default class Economy {
     this.sync(units, resources);
 
     this.defend(enemies);
+    this.expand(observation);
+    this.equip(observation);
 
-    if (units.size >= THRESHOLD_INITIAL_BUILD_ORDER) {
-      this.expand(observation);
-      this.equip(observation);
-
-      await this.hire(observation);
-    }
+    await this.hire(observation);
 
     this.mine(time);
 
