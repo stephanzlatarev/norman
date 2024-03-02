@@ -8,7 +8,9 @@ export default class DelayFirstEnemyExpansionMission {
   enemyWorkerTag = null;
 
   pendingEnemyExpansionsPos = null;
+  pendingPylonPos = null;
   enemyExpansionExists = false;
+  isBuildingPylons = false;
   isMissionComplete = false;
 
   constructor(map, model) {
@@ -31,6 +33,7 @@ export default class DelayFirstEnemyExpansionMission {
       this.enemyBasePos = findEnemyBase(model);
       this.enemyExpansionsPos = findEnemyExpansions(this.map.nexuses, this.enemyBasePos);
       this.pendingEnemyExpansionsPos = [...this.enemyExpansionsPos];
+      this.pendingPylonPos = [];
     }
 
     setAgentBusy(agent, this.model, true);
@@ -45,16 +48,36 @@ export default class DelayFirstEnemyExpansionMission {
           this.pendingEnemyExpansionsPos.length = 0;
         } else {
           this.pendingEnemyExpansionsPos.splice(this.pendingEnemyExpansionsPos.indexOf(enemyExpansionPos), 1);
+          this.pendingPylonPos = [enemyExpansionPos, ...this.pendingPylonPos];
         }
       } else {
         createMoveCommand(commands, agent, enemyExpansionPos);
       }
-    } else if (agent.shield < agent.shieldMax) {
-      // If enemy worker fights back then back offf
-      setAgentBusy(agent, this.model, false);
+    } else if (this.isBuildingPylons) {
+      if (this.pendingPylonPos.length) {
+        const pylonPos = this.pendingPylonPos[0];
 
-      console.log("Enemy worker fought back. Mission stopped.");
-      this.isMissionComplete = true;
+        if (doesPylonExist(units, pylonPos)) {
+          this.pendingPylonPos.splice(this.pendingPylonPos.indexOf(pylonPos), 1);
+        } else if (this.model.observation.playerCommon.minerals >= 100) {
+          if (createPylonCommand(commands, agent, pylonPos)) {
+            this.model.observation.playerCommon.minerals -= 100;
+          }
+        } else {
+          createMoveCommand(commands, agent, pylonPos);
+        }
+      } else {
+        setAgentBusy(agent, this.model, false);
+
+        this.isMissionComplete = true;
+      }
+    } else if (agent.shield < agent.shieldMax) {
+      // If enemy worker fights back then back off
+      this.isBuildingPylons = true;
+
+      if (this.pendingPylonPos.length) {
+        createMoveCommand(commands, agent, this.pendingPylonPos[0]);
+      }
     } else {
       // Currently, the agent locks on the closest enemy worker it sees first and attacks it.
       // TODO: Check if enemy worker fights back:
@@ -168,6 +191,14 @@ function findEnemyExpansions(baseLocations, baseOne) {
 function doesEnemyExpansionExist(enemies, agent) {
   for (const [_, enemy] of enemies) {
     if (BASES[enemy.unitType] && isInSightRange(agent.pos, enemy.pos)) {
+      return enemy;
+    }
+  }
+}
+
+function doesPylonExist(units, pos) {
+  for (const [_, unit] of units) {
+    if ((unit.unitType === 60) && isSamePosition(unit.pos, pos)) {
       return unit;
     }
   }
@@ -192,6 +223,19 @@ function createAttackCommand(commands, agent, enemy) {
 
   if ((order.abilityId !== 23) || (order.targetUnitTag != enemy.tag)) {
     commands.push({ unitTags: [agent.tag], abilityId: 3674, targetUnitTag: enemy.tag, queueCommand: false });
+  }
+}
+
+
+function createPylonCommand(commands, agent, pos) {
+  if (!agent || !pos) return;
+
+  const order = agent.orders.length ? agent.orders[0] : { abilityId: 0 };
+
+  if ((order.abilityId !== 881) || !order.targetWorldSpacePos || !isSamePosition(order.targetWorldSpacePos, pos)) {
+    commands.push({ unitTags: [agent.tag], abilityId: 881, targetWorldSpacePos: pos, queueCommand: false });
+
+    return true;
   }
 }
 
