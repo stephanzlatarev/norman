@@ -109,6 +109,12 @@ export const CLASS = {
   84: "unit"
 };
 
+export const BASES = {
+  18: "command center",
+  59: "nexus",
+  86: "hatchery",
+};
+
 export const WARRIORS = {
   10: "mothership",
   73: "zealot",

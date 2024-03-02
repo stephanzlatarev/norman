@@ -1,11 +1,16 @@
 import DelayFirstEnemyExpansionMission from "./delay-first-enemy-expansion-mission.js";
 
-const mission1 = new DelayFirstEnemyExpansionMission();
-
 export default class Tactics {
 
+  mission1
+
+  // TODO: Move map to memory and remove the constructor
+  constructor(map, model) {
+    this.mission1 = new DelayFirstEnemyExpansionMission(map, model);
+  }
+
   run() {
-    return mission1.complete ? [] : [mission1];
+    return this.mission1.isComplete() ? [] : [this.mission1];
   }
 
 }

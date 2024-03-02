@@ -25,7 +25,7 @@ export default class Game {
     const map = read(this.model, await this.client.gameInfo(), observation, { x: base.pos.x, y: base.pos.y });
 
     this.units = new Map();
-    this.tactics = new Tactics();
+    this.tactics = new Tactics(map, this.model);
     this.combat = new Combat();
     this.economy = new Economy(this.client, map, base);
 
@@ -99,7 +99,7 @@ export default class Game {
 
         // Run the missions
         for (const mission of missions) {
-          mission.run(commands, this.model, units);
+          mission.run(commands, this.model, units, enemies);
         }
 
         // Run the economy body system
