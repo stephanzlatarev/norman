@@ -33,7 +33,6 @@ export default class DelayFirstEnemyExpansionMission {
       this.enemyBasePos = findEnemyBase(model);
       this.enemyExpansionsPos = findEnemyExpansions(this.map.nexuses, this.enemyBasePos);
       this.pendingEnemyExpansionsPos = [...this.enemyExpansionsPos];
-      this.pendingPylonPos = [];
     }
 
     setAgentBusy(agent, this.model, true);
@@ -48,23 +47,21 @@ export default class DelayFirstEnemyExpansionMission {
           this.pendingEnemyExpansionsPos.length = 0;
         } else {
           this.pendingEnemyExpansionsPos.splice(this.pendingEnemyExpansionsPos.indexOf(enemyExpansionPos), 1);
-          this.pendingPylonPos = [enemyExpansionPos, ...this.pendingPylonPos];
+          this.pendingPylonPos = enemyExpansionPos;
         }
       } else {
         createMoveCommand(commands, agent, enemyExpansionPos);
       }
     } else if (this.isBuildingPylons) {
-      if (this.pendingPylonPos.length) {
-        const pylonPos = this.pendingPylonPos[0];
-
-        if (doesPylonExist(units, pylonPos)) {
-          this.pendingPylonPos.splice(this.pendingPylonPos.indexOf(pylonPos), 1);
+      if (this.pendingPylonPos) {
+        if (doesPylonExist(units, this.pendingPylonPos)) {
+          this.pendingPylonPos = null;
         } else if (this.model.observation.playerCommon.minerals >= 100) {
-          if (createPylonCommand(commands, agent, pylonPos)) {
+          if (createPylonCommand(commands, agent, this.pendingPylonPos)) {
             this.model.observation.playerCommon.minerals -= 100;
           }
         } else {
-          createMoveCommand(commands, agent, pylonPos);
+          createMoveCommand(commands, agent, this.pendingPylonPos);
         }
       } else {
         setAgentBusy(agent, this.model, false);
@@ -75,8 +72,8 @@ export default class DelayFirstEnemyExpansionMission {
       // If enemy worker fights back then back off
       this.isBuildingPylons = true;
 
-      if (this.pendingPylonPos.length) {
-        createMoveCommand(commands, agent, this.pendingPylonPos[0]);
+      if (this.pendingPylonPos) {
+        createMoveCommand(commands, agent, this.pendingPylonPos);
       }
     } else {
       // Currently, the agent locks on the closest enemy worker it sees first and attacks it.
