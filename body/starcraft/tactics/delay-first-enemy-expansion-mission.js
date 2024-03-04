@@ -1,6 +1,7 @@
+import Mission from "../mission.js";
 import { BASES, WORKERS } from "../units.js";
 
-export default class DelayFirstEnemyExpansionMission {
+export default class DelayFirstEnemyExpansionMission extends Mission {
 
   agentTag = null;
   enemyBasePos = null;
@@ -11,21 +12,18 @@ export default class DelayFirstEnemyExpansionMission {
   pendingPylonPos = null;
   enemyExpansionExists = false;
   isBuildingPylons = false;
-  isMissionComplete = false;
 
   constructor(map, model) {
+    super();
     this.map = map;
     this.model = model;
   }
 
   run(commands, model, units, enemies) {
-    if (this.isMissionComplete) return;
-
     const agent = findAgent(units, this.agentTag);
     if (!agent) {
-      console.log("Agent died. Mission stopped.");
-      this.isMissionComplete = true;
-      return;
+      console.log("Agent died. Mission 'Delay first enemy expansion' stopped.");
+      return this.remove();
     }
     this.agentTag = agent.tag;
 
@@ -66,7 +64,8 @@ export default class DelayFirstEnemyExpansionMission {
       } else {
         setAgentBusy(agent, this.model, false);
 
-        this.isMissionComplete = true;
+        console.log("Mission 'Delay first enemy expansion' accomplished.");
+        return this.remove();
       }
     } else if (agent.shield < agent.shieldMax) {
       // If enemy worker fights back then back off
@@ -96,9 +95,6 @@ export default class DelayFirstEnemyExpansionMission {
     }
   }
 
-  isComplete() {
-    return this.isMissionComplete;
-  }
 }
 
 // TODO: Use a memory node so that you don't have to search for it eery time. Replace the function with query inside the constructor.

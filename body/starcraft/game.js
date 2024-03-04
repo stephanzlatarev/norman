@@ -1,4 +1,5 @@
 import starcraft from "@node-sc2/proto";
+import Mission from "./mission.js";
 import read from "./map/read.js";
 import observe from "./observe/observe.js";
 import act from "./act/act.js";
@@ -93,12 +94,10 @@ export default class Game {
           }
         }
 
-        // Run the tactics body system
-        const missions = this.tactics.run();
         const commands = [];
 
         // Run the missions
-        for (const mission of missions) {
+        for (const mission of Mission.list()) {
           mission.run(commands, this.model, units, enemies);
         }
 
