@@ -8,6 +8,10 @@ const knownWorkerTags = new Set();
 
 export default class Worker {
 
+  static exists(unit) {
+    return knownWorkerTags.has(unit.tag);
+  }
+
   constructor(unit, depot) {
     if (unit) {
       this.init(unit);

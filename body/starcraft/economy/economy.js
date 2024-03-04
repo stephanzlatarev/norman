@@ -2,12 +2,14 @@ import Depot from "./depot.js";
 import Enemy from "./enemy.js";
 import Worker from "./worker.js";
 import Monitor from "./monitor.js";
+import BuildWorkersMission from "./build-workers-mission.js";
 import { WORKERS } from "../units.js";
 
-const LIMIT_WORKERS = 100;
 const RATIO_VESPENE_TO_MINERAL_JOBS = (2 * 3 + 1) / (8 * 2 + 2);
 const THRESHOLD_FREE_JOBS_FOR_EXPANSION = 16;
 const THRESHOLD_EXPAND_AT_WILL = 1200;
+
+new BuildWorkersMission();
 
 export default class Economy {
 
@@ -28,8 +30,6 @@ export default class Economy {
     this.defend(enemies);
     this.expand(observation);
     this.equip(observation);
-
-    await this.hire(observation);
 
     this.mine(time);
 
@@ -59,6 +59,12 @@ export default class Economy {
       for (const [_, unit] of units) {
         if (WORKERS[unit.unitType]) {
           this.workers.push(new Worker(unit));
+        }
+      }
+    } else {
+      for (const [_, unit] of units) {
+        if (WORKERS[unit.unitType] && !Worker.exists(unit)) {
+          this.workers.push(new Worker(unit, findClosestDepot(this.depots, unit.pos)));
         }
       }
     }
@@ -171,26 +177,6 @@ export default class Economy {
     }
   }
 
-  async hire(observation) {
-    if (this.workers.length < LIMIT_WORKERS) {
-      let freeJobs = countFreeJobs(this.depots, this.workers);
-
-      for (const depot of this.depots) {
-        if (freeJobs < 1) break;
-        if (observation.playerCommon.minerals < 50) break;
-        if ((observation.playerCommon.foodCap - observation.playerCommon.foodUsed) < 1) break;
-
-        if (await depot.produce(this.client)) {
-          this.workers.push(new Worker(null, depot));
-
-          observation.playerCommon.minerals -= 50;
-          observation.playerCommon.foodUsed += 1;
-          freeJobs--;
-        }
-      }
-    }
-  }
-
 }
 
 function countFreeJobs(depots, workers) {
@@ -215,6 +201,22 @@ function countVespeneToMineralJobsRatio(depots, workers) {
   jobsMineral = Math.min(jobsMineral, Math.max(workers.length - jobsVespene, 0));
 
   return jobsMineral ? jobsVespene / jobsMineral : 0;
+}
+
+function findClosestDepot(depots, pos) {
+  let closestDepot;
+  let closestSquareDistance = Infinity;
+
+  for (const depot of depots) {
+    const squareDistance = (depot.pos.x - pos.x) * (depot.pos.x - pos.x) + (depot.pos.y - pos.y) * (depot.pos.y - pos.y);
+
+    if (squareDistance < closestSquareDistance) {
+      closestDepot = depot;
+      closestSquareDistance = squareDistance;
+    }
+  }
+
+  return closestDepot;
 }
 
 function findClosestExpansionSite(depots) {
