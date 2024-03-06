@@ -3,6 +3,9 @@ import Enemy from "./enemy.js";
 import Worker from "./worker.js";
 import Monitor from "./monitor.js";
 import BuildWorkersMission from "./build-workers-mission.js";
+import EnsureSupplyMission from "./mission-ensure-supply.js";
+import PowerBuildingsMission from "./mission-power-buildings.js";
+import BuildFactoriesMission from "./mission-build-factories.js";
 import { WORKERS } from "../units.js";
 
 const RATIO_VESPENE_TO_MINERAL_JOBS = (2 * 3 + 1) / (8 * 2 + 2);
@@ -22,6 +25,10 @@ export default class Economy {
     for (const cluster of map.clusters.filter(cluster => !!cluster.nexus)) {
       this.depots.push(new Depot(base, cluster.nexus, cluster.resources));
     }
+
+    new EnsureSupplyMission(map);
+    new PowerBuildingsMission(map);
+    new BuildFactoriesMission(map);
   }
 
   async run(time, observation, units, resources, enemies) {
