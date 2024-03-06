@@ -177,7 +177,6 @@ function isWithinPowerDistance(a, b) {
 function isPoweredBy(a, pylons) {
   for (const pylon of pylons) {
     if (isWithinPowerDistance(a, pylon.pos)) {
-      console.log("plot", a, "is powered by", pylon.pos);
       return true;
     }
   }
