@@ -1,472 +1,246 @@
+import Depot from "./depot.js";
+import Hub from "./hub.js";
+import Types from "./types.js";
 
-export const LOOPS_PER_STEP = 2;
-export const LOOPS_PER_SECOND = 22.4;
-export const STEPS_PER_SECOND = LOOPS_PER_SECOND / LOOPS_PER_STEP;
+const resources = new Map();
+const workers = new Map();
+const buildings = new Map();
+const warriors = new Map();
+const enemies = new Map();
+const obstacles = new Map();
 
-export const RESOURCES = { 
-  146: "mineral", 147: "mineral", 341: "mineral", 483: "mineral",
-  665: "mineral", 666: "mineral", 796: "mineral", 797: "mineral",
-  884: "mineral", 885: "mineral", 886: "mineral", 887: "mineral",
-  1996: "mineral", 1997: "mineral", 1998: "mineral",
-  342: "vespene", 343: "vespene", 344: "vespene",
-  608: "vespene", 880: "vespene", 881: "vespene",
-};
+class Units {
 
-export const SPEED = {
-  10: (2.62 / STEPS_PER_SECOND), // mothership
-  73: (3.15 / STEPS_PER_SECOND), // zealot
-  74: (4.13 / STEPS_PER_SECOND), // stalker
-  76: (3.94 / STEPS_PER_SECOND), // templar
-  77: (3.50 / STEPS_PER_SECOND), // sentry
-  78: (5.95 / STEPS_PER_SECOND), // phoenix
-  79: (2.62 / STEPS_PER_SECOND), // carrier
-  80: (3.85 / STEPS_PER_SECOND), // voidray
-  84: (3.94 / STEPS_PER_SECOND), // probe
-};
+  get(tag) {
+    return resources.get(tag) || workers.get(tag) || buildings.get(tag) || warriors.get(tag) || enemies.get(tag) || obstacles.get(tag);
+  }
 
-export const RANGE = {
-  10: 7.0, // mothership
-  73: 0.1, // zealot
-  74: 6.0, // stalker
-  76: 0.1, // templar
-  77: 5.0, // sentry
-  78: 5.0, // phoenix
-  79: 8.0, // carrier
-  80: 6.0, // voidray
-  84: 0.1, // probe
-};
+  resources() {
+    return resources;
+  }
 
-export const DAMAGE = {
-  10:  6, // mothership
-  73:  8, // zealot
-  74: 13, // stalker
-  74: 45, // templar
-  77:  6, // sentry
-  78:  5, // phoenix
-  79:  5, // carrier
-  80:  6, // voidray
-  84:  5, // probe
-};
+  workers() {
+    return workers;
+  }
 
-export const DAMAGE_PER_STEP = {
-  10: (22.8 / STEPS_PER_SECOND), // mothership
-  73: (18.6 / STEPS_PER_SECOND), // zealot
-  74: ( 9.7 / STEPS_PER_SECOND), // stalker
-  74: (37.2 / STEPS_PER_SECOND), // templar
-  77: ( 8.4 / STEPS_PER_SECOND), // sentry
-  78: (12.7 / STEPS_PER_SECOND), // phoenix
-  79: (37.4 / STEPS_PER_SECOND), // carrier
-  80: (16.8 / STEPS_PER_SECOND), // voidray
-  84: (4.67 / STEPS_PER_SECOND), // probe
-};
+  buildings() {
+    return buildings;
+  }
 
-export const OWN_UNITS = {
-   0: "base",
-  10: "mothership",
-  59: "nexus",
-  60: "pylon",
-  61: "assimilator",
-  62: "gateway",
-  63: "forge",
-  64: "beacon",
-  65: "council",
-  67: "stargate",
-  69: "shrine",
-  71: "robotics",
-  72: "cybernetics",
-  73: "zealot",
-  74: "stalker",
-  76: "templar",
-  77: "sentry",
-  78: "phoenix",
-  79: "carrier",
-  80: "voidray",
-  82: "observer",
-  84: "probe"
-};
+  warriors() {
+    return warriors;
+  }
 
-export const CLASS = {
-  10: "unit",
-  59: "building",
-  60: "building",
-  61: "building",
-  62: "building",
-  63: "building",
-  64: "building",
-  65: "building",
-  67: "building",
-  69: "building",
-  71: "building",
-  72: "building",
-  73: "unit",
-  74: "unit",
-  76: "unit",
-  77: "unit",
-  78: "unit",
-  79: "unit",
-  80: "unit",
-  82: "unit",
-  84: "unit"
-};
+  enemies() {
+    return enemies;
+  }
 
-export const BASES = {
-  18: "command center",
-  59: "nexus",
-  86: "hatchery",
-};
+  obstacles() {
+    return obstacles;
+  }
 
-export const WARRIORS = {
-  10: "mothership",
-  73: "zealot",
-  74: "stalker",
-  76: "templar",
-  77: "sentry",
-  78: "phoenix",
-  79: "carrier",
-  80: "voidray",
-  82: "observer",
-};
+  sync(units, me, enemy) {
+    const alive = new Map();
 
-export const WORKERS = {
-  45: "scv",
-  84: "probe",
-  104: "drone",
-  268: "mule",
-};
+    for (const unit of units) {
+      alive.set(unit.tag, true);
+    }
 
-export const SCOUTS = {
-  73: "zealot",
-  74: "stalker",
-  76: "templar",
-  77: "sentry",
-  78: "phoenix",
-  80: "voidray",
-  82: "observer",
-};
+    const zombies = removeZombieUnits(resources, alive);
 
-export const LEADER_RANK = {
-  10: 8, // mothership
-  77: 7, // sentry
-  73: 6, // zealot
-  76: 5, // templar
-  74: 5, // stalker
-  82: 4, // observer
-  79: 3, // carrier
-  80: 2, // voidray
-  78: 1, // phoenix
-  84: 1, // probe
-};
+    removeDeadWorkers(alive);
+    removeDeadUnits(buildings, alive);
+    removeDeadUnits(warriors, alive);
+    removeDeadUnits(enemies, alive);
+    removeDeadUnits(obstacles, alive);
 
-export const USES_ENERGY = {
-  10: "mothership",
-  77: "sentry",
-};
+    for (const unit of units) {
+      const type = Types.get(unit.unitType);
+      const group = findGroup(unit, type, me, enemy)
 
-export const CAN_HIT_AIR = {
-  10: "mothership",
-  74: "stalker",
-  77: "sentry",
-  78: "phoenix",
-  79: "carrier",
-  80: "voidray",
-};
+      syncUnit(group, unit, type, zombies, me, enemy);
 
-export const BOOSTABLE = {
-  59: "nexus",
-  62: "gateway",
-  63: "forge",
-  67: "stargate",
-  71: "robotics",
-  72: "cybernetics",
-};
+      alive.set(unit.tag, true);
+    }
+  }
 
-export const ENEMY_UNITS = {
-  24: "bunker",
-  32: "tank",
-  33: "tank",
-  48: "marine",
-  49: "reaper",
-  51: "marauder",
-  105: "zergling",
-  107: "hydralisk",
-  110: "roach",
-  126: "queen",
-  692: "cyclone",
-};
-
-export const UNIT_RACE = {
-  24: 1,
-  32: 1,
-  33: 1,
-  48: 1,
-  49: 1,
-  51: 1,
-  105: 2,
-  107: 2,
-  110: 2,
-  126: 2,
-  692: 1,
-};
-
-export const LIGHT_WARRIORS = {
-  48: "marine",
-  105: "zergling",
-};
-
-export const HEAVY_WARRIORS = {
-  24: "bunker",
-  32: "siege tank",
-  33: "siege tank sieged",
-  66: "photon cannon",
-};
-
-export const STATIONARY_WARRIORS = {
-  66: "photon cannon",
-};
-
-export const ORDERS = {
-  110: "mothership",
-  880: "nexus",
-  881: "pylon",
-  882: "assimilator",
-  883: "gateway",
-  884: "forge",
-  885: "beacon",
-  886: "council",
-  889: "stargate",
-  891: "shrine",
-  893: "robotics",
-  894: "cybernetics",
-  916: "zealot",
-  917: "stalker",
-  920: "templar",
-  921: "sentry",
-  946: "phoenix",
-  948: "carrier",
-  950: "voidray",
-  977: "observer",
-  1006: "probe",
-  1062: "groundWeapons",
-  1063: "groundWeapons",
-  1064: "groundWeapons",
-  1065: "groundArmor",
-  1066: "groundArmor",
-  1067: "groundArmor",
-  1068: "shields",
-  1069: "shields",
-  1070: "shields",
-  1562: "airWeapons",
-  1563: "airWeapons",
-  1564: "airWeapons",
-  1565: "airArmor",
-  1566: "airArmor",
-  1567: "airArmor",
-  3692: "airArmor",
-  3693: "airWeapons",
-  3694: "groundArmor",
-  3695: "groundWeapons",
-  3696: "shields",
-};
-
-export const ACTIONS_LABELS = {
-  ...ORDERS,
-    16: "move",
-    76: "use-guardian-shield",
-   298: "harvest",
-  2244: "time-warp",
-  3690: "set-rally-point",
-  3755: "chronoboost",
-  3674: "attack",
 }
 
-export const ACTIONS = {
-  "cybernetics": {
-    "airArmor": 3692,
-    "airWeapons": 3693,
-  },
-  "forge": {
-    "groundArmor": 3694,
-    "groundWeapons": 3695,
-    "shields": 3696,
-  },
-  "gateway": {
-    "zealot": 916,
-    "stalker": 917,
-    "templar": 920,
-    "sentry": 921,
-  },
-  "mothership": {
-    "time-warp": 2244,
-  },
-  "nexus": {
-    "chronoboost": 3755,
-    "probe": 1006,
-    "mothership": 110,
-    "set-rally-point": 3690,
-  },
-  "probe": {
-    "nexus": 880,
-    "base": 881,
-    "pylon": 881,
-    "assimilator": 882,
-    "gateway": 883,
-    "forge": 884,
-    "beacon": 885,
-    "council": 886,
-    "stargate": 889,
-    "shrine": 891,
-    "robotics": 893,
-    "cybernetics": 894,
-  },
-  "robotics": {
-    "observer": 977,
-  },
-  "sentry": {
-    "use-guardian-shield": 76,
-  },
-  "stargate": {
-    "phoenix": 946,
-    "carrier": 948,
-    "voidray": 950,
+function findGroup(unit, type, me, enemy) {
+  if (unit.owner === me.id) {
+    if (type.isWorker) {
+      return workers;
+    } else if (type.isWarrior) {
+      return warriors;
+    } else if (type.isBuilding) {
+      return buildings;
+    }
+  } else if (unit.owner === enemy.id) {
+    return enemies;
+  } else if (type.isMinerals || type.isVespene) {
+    return resources;
   }
-};
 
-export const ACTION_TARGET = {
-  "scout": "location",
-  "move": "location",
-  "set-rally-point": "location",
-  "nexus": "location",
-  "pylon": "location",
-  "gateway": "location",
-  "forge": "location",
-  "beacon": "location",
-  "council": "location",
-  "stargate": "location",
-  "shrine": "location",
-  "robotics": "location",
-  "cybernetics": "location",
-  "attack": "location",
-  "assimilator": "unit",
-  "chronoboost": "unit",
-};
+  return obstacles;
+}
 
-export const IS_PRODUCED_BY = {
-  "mothership": "nexus",
-  "zealot": "gateway",
-  "stalker": "gateway",
-  "templar": "gateway",
-  "sentry": "gateway",
-  "phoenix": "stargate",
-  "carrier": "stargate",
-  "voidray": "stargate",
-  "observer": "robotics",
-  "probe": "nexus",
-  "airWeapons": "cybernetics",
-  "airArmor": "cybernetics",
-  "groundWeapons": "forge",
-  "groundArmor": "forge",
-  "shields": "forge",
-};
+function syncUnit(units, unit, type, zombies, me, enemy) {
+  let image = units.get(unit.tag);
 
-// Units with attack or defense functions
-export const IS_MILITARY = {
-   4: "colossus",
-   7: "infestor terran",
-   8: "baneling cocoon",
-   9: "baneling",
-  10: "mothership",
-  12: "changeling",
-  13: "changeling zealot",
-  14: "changeling marine shield",
-  15: "changeling marine",
-  16: "changeling zergling wings",
-  17: "changeling zergling",
-  23: "missile turret",
-  24: "bunker",
-  31: "auto turret",
-  32: "siege tank sieged",
-  33: "siege tank",
-  34: "viking assualt",
-  35: "viking fighter",
-  48: "marine",
-  49: "reaper",
-  50: "ghost",
-  51: "marauder",
-  52: "thor",
-  53: "hellion",
-  54: "medivac",
-  55: "banshee",
-  56: "raven",
-  57: "battle cruiser",
-  66: "photon cannon",
-  73: "zealot",
-  74: "stalker",
-  75: "high templar",
-  76: "dark templar",
-  77: "sentry",
-  78: "phoenix",
-  79: "carrier",
-  80: "voidray",
-  81: "warp prism",
-  82: "observer",
-  83: "immortal",
-  85: "interseptor",
-  95: "nidus network",
-  98: "spine crawler",
-  99: "spore crawler",
-  105: "zergling",
-  106: "overlord",
-  107: "hydralisk",
-  108: "mutalisk",
-  109: "ultralisk",
-  110: "roach",
-  111: "infestor",
-  112: "corruptor",
-  113: "brood lord cocoon",
-  114: "brood lord",
-  115: "baneling burrowed",
-  117: "hydralisk burrowed",
-  118: "roach burrowed",
-  119: "zergling burrowed",
-  125: "queen burrowed",
-  126: "queen",
-  127: "infestor burrowed",
-  128: "overlord cocoon",
-  129: "overseer",
-  130: "planetary fortress",
-  136: "warp prism phasing",
-  139: "spine crawler uprooted",
-  140: "spore crawler uprooted",
-  141: "archon",
-  142: "nidus canal",
-  289: "broodling",
-  311: "adept",
-  484: "hellion tank",
-  488: "mothership core",
-  489: "locust mp",
-  493: "swarm host mp burrowed",
-  494: "swarm host mp",
-  495: "oracle",
-  496: "tempest",
-  498: "widow mine",
-  499: "viper",
-  501: "lurker mp egg",
-  502: "lurker mp",
-  503: "lurker mp burrowed",
-  500: "widow mine burrowed",
-  687: "ravager cacoon",
-  688: "ravager",
-  689: "liberator",
-  691: "thor ap",
-  692: "cyclone",
-  693: "locust mp flying",
-  694: "disruptor",
-  732: "oracle stasis trap",
-  733: "disruptor phased",
-  734: "liberator ag",
-  801: "adept phase shift",
-  892: "overlord transport cocoon",
-  893: "overlord transport",
-  894: "pylon overcharged",
-  1910: "shield battery",
-};
+  if (!image) {
+    const zombie = findZombie(unit, type, zombies);
+
+    if (zombie) {
+      image = zombie;
+
+      image.tag = unit.tag;
+      image.nick = unit.tag.slice(unit.tag.length - 3);
+    } else {
+      image = {
+        tag: unit.tag,
+        nick: unit.tag.slice(unit.tag.length - 3),
+        isOwn: (unit.owner === me.id),
+        isEnemy: (unit.owner === enemy.id),
+        type: type,
+        body: {
+          x: unit.pos.x,
+          y: unit.pos.y,
+        },
+        armor: {
+          shieldMax: unit.shieldMax,
+        }
+      };
+    }
+
+    units.set(unit.tag, image);
+  }
+
+  image.isAlive = true;
+  image.isActive = (unit.buildProgress >= 1);
+  image.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
+  image.body.x = unit.pos.x;
+  image.body.y = unit.pos.y;
+  image.armor.shield = unit.shield;
+
+  image.isSelected = unit.isSelected;
+
+  if (image.isOwn) {
+    if (image.type.isWorker) {
+      image.isCarryingHarvest = isCarryingHarvest(unit);
+
+      if (!image.depot && !image.job) {
+        const depot = findDepot(image.body, 10);
+
+        if (depot) {
+          depot.assignWorker(image);
+        }
+      }
+    } else if (image.type.isDepot) {
+      if (!image.depot) {
+        image.depot = findDepot(image.body);
+      } else if (unit.rallyTargets && unit.rallyTargets.length) {
+        image.rally = unit.rallyTargets[0].point;
+      }
+
+      if (image.depot) {
+        image.depot.isActive = image.isActive;
+      }
+    } else if (image.type.isPylon) {
+      if (!image.hub && !image.nohub) {
+        image.hub = findHub(image.body);
+      }
+
+      if (image.hub) {
+        image.hub.pylonPlots[0].isFree = false;
+        image.hub.isPowered = image.isActive;
+      } else {
+        image.nohub = !!findHub(image.body, 3);
+      }
+    }
+  }
+
+  return image;
+}
+
+function removeDeadWorkers(alive) {
+  for (const [tag, worker] of workers) {
+    if (!alive.get(tag)) {
+      if (worker.depot) {
+        worker.depot.releaseWorker(worker);
+      }
+
+      worker.isAlive = false;
+      workers.delete(tag);
+    }
+  }
+}
+
+function removeDeadUnits(units, alive) {
+  for (const [tag, unit] of units) {
+    if (!alive.get(tag)) {
+      unit.isAlive = false;
+      units.delete(tag);
+    }
+  }
+}
+
+function removeZombieUnits(units, alive) {
+  const list = [];
+
+  for (const [tag, unit] of units) {
+    if (!alive.get(tag)) {
+      list.push(unit);
+      units.delete(tag);
+    }
+  }
+
+  return list;
+}
+
+function findZombie(unit, type, zombies) {
+  if (!type.isMinerals && !type.isVespene) return;
+
+  for (const zombie of zombies) {
+    if ((zombie.body.x === unit.pos.x) && (zombie.body.y === unit.pos.y)) {
+      return zombie;
+    }
+  }
+}
+
+function isCarryingHarvest(unit) {
+  for (const buffId of unit.buffIds) {
+    if (buffId === 271) return true;
+    if (buffId === 272) return true;
+    if (buffId === 273) return true;
+    if (buffId === 274) return true;
+    if (buffId === 275) return true;
+  }
+
+  return false;
+}
+
+function findDepot(pos, distance) {
+  for (const depot of Depot.list()) {
+    if (isAt(depot, pos, distance)) {
+      return depot;
+    }
+  }
+}
+
+function findHub(pos, distance) {
+  for (const hub of Hub.list()) {
+    if (isAt(hub, pos, distance)) {
+      return hub;
+    }
+  }
+}
+
+function isAt(object, pos, distance) {
+  if (distance > 0) {
+    return (Math.abs(object.x - pos.x) < distance) && (Math.abs(object.y - pos.y) < distance);
+  }
+
+  return (object.x === pos.x) && (object.y === pos.y);
+}
+
+export default new Units();

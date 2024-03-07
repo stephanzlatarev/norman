@@ -1,63 +1,68 @@
 
-const BODY = "body";
-const PROGRESS = "progress";
-const ATTACHED = "attached";
-const ATTACHING = "attaching";
-const DETACHING = "detaching";
-
 export default class Body {
 
-  constructor(memory, label, code, config) {
-    this.memory = memory;
-    this.node = memory.add(label).set("type", memory.add(BODY));
+  isAttached = false;
+
+  // Setting isAttaching or isDetaching to true will trigget attaching or detaching of the body
+  isAttaching = false;
+  isDetaching = false;
+
+  // Progress is an increasing positive number while this body is attaching or detaching
+  progress = 0;
+
+  constructor(label, code, config) {
+    this.label = label;
     this.code = code;
-    this.config = config;
+    this.config = config || {};
 
     this.timer = setInterval(this.run.bind(this), 1000);
   }
 
-  isAttached() {
-    return !!this.node.get(ATTACHED);
-  }
-
   async attach() {
-    this.node.set(PROGRESS, new Date().getTime());
+    if (this.isAttached) return;
 
-    const module = await import("../" + this.code + "/body.js");
+    this.progress = new Date().getTime();
 
-    this.body = new module.default(this.memory.model(), this.config);
+    const module = await import("../" + this.code + ".js");
+
+    this.body = new module.default(this.config);
 
     if (this.body && this.body.attach) {
-      await this.body.attach();
+      await this.body.attach(this.detach.bind(this));
     }
 
-    this.node.set(ATTACHED, true);
-    this.node.clear(PROGRESS);
+    this.isAttached = true;
+    this.progress = 0;
 
     console.log("Successfully attached body:", this.code);
   }
 
   async detach() {
-    this.node.set(PROGRESS, new Date().getTime());
+    if (!this.isAttached) return;
+
+    this.progress = new Date().getTime();
 
     if (this.body && this.body.detach) {
       await this.body.detach();
     }
 
-    this.node.set(ATTACHED, false);
-    this.node.clear(PROGRESS);
+    this.isAttached = false;
+    this.progress = 0;
 
     console.log("Successfully detached body:", this.code);
   }
 
   async run() {
-    if (!this.node.get(PROGRESS)) {
-      if (this.node.get(ATTACHING)) {
-        this.node.clear(ATTACHING);
+    if (!this.progress) {
+      if (this.isAttaching) {
+        this.isAttaching = false;
+
         await this.attach();
       }
-      if (this.node.get(DETACHING)) {
-        this.node.clear(DETACHING);
+
+      if (this.isDetaching) {
+        this.isDetaching = false;
+
         await this.detach();
       }
     }
@@ -66,6 +71,7 @@ export default class Body {
   async destroy() {
     if (this.timer) {
       clearInterval(this.timer);
+
       this.timer = null;
 
       await this.detach();

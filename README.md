@@ -1,4 +1,4 @@
-Nidamasin Norman is goal-oriented general purpose artificial intelligence.
+Nidamasin Norman is goal-oriented general-purpose artificial intelligence.
 
 ### Evolution
 
@@ -7,22 +7,13 @@ Nidamasin Norman is goal-oriented general purpose artificial intelligence.
 * Level 3 - Norman should be able to translate skills between activities. For example, knowing a strategy works for StarCraft II, he should try it in a game of Go.
 * Level 4 - Norman should be able to compose and decompose skills.
 
-### Start on Windows
+### Play StarCraft II
 
-Start StarCraft II API
+#### Locally on Windows
 
-```
-cd "C:\games\StarCraft II"
-start /D .\Support .\Versions\Base88500\SC2.exe -listen 127.0.0.1 -port 5000
-```
+Edit path and version of StarCraft II game in `norman.env` and start with `npm start`.
 
-Start Norman
-
-```
-npm start
-```
-
-### Run in SC2 AI Arena
+#### On SC2 AI Arena
 
 * Zip to `norman.zip`
 * Upload at https://aiarena.net/bots/518/edit

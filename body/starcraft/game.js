@@ -1,123 +1,107 @@
 import starcraft from "@node-sc2/proto";
+import Depot from "./depot.js";
+import Hub from "./hub.js";
+import Job from "./job.js";
+import Map from "./map.js";
 import Mission from "./mission.js";
-import read from "./map/read.js";
-import observe from "./observe/observe.js";
-import act from "./act/act.js";
-import Combat from "./combat/combat.js";
-import Economy from "./economy/economy.js";
-import Tactics from "./tactics/tactics.js";
-import { LOOPS_PER_STEP, LOOPS_PER_SECOND, WORKERS, IS_MILITARY } from "./units.js";
+import Order from "./order.js";
+import Types from "./types.js";
+import Units from "./units.js";
+import scheduleJobs from "./schedule.js";
+import Count from "./memo/count.js";
+import Enemy from "./memo/enemy.js";
+import Resources from "./memo/resources.js";
+
+const LOOPS_PER_STEP = 2;
+const LOOPS_PER_SECOND = 22.4;
+const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
 
 const print = console.log;
 
 export default class Game {
 
-  constructor(model) {
-    this.model = model;
-  }
-
-  async attach() {
+  async attach(endCallback) {
+    this.endCallback = endCallback;
     this.client = starcraft();
 
     await this.connect();
+    await this.say("Good luck!");
 
-    const observation = (await this.client.observation()).observation;
-    const base = observation.rawData.units.find(unit => (unit.unitType === 59)) || { pos: { x: 0, y: 0 } };
-    const map = read(this.model, await this.client.gameInfo(), observation, { x: base.pos.x, y: base.pos.y });
+    const gameInfo = await this.client.gameInfo();
+    const observation = await this.client.observation();
 
-    this.units = new Map();
-    this.tactics = new Tactics(map, this.model);
-    this.combat = new Combat();
-    this.economy = new Economy(this.client, map, base);
+    this.observation = observation.observation;
+    this.me = {
+      id: this.observation.playerCommon.playerId,
+      ...(this.observation.rawData.units.find(unit => (unit.unitType === 59)) || { pos: { x: 0, y: 0 } }).pos, // TODO: Replace with first building in Units
+    };
+    this.enemy = {
+      id: gameInfo.playerInfo.find(player => (player.playerId !== this.me.id)).playerId,
+      ...gameInfo.startRaw.startLocations[0],
+    };
+
+    Enemy.id = this.enemy.id;
+    Enemy.base = { x: this.enemy.x, y: this.enemy.y };
+
+    Types.sync((await this.client.data({ unitTypeId: true })).units);
+    Units.sync(this.observation.rawData.units, this.me, this.enemy);
+    Resources.sync(this.observation);
+
+    Map.sync(gameInfo, this.me);
+    await measureDistances(this.client, this.me);
 
     setTimeout(this.run.bind(this));
+
+    console.log = function() { const prefix = this.clock(); if (prefix) { print(prefix, ...arguments); } else { print(...arguments); } }.bind(this);
   }
 
   clock() {
-    const loop = this.model.observation ? this.model.observation.gameLoop : 0;
-    const seconds = Math.floor(loop / LOOPS_PER_SECOND);
-    const minutes = Math.floor(seconds / 60);
-    return twodigits(minutes) + ":" + twodigits(seconds % 60) + "/" + loop;
+    if (this.observation && this.observation.gameLoop) {
+      const loop = this.observation.gameLoop;
+      const minutes = Math.floor(loop / LOOPS_PER_MINUTE);
+      const seconds = Math.floor(loop / LOOPS_PER_SECOND) % 60;
+      const mm = (minutes >= 10) ? minutes : "0" + minutes;
+      const ss = (seconds >= 10) ? seconds : "0" + seconds;
+
+      return `${mm}:${ss}/${loop}`;
+    }
   }
 
   async run() {
-    console.log = function() { print(this.clock(), ...arguments); }.bind(this);
-
     try {
-      const game = this.model.get("Game");
-      const owner = game.get("owner");
-      const enemy = this.model.get("Enemy").get("owner");
+      while (this.client) {
+        const observation = await this.client.observation();
 
-      while (this.client && !game.get("over")) {
-        // Observe the current situation
-        this.model.observation = (await this.client.observation()).observation;
-        this.model.observation.ownUnits = this.model.observation.rawData.units.filter(unit => unit.owner === owner);
-        this.model.observation.enemyUnits = this.model.observation.rawData.units.filter(unit => unit.owner === enemy);
+        this.observation = observation.observation;
 
-        const images = observe(this.model, this.model.observation);
+        Units.sync(this.observation.rawData.units, this.me, this.enemy);
+        Resources.sync(this.observation);
+        Count.sync();
 
-        // Let skills perform on current situation
-        await this.model.memory.notifyPatternListeners();
-
-        // Act on skills reaction
-        await act(this.model, this.client, images);
-
-        const time = this.model.observation.gameLoop;
-        const units = new Map();
-        const enemies = new Map();
-        const resources = new Map();
-        const alive = new Map();
-        for (const unit of this.model.observation.rawData.units) {
-          sync(unit, this.units, owner, enemy);
-          alive.set(unit.tag, true);
-
-          if (unit.owner === owner) {
-            if (this.model.unitImages && WORKERS[unit.unitType]) {
-              const image = this.model.unitImages[unit.tag];
-              unit.isBusy = image ? !!image.get("isProducer") : false;
-            } else {
-              unit.isBusy = false;
-            }
-
-            units.set(unit.tag, unit);
-          } else if (unit.owner === enemy) {
-            enemies.set(unit.tag, unit);
-          } else {
-            resources.set(unit.tag, unit);
+        for (const job of Job.list()) {
+          if (job.assignee && !job.assignee.isAlive) {
+            job.close(false);
           }
         }
 
-        // Remove dead units
-        for (const tag of this.units.keys()) {
-          if (!alive.get(tag)) {
-            this.units.delete(tag);
-          }
+        for (const order of Order.list()) {
+          order.confirm();
         }
 
-        const commands = [];
-
-        // Run the missions
         for (const mission of Mission.list()) {
-          mission.run(commands, this.model, units, enemies);
+          mission.run();
         }
 
-        // Run the economy body system
-        await this.economy.run(time, this.model.observation, units, resources, enemies);
-        for (const [tag, hasJob] of this.economy.jobs()) {
-          const image = this.model.get(tag);
-          if (image) {
-            image.set("isWorker", hasJob);
-          }
+        scheduleJobs();
+
+        await this.executeOrders();
+
+        if (Units.workers().size && Units.buildings().size) {
+          await this.step();
+        } else {
+          await this.say("gg");
+          break;
         }
-
-        // Run the combat body system
-        this.combat.run(commands, this.units, this.model, this.model.observation.playerCommon.foodUsed);
-
-        // Execute all commands
-        await this.command(commands);
-
-        // Step in the game
-        await this.step();
       }
     } catch (error) {
       console.log(error);
@@ -125,88 +109,73 @@ export default class Game {
       console.log = print;
     }
 
-    this.detach();
+    this.endCallback();
   }
 
   async step() {
     await this.client.step({ count: LOOPS_PER_STEP });
   }
 
-  async command(commands) {
-    const actions = commands.map(command => ({ actionRaw: { unitCommand: command } }));
+  async executeOrders() {
+    const orders = [];
+    const actions = [];
+
+    for (const order of Order.list()) {
+      const command = order.command();
+
+      if (command) {
+        orders.push(order);
+        actions.push({ actionRaw: { unitCommand: command } });
+      }
+    }
+
     const response = await this.client.action({ actions: actions });
 
     for (let i = 0; i < response.result.length; i++) {
-      const result = response.result[i];
-
-      if (result !== 1) {
-        console.log(JSON.stringify(commands[i]), ">>", result);
-      }
+      orders[i].result(response.result[i]);
     }
   }
 
+  async say(message) {
+    await this.client.action({ actions: [{ actionChat: { channel: 1, message: message } }] });
+  }
+
   async detach() {
+    console.log = print;
+
     if (this.client) {
       try {
         await this.client.quit();
       } catch (error) {
       }
-
-      this.client = null;
     }
   }
 
 }
 
-function sync(unit, units, owner, enemy) {
-  let image = units.get(unit.tag);
+async function measureDistances(client, me) {
+  const points = [];
+  const mepos = { x: me.x, y: me.y };
 
-  if (!image) {
-    const body = getBody(unit);
-    const weapon = getWeapon(unit);
-    const armor = {};
-
-    image = {
-      tag: unit.tag,
-      nick: unit.tag.slice(unit.tag.length - 3),
-      type: unit.unitType,
-      isOwn: (unit.owner === owner),
-      isWarrior: (unit.owner === owner) && (weapon.damage > 0),
-      isEnemy: (unit.owner === enemy),
-      body: { ...body },
-      armor: { ...armor },
-      weapon: { ...weapon },
-    };
-
-    units.set(unit.tag, image);
+  for (const hub of Hub.list()) {
+    points.push({ startPos: mepos, endPos: { x: hub.x, y: hub.y } });
   }
 
-  image.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
-  image.body.x = unit.pos.x;
-  image.body.y = unit.pos.y;
-  image.armor.health = unit.health + unit.shield;
-  image.weapon.cooldown = getCooldown(unit, image.weapon);
-  image.isSelected = unit.isSelected;
-}
+  for (const depot of Depot.list()) {
+    points.push({ startPos: mepos, endPos: { x: depot.harvestRally.x, y: depot.harvestRally.y } });
+  }
 
-// TODO: Read from the game
-function getBody() {
-  return { radius: 0.5, speed: 2.25 / 16 };
-}
+  const pathing = (await client.query({ pathing: points })).pathing;
 
-//TODO: Read from the game
-function getWeapon(unit) {
-  if (IS_MILITARY[unit.unitType]) return { damage: 8, range: 0.1, isMelee: true, isRanged: false, speed: 16 * 1.20 / 2, attacks: 2 };
+  let index = 0;
 
-  return { damage: 0, range: 0, isMelee: false, isRanged: false, speed: 0, attacks: 0 };
-}
+  for (const hub of Hub.list()) {
+    hub.d = pathing[index++].distance;
+  }
+  Hub.order();
 
-function getCooldown(unit, weapon) {
-  if ((weapon.attacks > 1) && (unit.weaponCooldown > weapon.speed)) return 0;
-  return unit.weaponCooldown;
-}
-
-function twodigits(value) {
-  if (value < 10) return "0" + value;
-  return value;
+  for (const depot of Depot.list()) {
+    depot.d = pathing[index++].distance;
+  }
+  Depot.order();
 }

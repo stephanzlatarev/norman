@@ -1,4 +1,5 @@
-import Memory from "../../code/new-memory.js";
+import fs from "fs";
+import Memory from "../../code/memory.js";
 
 const missions = [];
 
@@ -23,3 +24,21 @@ export default class Mission extends Memory {
   }
 
 }
+
+async function load() {
+  try {
+    const files = fs.readdirSync("./body/starcraft/missions", { withFileTypes: true }).filter(dirent => dirent.isFile()).map(dirent => dirent.name);
+
+    for (const file of files) {
+      const module = await import("./missions/" + file);
+      const mission = new module.default();
+
+      console.log("Successfully loaded mission:", mission.constructor.name);
+    }
+
+  } catch (error) {
+    console.log("Failed to load missions due to:", error);
+  }
+}
+
+load();
