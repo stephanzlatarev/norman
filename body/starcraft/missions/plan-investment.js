@@ -8,6 +8,7 @@ export default class PlanInvestmentsMission extends Mission {
 
   run() {
     if (stage === 0) {
+      Limit.Forge = 0;
       Limit.Gateway = 1;
 
       if (Count.Nexus > 1) {
@@ -15,6 +16,7 @@ export default class PlanInvestmentsMission extends Mission {
         stage = 1;
       }
     } else {
+      Limit.Forge = (Count.Gateway >= 3) ? 1 : 0;
       Limit.Gateway = (Count.Nexus - 1) * 3;
       Limit.Nexus = Math.floor(Count.Gateway / 3) + 2;
     }

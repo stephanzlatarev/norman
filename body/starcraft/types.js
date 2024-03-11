@@ -3,7 +3,7 @@ const types = new Map();
 
 const IS_DEPOT = { Nexus: 1 };
 const IS_WORKER = { Drone: 1, MULE: 1, Probe: 1, SCV: 1 };
-const NEEDS_POWER = { Gateway: 1, Robotics: 1, Stargate: 1 };
+const NEEDS_POWER = { Forge: 1, Gateway: 1, Robotics: 1, Stargate: 1 };
 
 class Types {
 
