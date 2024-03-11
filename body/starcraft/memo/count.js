@@ -31,4 +31,11 @@ function count(units) {
   }
 }
 
+// TODO: Find a better way to ensure count returns a number for all known types
+counting.set("Assimilator", 0);
+counting.set("Forge", 0);
+counting.set("Gateway", 0);
+counting.set("Pylon", 0);
+counting.set("Nexus", 0);
+
 export default new Count();
