@@ -2,7 +2,7 @@ import Hub from "../hub.js";
 import Mission from "../mission.js";
 import Types from "../types.js";
 import Units from "../units.js";
-import WorkerBuild from "../jobs/WorkerBuild.js";
+import Build from "../jobs/build.js";
 import Count from "../memo/count.js";
 import Limit from "../memo/limit.js";
 import Resources from "../memo/resources.js";
@@ -29,7 +29,7 @@ export default class BuildFacilitiesMission extends Mission {
     const pos = findBuildingPlot();
     if (!pos) return;
 
-    this.job = new WorkerBuild(type.name, pos);
+    this.job = new Build(type.name, pos);
 
     Resources.minerals -= type.mineralCost;
     Resources.vespene -= type.vespeneCost;

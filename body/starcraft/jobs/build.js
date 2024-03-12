@@ -6,7 +6,7 @@ import Priority from "../memo/priority.js";
 
 const Worker = Types.get("Worker");
 
-export default class WorkerBuild extends Job {
+export default class Build extends Job {
 
   constructor(building, target, priority) {
     super("build " + building, (priority >= 0) ? priority : Priority[building], {

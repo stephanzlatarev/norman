@@ -1,7 +1,7 @@
 import Depot from "../depot.js";
 import Mission from "../mission.js";
 import Units from "../units.js";
-import WorkerBuild from "../jobs/WorkerBuild.js";
+import Build from "../jobs/build.js";
 import Count from "../memo/count.js";
 import Limit from "../memo/limit.js";
 import Resources from "../memo/resources.js";
@@ -25,7 +25,7 @@ export default class BuildExpansionsMission extends Mission {
     const pos = findDepotLocation();
     if (!pos) return;
 
-    this.job = new WorkerBuild("Nexus", pos);
+    this.job = new Build("Nexus", pos);
 
     Resources.minerals -= 400;
   }

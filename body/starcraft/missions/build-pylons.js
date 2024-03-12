@@ -1,7 +1,7 @@
 import Hub from "../hub.js";
 import Mission from "../mission.js";
 import Units from "../units.js";
-import WorkerBuild from "../jobs/WorkerBuild.js";
+import Build from "../jobs/build.js";
 import Resources from "../memo/resources.js";
 
 // TODO: Calculate time to new supply from nexuses and pylons in progress of building. Calculate time to supply cap looking at production facilities and ordered units. Build pylons just in time.
@@ -24,7 +24,7 @@ export default class BuildPylonsMission extends Mission {
     const pos = findPylonForSupply() || findPylonForPower();
     if (!pos) return;
 
-    this.job = new WorkerBuild("Pylon", pos, 100);
+    this.job = new Build("Pylon", pos, 100);
 
     Resources.minerals -= 100;
   }

@@ -1,6 +1,6 @@
 import Mission from "../mission.js";
 import Units from "../units.js";
-import WorkerBuild from "../jobs/WorkerBuild.js";
+import Build from "../jobs/build.js";
 import Count from "../memo/count.js";
 import Limit from "../memo/limit.js";
 import Resources from "../memo/resources.js";
@@ -37,7 +37,7 @@ export default class BuildExtractorsMission extends Mission {
         if (vespene.extractor && vespene.extractor.isAlive) continue;
 
         this.vespene = vespene;
-        this.job = new WorkerBuild(EXTRACTOR_TYPE, vespene);
+        this.job = new Build(EXTRACTOR_TYPE, vespene);
 
         Resources.minerals -= 75;
 
