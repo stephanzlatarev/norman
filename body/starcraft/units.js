@@ -1,6 +1,8 @@
 import Depot from "./depot.js";
 import Hub from "./hub.js";
 import Types from "./types.js";
+import WorkerHarvest from "./jobs/WorkerHarvest.js";
+import Resources from "./memo/resources.js";
 
 const resources = new Map();
 const workers = new Map();
@@ -116,6 +118,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   }
 
   image.isAlive = true;
+  image.lastSeen = Resources.loop;
   image.isActive = (unit.buildProgress >= 1);
   image.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
   image.body.x = unit.pos.x;
@@ -162,9 +165,13 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   return image;
 }
 
+function isWorkerInExtractor(worker) {
+  return (worker.job instanceof WorkerHarvest) && worker.job.resource && worker.job.resource.type.isExtractor && (Resources.loop - worker.lastSeen < 100);
+}
+
 function removeDeadWorkers(alive) {
   for (const [tag, worker] of workers) {
-    if (!alive.get(tag)) {
+    if (!alive.get(tag) && !isWorkerInExtractor(worker)) {
       if (worker.depot) {
         worker.depot.releaseWorker(worker);
       }

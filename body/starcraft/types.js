@@ -2,6 +2,7 @@
 const types = new Map();
 
 const IS_DEPOT = { Nexus: 1 };
+const IS_EXTRACTOR = { Assimilator: 1 };
 const IS_WORKER = { Drone: 1, MULE: 1, Probe: 1, SCV: 1 };
 const NEEDS_POWER = { Forge: 1, Gateway: 1, Robotics: 1, Stargate: 1 };
 
@@ -19,20 +20,23 @@ class Types {
     for (const unit of units) {
       if (!unit.available) continue;
 
+      const isExtractor = !!IS_EXTRACTOR[unit.name];
+
       const type = {
         id: unit.unitId,
         name: unit.name,
 
-        isDepot: IS_DEPOT[unit.name],
+        isDepot: !!IS_DEPOT[unit.name],
         isPylon: (unit.name === "Pylon"),
-        isWorker: IS_WORKER[unit.name],
+        isWorker: !!IS_WORKER[unit.name],
         isWarrior: !!unit.weapons.length,
-        isBuilding: !unit.movementSpeed && !unit.hasMinerals && !unit.hasVespene,
+        isExtractor: isExtractor,
+        isBuilding: !unit.movementSpeed && !unit.hasMinerals && (isExtractor || !unit.hasVespene),
         isMinerals: !!unit.hasMinerals,
-        isVespene: !!unit.hasVespene,
+        isVespene: !!unit.hasVespene && !isExtractor,
 
         supplyProvided: unit.foodProvided,
-        needsPower: NEEDS_POWER[unit.name],
+        needsPower: !!NEEDS_POWER[unit.name],
 
         movementSpeed: unit.movementSpeed,
         sightRange: unit.sightRange,

@@ -19,6 +19,9 @@ export default class Job extends Memory {
   // This is the current order issued to the assignee 
   order;
 
+  // The product of this job
+  product;
+
   // Is done when completed successfully
   isDone = false;
 
@@ -56,9 +59,10 @@ export default class Job extends Memory {
   }
 
   // Closes the job and removes the link from the assigned unit.
-  close(isSuccessful) {
-    this.isDone = !!isSuccessful;
-    this.isFailed = !isSuccessful;
+  close(outcome) {
+    this.product = outcome;
+    this.isDone = !!outcome;
+    this.isFailed = !outcome;
 
     if (this.assignee && (this.assignee.job === this)) {
       console.log("INFO: Unit", this.assignee.type.name, this.assignee.nick, "released from job", this.summary);

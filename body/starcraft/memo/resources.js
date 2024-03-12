@@ -4,6 +4,7 @@ class Resources {
 
   loop = 0;
   minerals = 0;
+  vespene = 0;
   supplyLimit = 0;
   supplyUsed = 0;
   supplyWorkers = 0;
@@ -11,6 +12,7 @@ class Resources {
   sync(observation) {
     this.loop = observation.gameLoop;
     this.minerals = observation.playerCommon.minerals;
+    this.vespene = observation.playerCommon.vespene;
     this.supplyLimit = observation.playerCommon.foodCap;
     this.supplyUsed = observation.playerCommon.foodUsed;
 
