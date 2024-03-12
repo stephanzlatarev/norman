@@ -4,7 +4,7 @@ import Types from "../types.js";
 
 const Worker = Types.get("Worker");
 
-export default class WorkerTransfer extends Job {
+export default class Transfer extends Job {
 
   constructor(fromDepot, toDepot) {
     super("transfer", 1, {

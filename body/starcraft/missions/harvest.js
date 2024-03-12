@@ -1,7 +1,7 @@
 import Mission from "../mission.js";
 import Units from "../units.js";
 import WorkerHarvest from "../jobs/WorkerHarvest.js";
-import WorkerTransfer from "../jobs/WorkerTransfer.js";
+import Transfer from "../jobs/transfer.js";
 
 //TODO: When mission is converted to skill, there will be just one job per mineral patch of active depot at a time
 const jobs = new Map();
@@ -81,7 +81,7 @@ export default class HarvestMission extends Mission {
         const target = findTransferDepot();
 
         if (target) {
-          transfers.add(new WorkerTransfer(depot, target));
+          transfers.add(new Transfer(depot, target));
         } else {
           break;
         }
