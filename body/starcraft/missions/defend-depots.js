@@ -1,7 +1,7 @@
 import Mission from "../mission.js";
 import Units from "../units.js";
 import Types from "../types.js";
-import Attack from "../jobs/Attack.js";
+import Attack from "../jobs/attack.js";
 import Count from "../memo/count.js";
 
 // TODO: Remove the hack of closing a job when adding a defender after implementing jit-mining
