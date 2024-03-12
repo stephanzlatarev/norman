@@ -6,7 +6,7 @@ import Priority from "../memo/priority.js";
 export default class Produce extends Job {
 
   constructor(product, facility, priority) {
-    super("produce", (priority >= 0) ? priority : Priority[product], {
+    super("produce " + product, (priority >= 0) ? priority : Priority[product], {
       assignee: facility
     });
 
