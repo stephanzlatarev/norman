@@ -1,5 +1,6 @@
 
 const types = new Map();
+const races = [[], [], [], []];
 
 const IS_DEPOT = { Nexus: 1 };
 const IS_EXTRACTOR = { Assimilator: 1 };
@@ -14,6 +15,10 @@ class Types {
 
   get(id) {
     return types.get(id);
+  }
+
+  list(race) {
+    return races[race];
   }
 
   sync(units) {
@@ -51,6 +56,8 @@ class Types {
 
       types.set(unit.unitId, type);
       types.set(unit.name, type);
+
+      races[unit.race].push(type);
     }
   }
 

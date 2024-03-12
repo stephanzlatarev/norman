@@ -33,6 +33,7 @@ export default class Game {
     this.observation = observation.observation;
     this.me = {
       id: this.observation.playerCommon.playerId,
+      race: getRace(gameInfo, this.observation.playerCommon.playerId),
       ...(this.observation.rawData.units.find(unit => (unit.unitType === 59)) || { pos: { x: 0, y: 0 } }).pos, // TODO: Replace with first building in Units
     };
     this.enemy = {
@@ -76,7 +77,7 @@ export default class Game {
 
         Units.sync(this.observation.rawData.units, this.me, this.enemy);
         Resources.sync(this.observation);
-        Count.sync();
+        Count.sync(this.me.race);
 
         for (const job of Job.list()) {
           if (job.assignee && !job.assignee.isAlive) {
@@ -151,6 +152,14 @@ export default class Game {
     }
   }
 
+}
+
+function getRace(gameInfo, playerId) {
+  for (const playerInfo of gameInfo.playerInfo) {
+    if (playerInfo.playerId === playerId) {
+      return playerInfo.raceActual;
+    }
+  }
 }
 
 async function measureDistances(client, me) {
