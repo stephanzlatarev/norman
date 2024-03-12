@@ -15,16 +15,16 @@ export default class BuildWorkersMission extends Mission {
     if (Resources.minerals < 100) return;
     if (Resources.supplyUsed > Resources.supplyLimit - 2) return;
 
-    for (const factory of Units.buildings().values()) {
-      if (factory.type.name !== "Gateway") continue;
+    for (const facility of Units.buildings().values()) {
+      if (facility.type.name !== "Gateway") continue;
 
-      if (!factory.isActive) continue;
-      if (factory.order.abilityId) continue;
+      if (!facility.isActive) continue;
+      if (facility.order.abilityId) continue;
 
       if (Resources.minerals < 100) return;
       if (Resources.supplyUsed > Resources.supplyLimit - 2) return;
 
-      createBuildWarriorJob(factory);
+      createProduceWarriorJob(facility);
 
       Resources.minerals -= 100;
       Resources.supplyUsed += 2;
@@ -41,12 +41,12 @@ function removeCompletedJobs() {
   }
 }
 
-function createBuildWarriorJob(factory) {
-  let job = jobs.get(factory);
+function createProduceWarriorJob(facility) {
+  let job = jobs.get(facility);
 
   if (!job) {
-    job = new BuildingTrain("Zealot", factory);
+    job = new BuildingTrain("Zealot", facility);
 
-    jobs.set(factory, job);
+    jobs.set(facility, job);
   }
 }

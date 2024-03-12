@@ -20,7 +20,7 @@ export default class BuildTechnologyMission extends Mission {
       }
     }
 
-    const type = Types.get(selectFactoryType());
+    const type = Types.get(selectFacilityType());
 
     if (Count[type.name] >= Limit[type.name]) return;
     if (Resources.minerals < type.mineralCost) return;
@@ -37,7 +37,7 @@ export default class BuildTechnologyMission extends Mission {
 
 }
 
-function selectFactoryType() {
+function selectFacilityType() {
   return "Forge";
 }
 

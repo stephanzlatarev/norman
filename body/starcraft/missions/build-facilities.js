@@ -7,7 +7,7 @@ import Count from "../memo/count.js";
 import Limit from "../memo/limit.js";
 import Resources from "../memo/resources.js";
 
-export default class BuildFactoriesMission extends Mission {
+export default class BuildFacilitiesMission extends Mission {
 
   job;
 
@@ -20,7 +20,7 @@ export default class BuildFactoriesMission extends Mission {
       }
     }
 
-    const type = Types.get(selectFactoryType());
+    const type = Types.get(selectFacilityType());
 
     if (Count[type.name] >= Limit[type.name]) return;
     if (Resources.minerals < type.mineralCost) return;
@@ -37,7 +37,7 @@ export default class BuildFactoriesMission extends Mission {
 
 }
 
-function selectFactoryType() {
+function selectFacilityType() {
   return "Gateway";
 }
 
