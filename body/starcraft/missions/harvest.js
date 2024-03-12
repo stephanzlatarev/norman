@@ -1,6 +1,6 @@
 import Mission from "../mission.js";
 import Units from "../units.js";
-import WorkerHarvest from "../jobs/WorkerHarvest.js";
+import Harvest from "../jobs/harvest.js";
 import Transfer from "../jobs/transfer.js";
 
 //TODO: When mission is converted to skill, there will be just one job per mineral patch of active depot at a time
@@ -105,7 +105,7 @@ function createHarvestJob(index, nexus, resource) {
   let job = jobs.get(jobId);
 
   if (!job) {
-    job = new WorkerHarvest(resource, nexus.depot);
+    job = new Harvest(resource, nexus.depot);
 
     jobs.set(jobId, job);
   }

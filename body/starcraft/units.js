@@ -1,7 +1,7 @@
 import Depot from "./depot.js";
 import Hub from "./hub.js";
 import Types from "./types.js";
-import WorkerHarvest from "./jobs/WorkerHarvest.js";
+import Harvest from "./jobs/harvest.js";
 import Resources from "./memo/resources.js";
 
 const resources = new Map();
@@ -166,7 +166,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
 }
 
 function isWorkerInExtractor(worker) {
-  return (worker.job instanceof WorkerHarvest) && worker.job.resource && worker.job.resource.type.isExtractor && (Resources.loop - worker.lastSeen < 100);
+  return (worker.job instanceof Harvest) && worker.job.resource && worker.job.resource.type.isExtractor && (Resources.loop - worker.lastSeen < 100);
 }
 
 function removeDeadWorkers(alive) {

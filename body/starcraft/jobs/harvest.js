@@ -4,7 +4,7 @@ import Types from "../types.js";
 
 const Worker = Types.get("Worker");
 
-export default class WorkerHarvest extends Job {
+export default class Harvest extends Job {
 
   constructor(resource, depot) {
     super("harvest", 0, {
