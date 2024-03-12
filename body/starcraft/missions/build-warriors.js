@@ -1,6 +1,7 @@
 import Mission from "../mission.js";
 import Units from "../units.js";
 import Produce from "../jobs/produce.js";
+import Count from "../memo/count.js";
 import Resources from "../memo/resources.js";
 
 const jobs = new Map();
@@ -45,8 +46,24 @@ function createProduceWarriorJob(facility) {
   let job = jobs.get(facility);
 
   if (!job) {
-    job = new Produce("Zealot", facility);
+    job = new Produce(selectWarriorType(), facility);
 
     jobs.set(facility, job);
   }
+}
+
+function selectWarriorType() {
+  if (Count.CyberneticsCore >= 1) {
+    if ((Count.Stalker < Count.Zealot * 4) && (Count.Stalker < Count.Sentry * 4)) {
+      return "Stalker";
+    } else if ((Count.Zealot * 4 < Count.Stalker) && (Count.Zealot < Count.Sentry)) {
+      return "Zealot";
+    } else if ((Count.Sentry * 4 < Count.Stalker) && (Count.Sentry < Count.Zealot)) {
+      return "Sentry";
+    }
+
+    return "Stalker";
+  }
+
+  return "Zealot";
 }

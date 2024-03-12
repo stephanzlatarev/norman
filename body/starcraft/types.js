@@ -7,6 +7,8 @@ const IS_EXTRACTOR = { Assimilator: 1 };
 const IS_WORKER = { Drone: 1, MULE: 1, Probe: 1, SCV: 1 };
 const NEEDS_POWER = { Forge: 1, Gateway: 1, Robotics: 1, Stargate: 1 };
 
+const ATTRIBUTE_STRUCTURE = 8;
+
 class Types {
 
   [Symbol.iterator]() {
@@ -24,8 +26,9 @@ class Types {
   sync(data) {
     for (const unit of data.units) {
       if (!unit.available) continue;
+      if (!unit.attributes.length) continue;
 
-      const isExtractor = !!IS_EXTRACTOR[unit.name];
+      const isBuilding = (unit.attributes.indexOf(ATTRIBUTE_STRUCTURE) >= 0);
 
       const type = {
         id: unit.unitId,
@@ -34,11 +37,11 @@ class Types {
         isDepot: !!IS_DEPOT[unit.name],
         isPylon: (unit.name === "Pylon"),
         isWorker: !!IS_WORKER[unit.name],
-        isWarrior: !!unit.weapons.length,
-        isExtractor: isExtractor,
-        isBuilding: !unit.movementSpeed && !unit.hasMinerals && (isExtractor || !unit.hasVespene),
+        isWarrior: !isBuilding,
+        isExtractor: !!IS_EXTRACTOR[unit.name],
+        isBuilding: isBuilding,
         isMinerals: !!unit.hasMinerals,
-        isVespene: !!unit.hasVespene && !isExtractor,
+        isVespene: !!unit.hasVespene && !unit.race,
 
         supplyProvided: unit.foodProvided,
         needsPower: !!NEEDS_POWER[unit.name],
