@@ -1,6 +1,6 @@
 import Mission from "../mission.js";
 import Units from "../units.js";
-import BuildingTrain from "../jobs/BuildingTrain.js";
+import Produce from "../jobs/produce.js";
 import Resources from "../memo/resources.js";
 
 const jobs = new Map();
@@ -45,7 +45,7 @@ function createProduceWarriorJob(facility) {
   let job = jobs.get(facility);
 
   if (!job) {
-    job = new BuildingTrain("Zealot", facility);
+    job = new Produce("Zealot", facility);
 
     jobs.set(facility, job);
   }

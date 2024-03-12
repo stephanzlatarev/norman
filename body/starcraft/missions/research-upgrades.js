@@ -1,7 +1,7 @@
 import Mission from "../mission.js";
 import Types from "../types.js";
 import Units from "../units.js";
-import BuildingTrain from "../jobs/BuildingTrain.js";
+import Produce from "../jobs/produce.js";
 import Resources from "../memo/resources.js";
 
 const FACILITY = "Forge";
@@ -36,7 +36,7 @@ export default class ResearchUpgradesMission extends Mission {
       if (Resources.minerals < upgrade.mineralCost) return;
       if (Resources.vespene < upgrade.vespeneCost) return;
 
-      this.job = new BuildingTrain(upgrade.name, facility);
+      this.job = new Produce(upgrade.name, facility);
 
       Resources.minerals -= upgrade.mineralCost;
       Resources.vespene -= upgrade.vespeneCost;

@@ -3,14 +3,14 @@ import Order from "../order.js";
 import Types from "../types.js";
 import Priority from "../memo/priority.js";
 
-export default class BuildingTrain extends Job {
+export default class Produce extends Job {
 
-  constructor(trainee, facility, priority) {
-    super("train", (priority >= 0) ? priority : Priority[trainee], {
+  constructor(product, facility, priority) {
+    super("produce", (priority >= 0) ? priority : Priority[product], {
       assignee: facility
     });
 
-    this.action = (trainee > 0) ? trainee : Types.get(trainee).abilityId;
+    this.action = (product > 0) ? product : Types.get(product).abilityId;
   }
 
   execute() {
