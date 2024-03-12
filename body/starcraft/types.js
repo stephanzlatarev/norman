@@ -13,16 +13,16 @@ class Types {
     return types[Symbol.iterator]();
   }
 
-  get(id) {
-    return types.get(id);
+  get(key) {
+    return types.get(key);
   }
 
   list(race) {
     return races[race];
   }
 
-  sync(units) {
-    for (const unit of units) {
+  sync(data) {
+    for (const unit of data.units) {
       if (!unit.available) continue;
 
       const isExtractor = !!IS_EXTRACTOR[unit.name];
@@ -46,7 +46,7 @@ class Types {
         movementSpeed: unit.movementSpeed,
         sightRange: unit.sightRange,
 
-        actionToBuild: unit.abilityId,
+        abilityId: unit.abilityId,
         buildTime: unit.buildTime,
         foodRequired: unit.foodRequired,
         mineralCost: unit.mineralCost,
@@ -58,6 +58,12 @@ class Types {
       types.set(unit.name, type);
 
       races[unit.race].push(type);
+    }
+
+    for (const upgrade of data.upgrades) {
+      if (upgrade.abilityId) {
+        types.set(upgrade.name, upgrade);
+      }
     }
   }
 

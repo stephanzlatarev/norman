@@ -44,7 +44,7 @@ export default class Game {
     Enemy.id = this.enemy.id;
     Enemy.base = { x: this.enemy.x, y: this.enemy.y };
 
-    Types.sync((await this.client.data({ unitTypeId: true })).units);
+    Types.sync((await this.client.data({ unitTypeId: true, upgradeId: true })));
     Units.sync(this.observation.rawData.units, this.me, this.enemy);
     Resources.sync(this.observation);
 

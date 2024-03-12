@@ -12,7 +12,7 @@ export default class BuildingTrain extends Job {
       assignee: factory ? factory : { type: Building }
     });
 
-    this.action = (trainee > 0) ? trainee : Types.get(trainee).actionToBuild;
+    this.action = (trainee > 0) ? trainee : Types.get(trainee).abilityId;
   }
 
   execute() {

@@ -13,7 +13,7 @@ export default class WorkerBuild extends Job {
       assignee: { type: Worker }
     });
 
-    this.action = (building > 0) ? building : Types.get(building).actionToBuild;
+    this.action = (building > 0) ? building : Types.get(building).abilityId;
     this.target = target;
   }
 
