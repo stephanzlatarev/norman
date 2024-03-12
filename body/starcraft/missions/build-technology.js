@@ -7,6 +7,8 @@ import Count from "../memo/count.js";
 import Limit from "../memo/limit.js";
 import Resources from "../memo/resources.js";
 
+const FACILITIES = ["CyberneticsCore", "Forge"];
+
 export default class BuildTechnologyMission extends Mission {
 
   job;
@@ -15,30 +17,31 @@ export default class BuildTechnologyMission extends Mission {
     if (this.job) {
       if (this.job.isFailed) {
         this.job = null;
-      } else if (!this.job.isDone) {
+      } else if (this.job.isDone) {
+        FACILITIES.splice(0, 1);
+        this.job = null;
+      } else {
         return;
       }
     }
 
-    const type = Types.get(selectFacilityType());
+    if (!FACILITIES.length) return;
 
-    if (Count[type.name] >= Limit[type.name]) return;
-    if (Resources.minerals < type.mineralCost) return;
-    if (Resources.vespene < type.vespeneCost) return;
+    const facility = Types.get(FACILITIES[0]);
+
+    if (Count[facility.name] >= Limit[facility.name]) return;
+    if (Resources.minerals < facility.mineralCost) return;
+    if (Resources.vespene < facility.vespeneCost) return;
 
     const pos = findBuildingPlot();
     if (!pos) return;
 
-    this.job = new Build(type.name, pos);
+    this.job = new Build(facility.name, pos);
 
-    Resources.minerals -= type.mineralCost;
-    Resources.vespene -= type.vespeneCost;
+    Resources.minerals -= facility.mineralCost;
+    Resources.vespene -= facility.vespeneCost;
   }
 
-}
-
-function selectFacilityType() {
-  return "Forge";
 }
 
 function findBuildingPlot() {
