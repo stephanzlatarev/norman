@@ -10,6 +10,8 @@ export default function() {
   const started = jobs.filter(job => !!job.assignee);
   const pending = jobs.filter(job => !job.assignee).sort(prioritizeJobs);
 
+  closeDeadJobs(started);
+
   startJobs(pending, started);
 
   show(pending, started);
@@ -21,6 +23,14 @@ export default function() {
 
 function prioritizeJobs(a, b) {
   return b.priority - a.priority;
+}
+
+function closeDeadJobs(jobs) {
+  for (const job of jobs) {
+    if (!job.assignee.isAlive) {
+      job.close(false);
+    }
+  }
 }
 
 function startJobs(pending, started) {
