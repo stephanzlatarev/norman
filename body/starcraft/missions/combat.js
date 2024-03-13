@@ -40,8 +40,26 @@ export default class Combat extends Mission {
 function attack(target) {
   const pos = target.body || target;
 
+  let observer;
+  let leader;
+  let leaderDistance = Infinity;
+
   for (const warrior of Units.warriors().values()) {
-    orderAttack(warrior, pos);
+    if (warrior.type.name === "Observer") {
+      observer = warrior;
+    } else {
+      orderAttack(warrior, pos);
+
+      const distance = Math.abs(warrior.body.x - pos.x) + Math.abs(warrior.body.y - pos.y);
+      if (distance < leaderDistance) {
+        leader = warrior;
+        leaderDistance = distance;
+      }
+    }
+  }
+
+  if (observer && leader) {
+    orderMove(observer, leader.body);
   }
 }
 
