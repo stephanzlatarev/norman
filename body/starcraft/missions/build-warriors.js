@@ -16,7 +16,7 @@ export default class BuildWorkersMission extends Mission {
   run() {
     removeCompletedJobs();
 
-    Resources.supplyUsed += jobs.size + jobs.size;
+    if (Resources.supplyUsed >= Resources.supplyLimit) return;
 
     for (const facility of Units.buildings().values()) {
       if (!WARRIOR_PRODUCER[facility.type.name]) continue;
@@ -55,15 +55,11 @@ function createProduceWarriorJob(facility) {
 function selectWarriorType(facility) {
   if (facility.type.name === "Gateway") {
     if (Count.CyberneticsCore >= 1) {
-      if ((Count.Stalker < Count.Zealot * 4) && (Count.Stalker < Count.Sentry * 4)) {
+      if ((Count.Stalker <= Count.Zealot * 4) && (Count.Stalker <= Count.Sentry * 4)) {
         return "Stalker";
-      } else if ((Count.Zealot * 4 < Count.Stalker) && (Count.Zealot < Count.Sentry)) {
-        return "Zealot";
-      } else if ((Count.Sentry * 4 < Count.Stalker) && (Count.Sentry < Count.Zealot)) {
+      } else if ((Count.Sentry * 4 <= Count.Stalker) && (Count.Sentry <= Count.Zealot)) {
         return "Sentry";
       }
-  
-      return "Stalker";
     }
 
     return "Zealot";
