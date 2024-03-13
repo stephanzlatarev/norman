@@ -12,6 +12,7 @@ export default class PlanInvestmentsMission extends Mission {
       Limit.CyberneticsCore = 0;
       Limit.Forge = 0;
       Limit.Gateway = 1;
+      Limit.RoboticsFacility = 0;
 
       if (Count.Nexus > 1) {
         // Transition to stage 1
@@ -23,6 +24,7 @@ export default class PlanInvestmentsMission extends Mission {
       Limit.Forge = (Count.Gateway >= 3) ? 1 : 0;
       Limit.Gateway = (Count.Nexus - 1) * 3;
       Limit.Nexus = Math.floor(Count.Gateway / 3) + 2;
+      Limit.RoboticsFacility = 1;
     }
   }
 

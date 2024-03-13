@@ -4,10 +4,14 @@ const races = [[], [], [], []];
 
 const IS_DEPOT = { Nexus: 1 };
 const IS_EXTRACTOR = { Assimilator: 1 };
+const IS_PYLON = { Pylon: 1 };
 const IS_WORKER = { Drone: 1, MULE: 1, Probe: 1, SCV: 1 };
-const NEEDS_POWER = { Forge: 1, Gateway: 1, Robotics: 1, Stargate: 1 };
+
+const RACE_PROTOSS = 3;
 
 const ATTRIBUTE_STRUCTURE = 8;
+
+const TYPE_OTHER = { name: "Other" };
 
 class Types {
 
@@ -16,7 +20,9 @@ class Types {
   }
 
   get(key) {
-    return types.get(key);
+    const type = types.get(key);
+
+    return type ? type : TYPE_OTHER;
   }
 
   list(race) {
@@ -35,7 +41,7 @@ class Types {
         name: unit.name,
 
         isDepot: !!IS_DEPOT[unit.name],
-        isPylon: (unit.name === "Pylon"),
+        isPylon: !!IS_PYLON[unit.name],
         isWorker: !!IS_WORKER[unit.name],
         isWarrior: !isBuilding,
         isExtractor: !!IS_EXTRACTOR[unit.name],
@@ -44,7 +50,7 @@ class Types {
         isVespene: !!unit.hasVespene && !unit.race,
 
         supplyProvided: unit.foodProvided,
-        needsPower: !!NEEDS_POWER[unit.name],
+        needsPower: (unit.race === RACE_PROTOSS) && !IS_DEPOT[unit.name] && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name],
 
         movementSpeed: unit.movementSpeed,
         sightRange: unit.sightRange,
@@ -55,6 +61,9 @@ class Types {
         mineralCost: unit.mineralCost,
         vespeneCost: unit.vespeneCost,
         techRequirement: unit.techRequirement,
+
+        // TODO: Calculate the time needed to produce the fastest building unit
+        produceTime: (isBuilding && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name]) ? 10 : 0,
       };
 
       types.set(unit.unitId, type);

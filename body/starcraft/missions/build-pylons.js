@@ -62,8 +62,9 @@ function countProductionCapacity() {
   let count = 0;
 
   for (const building of Units.buildings().values()) {
-    if ((building.type.name === "Nexus") || (building.type.name === "Gateway")) {
+    if (building.type.produceTime) {
       count++;
+
       if (building.order.abilityId) count++;
     }
   }

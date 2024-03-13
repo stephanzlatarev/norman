@@ -8,5 +8,6 @@ export default {
   Forge: 3,
   Gateway: Infinity,
   Nexus: Infinity,
+  RoboticsFacility: Infinity,
 
 }

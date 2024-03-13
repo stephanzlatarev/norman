@@ -6,6 +6,11 @@ import Resources from "../memo/resources.js";
 
 const jobs = new Map();
 
+const WARRIOR_PRODUCER = {
+  Gateway: true,
+  RoboticsFacility: true,
+};
+
 export default class BuildWorkersMission extends Mission {
 
   run() {
@@ -13,22 +18,13 @@ export default class BuildWorkersMission extends Mission {
 
     Resources.supplyUsed += jobs.size + jobs.size;
 
-    if (Resources.minerals < 100) return;
-    if (Resources.supplyUsed > Resources.supplyLimit - 2) return;
-
     for (const facility of Units.buildings().values()) {
-      if (facility.type.name !== "Gateway") continue;
+      if (!WARRIOR_PRODUCER[facility.type.name]) continue;
 
       if (!facility.isActive) continue;
       if (facility.order.abilityId) continue;
 
-      if (Resources.minerals < 100) return;
-      if (Resources.supplyUsed > Resources.supplyLimit - 2) return;
-
       createProduceWarriorJob(facility);
-
-      Resources.minerals -= 100;
-      Resources.supplyUsed += 2;
     }
   }
 
@@ -46,24 +42,36 @@ function createProduceWarriorJob(facility) {
   let job = jobs.get(facility);
 
   if (!job) {
-    job = new Produce(selectWarriorType(), facility);
+    const warrior = selectWarriorType(facility);
 
-    jobs.set(facility, job);
+    if (warrior) {
+      job = new Produce(warrior, facility);
+
+      jobs.set(facility, job);
+    }
   }
 }
 
-function selectWarriorType() {
-  if (Count.CyberneticsCore >= 1) {
-    if ((Count.Stalker < Count.Zealot * 4) && (Count.Stalker < Count.Sentry * 4)) {
+function selectWarriorType(facility) {
+  if (facility.type.name === "Gateway") {
+    if (Count.CyberneticsCore >= 1) {
+      if ((Count.Stalker < Count.Zealot * 4) && (Count.Stalker < Count.Sentry * 4)) {
+        return "Stalker";
+      } else if ((Count.Zealot * 4 < Count.Stalker) && (Count.Zealot < Count.Sentry)) {
+        return "Zealot";
+      } else if ((Count.Sentry * 4 < Count.Stalker) && (Count.Sentry < Count.Zealot)) {
+        return "Sentry";
+      }
+  
       return "Stalker";
-    } else if ((Count.Zealot * 4 < Count.Stalker) && (Count.Zealot < Count.Sentry)) {
-      return "Zealot";
-    } else if ((Count.Sentry * 4 < Count.Stalker) && (Count.Sentry < Count.Zealot)) {
-      return "Sentry";
     }
 
-    return "Stalker";
-  }
+    return "Zealot";
+  } else if (facility.type.name === "RoboticsFacility") {
+    if (Count.Observer < 1) {
+      return "Observer";
+    }
 
-  return "Zealot";
+    return "Immortal";
+  }
 }
