@@ -10,10 +10,10 @@ export default class Job extends Memory {
   // Priority is a non-negative number. The higher the number, the higher the priority of the job.
   priority;
 
-  // Conditions specify the pre-requisites for starting the job.
-  conditions;
+  // A unit or a profile of a unit that can do the job
+  agent;
 
-  // This is the unit assigned to execute the job.
+  // This is the unit assigned to execute the job
   assignee;
 
   // This is the current order issued to the assignee 
@@ -28,12 +28,12 @@ export default class Job extends Memory {
   // Is failed when attempted but failed
   isFailed = false;
 
-  constructor(summary, priority, conditions) {
+  constructor(summary, priority, agent) {
     super();
 
     this.summary = summary;
     this.priority = (priority > 0) ? priority : 0;
-    this.conditions = conditions;
+    this.agent = agent;
 
     jobs.add(this);
   }

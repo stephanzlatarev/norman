@@ -49,22 +49,22 @@ function startJobs(pending, started) {
 }
 
 function findCandidate(job) {
-  if (!job.conditions || !job.conditions.assignee) return;
+  if (!job.agent) return;
 
-  if (job.conditions.assignee.tag) {
-    return Units.get(job.conditions.assignee.tag);
+  if (job.agent.tag) {
+    return Units.get(job.agent.tag);
   }
 
-  if (job.conditions.assignee.type === Worker) {
+  if (job.agent.type === Worker) {
     for (const unit of Units.workers().values()) {
       if (unit.job) continue;
-      if (job.conditions.assignee.depot && (unit.depot !== job.conditions.assignee.depot)) continue;
+      if (job.agent.depot && (unit.depot !== job.agent.depot)) continue;
 
       return unit;
     }
   }
 
-  if (job.conditions.assignee.type === Building) {
+  if (job.agent.type === Building) {
     for (const unit of Units.buildings().values()) {
       if (!unit.job) {
         return unit;
