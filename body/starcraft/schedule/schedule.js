@@ -1,6 +1,7 @@
 import Job from "../job.js";
 import Types from "../types.js";
 import Units from "../units.js";
+import Resources from "../memo/resources.js";
 
 import describeSchedule from "./describe.js";
 
@@ -38,6 +39,9 @@ function closeDeadJobs(jobs) {
 function startJobs(pending, started) {
   for (let i = 0; i < pending.length; i++) {
     const job = pending[i];
+
+    if (!hasResources(job.output)) continue;
+
     const candidate = findCandidate(job);
 
     if (candidate) {
@@ -46,6 +50,16 @@ function startJobs(pending, started) {
       pending.splice(i--, 1);
     }
   }
+}
+
+function hasResources(output) {
+  if (output) {
+    if (output.foodRequired > Resources.supply) return false;
+    if (output.mineralCost > Resources.minerals) return false;
+    if (output.vespeneCost > Resources.vespene) return false;
+  }
+
+  return true;
 }
 
 function findCandidate(job) {
