@@ -1,7 +1,7 @@
-import Hub from "../hub.js";
 import Mission from "../mission.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
+import Hub from "../map/hub.js";
 import Resources from "../memo/resources.js";
 
 // TODO: Calculate time to new supply from nexuses and pylons in progress of building. Calculate time to supply cap looking at production facilities and ordered units. Build pylons just in time.

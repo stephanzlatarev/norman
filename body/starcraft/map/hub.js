@@ -1,15 +1,12 @@
-import Memory from "../../code/memory.js";
+import Pin from "./pin.js";
 
 const hubs = [];
 
-export default class Hub extends Memory {
+export default class Hub extends Pin {
 
   constructor(x, y) {
-    super();
+    super({ x, y });
 
-    this.d = 1;
-    this.x = x;
-    this.y = y;
     this.isPowered = false;
 
     this.pylonPlots = [

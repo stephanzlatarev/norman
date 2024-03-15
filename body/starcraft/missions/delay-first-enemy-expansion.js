@@ -1,9 +1,9 @@
-import Depot from "../depot.js";
 import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
 import Types from "../types.js";
 import Units from "../units.js";
+import Depot from "../map/depot.js";
 import Enemy from "../memo/enemy.js";
 import Resources from "../memo/resources.js";
 

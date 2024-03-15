@@ -1,8 +1,8 @@
-import Memory from "../../code/memory.js";
+import Pin from "./pin.js";
 
 const depots = [];
 
-export default class Depot extends Memory {
+export default class Depot extends Pin {
 
   // The workers assigned to this depot
   workers = new Set();
@@ -17,11 +17,7 @@ export default class Depot extends Memory {
   isSaturated = false;
 
   constructor(location, rally, minerals, vespene) {
-    super();
-
-    this.d = 1;
-    this.x = location.x;
-    this.y = location.y;
+    super(location);
 
     this.harvestRally = rally;
     this.exitRally = rally ? { x: location.x + location.x - rally.x, y: location.y + location.y - rally.y } : null;

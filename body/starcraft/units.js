@@ -1,8 +1,8 @@
-import Depot from "./depot.js";
-import Hub from "./hub.js";
 import Types from "./types.js";
 import Harvest from "./jobs/harvest.js";
+import Hub from "./map/hub.js";
 import Resources from "./memo/resources.js";
+import Depot from "./map/depot.js";
 
 const resources = new Map();
 const workers = new Map();

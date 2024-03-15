@@ -1,6 +1,6 @@
-import Hub from "./hub.js";
 import Depot from "./depot.js";
-import Units from "./units.js";
+import Hub from "./hub.js";
+import Units from "../units.js";
 
 class Map {
 
