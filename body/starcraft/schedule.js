@@ -2,8 +2,8 @@ import Job from "./job.js";
 import Types from "./types.js";
 import Units from "./units.js";
 
-const Building = Types.get("Building");
-const Worker = Types.get("Worker");
+const Building = Types.unit("Building");
+const Worker = Types.unit("Worker");
 
 export default function() {
   const jobs = Array.from(Job.list().values());

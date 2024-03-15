@@ -7,8 +7,8 @@ const counting = new Map();
 
 class Count {
 
-  sync(race) {
-    // Zero all counting
+  sync(observation, race) {
+    // Count units by type
     for (const type of Types.list(race)) {
       counting.set(type.name, 0);
     }
@@ -19,6 +19,11 @@ class Count {
 
     for (const [type, count] of counting) {
       this[type] = count;
+    }
+
+    // Set count of upgrades by type
+    for (const id of observation.rawData.player.upgradeIds) {
+      this[Types.upgrade(id).name] = 1;
     }
   }
 

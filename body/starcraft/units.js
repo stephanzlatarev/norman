@@ -57,7 +57,7 @@ class Units {
     removeDeadUnits(obstacles, alive);
 
     for (const unit of units) {
-      const type = Types.get(unit.unitType);
+      const type = Types.unit(unit.unitType);
       const group = findGroup(unit, type, me, enemy)
 
       syncUnit(group, unit, type, zombies, me, enemy);

@@ -2,7 +2,7 @@ import Job from "../job.js";
 import Order from "../order.js";
 import Types from "../types.js";
 
-const Worker = Types.get("Worker");
+const Worker = Types.unit("Worker");
 
 export default class Harvest extends Job {
 

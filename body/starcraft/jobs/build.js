@@ -4,7 +4,7 @@ import Types from "../types.js";
 import Units from "../units.js";
 import Priority from "../memo/priority.js";
 
-const Worker = Types.get("Worker");
+const Worker = Types.unit("Worker");
 
 export default class Build extends Job {
 
@@ -13,7 +13,7 @@ export default class Build extends Job {
       assignee: { type: Worker }
     });
 
-    this.action = (building > 0) ? building : Types.get(building).abilityId;
+    this.action = (building > 0) ? building : Types.unit(building).abilityId;
     this.target = target;
   }
 

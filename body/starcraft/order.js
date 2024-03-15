@@ -14,6 +14,7 @@ export default class Order extends Memory {
   target;
 
   status = 0;
+  isIssued = false;
   isConfirmed = false;
   isFailed = false;
 
@@ -45,7 +46,10 @@ export default class Order extends Memory {
   }
 
   result(status) {
+    if (this.isIssued) return;
+
     this.status = status;
+    this.isIssued = true;
     this.isFailed = (status !== 1);
 
     if (this.isFailed) {

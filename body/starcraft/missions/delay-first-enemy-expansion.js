@@ -29,7 +29,7 @@ class AnnoyEnemy extends Job {
 
   constructor() {
     super("annoy enemy", 100, {
-      assignee: { type: Types.get("Worker") }
+      assignee: { type: Types.unit("Worker") }
     });
   }
 

@@ -8,7 +8,7 @@ import Limit from "../memo/limit.js";
 import Resources from "../memo/resources.js";
 
 const DEFAULT_FACILITIES = ["Gateway"];
-const SPECIAL_FACILITIES = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge"];
+const SPECIAL_FACILITIES = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil"];
 
 export default class BuildFacilitiesMission extends Mission {
 
@@ -19,7 +19,7 @@ export default class BuildFacilitiesMission extends Mission {
       if (this.job.isFailed) {
         this.job = null;
       } else if (this.job.isDone) {
-        if (this.job.product && (this.job.product.type === Types.get(SPECIAL_FACILITIES[0]))) {
+        if (this.job.product && (this.job.product.type === Types.unit(SPECIAL_FACILITIES[0]))) {
           SPECIAL_FACILITIES.splice(0, 1);
         }
 
@@ -49,7 +49,7 @@ export default class BuildFacilitiesMission extends Mission {
 function selectFacilityType() {
   // Try special types
   if (SPECIAL_FACILITIES.length) {
-    const facility = Types.get(SPECIAL_FACILITIES[0]);
+    const facility = Types.unit(SPECIAL_FACILITIES[0]);
   
     if (Count[facility.name] < Limit[facility.name]) {
       return facility;
@@ -58,7 +58,7 @@ function selectFacilityType() {
 
   // Try default type
   for (const one of DEFAULT_FACILITIES) {
-    const facility = Types.get(one);
+    const facility = Types.unit(one);
 
     if (Count[facility.name] < Limit[facility.name]) {
       return facility;

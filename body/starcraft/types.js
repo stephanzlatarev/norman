@@ -1,5 +1,6 @@
 
-const types = new Map();
+const units = new Map();
+const upgrades = new Map();
 const races = [[], [], [], []];
 
 const IS_DEPOT = { Nexus: 1 };
@@ -15,12 +16,14 @@ const TYPE_OTHER = { name: "Other" };
 
 class Types {
 
-  [Symbol.iterator]() {
-    return types[Symbol.iterator]();
+  unit(key) {
+    const type = units.get(key);
+
+    return type ? type : TYPE_OTHER;
   }
 
-  get(key) {
-    const type = types.get(key);
+  upgrade(key) {
+    const type = upgrades.get(key);
 
     return type ? type : TYPE_OTHER;
   }
@@ -66,22 +69,23 @@ class Types {
         produceTime: (isBuilding && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name]) ? 10 : 0,
       };
 
-      types.set(unit.unitId, type);
-      types.set(unit.name, type);
+      units.set(unit.unitId, type);
+      units.set(unit.name, type);
 
       races[unit.race].push(type);
     }
 
     for (const upgrade of data.upgrades) {
       if (upgrade.abilityId) {
-        types.set(upgrade.name, upgrade);
+        upgrades.set(upgrade.upgradeId, upgrade);
+        upgrades.set(upgrade.name, upgrade);
       }
     }
   }
 
 }
 
-types.set("Building", { isBuilding: true });
-types.set("Worker", { isWorker: true });
+units.set("Building", { isBuilding: true });
+units.set("Worker", { isWorker: true });
 
 export default new Types();

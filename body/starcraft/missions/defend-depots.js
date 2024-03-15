@@ -7,7 +7,7 @@ import Count from "../memo/count.js";
 // TODO: Remove the hack of closing a job when adding a defender after implementing jit-mining
 import Job from "../job.js";
 
-const Worker = Types.get("Worker");
+const Worker = Types.unit("Worker");
 const MaxAttackers = 12;
 
 const jobs = new Map();

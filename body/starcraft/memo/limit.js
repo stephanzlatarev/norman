@@ -9,5 +9,6 @@ export default {
   Gateway: Infinity,
   Nexus: Infinity,
   RoboticsFacility: Infinity,
+  TwilightCouncil: 1,
 
 }

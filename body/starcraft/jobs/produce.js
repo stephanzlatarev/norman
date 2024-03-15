@@ -10,7 +10,7 @@ export default class Produce extends Job {
       assignee: facility
     });
 
-    this.action = (product > 0) ? product : Types.get(product).abilityId;
+    this.action = (product > 0) ? product : Types.unit(product).abilityId;
   }
 
   execute() {
