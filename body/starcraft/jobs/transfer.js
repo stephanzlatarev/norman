@@ -1,27 +1,22 @@
 import Job from "../job.js";
 import Order from "../order.js";
-import Types from "../types.js";
-
-const Worker = Types.unit("Worker");
 
 export default class Transfer extends Job {
 
   constructor(fromDepot, toDepot) {
-    super("transfer", 1, { type: Worker, depot: fromDepot });
-
-    this.depot = toDepot;
+    super({ type: "Worker", depot: fromDepot }, null, toDepot);
   }
 
   execute() {
     if (!this.order) {
-      const minerals = this.depot.minerals[0];
+      const minerals = this.target.minerals[0];
 
       this.order = new Order(this.assignee, 298, minerals);
 
-      this.depot.assignWorker(this.assignee);
+      this.target.assignWorker(this.assignee);
     } else if (this.order.isFailed) {
       this.close(false);
-    } else if (this.order.isConfirmed && this.depot.isActive) {
+    } else if (this.order.isConfirmed && this.target.isActive) {
       this.close(true);
     }
   }

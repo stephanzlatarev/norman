@@ -2,22 +2,16 @@ import Job from "../job.js";
 import Order from "../order.js";
 import Types from "../types.js";
 import Units from "../units.js";
-import Priority from "../memo/priority.js";
-
-const Worker = Types.unit("Worker");
 
 export default class Build extends Job {
 
-  constructor(building, target, priority) {
-    super("build " + building, (priority >= 0) ? priority : Priority[building], { type: Worker });
-
-    this.action = (building > 0) ? building : Types.unit(building).abilityId;
-    this.target = target;
+  constructor(building, target) {
+    super("Worker", building.name ? building : Types.unit(building), target);
   }
 
   execute() {
     if (!this.order) {
-      this.order = new Order(this.assignee, this.action, this.target);
+      this.order = new Order(this.assignee, this.output.abilityId, this.target);
     } else if (this.order.isFailed) {
       this.close(false);
     } else if (this.order.isConfirmed) {

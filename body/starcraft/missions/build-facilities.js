@@ -38,7 +38,7 @@ export default class BuildFacilitiesMission extends Mission {
     const pos = findBuildingPlot();
     if (!pos) return;
 
-    this.job = new Build(facility.name, pos);
+    this.job = new Build(facility, pos);
 
     Resources.minerals -= facility.mineralCost;
     Resources.vespene -= facility.vespeneCost;

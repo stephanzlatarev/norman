@@ -12,20 +12,30 @@ const RACE_PROTOSS = 3;
 
 const ATTRIBUTE_STRUCTURE = 8;
 
-const TYPE_OTHER = { name: "Other" };
-
 class Types {
 
   unit(key) {
-    const type = units.get(key);
+    let type = units.get(key);
 
-    return type ? type : TYPE_OTHER;
+    if (!type) {
+      type = { name: "Other" };
+
+      units.set(key, type);
+    }
+
+    return type;
   }
 
   upgrade(key) {
-    const type = upgrades.get(key);
+    let type = upgrades.get(key);
 
-    return type ? type : TYPE_OTHER;
+    if (!type) {
+      type = { name: "Other" };
+
+      upgrades.set(key, type);
+    }
+
+    return type;
   }
 
   list(race) {
@@ -39,35 +49,35 @@ class Types {
 
       const isBuilding = (unit.attributes.indexOf(ATTRIBUTE_STRUCTURE) >= 0);
 
-      const type = {
-        id: unit.unitId,
-        name: unit.name,
+      const type = this.unit(unit.name);
 
-        isDepot: !!IS_DEPOT[unit.name],
-        isPylon: !!IS_PYLON[unit.name],
-        isWorker: !!IS_WORKER[unit.name],
-        isWarrior: !isBuilding,
-        isExtractor: !!IS_EXTRACTOR[unit.name],
-        isBuilding: isBuilding,
-        isMinerals: !!unit.hasMinerals,
-        isVespene: !!unit.hasVespene && !unit.race,
+      type.id = unit.unitId;
+      type.name = unit.name;
 
-        supplyProvided: unit.foodProvided,
-        needsPower: (unit.race === RACE_PROTOSS) && !IS_DEPOT[unit.name] && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name],
+      type.isDepot = !!IS_DEPOT[unit.name];
+      type.isPylon = !!IS_PYLON[unit.name];
+      type.isWorker = !!IS_WORKER[unit.name];
+      type.isWarrior = !isBuilding;
+      type.isExtractor = !!IS_EXTRACTOR[unit.name];
+      type.isBuilding = isBuilding;
+      type.isMinerals = !!unit.hasMinerals;
+      type.isVespene = !!unit.hasVespene && !unit.race;
 
-        movementSpeed: unit.movementSpeed,
-        sightRange: unit.sightRange,
+      type.supplyProvided = unit.foodProvided;
+      type.needsPower = (unit.race === RACE_PROTOSS) && !IS_DEPOT[unit.name] && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name];
 
-        abilityId: unit.abilityId,
-        buildTime: unit.buildTime,
-        foodRequired: unit.foodRequired,
-        mineralCost: unit.mineralCost,
-        vespeneCost: unit.vespeneCost,
-        techRequirement: unit.techRequirement,
+      type.movementSpeed = unit.movementSpeed;
+      type.sightRange = unit.sightRange;
 
-        // TODO: Calculate the time needed to produce the fastest building unit
-        produceTime: (isBuilding && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name]) ? 10 : 0,
-      };
+      type.abilityId = unit.abilityId;
+      type.buildTime = unit.buildTime;
+      type.foodRequired = unit.foodRequired;
+      type.mineralCost = unit.mineralCost;
+      type.vespeneCost = unit.vespeneCost;
+      type.techRequirement = unit.techRequirement;
+
+      // TODO: Calculate the time needed to produce the fastest building unit
+      type.produceTime = (isBuilding && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name]) ? 10 : 0;
 
       units.set(unit.unitId, type);
       units.set(unit.name, type);

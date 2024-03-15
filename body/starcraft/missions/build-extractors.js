@@ -5,8 +5,6 @@ import Count from "../memo/count.js";
 import Limit from "../memo/limit.js";
 import Resources from "../memo/resources.js";
 
-const EXTRACTOR_TYPE = "Assimilator";
-
 export default class BuildExtractorsMission extends Mission {
 
   job;
@@ -27,7 +25,7 @@ export default class BuildExtractorsMission extends Mission {
     }
 
     if (Resources.minerals < 75) return;
-    if (Count[EXTRACTOR_TYPE] >= Limit[EXTRACTOR_TYPE]) return;
+    if (Count["Assimilator"] >= Limit["Assimilator"]) return;
 
     for (const nexus of Units.buildings().values()) {
       if (!nexus.depot) continue;
@@ -37,7 +35,7 @@ export default class BuildExtractorsMission extends Mission {
         if (vespene.extractor && vespene.extractor.isAlive) continue;
 
         this.vespene = vespene;
-        this.job = new Build(EXTRACTOR_TYPE, vespene);
+        this.job = new Build("Assimilator", vespene);
 
         Resources.minerals -= 75;
 

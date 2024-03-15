@@ -1,5 +1,6 @@
 import Mission from "../mission.js";
 import Order from "../order.js";
+import Types from "../types.js";
 import Units from "../units.js";
 import Produce from "../jobs/produce.js";
 import Limit from "../memo/limit.js";
@@ -62,7 +63,7 @@ function createBuildWorkerJob(nexus) {
   let job = jobs.get(nexus);
 
   if (!job) {
-    job = new Produce("Probe", nexus);
+    job = new Produce(nexus, Types.unit("Probe"));
 
     jobs.set(nexus, job);
   }

@@ -1,13 +1,11 @@
 import Mission from "../mission.js";
 import Units from "../units.js";
-import Types from "../types.js";
 import Attack from "../jobs/attack.js";
 import Count from "../memo/count.js";
 
 // TODO: Remove the hack of closing a job when adding a defender after implementing jit-mining
 import Job from "../job.js";
 
-const Worker = Types.unit("Worker");
 const MaxAttackers = 12;
 
 const jobs = new Map();
@@ -68,7 +66,7 @@ function addJob(nexus, index) {
   const jobId = nexus.tag + ":" + index;
 
   if (!jobs.has(jobId)) {
-    jobs.set(jobId, new Attack({ type: Worker, depot: nexus.depot }, nexus.depot.exitRally));
+    jobs.set(jobId, new Attack({ type: "Worker", depot: nexus.depot }, nexus.depot.exitRally));
 
     // TODO: Remove this hack after implementing jit-mining
     for (const job of Job.list()) {

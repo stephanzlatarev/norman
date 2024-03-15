@@ -6,22 +6,25 @@ export default function(pending, started) {
 
   const text = ["Schedule:"];
   let index = 1;
+  let count = 0;
 
   text.push("");
 
   for (let i = 0; i < started.length; i++, index++) {
     if (started[i].priority) {
       text.push(describeJob(started[i], index));
+      count++;
     }
   }
 
   if (pending.length && started.length) {
-    text.push("\t-----");
+    text.push("----\tprio\t----");
   }
 
   for (let i = 0; i < pending.length; i++, index++) {
     if (pending[i].priority) {
       text.push(describeJob(pending[i], index));
+      count++;
     }
   }
 
@@ -29,7 +32,7 @@ export default function(pending, started) {
 
   const textToShow = text.join("\r\n");
 
-  if (textToShow !== lastShownText) {
+  if (count && (textToShow !== lastShownText)) {
     lastShownText = textToShow;
 
     console.log(textToShow);
@@ -39,8 +42,7 @@ export default function(pending, started) {
 function describeJob(job, index) {
   return [
     index,
-    job.constructor.name,
-    "prio: " + job.priority,
+    job.priority,
     statusJob(job),
     describeAssignee(job.assignee),
     statusOrder(job.order),

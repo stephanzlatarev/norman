@@ -45,7 +45,7 @@ export default class ResearchUpgradesMission extends Mission {
       if (Resources.minerals < upgrade.mineralCost) return;
       if (Resources.vespene < upgrade.vespeneCost) return;
 
-      this.job = new Produce(upgrade.abilityId, facility);
+      this.job = new Produce(facility, upgrade);
 
       Resources.minerals -= upgrade.mineralCost;
       Resources.vespene -= upgrade.vespeneCost;

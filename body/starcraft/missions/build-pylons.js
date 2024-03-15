@@ -24,7 +24,7 @@ export default class BuildPylonsMission extends Mission {
     const pos = findPylonForSupply() || findPylonForPower();
     if (!pos) return;
 
-    this.job = new Build("Pylon", pos, 100);
+    this.job = new Build("Pylon", pos);
 
     Resources.minerals -= 100;
   }

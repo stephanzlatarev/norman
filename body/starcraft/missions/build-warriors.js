@@ -1,4 +1,5 @@
 import Mission from "../mission.js";
+import Types from "../types.js";
 import Units from "../units.js";
 import Produce from "../jobs/produce.js";
 import Count from "../memo/count.js";
@@ -45,7 +46,7 @@ function createProduceWarriorJob(facility) {
     const warrior = selectWarriorType(facility);
 
     if (warrior) {
-      job = new Produce(warrior, facility);
+      job = new Produce(facility, Types.unit(warrior));
 
       jobs.set(facility, job);
     }

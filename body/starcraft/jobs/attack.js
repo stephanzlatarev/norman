@@ -4,9 +4,7 @@ import Order from "../order.js";
 export default class Attack extends Job {
 
   constructor(warrior, target) {
-    super("attack", 100, warrior);
-
-    this.target = target;
+    super(warrior, null, target);
   }
 
   execute() {

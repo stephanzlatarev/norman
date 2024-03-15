@@ -1,4 +1,6 @@
 import Memory from "../../code/memory.js";
+import Types from "./types.js";
+import Priority from "./memo/priority.js";
 
 const jobs = new Set();
 
@@ -7,19 +9,25 @@ export default class Job extends Memory {
   // A short description of the job
   summary;
 
-  // Priority is a non-negative number. The higher the number, the higher the priority of the job.
+  // Priority is a non-negative number. The higher the number, the higher the priority of the job
   priority;
 
   // A unit or a profile of a unit that can do the job
   agent;
 
+  // The expected resulting product of the job, if any
+  output;
+
+  // The target location or unit of the job, if any
+  output;
+
   // This is the unit assigned to execute the job
   assignee;
 
-  // This is the current order issued to the assignee 
+  // This is the current order issued to the assignee
   order;
 
-  // The product of this job
+  // This is the product of this job
   product;
 
   // Is done when completed successfully
@@ -28,12 +36,15 @@ export default class Job extends Memory {
   // Is failed when attempted but failed
   isFailed = false;
 
-  constructor(summary, priority, agent) {
+  constructor(agent, output, target) {
     super();
 
-    this.summary = summary;
-    this.priority = (priority > 0) ? priority : 0;
-    this.agent = agent;
+    this.agent = getAgent(agent);
+    this.output = output;
+    this.target = target;
+
+    this.summary = getSummary(this);
+    this.priority = getPriority(output);
 
     jobs.add(this);
   }
@@ -77,4 +88,50 @@ export default class Job extends Memory {
     return jobs;
   }
 
+}
+
+function getAgent(agent) {
+  if (agent.tag) {
+    return agent;
+  } else if (agent.type) {
+    if (agent.type.name) {
+      return agent;
+    }
+
+    return { ...agent, type: Types.unit(agent.type) };
+  }
+
+  return { type: Types.unit(agent) };
+}
+
+function getSummary(job) {
+  const summary = [job.constructor.name];
+
+  if (job.output) {
+    summary.push(job.output.name);
+  }
+
+  if (job.target) {
+    if (job.target.nick && job.target.type) {
+      summary.push(job.target.type.name);
+      summary.push(job.target.nick);
+    } else if (job.target.x && job.target.y) {
+      summary.push(job.target.x.toFixed(1));
+      summary.push(job.target.y.toFixed(1));
+    }
+  }
+
+  return summary.join(" ");
+}
+
+function getPriority(type) {
+  if (type) {
+    const priority = Priority[type.name];
+
+    if (priority > 0) {
+      return priority;
+    }
+  }
+
+  return 0;
 }
