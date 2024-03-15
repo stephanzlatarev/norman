@@ -4,13 +4,13 @@ import Mission from "./mission.js";
 import Order from "./order.js";
 import Types from "./types.js";
 import Units from "./units.js";
-import scheduleJobs from "./schedule.js";
 import Depot from "./map/depot.js";
 import Hub from "./map/hub.js";
 import Map from "./map/map.js";
 import Count from "./memo/count.js";
 import Enemy from "./memo/enemy.js";
 import Resources from "./memo/resources.js";
+import scheduleJobs from "./schedule/schedule.js";
 
 const LOOPS_PER_STEP = 2;
 const LOOPS_PER_SECOND = 22.4;
