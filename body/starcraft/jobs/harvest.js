@@ -7,9 +7,7 @@ const Worker = Types.unit("Worker");
 export default class Harvest extends Job {
 
   constructor(resource, depot) {
-    super("harvest", 0, {
-      assignee: { type: Worker, depot: depot }
-    });
+    super("harvest", 0, { type: Worker, depot: depot });
 
     this.resource = resource;
   }

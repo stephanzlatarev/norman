@@ -7,9 +7,7 @@ const Worker = Types.unit("Worker");
 export default class Transfer extends Job {
 
   constructor(fromDepot, toDepot) {
-    super("transfer", 1, {
-      assignee: { type: Worker, depot: fromDepot }
-    });
+    super("transfer", 1, { type: Worker, depot: fromDepot });
 
     this.depot = toDepot;
   }

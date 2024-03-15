@@ -9,9 +9,7 @@ const Worker = Types.unit("Worker");
 export default class Build extends Job {
 
   constructor(building, target, priority) {
-    super("build " + building, (priority >= 0) ? priority : Priority[building], {
-      assignee: { type: Worker }
-    });
+    super("build " + building, (priority >= 0) ? priority : Priority[building], { type: Worker });
 
     this.action = (building > 0) ? building : Types.unit(building).abilityId;
     this.target = target;
