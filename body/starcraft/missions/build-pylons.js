@@ -19,14 +19,12 @@ export default class BuildPylonsMission extends Mission {
       }
     }
 
-    if (Resources.minerals < 100) return;
-
     const pos = findPylonForSupply() || findPylonForPower();
-    if (!pos) return;
 
-    this.job = new Build("Pylon", pos);
-
-    Resources.minerals -= 100;
+    if (pos) {
+      this.job = new Build("Pylon", pos);
+      this.job.priority = 100;
+    }
   }
 
 }

@@ -2,9 +2,6 @@ import Mission from "../mission.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
 import Depot from "../map/depot.js";
-import Count from "../memo/count.js";
-import Limit from "../memo/limit.js";
-import Resources from "../memo/resources.js";
 
 export default class BuildExpansionsMission extends Mission {
 
@@ -19,15 +16,11 @@ export default class BuildExpansionsMission extends Mission {
       }
     }
 
-    if (Count.Nexus >= Limit.Nexus) return;
-    if (Resources.minerals < 400) return;
-
     const pos = findDepotLocation();
-    if (!pos) return;
 
-    this.job = new Build("Nexus", pos);
-
-    Resources.minerals -= 400;
+    if (pos) {
+      this.job = new Build("Nexus", pos);
+    }
   }
 
 }

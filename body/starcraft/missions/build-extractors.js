@@ -1,9 +1,6 @@
 import Mission from "../mission.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
-import Count from "../memo/count.js";
-import Limit from "../memo/limit.js";
-import Resources from "../memo/resources.js";
 
 export default class BuildExtractorsMission extends Mission {
 
@@ -24,9 +21,6 @@ export default class BuildExtractorsMission extends Mission {
       }
     }
 
-    if (Resources.minerals < 75) return;
-    if (Count["Assimilator"] >= Limit["Assimilator"]) return;
-
     for (const nexus of Units.buildings().values()) {
       if (!nexus.depot) continue;
       if (!nexus.depot.vespene.length) continue;
@@ -36,8 +30,6 @@ export default class BuildExtractorsMission extends Mission {
 
         this.vespene = vespene;
         this.job = new Build("Assimilator", vespene);
-
-        Resources.minerals -= 75;
 
         return;
       }

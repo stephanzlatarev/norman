@@ -1,65 +1,85 @@
 import Job from "../job.js";
-import Types from "../types.js";
 import Units from "../units.js";
+import Count from "../memo/count.js";
+import Limit from "../memo/limit.js";
 import Resources from "../memo/resources.js";
 
 import describeSchedule from "./describe.js";
-
-const Building = Types.unit("Building");
-const Worker = Types.unit("Worker");
 
 export default function() {
   const jobs = Array.from(Job.list().values());
   const started = jobs.filter(job => !!job.assignee);
   const pending = jobs.filter(job => !job.assignee).sort(prioritizeJobs);
 
-  closeDeadJobs(started);
-
-  startJobs(pending, started);
-
-  describeSchedule(pending, started);
-
+  // Execute all previously started jobs
   for (const job of started) {
     job.execute();
   }
-}
 
-function prioritizeJobs(a, b) {
-  return b.priority - a.priority;
-}
+  // Account for resources required for outstanding orders
 
-function closeDeadJobs(jobs) {
-  for (const job of jobs) {
-    if (!job.assignee.isAlive) {
-      job.close(false);
-    }
-  }
-}
+  // Start and execute as many pending jobs as possible by their priority
+  let blockPriority = 0;
+  let blockSupply = false;
+  let blockMinerals = false;
+  let blockVespene = false;
 
-function startJobs(pending, started) {
   for (let i = 0; i < pending.length; i++) {
     const job = pending[i];
 
-    if (!hasResources(job.output)) continue;
+    // A lower priority job can be started only if it doesn't delay higher priority jobs
+    if ((job.priority < blockPriority) && job.output) {
+      if (blockSupply && job.output.foodRequired) continue;
+      if (blockMinerals && job.output.mineralCost) continue;
+      if (blockVespene && job.output.vespeneCost) continue;
+    }
 
-    const candidate = findCandidate(job);
+    if (job.output) {
+      if (Count[job.output.name] >= Limit[job.output.name]) continue;
 
-    if (candidate) {
-      job.assign(candidate);
+      if (job.output.foodRequired > Resources.supply) {
+        blockPriority = job.priority;
+        blockSupply = true;
+        continue;
+      }
+
+      if (job.output.mineralCost > Resources.minerals) {
+        blockPriority = job.priority;
+        blockMinerals = true;
+        continue;
+      }
+
+      if (job.output.vespeneCost > Resources.vespene) {
+        blockPriority = job.priority;
+        blockVespene = true;
+        continue;
+      }
+    }
+
+    const assignee = findCandidate(job);
+
+    if (assignee) {
+      job.assign(assignee);
+      job.execute();
+
+      if (job.output) {
+        Count[job.output.name]++;
+
+        if (job.output.foodRequired) Resources.supply -= job.output.foodRequired;
+        if (job.output.mineralCost) Resources.minerals -= job.output.mineralCost;
+        if (job.output.vespeneCost) Resources.vespene -= job.output.vespeneCost;
+      }
+
       started.push(job);
       pending.splice(i--, 1);
     }
   }
+
+  describeSchedule(pending, started);
 }
 
-function hasResources(output) {
-  if (output) {
-    if (output.foodRequired > Resources.supply) return false;
-    if (output.mineralCost > Resources.minerals) return false;
-    if (output.vespeneCost > Resources.vespene) return false;
-  }
-
-  return true;
+function prioritizeJobs(a, b) {
+  return b.priority - a.priority;
 }
 
 function findCandidate(job) {
@@ -69,8 +89,9 @@ function findCandidate(job) {
     return Units.get(job.agent.tag);
   }
 
-  if (job.agent.type === Worker) {
+  if (job.agent.type.isWorker) {
     for (const unit of Units.workers().values()) {
+      if (unit.order.abilityId) continue;
       if (unit.job) continue;
       if (job.agent.depot && (unit.depot !== job.agent.depot)) continue;
 
@@ -78,11 +99,12 @@ function findCandidate(job) {
     }
   }
 
-  if (job.agent.type === Building) {
+  if (job.agent.type.isBuilding) {
     for (const unit of Units.buildings().values()) {
-      if (!unit.job) {
-        return unit;
-      }
+      if (unit.order.abilityId) continue;
+      if (unit.job) continue;
+
+      return unit;
     }
   }
 }

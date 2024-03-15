@@ -4,7 +4,6 @@ import Types from "../types.js";
 import Units from "../units.js";
 import Produce from "../jobs/produce.js";
 import Limit from "../memo/limit.js";
-import Resources from "../memo/resources.js";
 
 // TODO: When mission is converted to skill, there will be one instance per active nexus and just one job at a time
 const jobs = new Map();
@@ -14,30 +13,14 @@ export default class BuildWorkersMission extends Mission {
   run() {
     removeCompletedJobs();
 
-    Resources.supplyUsed += jobs.size;
-    Resources.supplyWorkers += jobs.size;
-
-    if (Resources.minerals < 50) return;
-    if (Resources.supplyUsed >= Resources.supplyLimit) return;
-    if (Resources.supplyWorkers >= Limit.Worker) return;
+    if (Units.workers().size >= Limit.Worker) return;
 
     for (const nexus of Units.buildings().values()) {
       if (!nexus.depot) continue;
-
+      if (!nexus.isActive) continue;
       if (setRallyPoint(nexus)) continue;
 
-      if (!nexus.isActive) continue;
-      if (nexus.order.abilityId) continue;
-
-      if (Resources.minerals < 50) return;
-      if (Resources.supplyUsed >= Resources.supplyLimit) return;
-      if (Resources.supplyWorkers >= Limit.Worker) return;
-
       createBuildWorkerJob(nexus);
-
-      Resources.minerals -= 50;
-      Resources.supplyUsed++;
-      Resources.supplyWorkers++;
     }
   }
 

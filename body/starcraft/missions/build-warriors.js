@@ -21,9 +21,7 @@ export default class BuildWorkersMission extends Mission {
 
     for (const facility of Units.buildings().values()) {
       if (!WARRIOR_PRODUCER[facility.type.name]) continue;
-
       if (!facility.isActive) continue;
-      if (facility.order.abilityId) continue;
 
       createProduceWarriorJob(facility);
     }

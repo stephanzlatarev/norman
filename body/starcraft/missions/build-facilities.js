@@ -5,10 +5,11 @@ import Build from "../jobs/build.js";
 import Hub from "../map/hub.js";
 import Count from "../memo/count.js";
 import Limit from "../memo/limit.js";
-import Resources from "../memo/resources.js";
 
 const DEFAULT_FACILITIES = ["Gateway"];
 const SPECIAL_FACILITIES = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil"];
+
+// TODO: Convert to skill and run one skill per facility type
 
 export default class BuildFacilitiesMission extends Mission {
 
@@ -30,18 +31,12 @@ export default class BuildFacilitiesMission extends Mission {
     }
 
     const facility = selectFacilityType();
-
     if (!facility) return;
-    if (Resources.minerals < facility.mineralCost) return;
-    if (Resources.vespene < facility.vespeneCost) return;
 
     const pos = findBuildingPlot();
     if (!pos) return;
 
     this.job = new Build(facility, pos);
-
-    Resources.minerals -= facility.mineralCost;
-    Resources.vespene -= facility.vespeneCost;
   }
 
 }

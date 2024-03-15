@@ -3,7 +3,6 @@ import Types from "../types.js";
 import Units from "../units.js";
 import Produce from "../jobs/produce.js";
 import Count from "../memo/count.js";
-import Resources from "../memo/resources.js";
 
 const FACILITY = "Forge";
 const UPGRADES = [
@@ -40,15 +39,8 @@ export default class ResearchUpgradesMission extends Mission {
       if (facility.type.name !== FACILITY) continue;
 
       if (!facility.isActive) continue;
-      if (facility.order.abilityId) continue;
-
-      if (Resources.minerals < upgrade.mineralCost) return;
-      if (Resources.vespene < upgrade.vespeneCost) return;
 
       this.job = new Produce(facility, upgrade);
-
-      Resources.minerals -= upgrade.mineralCost;
-      Resources.vespene -= upgrade.vespeneCost;
     }
   }
 
