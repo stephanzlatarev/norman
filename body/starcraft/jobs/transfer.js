@@ -4,7 +4,7 @@ import Order from "../order.js";
 export default class Transfer extends Job {
 
   constructor(fromDepot, toDepot) {
-    super({ type: "Worker", depot: fromDepot }, null, toDepot);
+    super({ type: { isWorker: true }, depot: fromDepot }, null, toDepot);
   }
 
   execute() {

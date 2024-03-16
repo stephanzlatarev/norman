@@ -4,7 +4,7 @@ import Order from "../order.js";
 export default class Harvest extends Job {
 
   constructor(resource, depot) {
-    super({ type: "Worker", depot: depot }, null, resource);
+    super({ type: { isWorker: true }, depot: depot }, null, resource);
   }
 
   execute() {

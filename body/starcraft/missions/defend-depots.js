@@ -66,7 +66,7 @@ function addJob(nexus, index) {
   const jobId = nexus.tag + ":" + index;
 
   if (!jobs.has(jobId)) {
-    jobs.set(jobId, new Attack({ type: "Worker", depot: nexus.depot }, nexus.depot.exitRally));
+    jobs.set(jobId, new Attack({ type: { isWorker: true }, depot: nexus.depot }, nexus.depot.exitRally));
 
     // TODO: Remove this hack after implementing jit-mining
     for (const job of Job.list()) {

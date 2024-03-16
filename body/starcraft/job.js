@@ -91,14 +91,8 @@ export default class Job extends Memory {
 }
 
 function getAgent(agent) {
-  if (agent.tag) {
+  if (agent.tag || agent.type) {
     return agent;
-  } else if (agent.type) {
-    if (agent.type.name) {
-      return agent;
-    }
-
-    return { ...agent, type: Types.unit(agent.type) };
   }
 
   return { type: Types.unit(agent) };

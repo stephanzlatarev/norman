@@ -56,7 +56,7 @@ export default function() {
       }
     }
 
-    const assignee = findCandidate(job);
+    const assignee = findCandidate(job.agent);
 
     if (assignee) {
       job.assign(assignee);
@@ -82,24 +82,23 @@ function prioritizeJobs(a, b) {
   return b.priority - a.priority;
 }
 
-function findCandidate(job) {
-  if (!job.agent) return;
+function findCandidate(profile) {
+  if (!profile) return;
 
-  if (job.agent.tag) {
-    return Units.get(job.agent.tag);
+  if (profile.tag) {
+    return Units.get(profile.tag);
   }
 
-  if (job.agent.type.isWorker) {
+  if (profile.type.isWorker) {
     for (const unit of Units.workers().values()) {
-      if (unit.order.abilityId) continue;
       if (unit.job) continue;
-      if (job.agent.depot && (unit.depot !== job.agent.depot)) continue;
+      if (profile.depot && (unit.depot !== profile.depot)) continue;
 
       return unit;
     }
   }
 
-  if (job.agent.type.isBuilding) {
+  if (profile.type.isBuilding) {
     for (const unit of Units.buildings().values()) {
       if (unit.order.abilityId) continue;
       if (unit.job) continue;
