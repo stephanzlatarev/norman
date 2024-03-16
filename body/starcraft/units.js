@@ -121,6 +121,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   image.lastSeen = Resources.loop;
   image.isActive = (unit.buildProgress >= 1);
   image.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
+  image.energy = unit.energy;
   image.body.x = unit.pos.x;
   image.body.y = unit.pos.y;
   image.armor.shield = unit.shield;
@@ -160,6 +161,10 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
         image.nohub = !!findHub(image.body, 3);
       }
     }
+
+    if (image.type.isBuilding) {
+      image.boost = getBoostPercentage(unit);
+    }
   }
 
   return image;
@@ -167,6 +172,14 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
 
 function isWorkerInExtractor(worker) {
   return (worker.job instanceof Harvest) && worker.job.target && worker.job.target.type.isExtractor && (Resources.loop - worker.lastSeen < 35);
+}
+
+function getBoostPercentage(unit) {
+  if (unit.buffDurationMax && unit.buffIds.length && (unit.buffIds.indexOf(281) >= 0)) {
+    return unit.buffDurationRemain * 100 / unit.buffDurationMax; 
+  }
+
+  return 0;
 }
 
 function removeDeadWorkers(alive) {
