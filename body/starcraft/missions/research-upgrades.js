@@ -36,9 +36,10 @@ export default class ResearchUpgradesMission extends Mission {
     }
 
     for (const facility of Units.buildings().values()) {
-      if (facility.type.name !== FACILITY) continue;
-
+      if (facility.job) continue;
       if (!facility.isActive) continue;
+
+      if (facility.type.name !== FACILITY) continue;
 
       this.job = new Produce(facility, upgrade);
     }

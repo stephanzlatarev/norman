@@ -120,7 +120,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   image.isAlive = true;
   image.lastSeen = Resources.loop;
   image.isActive = (unit.buildProgress >= 1);
-  image.order = unit.orders.length ? unit.orders[0] : { abilityId: 0 };
+  image.order = unit.orders.length ? { ...unit.orders[0], queue: unit.orders.length } : { abilityId: 0, queue: 0 };
   image.energy = unit.energy;
   image.body.x = unit.pos.x;
   image.body.y = unit.pos.y;

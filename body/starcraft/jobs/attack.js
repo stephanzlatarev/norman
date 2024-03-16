@@ -9,7 +9,7 @@ export default class Attack extends Job {
 
   execute() {
     if (!this.order) {
-      this.order = new Order(this.assignee, 3674, this.target);
+      this.order = new Order(this.assignee, 23, this.target);
     } else if (this.order.isFailed) {
       this.close(false);
     }

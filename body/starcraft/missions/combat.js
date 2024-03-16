@@ -133,7 +133,7 @@ function orderAttack(warrior, pos) {
     (warrior.order.targetWorldSpacePos && !isSamePosition(warrior.order.targetWorldSpacePos, pos)) ||
     (warrior.order.targetUnitTag && isFarFrom(warrior.body, pos))
   ) {
-    new Order(warrior, 3674, pos);
+    new Order(warrior, 23, pos);
   }
 }
 

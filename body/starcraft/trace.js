@@ -19,7 +19,7 @@ export default class Trace {
     for (const order of Order.list()) {
       if (!order.unit.isSelected) continue;
 
-      if (order.action === 3674) {
+      if (order.action === 23) {
         const start = order.unit.body;
         const end = order.target.body ? order.target.body : order.target;
         const dot = (start.x === end.x) && (start.y === end.y);

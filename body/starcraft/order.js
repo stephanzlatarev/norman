@@ -26,6 +26,12 @@ export default class Order extends Memory {
     this.target = target;
     this.checkIsAcknowledged = checkIsAcknowledged;
 
+    if (unit.todo) {
+      // Close the previous order for this unit
+      unit.todo.result(0);
+    }
+    unit.todo = this;
+
     orders.push(this);
   }
 
@@ -50,10 +56,8 @@ export default class Order extends Memory {
   }
 
   result(status) {
-    if (this.isIssued) return;
-
     this.status = status;
-    this.isIssued = true;
+    this.isIssued = (status > 0);
     this.isFailed = (status !== 1);
 
     if (this.isFailed) {
@@ -75,14 +79,21 @@ export default class Order extends Memory {
     } else {
       if (this.checkIsAcknowledged) {
         this.isAcknowledged = this.checkIsAcknowledged(this);
-      } else if (this.unit.order.abilityId === this.ability) {
+      } else if (checkIsAcknowledged(this)) {
         this.isAcknowledged = true;
       }
 
       if (this.isAcknowledged) {
+        // This order moves from the unit's todo list to its active order list
+        if (this.unit.todo === this) {
+          this.unit.todo = null;
+        }
+
+        // This order is removed from to-be-issued list in memory
         this.remove();
       } else {
-        console.log("ACK?", this.unit.type.name, this.ability, this.unit.order.abilityId);
+        console.log("INFO: Waiting for", this.unit.type.name, this.unit.nick, "to acknowledge",
+          "order:", this.ability, this.target, "while busy with:", this.unit.order);
       }
     }
   }
@@ -107,6 +118,23 @@ export default class Order extends Memory {
     return orders;
   }
 
+}
+
+function checkIsAcknowledged(order) {
+  const actual = order.unit.order;
+
+  if (actual.abilityId !== order.ability) return false;
+  if (actual.targetUnitTag && (actual.targetUnitTag !== order.target.tag)) return false;
+  if (actual.targetWorldPos && !isSamePosition(actual.targetWorldPos.x, order.target)) return false;
+
+  return true;
+}
+
+function isSamePosition(a, b) {
+  const bx = b.body ? b.body.x : b.x;
+  const by = b.body ? b.body.y : b.y;
+
+  return (Math.abs(a.x - bx) < 1) && (Math.abs(a.y - by) < 1);
 }
 
 function targetToString(target) {

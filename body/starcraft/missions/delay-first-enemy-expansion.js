@@ -142,7 +142,7 @@ function orderAttack(agent, enemy) {
   if (!agent || !enemy) return;
 
   if ((agent.order.abilityId !== 23) || (agent.order.targetUnitTag !== enemy.tag)) {
-    new Order(agent, 3674, enemy);
+    new Order(agent, 23, enemy);
   }
 }
 

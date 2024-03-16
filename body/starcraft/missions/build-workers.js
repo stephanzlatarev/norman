@@ -16,6 +16,7 @@ export default class BuildWorkersMission extends Mission {
     if (Units.workers().size >= Limit.Worker) return;
 
     for (const nexus of Units.buildings().values()) {
+      if (nexus.job) continue;
       if (!nexus.depot) continue;
       if (!nexus.isActive) continue;
       if (setRallyPoint(nexus)) continue;
@@ -30,8 +31,12 @@ function setRallyPoint(nexus) {
   const rally = nexus.depot.isSaturated ? nexus.depot.exitRally : nexus.depot.harvestRally;
 
   if (rally && (!nexus.rally || (nexus.rally.x !== rally.x) || (nexus.rally.y !== rally.y))) {
-    return new Order(nexus, 3690, rally);
+    return new Order(nexus, 3690, rally, isSetRallyPointAcknowledge);
   }
+}
+
+function isSetRallyPointAcknowledge() {
+  return true;
 }
 
 function removeCompletedJobs() {
