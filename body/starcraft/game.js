@@ -12,7 +12,7 @@ import Enemy from "./memo/enemy.js";
 import Resources from "./memo/resources.js";
 import scheduleJobs from "./schedule/schedule.js";
 
-const LOOPS_PER_STEP = 2;
+const LOOPS_PER_STEP = 1;
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
 
