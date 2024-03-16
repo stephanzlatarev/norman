@@ -166,7 +166,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
 }
 
 function isWorkerInExtractor(worker) {
-  return (worker.job instanceof Harvest) && worker.job.resource && worker.job.resource.type.isExtractor && (Resources.loop - worker.lastSeen < 100);
+  return (worker.job instanceof Harvest) && worker.job.target && worker.job.target.type.isExtractor && (Resources.loop - worker.lastSeen < 35);
 }
 
 function removeDeadWorkers(alive) {
