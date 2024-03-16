@@ -29,6 +29,9 @@ export default class Order extends Memory {
   }
 
   command() {
+    // Don't repeat commands
+    if (this.isIssued) return;
+
     if (this.unit && this.unit.isAlive && this.ability) {
       if (this.target) {
         if (this.target.tag) {
