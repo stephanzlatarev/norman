@@ -15,16 +15,16 @@ export default class Order extends Memory {
 
   status = 0;
   isIssued = false;
-  isAcknowledged = false;
-  isFailed = false;
+  isAccepted = false;
+  isRejected = false;
 
-  constructor(unit, ability, target, checkIsAcknowledged) {
+  constructor(unit, ability, target, checkIsAccepted) {
     super();
 
     this.unit = unit;
     this.ability = ability;
     this.target = target;
-    this.checkIsAcknowledged = checkIsAcknowledged;
+    this.checkIsAccepted = checkIsAccepted;
 
     if (unit.todo) {
       // Close the previous order for this unit
@@ -58,32 +58,32 @@ export default class Order extends Memory {
   result(status) {
     this.status = status;
     this.isIssued = (status > 0);
-    this.isFailed = (status !== 1);
+    this.isRejected = (status !== 1);
 
-    if (this.isFailed) {
-      this.isAcknowledged = false;
+    if (this.isRejected) {
+      this.isAccepted = false;
       this.remove();
 
       console.log("ERROR:", this.toString(), ">>", status);
     }
   }
 
-  // Check if the order is acknowledged and if so then remove it.
+  // Check if the order is accepted and if so then remove it.
   check() {
     if (!this.isIssued) return;
-    if (this.isAcknowledged) return;
+    if (this.isAccepted) return;
 
     if (this.unit && !this.unit.isAlive) {
       // The unit meanwhile died
       this.result(0);
     } else {
-      if (this.checkIsAcknowledged) {
-        this.isAcknowledged = this.checkIsAcknowledged(this);
-      } else if (checkIsAcknowledged(this)) {
-        this.isAcknowledged = true;
+      if (this.checkIsAccepted) {
+        this.isAccepted = this.checkIsAccepted(this);
+      } else if (checkIsAccepted(this)) {
+        this.isAccepted = true;
       }
 
-      if (this.isAcknowledged) {
+      if (this.isAccepted) {
         // This order moves from the unit's todo list to its active order list
         if (this.unit.todo === this) {
           this.unit.todo = null;
@@ -92,8 +92,8 @@ export default class Order extends Memory {
         // This order is removed from to-be-issued list in memory
         this.remove();
       } else {
-        console.log("INFO: Waiting for", this.unit.type.name, this.unit.nick, "to acknowledge",
-          "order:", this.ability, this.target, "while busy with:", this.unit.order);
+        console.log("INFO: Waiting for", this.unit.type.name, this.unit.nick, "to accept",
+          "order:", this.ability, "while busy with:", this.unit.order.abilityId);
       }
     }
   }
@@ -120,7 +120,7 @@ export default class Order extends Memory {
 
 }
 
-function checkIsAcknowledged(order) {
+function checkIsAccepted(order) {
   const actual = order.unit.order;
 
   if (actual.abilityId !== order.ability) return false;

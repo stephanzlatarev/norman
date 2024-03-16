@@ -14,9 +14,9 @@ export default class Transfer extends Job {
       this.order = new Order(this.assignee, 298, minerals);
 
       this.target.assignWorker(this.assignee);
-    } else if (this.order.isFailed) {
+    } else if (this.order.isRejected) {
       this.close(false);
-    } else if (this.order.isAcknowledged && this.target.isActive) {
+    } else if (this.order.isAccepted && this.target.isActive) {
       this.close(true);
     }
   }

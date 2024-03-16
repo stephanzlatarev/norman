@@ -20,9 +20,9 @@ export default class Produce extends Job {
           return (agent.order.abilityId === abilityId);
         }
       });
-    } else if (this.order.isFailed) {
+    } else if (this.order.isRejected) {
       this.close(false);
-    } else if (this.order.isAcknowledged) {
+    } else if (this.order.isAccepted) {
       // TODO: Calculate threshold based on ability build time
       if (!this.assignee.order.queue || ((this.assignee.order.queue === 1) && (this.assignee.order.progress > 0.95))) {
         this.close(true);

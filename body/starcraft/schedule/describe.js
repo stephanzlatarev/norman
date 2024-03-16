@@ -68,8 +68,8 @@ function statusJob(job) {
 
 function statusOrder(order) {
   if (!order) return "no order";
-  if (order.isFailed) return "FAIL";
-  if (order.isConfirmed) return "CONFIRMED";
+  if (order.isRejected) return "REJECTED";
+  if (order.isAccepted) return "accepted";
   if (order.assignee) return "running";
   return "status=" + order.status;
 }
