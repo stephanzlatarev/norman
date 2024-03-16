@@ -14,7 +14,7 @@ export default class Build extends Job {
       this.order = new Order(this.assignee, this.output.abilityId, this.target);
     } else if (this.order.isFailed) {
       this.close(false);
-    } else if (this.order.isConfirmed) {
+    } else if (this.order.isAcknowledged) {
       const pos = this.target.body || this.target;
 
       if (isWorkerAtPosition(this.assignee, pos)) {

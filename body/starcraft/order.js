@@ -15,15 +15,16 @@ export default class Order extends Memory {
 
   status = 0;
   isIssued = false;
-  isConfirmed = false;
+  isAcknowledged = false;
   isFailed = false;
 
-  constructor(unit, ability, target) {
+  constructor(unit, ability, target, checkIsAcknowledged) {
     super();
 
     this.unit = unit;
     this.ability = ability;
     this.target = target;
+    this.checkIsAcknowledged = checkIsAcknowledged;
 
     orders.push(this);
   }
@@ -56,25 +57,33 @@ export default class Order extends Memory {
     this.isFailed = (status !== 1);
 
     if (this.isFailed) {
-      this.isConfirmed = false;
+      this.isAcknowledged = false;
       this.remove();
 
       console.log("ERROR:", this.toString(), ">>", status);
-    } else if ((this.ability !== 16) && (this.ability !== 3674)) {
-      console.log("OK:", this.toString());
     }
   }
 
-  // Verify if the order is taken and if taken then remove it.
-  confirm() {
+  // Check if the order is acknowledged and if so then remove it.
+  check() {
+    if (!this.isIssued) return;
+    if (this.isAcknowledged) return;
+
     if (this.unit && !this.unit.isAlive) {
       // The unit meanwhile died
       this.result(0);
     } else {
-      // TODO: Check if expected result is seen in current observation
-      this.isConfirmed = true;
+      if (this.checkIsAcknowledged) {
+        this.isAcknowledged = this.checkIsAcknowledged(this);
+      } else if (this.unit.order.abilityId === this.ability) {
+        this.isAcknowledged = true;
+      }
 
-      this.remove();
+      if (this.isAcknowledged) {
+        this.remove();
+      } else {
+        console.log("ACK?", this.unit.type.name, this.ability, this.unit.order.abilityId);
+      }
     }
   }
 

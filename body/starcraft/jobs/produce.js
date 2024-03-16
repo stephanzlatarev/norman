@@ -12,7 +12,7 @@ export default class Produce extends Job {
       this.order = new Order(this.assignee, this.output.abilityId);
     } else if (this.order.isFailed) {
       this.close(false);
-    } else if (this.order.isConfirmed && !this.assignee.order.abilityId) {
+    } else if (this.order.isAcknowledged) {
       this.close(true);
     }
   }

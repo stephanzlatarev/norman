@@ -16,7 +16,7 @@ export default class Transfer extends Job {
       this.target.assignWorker(this.assignee);
     } else if (this.order.isFailed) {
       this.close(false);
-    } else if (this.order.isConfirmed && this.target.isActive) {
+    } else if (this.order.isAcknowledged && this.target.isActive) {
       this.close(true);
     }
   }

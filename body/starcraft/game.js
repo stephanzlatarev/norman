@@ -86,7 +86,7 @@ export default class Game {
         }
 
         for (const order of Order.list()) {
-          order.confirm();
+          order.check();
         }
 
         for (const mission of Mission.list()) {
