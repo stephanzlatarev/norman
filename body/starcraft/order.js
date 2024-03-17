@@ -1,4 +1,5 @@
 import Memory from "../../code/memory.js";
+import Units from "./units.js";
 
 const orders = [];
 
@@ -124,6 +125,13 @@ function checkIsAccepted(order) {
   const actual = order.unit.order;
 
   if (actual.abilityId !== order.ability) return false;
+
+  if ((order.ability === 23) && !order.target.tag && actual.targetUnitTag) {
+    const enemy = Units.enemies().get(actual.targetUnitTag);
+
+    if (enemy && isClosePosition(order.target, enemy.body)) return true;
+  }
+
   if (actual.targetUnitTag && (actual.targetUnitTag !== order.target.tag)) return false;
   if (actual.targetWorldPos && !isSamePosition(actual.targetWorldPos.x, order.target)) return false;
 
@@ -135,6 +143,13 @@ function isSamePosition(a, b) {
   const by = b.body ? b.body.y : b.y;
 
   return (Math.abs(a.x - bx) < 1) && (Math.abs(a.y - by) < 1);
+}
+
+function isClosePosition(a, b) {
+  const bx = b.body ? b.body.x : b.x;
+  const by = b.body ? b.body.y : b.y;
+
+  return (Math.abs(a.x - bx) < 10) && (Math.abs(a.y - by) < 10);
 }
 
 function targetToString(target) {
