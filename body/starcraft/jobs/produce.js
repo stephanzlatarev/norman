@@ -11,12 +11,20 @@ export default class Produce extends Job {
     if (!this.order) {
       const agent = this.assignee;
       const queue = this.assignee.order.queue;
+      const progress = this.assignee.order.progress;
       const abilityId = this.output.abilityId;
 
       this.order = new Order(this.assignee, this.output.abilityId, null, function() {
         if (queue) {
+          if (agent.order.queue === queue) {
+            // The newly accepted order must have replaced the previous order
+            return ((agent.order.abilityId === abilityId) && (agent.order.progress < progress));
+          }
+
+          // The newly accepted order must be added to the queue after the previous order
           return (agent.order.queue > queue);
         } else {
+          // When there was no previous order then this must be the first order for the agent
           return (agent.order.abilityId === abilityId);
         }
       });
