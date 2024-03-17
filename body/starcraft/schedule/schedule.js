@@ -4,8 +4,6 @@ import Count from "../memo/count.js";
 import Limit from "../memo/limit.js";
 import Resources from "../memo/resources.js";
 
-import describeSchedule from "./describe.js";
-
 export default function() {
   const jobs = Array.from(Job.list().values());
   const started = jobs.filter(job => !!job.assignee);
@@ -74,8 +72,6 @@ export default function() {
       pending.splice(i--, 1);
     }
   }
-
-  describeSchedule(pending, started);
 }
 
 function prioritizeJobs(a, b) {
