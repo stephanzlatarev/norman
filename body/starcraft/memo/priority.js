@@ -1,13 +1,16 @@
 
 export default {
 
-  Assimilator: 50,
-  CyberneticsCore: 20,
-  Forge: 20,
-  Gateway: 40,
-  Nexus: 50,
   Probe: 90,
-  RoboticsFacility: 40,
-  TwilightCouncil: 20,
+
+  Nexus: 70,
+  Assimilator: 70,
+
+  Gateway: 50,
+  RoboticsFacility: 50,
+
+  CyberneticsCore: 30,
+  Forge: 30,
+  TwilightCouncil: 30,
 
 }
