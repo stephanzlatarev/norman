@@ -9,12 +9,15 @@ const transfers = new Set();
 
 const MAX_HARVEST_JOBS = 22;
 
+let isInitialized = false;
+
 // Create at most two jobs per mineral patch as this is optimal without just-in-time mining
 // but not more than the number of workers at the depot.
 // Create three jobs per active extractor.
 export default class HarvestMission extends Mission {
 
   run() {
+    initialSetup();
     removeCompletedJobs();
 
     for (const nexus of Units.buildings().values()) {
@@ -128,4 +131,65 @@ function findTransferDepot() {
       return one.depot;
     }
   }
+}
+
+function findFirstBase() {
+  for (const one of Units.buildings().values()) {
+    if (one.depot && one.depot.workers.size && one.depot.minerals.length) {
+      return one;
+    }
+  }
+}
+
+function findClosest(patch, workers) {
+  let closestWorker;
+  let closestSquareDistance = Infinity;
+
+  for (const worker of workers) {
+    const thisSquareDistance = squareDistance(worker.body, patch.body);
+
+    if (thisSquareDistance < closestSquareDistance) {
+      closestWorker = worker;
+      closestSquareDistance = thisSquareDistance;
+    }
+  }
+
+  return closestWorker;
+}
+
+function squareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+}
+
+function initialSetup() {
+  if (isInitialized) return;
+
+  const base = findFirstBase();
+  if (!base) return;
+
+  const minerals = base.depot.minerals.sort((a, b) => (a.d - b.d));
+  const workers = new Set(base.depot.workers);
+
+  let jobIndex = 0;
+
+  for (const patch of minerals) {
+    for (let i = 1; i <= 2; i++) {
+      const worker = findClosest(patch, workers);
+
+      if (worker) {
+        const jobId = base.tag + ":" + jobIndex;
+        const job = new Harvest(patch, base.depot);
+
+        job.assign(worker);
+        jobs.set(jobId, job);
+        jobIndex++;
+
+        workers.delete(worker);
+      }
+    }
+
+    if (!workers.size) break;
+  }
+
+  isInitialized = true;
 }

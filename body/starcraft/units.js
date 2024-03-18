@@ -105,6 +105,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
         isEnemy: (unit.owner === enemy.id),
         type: type,
         body: {
+          r: unit.radius,
           x: unit.pos.x,
           y: unit.pos.y,
         },
