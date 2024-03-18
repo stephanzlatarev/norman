@@ -29,6 +29,10 @@ export default class Harvest extends Job {
   }
 
   execute() {
+    if (!this.target.isActive) {
+      return this.close(true);
+    }
+
     if (this.isSpeedMining) {
       const sd = squareDistance(this.assignee.body, this.target.body);
 

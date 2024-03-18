@@ -164,10 +164,22 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
       } else {
         image.nohub = !!findHub(image.body, 3);
       }
+    } else if (image.type.isExtractor) {
+      if (!unit.vespeneContents) {
+        image.isActive = false;
+      }
     }
 
     if (image.type.isBuilding) {
       image.boost = getBoostPercentage(unit);
+    }
+  } else if (image.type.isMinerals) {
+    if (!unit.mineralContents) {
+      image.isActive = false;
+    }
+  } else if (image.type.isVespene) {
+    if (!unit.vespeneContents) {
+      image.isActive = false;
     }
   }
 

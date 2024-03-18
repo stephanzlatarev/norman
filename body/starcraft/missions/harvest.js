@@ -36,6 +36,8 @@ export default class HarvestMission extends Mission {
 
       if (nexus.isActive) {
         for (const minerals of depot.minerals) {
+          if (!minerals.isActive) continue;
+
           capacity += 2;
 
           for (let i = 1; i <= 2; i++) {
