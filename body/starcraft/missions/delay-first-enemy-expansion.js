@@ -20,14 +20,16 @@ export default class DelayFirstEnemyExpansionMission extends Mission {
 
 class AnnoyEnemy extends Job {
 
-  enemyExpansions = null;
-
-  enemyWorker = null;
-  pendingPylonPos = null;
-  isBuildingPylon = false;
+  basePos = null;
+  baseDirection = null;
+  baseEntranceLocked = false;
+  baseEntrancePos = null;
+  expansionPos = null;
 
   constructor() {
     super("Worker");
+
+    this.transition(this.goScoutExpansion);
   }
 
   execute() {
@@ -35,72 +37,207 @@ class AnnoyEnemy extends Job {
       console.log("Agent died. Mission 'Delay first enemy expansion' stopped.");
 
       this.close(false);
-    }
-
-    if (!this.enemyExpansions) {
-      const depots = [...Depot.list()].sort((a, b) => (b.d - a.d));
-
-      this.enemyExpansions = (depots.length >= 2) ? depots.slice(1, 2) : [];
-    }
-
-    if (this.enemyExpansions.length) {
-      const enemyExpansionPos = getClosest(this.assignee.body, this.enemyExpansions);
-
-      if (isInSightRange(this.assignee.body, enemyExpansionPos)) {
-        if (doesEnemyExpansionExist(this.assignee.body)) {
-          this.enemyExpansions.length = 0;
-        } else {
-          this.enemyExpansions.splice(this.enemyExpansions.indexOf(enemyExpansionPos), 1);
-          this.pendingPylonPos = enemyExpansionPos;
-        }
-      } else {
-        orderMove(this.assignee, enemyExpansionPos);
-      }
-    } else if (this.isBuildingPylon) {
-      if (this.pendingPylonPos) {
-        if (doesPylonExist(this.pendingPylonPos)) {
-          this.pendingPylonPos = null;
-        } else if (Resources.minerals >= 100) {
-          if (orderPylon(this.assignee, this.pendingPylonPos)) {
-            Resources.minerals -= 100;
-          }
-        } else {
-          orderMove(this.assignee, this.pendingPylonPos);
-        }
-      } else {
-        console.log("Mission 'Delay first enemy expansion' accomplished.");
-
-        return this.close(true);
-      }
-    } else if (this.assignee.armor.shield < this.assignee.armor.shieldMax) {
-      // If enemy worker fights back then back off
-      this.isBuildingPylon = true;
-
-      if (this.pendingPylonPos) {
-        orderMove(this.assignee, this.pendingPylonPos);
-      }
     } else {
-      // Currently, the agent locks on the closest enemy worker it sees first and attacks it.
-      // TODO: Check if enemy worker fights back:
-      //         - If we lose shield too quickly, back off but keep watching for workers going for an expansion.
-      //         - Otherwise, kill enemy unit and then restore shield.
-      // TODO: During weapon cooldown, position agent closer to path to expansion. Use "facing" to detect pos of last turn before seeing first enemy worker. Step back towards it.
-      // TODO: (only if not expansion exists) If enemy worker goes towards the expansion, reserve minerals for a pylon and create the pylon at first position to block expansion.
-      //       The assumption is that the agent reaches the 5x5 plot before the enemy worker reaches the center.
-
-      if (!this.enemyWorker || !this.enemyWorker.isAlive) {
-        this.enemyWorker = findClosestEnemyWorker(this.assignee.body);
-      }
-
-      if (this.enemyWorker) {
-        orderAttack(this.assignee, this.enemyWorker);
-      } else {
-        orderMove(this.assignee, Enemy.base);
-      }
+      this.act();
     }
-
   }
 
+  transition(action) {
+    this.act = action.bind(this);
+  }
+
+  goHome() {
+    console.log("Mission 'Delay first enemy expansion' accomplished.");
+
+    this.close(true);
+  }
+
+  goScoutExpansion() {
+    if (!this.basePos) {
+      const depots = [...Depot.list()].sort((a, b) => (b.d - a.d));
+
+      if (depots.length >= 2) {
+        this.basePos = depots[0];
+        this.expansionPos = depots[1];
+      } else if (depots.length === 1) {
+        this.basePos = depots[0];
+      } else {
+        this.transition(this.goHome);
+      }
+    }
+
+    if (this.expansionPos) {
+      if (isInSightRange(this.assignee.body, this.expansionPos)) {
+
+        if (doesEnemyExpansionExist(this.assignee.body)) {
+          // Enemy already built the expansion. We cannot block it
+          this.expansionPos = null;
+        }
+
+        this.transition(this.goApproachEnemyBase);
+      } else {
+        orderMove(this.assignee, this.expansionPos);
+      }
+    } else {
+      this.transition(this.goApproachEnemyBase);
+    }
+  }
+
+  goApproachEnemyBase() {
+    if (!this.baseEntranceLocked && (this.assignee.direction !== this.baseDirection)) {
+      this.baseDirection = this.assignee.direction;
+      this.baseEntrancePos = this.assignee.body;
+    }
+
+    const enemyWorker = findClosestEnemyWorker(this.baseEntrancePos);
+
+    if (enemyWorker) {
+      // Once we see the first enemy worker on the way to the enemy base, we'll no longer try to locate the position of the entrance to the base 
+      this.baseEntranceLocked = true;
+
+      this.transition(this.goAttackEnemyWorker);
+    } else {
+      orderMove(this.assignee, Enemy.base);
+    }
+  }
+
+  goAttackEnemyWorker() {
+    if (isAttacked(this.assignee)) {
+      // Enemy worker fights back
+      return this.transition(this.goApproachExpansion);
+    }
+
+    const enemyWorker = findClosestEnemyWorker(this.baseEntrancePos);
+
+    if (enemyWorker) {
+      orderAttack(this.assignee, enemyWorker);
+    } else {
+      orderMove(this.assignee, Enemy.base);
+    }
+  }
+
+  goApproachExpansion() {
+    if (!this.expansionPos) return this.transition(this.goHome);
+
+    const enemyWorker = findClosestEnemyWorker(this.assignee.body);
+
+    if (enemyWorker) {
+      const squareDistanceToEnemyWorker = squareDistance(this.assignee.body, enemyWorker.body);
+      const squareDistanceToExpansion = squareDistance(enemyWorker.body, this.expansionPos);
+
+      if (squareDistanceToExpansion < 25) {
+        // Enemy worker is too close to expansion plot. Try to block it
+        return this.transition(this.goBlockExpansion);
+      }
+
+      if (squareDistanceToEnemyWorker > 25) {
+        // Enemy worker is too far away. Maybe it backed off. Go back to enemy base
+        if (!isAttacked(this.assignee)) {
+          return this.transition(this.goAttackEnemyWorker);
+        }
+      }
+    } else {
+      return this.transition(this.goApproachEnemyBase);
+    }
+
+    orderMove(this.assignee, this.expansionPos);
+  }
+
+  goBlockExpansion() {
+    if (!this.expansionPos) return this.transition(this.goHome);
+
+    if (isInjured(this.assignee)) {
+      return this.transition(this.goBuildPylon);
+    }
+
+    const enemyWorker = findClosestEnemyWorker(this.baseEntrancePos);
+
+    if (enemyWorker) {
+      const squareDistanceToExpansion = squareDistance(enemyWorker.body, this.expansionPos);
+
+      if ((squareDistanceToExpansion < 9) && (squareDistance(enemyWorker.body, this.expansionPos) > 9)) {
+        // Agent is falling behind. Try to build pylon
+        return this.transition(this.goBuildPylon);
+      } else if (squareDistanceToExpansion > 25) {
+        return this.transition(this.goApproachExpansion);
+      }
+    } else {
+      return this.transition(this.goApproachEnemyBase);
+    }
+
+    const bx = this.expansionPos.x;
+    const by = this.expansionPos.y;
+    const ax = this.assignee.body.x;
+    const ay = this.assignee.body.y;
+
+    if (ax >= bx) {
+      if (ay >= by) {
+        // Agent is top-right relative to the base
+        if (ay >= by + 1) {
+          orderMove(this.assignee, { x: bx - 1.5, y: by + 1.5 });
+        } else if ((ax >= bx + 1) && (ay <= by + 0.5)) {
+          orderMove(this.assignee, { x: bx + 1.5, y: by + 1.5 });
+        } else {
+          orderMove(this.assignee, { x: bx, y: by + 1.5 });
+        }
+      } else {
+        // Agent is bottom-right relative to the base
+        if (ax >= bx + 1) {
+          orderMove(this.assignee, { x: bx + 1.5, y: by + 1.5 });
+        } else if ((ay <= by - 1) && (ax <= bx + 0.5)) {
+          orderMove(this.assignee, { x: bx + 1.5, y: by - 1.5 });
+        } else {
+          orderMove(this.assignee, { x: bx + 1.5, y: by });
+        }
+      }
+    } else {
+      if (ay >= by) {
+        // Agent is top-left relative to the base
+        if (ax <= bx - 1) {
+          orderMove(this.assignee, { x: bx - 1.5, y: by - 1.5 });
+        } else if ((ay >= by + 1) && (ax >= bx - 0.5)) {
+          orderMove(this.assignee, { x: bx - 1.5, y: by + 1.5 });
+        } else {
+          orderMove(this.assignee, { x: bx - 1.5, y: by });
+        }
+      } else {
+        // Agent is bottom-left relative to the base
+        if (ay <= by - 1) {
+          orderMove(this.assignee, { x: bx + 1.5, y: by - 1.5 });
+        } else if ((ax <= bx - 1) && (ay >= by - 0.5)) {
+          orderMove(this.assignee, { x: bx - 1.5, y: by - 1.5 });
+        } else {
+          orderMove(this.assignee, { x: bx, y: by - 1.5 });
+        }
+      }
+    }
+  }
+
+  // Build at edge of base plot if my worker is behind the enemy worker heading for expansion
+  goBuildPylon() {
+    if (!this.expansionPos) return this.transition(this.goHome);
+
+    if (doesPylonExist(this.expansionPos)) {
+      this.expansionPos = null;
+
+      this.transition(this.goHome);
+    } else if (Resources.minerals >= 100) {
+      if (orderPylon(this.assignee, this.expansionPos)) {
+        Resources.minerals -= 100;
+      }
+    } else {
+      orderMove(this.assignee, this.expansionPos);
+    }
+  }
+
+}
+
+function isAttacked(agent) {
+  return (agent.armor.shield < agent.armor.shieldMax);
+}
+
+function isInjured(agent) {
+  return (agent.armor.health < agent.armor.healthMax);
 }
 
 function findClosestEnemyWorker(pos) {
@@ -149,8 +286,6 @@ function orderAttack(agent, enemy) {
 function orderMove(agent, pos) {
   if (!agent || !agent.order || !agent.body || !pos) return;
 
-  if (!agent.order.abilityId && isCloseTo(agent.body, pos)) return;
-
   if ((agent.order.abilityId !== 16) || !agent.order.targetWorldSpacePos || !isSamePosition(agent.order.targetWorldSpacePos, pos)) {
     new Order(agent, 16, pos);
   }
@@ -165,7 +300,7 @@ function orderPylon(agent, pos) {
 }
 
 function isSamePosition(a, b) {
-  return (Math.abs(a.x - b.x) <= 3) && (Math.abs(a.y - b.y) <= 3);
+  return (Math.abs(a.x - b.x) < 1) && (Math.abs(a.y - b.y) < 1);
 }
 
 function isInSightRange(a, b) {
@@ -174,22 +309,6 @@ function isInSightRange(a, b) {
 
 function isCloseTo(a, b) {
   return (Math.abs(a.x - b.x) <= 10) && (Math.abs(a.y - b.y) <= 10);
-}
-
-function getClosest(a, bs) {
-  let closestDistance = Infinity;
-  let closestPos = null;
-
-  for (const b of bs) {
-    const sd = squareDistance(a, b);
-
-    if (sd < closestDistance) {
-      closestDistance = sd;
-      closestPos = b;
-    }
-  }
-
-  return closestPos;
 }
 
 function squareDistance(a, b) {

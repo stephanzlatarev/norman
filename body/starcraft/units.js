@@ -109,6 +109,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
           y: unit.pos.y,
         },
         armor: {
+          healthMax: unit.healthMax,
           shieldMax: unit.shieldMax,
         }
       };
@@ -121,9 +122,11 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   image.lastSeen = Resources.loop;
   image.isActive = (unit.buildProgress >= 1);
   image.order = unit.orders.length ? { ...unit.orders[0], queue: unit.orders.length } : { abilityId: 0, queue: 0 };
+  image.direction = unit.facing;
   image.energy = unit.energy;
   image.body.x = unit.pos.x;
   image.body.y = unit.pos.y;
+  image.armor.health = unit.health;
   image.armor.shield = unit.shield;
 
   image.isSelected = unit.isSelected;
