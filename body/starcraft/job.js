@@ -30,6 +30,9 @@ export default class Job extends Memory {
   // This is the product of this job
   product;
 
+  // Is job committed for the assigned unit. If not, the unit can take a higher priority job
+  isCommitted = true;
+
   // Is done when completed successfully
   isDone = false;
 
@@ -54,6 +57,8 @@ export default class Job extends Memory {
     if (unit) {
       if (unit.job) {
         console.log("WARNING! Unit", unit.type.name, unit.nick, "re-assigned from job", unit.job.summary, "to job", this.summary);
+
+        unit.job.assignee = null;
       } else {
         console.log("INFO: Unit", unit.type.name, unit.nick, "assigned to job", this.summary);
       }

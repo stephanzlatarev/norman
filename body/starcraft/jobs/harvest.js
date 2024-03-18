@@ -31,7 +31,9 @@ export default class Harvest extends Job {
   execute() {
     if (this.isSpeedMining) {
       const sd = squareDistance(this.assignee.body, this.target.body);
-  
+
+      this.isCommitted = true;
+
       if (this.assignee.isCarryingHarvest) {
         if (sd < this.boostDistance) {
           pushToDepot(this.assignee, this.storePoint);
@@ -43,6 +45,9 @@ export default class Harvest extends Job {
           harvestResource(this.assignee, this.target);
         } else {
           pushToResource(this.assignee, this.harvestPoint);
+
+          // While pushing to the resource, the worker is available to take hiher priority jobs
+          this.isCommitted = false;
         }
       }
     } else if (!this.order) {

@@ -29,6 +29,7 @@ class AnnoyEnemy extends Job {
   constructor() {
     super("Worker");
 
+    this.priority = 100;
     this.transition(this.goScoutExpansion);
   }
 

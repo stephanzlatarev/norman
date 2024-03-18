@@ -54,7 +54,7 @@ export default function() {
       }
     }
 
-    const assignee = findCandidate(job.agent);
+    const assignee = findCandidate(job.agent, job.priority);
 
     if (assignee) {
       job.assign(assignee);
@@ -78,7 +78,7 @@ function prioritizeJobs(a, b) {
   return b.priority - a.priority;
 }
 
-function findCandidate(profile) {
+function findCandidate(profile, priority) {
   if (!profile) return;
 
   if (profile.tag) {
@@ -86,8 +86,17 @@ function findCandidate(profile) {
   }
 
   if (profile.type.isWorker) {
+    // First, try to find a worker without a job
     for (const unit of Units.workers().values()) {
       if (unit.job) continue;
+      if (profile.depot && (unit.depot !== profile.depot)) continue;
+
+      return unit;
+    }
+
+    // Second, try to find a worker with non-committed job
+    for (const unit of Units.workers().values()) {
+      if (unit.job && (unit.job.isCommitted || (unit.job.priority >= priority))) continue;
       if (profile.depot && (unit.depot !== profile.depot)) continue;
 
       return unit;
