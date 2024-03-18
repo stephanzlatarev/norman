@@ -29,7 +29,7 @@ export default class Harvest extends Job {
   }
 
   execute() {
-    if (!this.target.isActive) {
+    if (!this.target.isAlive || !this.target.isActive) {
       return this.close(true);
     }
 

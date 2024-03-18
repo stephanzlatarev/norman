@@ -226,6 +226,7 @@ function removeZombieUnits(units, alive) {
   for (const [tag, unit] of units) {
     if (!alive.get(tag)) {
       list.push(unit);
+      unit.isAlive = false;
       units.delete(tag);
     }
   }
