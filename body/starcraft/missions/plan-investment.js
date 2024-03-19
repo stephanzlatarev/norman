@@ -2,6 +2,7 @@ import Mission from "../mission.js";
 import Count from "../memo/count.js";
 import Limit from "../memo/limit.js";
 import Priority from "../memo/priority.js";
+import Resources from "../memo/resources.js";
 
 let stage = 0;
 
@@ -24,16 +25,25 @@ export default class PlanInvestmentsMission extends Mission {
         stage = 1;
       }
     } else {
-      Priority.Nexus = 70;
-      Limit.Nexus = Math.floor(Count.Gateway / 3) + 2;
+      if (Resources.supplyLimit < 198) {
+        Priority.Nexus = 70;
+        Limit.Nexus = Math.floor((Count.Gateway + Count.RoboticsFacility) / 3) + 2;
+      } else {
+        Priority.Nexus = 40;
+        Limit.Nexus = Infinity;
+      }
       Limit.Assimilator = (Count.Nexus - 1) * 2;
 
       Priority.Gateway = 50;
-      Limit.Gateway = (Count.Nexus - 1) * 3;
-      Limit.Forge = (Count.Gateway >= 3) ? 1 : 0;
-
-      Limit.CyberneticsCore = 1;
+      Limit.Gateway = Math.floor(Math.min(
+          (Count.Nexus - 1) * 3,                       // Gateways should not grow more than nexuses
+          Count.Probe / 12 - Count.RoboticsFacility,   // Gateways should not grow more than income
+          Count.RoboticsFacility ? Infinity : 1,       // Prioritize first Robotics facility before second Gateway
+      ));
       Limit.RoboticsFacility = 1;
+
+      Limit.Forge = (Count.Gateway >= 3) ? 1 : 0;
+      Limit.CyberneticsCore = 1;
     }
   }
 

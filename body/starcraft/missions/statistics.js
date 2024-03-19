@@ -11,8 +11,13 @@ const harvestersVespene = new Map();
 let minerals = 0;
 let vespene = 0;
 
+const workerProduction = new Set();
 let workerProductionUsed = 0;
 let workerProductionTotal = 0;
+
+const gatewayProduction = new Set();
+let gatewayProductionUsed = 0;
+let gatewayProductionTotal = 0;
 
 export default class Statistics extends Mission {
 
@@ -20,6 +25,7 @@ export default class Statistics extends Mission {
     if (Resources.loop > 0) {
       trackHarvest();
       trackWorkerProduction();
+      trackGatewayProduction();
 
       if ((Resources.loop % LOOPS_PER_MINUTE) === 0) {
         show();
@@ -37,8 +43,13 @@ function clear() {
   minerals = 0;
   vespene = 0;
 
+  workerProduction.clear();
   workerProductionUsed = 0;
   workerProductionTotal = 0;
+
+  gatewayProduction.clear();
+  gatewayProductionUsed = 0;
+  gatewayProductionTotal = 0;
 }
 
 function trackHarvest() {
@@ -67,10 +78,25 @@ function trackWorkerProduction() {
     if (!nexus.isActive) continue;
     if (nexus.type.name !== "Nexus") continue;
 
+    workerProduction.add(nexus);
     workerProductionTotal++;
 
     if (nexus.order.abilityId) {
       workerProductionUsed++
+    }
+  }
+}
+
+function trackGatewayProduction() {
+  for (const gateway of Units.buildings().values()) {
+    if (!gateway.isActive) continue;
+    if (gateway.type.name !== "Gateway") continue;
+
+    gatewayProduction.add(gateway);
+    gatewayProductionTotal++;
+
+    if (gateway.order.abilityId) {
+      gatewayProductionUsed++
     }
   }
 }
@@ -84,7 +110,9 @@ function show() {
   text.push("|");
   text.push("Vespene:", vespene);
   text.push("|");
-  text.push("Nexuses:", percentage(workerProductionUsed, workerProductionTotal));
+  text.push("Nexuses:", workerProduction.size, percentage(workerProductionUsed, workerProductionTotal));
+  text.push("|");
+  text.push("Gateways:", gatewayProduction.size, percentage(gatewayProductionUsed, gatewayProductionTotal));
 
   console.log(text.join(" "));
 }
