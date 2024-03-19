@@ -3,6 +3,10 @@ import Units from "./units.js";
 
 const orders = [];
 
+const STATUS_DEAD = -1;
+const STATUS_EMPTY = -2;
+const STATUS_ABORT = -3;
+
 export default class Order extends Memory {
 
   // The unit to execute this order
@@ -28,8 +32,8 @@ export default class Order extends Memory {
     this.checkIsAccepted = checkIsAccepted;
 
     if (unit.todo) {
-      // Close the previous order for this unit
-      unit.todo.result(0);
+      // Abort the previous order for this unit
+      unit.todo.abort();
     }
     unit.todo = this;
 
@@ -53,7 +57,19 @@ export default class Order extends Memory {
     }
 
     // Close the order when no command is issued
-    this.result(0);
+    this.result(STATUS_EMPTY);
+  }
+
+  abort() {
+    console.log("INFO: Abort order for", this.unit.type.name, this.unit.nick,
+      "action", this.ability, "of status", this.status, this.isIssued ? "issued" : "", this.isAccepted ? "accepted" : "", this.isRejected ? "rejected" : "");
+
+    this.status = STATUS_ABORT;
+    this.isIssued = false;
+    this.isAccepted = false;
+    this.isRejected = true;
+
+    this.remove();
   }
 
   result(status) {
@@ -76,7 +92,7 @@ export default class Order extends Memory {
 
     if (this.unit && !this.unit.isAlive) {
       // The unit meanwhile died
-      this.result(0);
+      this.result(STATUS_DEAD);
     } else {
       if (this.checkIsAccepted) {
         this.isAccepted = this.checkIsAccepted(this);
@@ -93,8 +109,9 @@ export default class Order extends Memory {
         // This order is removed from to-be-issued list in memory
         this.remove();
       } else {
-        console.log("INFO: Waiting for", this.unit.type.name, this.unit.nick, "to accept",
-          "order:", this.ability, "while busy with:", this.unit.order.abilityId);
+        console.log("INFO: Waiting for", this.unit.type.name, this.unit.nick,
+          "to accept order", this.ability, "of status", this.status, this.isIssued ? "issued" : "", this.isAccepted ? "accepted" : "", this.isRejected ? "rejected" : "",
+          "while busy with action", this.unit.order.abilityId);
       }
     }
   }
