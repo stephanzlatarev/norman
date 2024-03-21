@@ -1,11 +1,13 @@
 import Memory from "../../code/memory.js";
-import Units from "./units.js";
+import Resources from "./memo/resources.js";
 
 const orders = [];
 
 const STATUS_DEAD = -1;
 const STATUS_EMPTY = -2;
 const STATUS_ABORT = -3;
+
+const RETRY_AFTER = 3;
 
 export default class Order extends Memory {
 
@@ -18,41 +20,89 @@ export default class Order extends Memory {
   // Either unit or position
   target;
 
+  // A follow-up order
+  next;
+
+  // The status of this order reflects the result of the command issued to the unit
   status = 0;
+
+  // The game loop at which a command was issued to the unit
+  timeIssued;
+
   isIssued = false;
   isAccepted = false;
   isRejected = false;
 
-  constructor(unit, ability, target, checkIsAccepted) {
+  constructor(subject, ability, target) {
     super();
 
-    this.unit = unit;
+    if (subject instanceof Order) {
+      subject.next = this;
+      this.unit = subject.unit;
+    } else {
+      orders.push(this);
+
+      this.unit = subject;
+
+      if (this.unit.todo) {
+        // Abort the previous order for this unit
+        this.unit.todo.abort();
+      }
+
+      this.unit.todo = this;
+    }
+
     this.ability = ability;
     this.target = target;
-    this.checkIsAccepted = checkIsAccepted;
+  }
 
-    if (unit.todo) {
-      // Abort the previous order for this unit
-      unit.todo.abort();
-    }
-    unit.todo = this;
+  replace(ability, target) {
+    this.ability = ability;
+    this.target = target;
+    this.next = null;
 
-    orders.push(this);
+    this.checkIsAccepted = null;
+
+    this.status = 0;
+    this.timeIssued = null;
+
+    this.isIssued = false;
+    this.isAccepted = false;
+    this.isRejected = false;
+
+    return this;
+  }
+
+  queue(ability, target) {
+    return new Order(this, ability, target);
+  }
+
+  accept(check) {
+    this.checkIsAccepted = (check === true) ? (() => true) : check;
+
+    return this;
   }
 
   command() {
-    // Don't repeat commands
-    if (this.isIssued) return;
+    if (this.isIssued) {
+      if (!this.isAccepted && !this.isRejected && (Resources.loop > this.timeIssued + RETRY_AFTER)) {
+        // Commands get lost in the arena. Retry them...
+        console.log("INFO: Retrying command for", this.unit.type.name, this.unit.nick, "action", this.ability);
+      } else {
+        // Don't repeat commands
+        return;
+      }
+    }
 
     if (this.unit && this.unit.isAlive && this.ability) {
       if (this.target) {
         if (this.target.tag) {
-          return { unitTags: [this.unit.tag], abilityId: this.ability, targetUnitTag: this.target.tag, queueCommand: false };
+          return { unitTags: [this.unit.tag], abilityId: this.ability, targetUnitTag: this.target.tag };
         } else if (this.target.x && this.target.y) {
-          return { unitTags: [this.unit.tag], abilityId: this.ability, targetWorldSpacePos: this.target, queueCommand: false };
+          return { unitTags: [this.unit.tag], abilityId: this.ability, targetWorldSpacePos: { x: this.target.x, y: this.target.y } };
         }
       } else {
-        return { unitTags: [this.unit.tag], abilityId: this.ability, queueCommand: false };
+        return { unitTags: [this.unit.tag], abilityId: this.ability };
       }
     }
 
@@ -73,6 +123,7 @@ export default class Order extends Memory {
   }
 
   result(status) {
+    this.timeIssued = Resources.loop;
     this.status = status;
     this.isIssued = (status > 0);
     this.isRejected = (status !== 1);
@@ -122,6 +173,10 @@ export default class Order extends Memory {
     if (index >= 0) {
       orders.splice(index, 1);
     }
+
+    if (this.unit.todo === this) {
+      this.unit.todo = null;
+    }
   }
 
   toString() {
@@ -143,11 +198,8 @@ function checkIsAccepted(order) {
 
   if (actual.abilityId !== order.ability) return false;
 
-  if ((order.ability === 23) && !order.target.tag && actual.targetUnitTag) {
-    const enemy = Units.enemies().get(actual.targetUnitTag);
-
-    if (enemy && isClosePosition(order.target, enemy.body)) return true;
-  }
+  // Basic attack command which doesn't aim at an enemy unit will aim at the nearest enemy regardless of the target location
+  if ((order.ability === 23) && !order.target.tag) return true;
 
   if (actual.targetUnitTag && (actual.targetUnitTag !== order.target.tag)) return false;
   if (actual.targetWorldPos && !isSamePosition(actual.targetWorldPos.x, order.target)) return false;
@@ -160,13 +212,6 @@ function isSamePosition(a, b) {
   const by = b.body ? b.body.y : b.y;
 
   return (Math.abs(a.x - bx) < 1) && (Math.abs(a.y - by) < 1);
-}
-
-function isClosePosition(a, b) {
-  const bx = b.body ? b.body.x : b.x;
-  const by = b.body ? b.body.y : b.y;
-
-  return (Math.abs(a.x - bx) < 10) && (Math.abs(a.y - by) < 10);
 }
 
 function targetToString(target) {

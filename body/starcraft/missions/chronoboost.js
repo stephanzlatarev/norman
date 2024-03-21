@@ -12,13 +12,9 @@ export default class ChronoboostMission extends Mission {
       if (nexus.energy < 50) continue;
 
       if (nexus.order.progress && (nexus.boost === 0)) {
-        new Order(nexus, 3755, nexus, isAccepted);
+        new Order(nexus, 3755, nexus).accept(order => (order.target.boost > 0));
       }
     }
   }
 
-}
-
-function isAccepted(order) {
-  return (order.target.boost > 0);
 }

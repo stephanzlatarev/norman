@@ -22,8 +22,8 @@ export default class Depot extends Pin {
     this.harvestRally = rally;
     this.exitRally = rally ? { x: location.x + location.x - rally.x, y: location.y + location.y - rally.y } : null;
 
-    this.minerals = minerals;
-    this.vespene = vespene;
+    this.minerals = minerals.sort((a, b) => (a.d - b.d));
+    this.vespene = vespene.sort((a, b) => (a.d - b.d));
 
     depots.push(this);
   }

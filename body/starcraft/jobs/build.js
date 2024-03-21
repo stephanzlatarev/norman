@@ -5,6 +5,8 @@ import Units from "../units.js";
 
 export default class Build extends Job {
 
+  isProgressing = false;
+
   constructor(building, target) {
     super("Worker", building.name ? building : Types.unit(building), target);
   }
@@ -17,7 +19,13 @@ export default class Build extends Job {
     } else if (this.order.isAccepted) {
       const pos = this.target.body || this.target;
 
-      if (isWorkerAtPosition(this.assignee, pos)) {
+      // Make sure the worker is no longer building it
+      if ((this.assignee.order.abilityId !== this.output.abilityId) && isWorkerAtPosition(this.assignee, pos)) {
+        this.isProgressing = true;
+      }
+
+      // Close the job when the building appears
+      if (this.isProgressing) {
         const building = findBuilding(pos);
 
         if (building) {

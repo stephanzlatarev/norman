@@ -14,7 +14,7 @@ export default class Produce extends Job {
       const progress = this.assignee.order.progress;
       const abilityId = this.output.abilityId;
 
-      this.order = new Order(this.assignee, this.output.abilityId, null, function() {
+      this.order = new Order(agent, abilityId).accept(function() {
         if (queue) {
           if (agent.order.queue === queue) {
             // The newly accepted order must have replaced the previous order
@@ -39,4 +39,3 @@ export default class Produce extends Job {
   }
 
 }
-

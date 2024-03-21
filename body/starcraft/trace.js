@@ -31,11 +31,50 @@ export default class Trace {
         spheres.push({ p: { x: end.x, y: end.y, z: 9 }, r: 0.2, color: { r: 200, g: 200, b: 200 } });
       }
 
+      trackSpeed(order.unit);
     }
 
     await client.debug({ debug: [{ draw: { lines: lines, spheres: spheres } }] });
 
     await new Promise(resolve => setTimeout(resolve, this.speed));
+  }
+
+}
+
+function trackSpeed(unit) {
+  if (unit.isSelected && unit.job) {
+
+    if (unit.last) {
+      const x1 = unit.last.x;
+      const y1 = unit.last.y;
+      const x2 = unit.body.x;
+      const y2 = unit.body.y;
+
+      unit.body.s = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+      unit.body.a = (unit.last.s >= 0) ? unit.body.s - unit.last.s : 0;
+    } else {
+      unit.body.s = 0;
+      unit.body.a = 0;
+    }
+
+    if (unit.body.last.s >= 0) {
+      unit.body.a = unit.body.s - unit.last.s;
+    } else {
+      unit.body.a = 0;
+    }
+
+    image.body.last = {
+      x: image.body.x,
+      y: image.body.y,
+      s: image.body.s,
+    }
+
+    console.log(unit.job ? unit.job.summary : "free",
+      "\tdirection:", unit.direction.toFixed(1),
+      "\tspeed:", unit.body.s.toFixed(2),
+      "\tacceleration:", unit.body.a.toFixed(2),
+      "\torder:", JSON.stringify(unit.order),
+    );
   }
 
 }

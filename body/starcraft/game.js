@@ -122,18 +122,28 @@ export default class Game {
     const actions = [];
 
     for (const order of Order.list()) {
-      const command = order.command();
+      let o = order;
 
-      if (command) {
-        orders.push(order);
-        actions.push({ actionRaw: { unitCommand: command } });
+      while (o) {
+        const command = o.command();
+
+        if (command) {
+          command.queueCommand = (o !== order);
+
+          orders.push(o);
+          actions.push({ actionRaw: { unitCommand: command } });
+        }
+
+        o = o.next;
       }
     }
 
-    const response = await this.client.action({ actions: actions });
+    if (actions.length) {
+      const response = await this.client.action({ actions: actions });
 
-    for (let i = 0; i < response.result.length; i++) {
-      orders[i].result(response.result[i]);
+      for (let i = 0; i < response.result.length; i++) {
+        orders[i].result(response.result[i]);
+      }
     }
   }
 

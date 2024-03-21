@@ -31,12 +31,8 @@ function setRallyPoint(nexus) {
   const rally = nexus.depot.isSaturated ? nexus.depot.exitRally : nexus.depot.harvestRally;
 
   if (rally && (!nexus.rally || (nexus.rally.x !== rally.x) || (nexus.rally.y !== rally.y))) {
-    return new Order(nexus, 3690, rally, isSetRallyPointAccepted);
+    return new Order(nexus, 3690, rally).accept(true);
   }
-}
-
-function isSetRallyPointAccepted() {
-  return true;
 }
 
 function removeCompletedJobs() {

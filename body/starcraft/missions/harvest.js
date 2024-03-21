@@ -9,15 +9,14 @@ const transfers = new Set();
 
 const MAX_HARVEST_JOBS = 22;
 
-let isInitialized = false;
-
 // Create at most two jobs per mineral patch as this is optimal without just-in-time mining
 // but not more than the number of workers at the depot.
 // Create three jobs per active extractor.
 export default class HarvestMission extends Mission {
 
+  isInitialized = false;
+
   run() {
-    initialSetup();
     removeCompletedJobs();
 
     for (const nexus of Units.buildings().values()) {
@@ -31,7 +30,6 @@ export default class HarvestMission extends Mission {
       const workerCount = depot.workers.size;
 
       let capacity = 0;
-      let jobCount = 0;
       let jobIndex = 0;
 
       if (nexus.isActive) {
@@ -41,9 +39,8 @@ export default class HarvestMission extends Mission {
           capacity += 2;
 
           for (let i = 1; i <= 2; i++) {
-            if ((jobCount < workerCount) && (jobIndex < MAX_HARVEST_JOBS)) {
+            if ((jobIndex < workerCount) && (jobIndex < MAX_HARVEST_JOBS)) {
               createHarvestJob(jobIndex, nexus, minerals);
-              jobCount++;
               jobIndex++;
             }
           }
@@ -55,9 +52,8 @@ export default class HarvestMission extends Mission {
           capacity += 3;
 
           for (let i = 1; i <= 3; i++) {
-            if ((jobCount < workerCount) && (jobIndex < MAX_HARVEST_JOBS)) {
+            if ((jobIndex < workerCount) && (jobIndex < MAX_HARVEST_JOBS)) {
               createHarvestJob(jobIndex, nexus, vespene.extractor);
-              jobCount++;
               jobIndex++;
             }
           }
@@ -91,6 +87,12 @@ export default class HarvestMission extends Mission {
           break;
         }
       }
+
+      if (!this.isInitialized) {
+        initialSetup(nexus);
+
+        this.isInitialized = true;
+      }
     }
   }
 
@@ -110,7 +112,7 @@ function createHarvestJob(index, nexus, resource) {
   let job = jobs.get(jobId);
 
   if (!job) {
-    job = new Harvest(resource, nexus.depot);
+    job = new Harvest(resource, nexus);
 
     jobs.set(jobId, job);
   }
@@ -135,14 +137,6 @@ function findTransferDepot() {
   }
 }
 
-function findFirstBase() {
-  for (const one of Units.buildings().values()) {
-    if (one.depot && one.depot.workers.size && one.depot.minerals.length) {
-      return one;
-    }
-  }
-}
-
 function findClosest(patch, workers) {
   let closestWorker;
   let closestSquareDistance = Infinity;
@@ -163,35 +157,31 @@ function squareDistance(a, b) {
   return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
 
-function initialSetup() {
-  if (isInitialized) return;
+function initialSetup(nexus) {
+  const workers = new Set(nexus.depot.workers);
+  const firstLine = [];
+  const secondLine = [];
 
-  const base = findFirstBase();
-  if (!base) return;
+  let lastPatch;
 
-  const minerals = base.depot.minerals.sort((a, b) => (a.d - b.d));
-  const workers = new Set(base.depot.workers);
-
-  let jobIndex = 0;
-
-  for (const patch of minerals) {
-    for (let i = 1; i <= 2; i++) {
-      const worker = findClosest(patch, workers);
-
-      if (worker) {
-        const jobId = base.tag + ":" + jobIndex;
-        const job = new Harvest(patch, base.depot);
-
-        job.assign(worker);
-        jobs.set(jobId, job);
-        jobIndex++;
-
-        workers.delete(worker);
-      }
+  for (const job of jobs.values()) {
+    if (job.target !== lastPatch) {
+      firstLine.push(job);
+    } else {
+      secondLine.push(job);
     }
 
-    if (!workers.size) break;
+    lastPatch = job.target;
   }
 
-  isInitialized = true;
+  const assignments = [...firstLine, ...secondLine];
+  assignments.length = Math.min(assignments.length, workers.size);
+
+  for (const job of assignments) {
+    const worker = findClosest(job.target, workers);
+
+    job.assign(worker);
+
+    workers.delete(worker);
+  }
 }
