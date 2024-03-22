@@ -13,7 +13,7 @@ export default class Build extends Job {
 
   execute() {
     if (!this.order) {
-      this.order = new Order(this.assignee, this.output.abilityId, this.target);
+      this.order = new Order(this.assignee, this.output.abilityId, this.target).expect(this.output);
     } else if (this.order.isRejected) {
       this.close(false);
     } else if (this.order.isAccepted) {

@@ -1,4 +1,5 @@
 import Job from "../job.js";
+import Order from "../order.js";
 import Units from "../units.js";
 import Count from "../memo/count.js";
 import Limit from "../memo/limit.js";
@@ -15,6 +16,13 @@ export default function() {
   }
 
   // Account for resources required for outstanding orders
+  for (const order of Order.list()) {
+    if (order.output && (!order.isIssued || !order.isAccepted)) {
+      if (order.output.foodRequired) Resources.supply -= order.output.foodRequired;
+      if (order.output.mineralCost) Resources.minerals -= order.output.mineralCost;
+      if (order.output.vespeneCost) Resources.vespene -= order.output.vespeneCost;
+    }
+  }
 
   // Start and execute as many pending jobs as possible by their priority
   let blockPriority = 0;

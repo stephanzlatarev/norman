@@ -20,6 +20,9 @@ export default class Order extends Memory {
   // Either unit or position
   target;
 
+  // The expected resulting product of the order, if any
+  output;
+
   // A follow-up order
   next;
 
@@ -54,6 +57,12 @@ export default class Order extends Memory {
 
     this.ability = ability;
     this.target = target;
+  }
+
+  expect(output) {
+    this.output = output;
+
+    return this;
   }
 
   replace(ability, target) {

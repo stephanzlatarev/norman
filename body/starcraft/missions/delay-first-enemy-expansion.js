@@ -1,6 +1,7 @@
 import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
+import Types from "../types.js";
 import Units from "../units.js";
 import Depot from "../map/depot.js";
 import Enemy from "../memo/enemy.js";
@@ -312,7 +313,7 @@ function orderPylon(agent, pos) {
   if (!agent || !pos) return;
 
   if ((agent.order.abilityId !== 881) || !agent.order.targetWorldSpacePos || !isSamePosition(agent.order.targetWorldSpacePos, pos)) {
-    return new Order(agent, 881, pos);
+    return new Order(agent, 881, pos).expect(Types.unit("Pylon"));
   }
 }
 
