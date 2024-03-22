@@ -1,7 +1,7 @@
 import Mission from "../mission.js";
 import Units from "../units.js";
 import Attack from "../jobs/attack.js";
-import Count from "../memo/count.js";
+import { ActiveCount } from "../memo/count.js";
 
 // TODO: Remove the hack of closing a job when adding a defender after implementing jit-mining
 import Job from "../job.js";
@@ -13,7 +13,7 @@ const jobs = new Map();
 export default class DefendDepotsMission extends Mission {
 
   run() {
-    if (Count.Zealot) {
+    if (ActiveCount.Zealot + ActiveCount.Stalker + ActiveCount.Sentry + ActiveCount.Immortal > 0) {
       return closeAllJobs();
     }
 

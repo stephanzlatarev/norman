@@ -1,7 +1,7 @@
 import Mission from "../mission.js";
 import Order from "../order.js";
 import Units from "../units.js";
-import Count from "../memo/count.js";
+import { ActiveCount } from "../memo/count.js";
 import Enemy from "../memo/enemy.js";
 import Resources from "../memo/resources.js";
 
@@ -14,7 +14,7 @@ export default class Combat extends Mission {
 
   run() {
     if (!findOwnBase()) return;
-    if (!Count.Zealot) return;
+    if (ActiveCount.Zealot + ActiveCount.Stalker + ActiveCount.Sentry + ActiveCount.Immortal === 0) return;
 
     const enemy = findClosestEnemy() || Enemy.base;
     if (!enemy) return;

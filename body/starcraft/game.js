@@ -77,7 +77,7 @@ export default class Game {
 
         Units.sync(this.observation.rawData.units, this.me, this.enemy);
         Resources.sync(this.observation);
-        Count.sync(this.observation, this.me.race);
+        Count(this.observation, this.me.race);
 
         for (const job of Job.list()) {
           if (job.assignee && !job.assignee.isAlive) {

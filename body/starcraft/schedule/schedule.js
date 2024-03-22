@@ -1,7 +1,8 @@
 import Job from "../job.js";
 import Order from "../order.js";
+import Types from "../types.js";
 import Units from "../units.js";
-import Count from "../memo/count.js";
+import { ActiveCount, TotalCount } from "../memo/count.js";
 import Limit from "../memo/limit.js";
 import Resources from "../memo/resources.js";
 
@@ -41,7 +42,13 @@ export default function() {
     }
 
     if (job.output) {
-      if (Count[job.output.name] >= Limit[job.output.name]) continue;
+      if (TotalCount[job.output.name] >= Limit[job.output.name]) continue;
+
+      if (job.output.techRequirement) {
+        const tech = Types.unit(job.output.techRequirement);
+
+        if (!ActiveCount[tech.name]) continue;
+      }
 
       if (job.output.foodRequired > Resources.supply) {
         blockPriority = job.priority;
@@ -69,7 +76,7 @@ export default function() {
       job.execute();
 
       if (job.output) {
-        Count[job.output.name]++;
+        TotalCount[job.output.name]++;
 
         if (job.output.foodRequired) Resources.supply -= job.output.foodRequired;
         if (job.output.mineralCost) Resources.minerals -= job.output.mineralCost;

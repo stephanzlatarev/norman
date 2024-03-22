@@ -2,7 +2,7 @@ import Mission from "../mission.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
 import Hub from "../map/hub.js";
-import Count from "../memo/count.js";
+import { TotalCount } from "../memo/count.js";
 import Resources from "../memo/resources.js";
 
 // TODO: Calculate time to new supply from nexuses and pylons in progress of building. Calculate time to supply cap looking at production facilities and ordered units. Build pylons just in time.
@@ -34,7 +34,7 @@ export default class BuildPylonsMission extends Mission {
 
 function findPylonForSupply() {
   if (Resources.supplyLimit >= 200) return;
-  if ((Resources.supplyUsed < 20) && (Count.Pylon >= 1)) return; // Too early for a second pylon
+  if ((Resources.supplyUsed < 20) && (TotalCount.Pylon >= 1)) return; // Too early for a second pylon
   if (Resources.supplyUsed < Resources.supplyLimit - 8) return;
   if (Resources.supplyUsed + countProductionCapacity() < countExpectedSupply() - 8) return;
 

@@ -3,7 +3,7 @@ import Types from "../types.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
 import Hub from "../map/hub.js";
-import Count from "../memo/count.js";
+import { TotalCount } from "../memo/count.js";
 import Limit from "../memo/limit.js";
 
 const DEFAULT_FACILITIES = ["Gateway"];
@@ -46,7 +46,7 @@ function selectFacilityType() {
   if (SPECIAL_FACILITIES.length) {
     const facility = Types.unit(SPECIAL_FACILITIES[0]);
   
-    if (Count[facility.name] < Limit[facility.name]) {
+    if (TotalCount[facility.name] < Limit[facility.name]) {
       return facility;
     }
   }
@@ -55,7 +55,7 @@ function selectFacilityType() {
   for (const one of DEFAULT_FACILITIES) {
     const facility = Types.unit(one);
 
-    if (Count[facility.name] < Limit[facility.name]) {
+    if (TotalCount[facility.name] < Limit[facility.name]) {
       return facility;
     }
   }

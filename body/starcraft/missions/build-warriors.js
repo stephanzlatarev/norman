@@ -2,7 +2,7 @@ import Mission from "../mission.js";
 import Types from "../types.js";
 import Units from "../units.js";
 import Produce from "../jobs/produce.js";
-import Count from "../memo/count.js";
+import { ActiveCount, TotalCount } from "../memo/count.js";
 import Resources from "../memo/resources.js";
 
 const jobs = new Map();
@@ -53,17 +53,17 @@ function createProduceWarriorJob(facility) {
 
 function selectWarriorType(facility) {
   if (facility.type.name === "Gateway") {
-    if (Count.CyberneticsCore >= 1) {
-      if ((Count.Stalker <= Count.Zealot * 4) && (Count.Stalker <= Count.Sentry * 4)) {
+    if (ActiveCount.CyberneticsCore >= 1) {
+      if ((TotalCount.Stalker <= TotalCount.Zealot * 4) && (TotalCount.Stalker <= TotalCount.Sentry * 4)) {
         return "Stalker";
-      } else if ((Count.Sentry * 4 <= Count.Stalker) && (Count.Sentry <= Count.Zealot)) {
+      } else if ((TotalCount.Sentry * 4 <= TotalCount.Stalker) && (TotalCount.Sentry <= TotalCount.Zealot)) {
         return "Sentry";
       }
     }
 
     return "Zealot";
   } else if (facility.type.name === "RoboticsFacility") {
-    if (Count.Observer < 1) {
+    if (TotalCount.Observer < 1) {
       return "Observer";
     }
 

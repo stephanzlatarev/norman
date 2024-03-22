@@ -1,40 +1,77 @@
 import Types from "../types.js";
 import Units from "../units.js";
 
-const counting = new Map();
+const active = new Map();
+const total = new Map();
 
-// TODO: Split into CountActive and CountTotal to differentiate active units from ordered or building 
+export const ActiveCount = {
+  CyberneticsCore: 0,
+  Gateway: 0,
+  Immortal: 0,
+  Nexus: 0,
+  Observer: 0,
+  Probe: 0,
+  Pylon: 0,
+  RoboticsFacility: 0,
+  Sentry: 0,
+  Stalker: 0,
+  Zealot: 0,
+};
 
-class Count {
+export const TotalCount = {
+  CyberneticsCore: 0,
+  Gateway: 0,
+  Immortal: 0,
+  Nexus: 0,
+  Observer: 0,
+  Probe: 0,
+  Pylon: 0,
+  RoboticsFacility: 0,
+  Sentry: 0,
+  Stalker: 0,
+  Zealot: 0,
+};
 
-  sync(observation, race) {
-    // Count units by type
-    for (const type of Types.list(race)) {
-      counting.set(type.name, 0);
-    }
-
-    count(Units.buildings().values());
-    count(Units.warriors().values());
-    count(Units.workers().values());
-
-    for (const [type, count] of counting) {
-      this[type] = count;
-    }
-
-    // Set count of upgrades by type
-    for (const id of observation.rawData.player.upgradeIds) {
-      this[Types.upgrade(id).name] = 1;
-    }
+export default function(observation, race) {
+  // Count units by type
+  for (const type of Types.list(race)) {
+    active.set(type.name, 0);
+    total.set(type.name, 0);
   }
 
+  count(Units.buildings().values());
+  count(Units.warriors().values());
+  count(Units.workers().values());
+
+  for (const [type, count] of active) {
+    ActiveCount[type] = count;
+  }
+
+  for (const [type, count] of total) {
+    TotalCount[type] = count;
+  }
+
+  // Set count of upgrades by type
+  for (const id of observation.rawData.player.upgradeIds) {
+    const upgradeName = Types.upgrade(id).name;
+
+    ActiveCount[upgradeName] = 1;
+    TotalCount[upgradeName] = 1;
+  }
 }
 
 function count(units) {
   for (const unit of units) {
-    const count = counting.get(unit.type.name);
+    increment(total, unit.type.name);
 
-    counting.set(unit.type.name, count ? count + 1 : 1);
+    if (unit.isActive) {
+      increment(active, unit.type.name);
+    }
   }
 }
 
-export default new Count();
+function increment(map, key) {
+  const count = map.get(key);
+
+  map.set(key, count ? count + 1 : 1);
+}

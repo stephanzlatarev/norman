@@ -2,7 +2,7 @@ import Mission from "../mission.js";
 import Types from "../types.js";
 import Units from "../units.js";
 import Produce from "../jobs/produce.js";
-import Count from "../memo/count.js";
+import { ActiveCount } from "../memo/count.js";
 
 const FACILITY = "Forge";
 const UPGRADES = [
@@ -49,7 +49,7 @@ export default class ResearchUpgradesMission extends Mission {
 
 function getUpgradeType() {
   for (const upgrade of UPGRADES) {
-    if (!Count[upgrade]) {
+    if (!ActiveCount[upgrade]) {
       return Types.upgrade(upgrade);
     }
   }
