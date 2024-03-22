@@ -1,10 +1,7 @@
-import Memory from "../../../code/memory.js";
 
-export default class Pin extends Memory {
+export default class Pin {
 
   constructor(location) {
-    super();
-
     this.x = location.x;
     this.y = location.y;
 

@@ -47,6 +47,7 @@ class Types {
       if (!unit.available) continue;
       if (!unit.attributes.length) continue;
 
+      const isNeutral = !unit.race;
       const isBuilding = (unit.attributes.indexOf(ATTRIBUTE_STRUCTURE) >= 0);
 
       const type = this.unit(unit.name);
@@ -54,12 +55,13 @@ class Types {
       type.id = unit.unitId;
       type.name = unit.name;
 
+      type.isNeutral = isNeutral;
       type.isDepot = !!IS_DEPOT[unit.name];
       type.isPylon = !!IS_PYLON[unit.name];
       type.isWorker = !!IS_WORKER[unit.name];
-      type.isWarrior = !isBuilding;
+      type.isWarrior = !isBuilding && !isNeutral;
       type.isExtractor = !!IS_EXTRACTOR[unit.name];
-      type.isBuilding = isBuilding;
+      type.isBuilding = isBuilding && !isNeutral;
       type.isMinerals = !!unit.hasMinerals;
       type.isVespene = !!unit.hasVespene && !unit.race;
 

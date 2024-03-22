@@ -1,11 +1,11 @@
-import Pin from "./pin.js";
+import Zone from "./zone.js";
 
 const hubs = [];
 
-export default class Hub extends Pin {
+export default class Hub extends Zone {
 
-  constructor(x, y) {
-    super({ x, y });
+  constructor(x, y, r) {
+    super(x, y, r);
 
     this.isPowered = false;
 
@@ -38,7 +38,11 @@ export default class Hub extends Pin {
   }
 
   static order() {
-    hubs.sort((a, b) => (a.d - b.d));
+    hubs.sort(function(a, b) {
+      if (a.isWall !== b.isWall) return a.isWall ? -1 : 1;
+
+      return a.d - b.d;
+    });
   }
 
 }

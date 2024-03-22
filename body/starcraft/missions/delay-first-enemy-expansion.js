@@ -11,8 +11,24 @@ export default class DelayFirstEnemyExpansionMission extends Mission {
   job = null;
 
   run() {
-    if (!this.job) {
-      this.job = new AnnoyEnemy();
+    if (this.job) return;
+
+    if (this.pylonJob) {
+      // Waiting for the pylon job to be assigned
+      if (this.pylonJob.assignee) {
+        this.pylonBuilder = this.pylonJob.assignee;
+      }
+
+      // Waiting for the pylon job to finish
+      if (this.pylonJob.isDone) {
+        this.job = new AnnoyEnemy();
+        this.job.assign(this.pylonBuilder);
+      } else if (this.pylonJob.isFailed) {
+        this.job = true;
+      }
+    } else {
+      // Waiting for the pylon job to appear
+      this.pylonJob = Array.from(Job.list()).find(job => job.output && job.output.isPylon);
     }
   }
 

@@ -1,47 +1,53 @@
+import Board from "./board.js";
 import Depot from "./depot.js";
 import Hub from "./hub.js";
+import Zone from "./zone.js";
 import Units from "../units.js";
+import createWall from "./wall.js";
 
 class Map {
 
   sync(gameInfo) {
-    readPlayableArea(this, gameInfo.startRaw.playableArea);
-    readPlacementGrid(this, gameInfo.startRaw.placementGrid);
+    this.left = gameInfo.startRaw.playableArea.p0.x;
+    this.top = gameInfo.startRaw.playableArea.p0.y;
+    this.right = gameInfo.startRaw.playableArea.p1.x;
+    this.bottom = gameInfo.startRaw.playableArea.p1.y;
 
-    locateDepots(this);
-    locateHubs(this, 10);
+    this.width = this.right - this.left;
+    this.height = this.bottom - this.top;
+
+    this.board = newBoard(gameInfo.startRaw.placementGrid, gameInfo.startRaw.pathingGrid);
+
+    createDepots(populateBoard(this.board.copy(), { harvest: 1, resources: 1, obstacles: 1 }));
+    createZones(populateBoard(this.board.copy(), { depots: 1, resources: 1, obstacles: 1 }));
+
+    createWall(populateBoard(this.board.copy(), { obstacles: 1 }));
+  }
+
+  get(filter) {
+    return populateBoard(this.board.copy(), filter);
   }
 
 }
 
-function readPlayableArea(map, playArea) {
-  const left = playArea.p0.x;
-  const top = playArea.p0.y;
-  const width = playArea.p1.x - playArea.p0.x;
-  const height = playArea.p1.y - playArea.p0.y;
-
-  map.left = left;
-  map.top = top;
-  map.width = width;
-  map.height = height;
-}
-
-function readPlacementGrid(map, grid) {
+function newBoard(placementGrid, pathingGrid) {
   const lines = [];
-  const size = grid.size;
-  const data = grid.data;
+  const size = placementGrid.size;
 
   for (let y = 0; y < size.y; y++) {
     const line = [];
     for (let x = 0; x < size.x; x++) {
       const index = x + y * size.x;
-      const bit = data[Math.floor(index / 8)];
       const pos = 7 - index % 8;
       const mask = 1 << pos;
-      const val = (bit & mask) != 0;
 
-      if (val) {
+      const placement = (placementGrid.data[Math.floor(index / 8)] & mask) != 0;
+      const pathing = (pathingGrid.data[Math.floor(index / 8)] & mask) != 0;
+
+      if (placement && pathing) {
         line.push(" ");
+      } else if (placement || pathing) {
+        line.push("/");
       } else {
         line.push("-");
       }
@@ -49,14 +55,39 @@ function readPlacementGrid(map, grid) {
     lines.push(line.join(""));
   }
 
-  map.lines = lines;
+  for (const building of Units.buildings().values()) {
+    if (building.type.isBuilding) {
+      for (let i = 0; i < 5; i++) {
+        const col = building.body.x - 2.5;
+        const row = building.body.y - 2.5 + i;
+        const line = lines[row];
+
+        lines[row] = line.substring(0, col) + "     " + line.substring(col + 5);
+      }
+    }
+  }
+
+  return new Board(lines);
 }
 
-function locateDepots(map) {
+function createDepots(board) {
   const clusters = clusterResources(findClusters());
 
   for (const cluster of clusters) {
-    calculateDepotCoordinates(map, cluster);
+    const depot = board.base(Math.floor(cluster.x), Math.floor(cluster.y), 5, 10);
+
+    if (!depot) continue;
+
+    cluster.depot = { x: depot.x + 2.5, y: depot.y + 2.5 };
+    cluster.rally = { x: cluster.depot.x + Math.sign(cluster.x - cluster.depot.x) * 3, y: cluster.depot.y + Math.sign(cluster.y - cluster.depot.y) * 3 };
+
+    // Calculate distance to depot for each resource in the cluster
+    for (const resource of cluster.resources) {
+      const dx = resource.body.x - cluster.depot.x;
+      const dy = resource.body.y - cluster.depot.y;
+
+      resource.d = Math.sqrt(dx * dx + dy * dy);
+    }
 
     const minerals = cluster.resources.filter(resource => resource.type.isMinerals);
     const vespene = cluster.resources.filter(resource => resource.type.isVespene);
@@ -157,184 +188,86 @@ function clusterResources(clusters) {
   return result;
 }
 
-function calculateDepotCoordinates(map, cluster) {
-  const clusterX = Math.floor(cluster.x);
-  const clusterY = Math.floor(cluster.y);
-  const plotMinX = clusterX - 20;
-  const plotMinY = clusterY - 20;
-  const plotMaxW = 40;
-  const plotMaxH = 40;
-  const board = createBoard(map, { harvest: 1, units: 1 });
-  const data = prefix(board, plotMinX, plotMinY, plotMaxW, plotMaxH);
-  const slot = plot(data, 5, 5, plotMinX, plotMinY, plotMinX + plotMaxW, plotMinY + plotMaxH, clusterX, clusterY);
+function createZones(board) {
+  for (let size = 16; size >= 6; size -= 2) {
+    const type = (size >= 10) ? "H" : "O";
+    const radius = size / 2;
+    const blocks = board.many(type, size, size, true);
 
-  cluster.depot = { x: slot.x + 2.5, y: slot.y + 2.5 };
-  cluster.rally = { x: cluster.depot.x + Math.sign(cluster.x - cluster.depot.x) * 3, y: cluster.depot.y + Math.sign(cluster.y - cluster.depot.y) * 3 };
-
-  // Calculate distance to depot for each resource in the cluster
-  for (const resource of cluster.resources) {
-    const dx = resource.body.x - cluster.depot.x;
-    const dy = resource.body.y - cluster.depot.y;
-
-    resource.d = Math.sqrt(dx * dx + dy * dy);
-  }
-}
-
-function locateHubs(map, size) {
-  const plots = [];
-  const board = createBoard(map, { depots: 1, units: 1 });
-
-  for (let y = 0; y < board.length - size; y += size) {
-    for (let x = 0; x < board[y].length - size; x += size) {
-      const data = prefix(board, x, y, size + size, size + size);
-      const plot = findPlot(plots.length, data, x, y, x + size + size, y + size + size, size, size);
-
-      if (plot) {
-        plots.push(plot);
-        add(board, "X", plot.x, plot.y, plot.w, plot.h);
-
-        const centerX = plot.x + plot.w / 2 + 1;
-        const centerY = plot.y + plot.h / 2 + 1;
-
-        new Hub(centerX, centerY);
-      }
-    }
-  }
-
-  return plots;
-}
-
-function findPlot(index, prefix, startX, startY, endX, endY, width, height) {
-  for (let y = startY; y < Math.min(endY, prefix.length - 1); y++) {
-    for (let x = startX; x < Math.min(endX, prefix[y].length - 1); x++) {
-      const cell = prefix[y][x];
-
-      if (cell && (cell.w >= width) && (cell.h >= height)) {
-        return { index: index, x: x, y: y, w: width, h: height };
-      }
-    }
-  }
-}
-
-function createBoard(map, filter) {
-  const board = JSON.parse(JSON.stringify(map.lines));
-
-  if (filter.harvest) {
-    for (const unit of Units.resources().values()) {
-      const x = Math.floor(unit.body.x);
-      const y = Math.floor(unit.body.y);
-
-      if (unit.type.isMinerals) {
-        add(board, "·", x - 4, y - 2, 8, 5);
-        add(board, "·", x - 3, y - 3, 6, 7);
-      } else if (unit.type.isVespene) {
-        add(board, "·", x - 4, y - 4, 9, 9);
-      }
-    }
-  }
-
-  if (filter.units) {
-    for (const unit of Units.resources().values()) {
-      const x = Math.floor(unit.body.x);
-      const y = Math.floor(unit.body.y);
-
-      if (unit.type.isMinerals) {
-        add(board, "M", x - 1, y, 2, 1);
-      } else if (unit.type.isVespene) {
-        add(board, "V", x - 1, y - 1, 3, 3);
+    for (const block of blocks) {
+      if (size >= 10) {
+        new Hub(block.x + radius, block.y + radius, radius);
       } else {
-        const radius = Math.round(unit.radius);
-        const diameter = Math.round(unit.radius * 2);
-
-        add(board, "?", x - radius, y - radius, diameter, diameter);
+        new Zone(block.x + radius, block.y + radius, radius);
       }
     }
+  }
+}
 
-    for (const unit of Units.obstacles().values()) {
+function populateBoard(board, filter) {
+  if (filter && filter.harvest) {
+    for (const unit of Units.resources().values()) {
       const x = Math.floor(unit.body.x);
       const y = Math.floor(unit.body.y);
-      const radius = Math.round(unit.radius);
-      const diameter = Math.round(unit.radius * 2);
 
-      add(board, "?", x - radius, y - radius, diameter, diameter);
+      if (unit.type.isMinerals) {
+        board.one("·", x - 4, y - 2, 8, 5);
+        board.one("·", x - 3, y - 3, 6, 7);
+      } else if (unit.type.isVespene) {
+        board.one("·", x - 4, y - 4, 9, 9);
+      }
     }
   }
 
-  if (filter.depots) {
+  if (!filter || filter.resources) {
+    for (const unit of Units.resources().values()) {
+      const x = Math.floor(unit.body.x);
+      const y = Math.floor(unit.body.y);
+
+      if (unit.type.isMinerals) {
+        board.one("M", x - 1, y, 2, 1);
+      } else if (unit.type.isVespene) {
+        board.one("V", x - 1, y - 1, 3, 3);
+      } else {
+        board.one("?", x, y, 1, 1);
+      }
+    }
+  }
+
+  if (!filter || filter.obstacles) {
+    for (const unit of Units.obstacles().values()) {
+      board.one("X", Math.floor(unit.body.x) - 1, Math.floor(unit.body.y) - 1, 3, 3);
+    }
+  }
+
+  if (!filter || filter.depots) {
     for (const depot of Depot.list()) {
-      add(board, "N", Math.floor(depot.x - 2.5), Math.floor(depot.y - 2.5), 5, 5);
+      board.one("N", Math.floor(depot.x - 2.5), Math.floor(depot.y - 2.5), 5, 5);
+    }
+  }
+
+  if (!filter || filter.hubs) {
+    for (const hub of Hub.list()) {
+      const size = hub.r + hub.r;
+
+      board.one("H", Math.floor(hub.x - hub.r), Math.floor(hub.y - hub.r), size, size);
+
+      for (const pylon of hub.pylonPlots) {
+        board.one("P", pylon.x - 1, pylon.y - 1, 2, 2);
+      }
+      for (const building of hub.buildingPlots) {
+        board.one("B", building.x - 1.5, building.y - 1.5, 3, 3);
+      }
+    }
+  }
+
+  if (!filter || filter.zones) {
+    for (const zone of Zone.list()) {
+      board.one("O", Math.floor(zone.x), Math.floor(zone.y), 1, 1);
     }
   }
 
   return board;
-}
-
-function add(board, symbol, x, y, w, h) {
-  for (let row = y; row < y + h; row++) {
-    const line = board[row];
-
-    let symbols = "";
-    for (let i = 0; i < w; i++) symbols += symbol;
-
-    board[row] = line.substring(0, x) + symbols + line.substring(x + w);
-  }
-}
-
-function prefix(board, x, y, w, h) {
-  const minx = x ? x : 0;
-  const maxx = w ? minx + w : board[0].length - 1;
-  const miny = y ? y : 0;
-  const maxy = h ? miny + h : board.length - 1;
-
-  // Zero prefix table
-  const prefix = [];
-  for (const row of board) {
-    const line = [];
-    for (const _ of row) {
-      line.push({ w: 0, h: 0 });
-    }
-    prefix.push(line);
-  }
-
-  for (let row = Math.min(maxy - 1, board.length - 1); row >= Math.max(miny, 0); row--) {
-    for (let col = Math.min(maxx - 1, board[row].length - 1); col >= Math.max(minx, 0); col--) {
-      if (board[row][col] !== " ") continue;
-
-      const cell = prefix[row][col];
-      const right = prefix[row][col + 1];
-      const bottom = prefix[row + 1][col];
-      const diagonal = prefix[row + 1][col + 1];
-
-      cell.w = Math.min(right.w + 1, diagonal.w + 1);
-      cell.h = Math.min(bottom.h + 1, diagonal.h + 1);
-    }
-  }
-
-  return prefix;
-}
-
-function plot(prefix, width, height, minX, minY, maxX, maxY, centerX, centerY) {
-  let best = 1000000;
-  let plot = { x:0, y: 0, w: 0, h: 0 };
-
-  for (let y = Math.max(minY, 0); y <= Math.min(maxY, prefix.length - 1); y++) {
-    for (let x = Math.max(minX, 0); x <= Math.min(maxX, prefix[y].length - 1); x++) {
-      const cell = prefix[y][x];
-
-      if ((cell.w >= width) && (cell.h >= height)) {
-        const cellCenterX = x + width / 2;
-        const cellCenterY = y + height / 2;
-        const distance = (cellCenterX - centerX) * (cellCenterX - centerX) + (cellCenterY - centerY) * (cellCenterY - centerY);
-
-        if (distance < best) {
-          best = distance;
-          plot = { x: x, y: y, w: cell.w, h: cell.h };
-        }
-      }
-    }
-  }
-
-  return { x: plot.x, y: plot.y, w: width, h: height };
 }
 
 export default new Map();
