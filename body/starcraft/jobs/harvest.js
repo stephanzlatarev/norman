@@ -54,13 +54,13 @@ export default class Harvest extends Job {
       const sd = squareDistance(this.assignee.body, this.target.body);
 
       if (this.assignee.isCarryingHarvest) {
-        if (sd < this.boostDistance) {
-          this.mode = returnHarvest(this.assignee);
-        } else {
+        if ((sd > this.boostDistance) && isInHarvestLane(this.assignee, this.storePoint, this.harvestPoint)) {
           this.mode = pushToDepot(this.assignee, this.mode, this.storePoint, this.target, this.nexus);
+        } else {
+          this.mode = returnHarvest(this.assignee);
         }
       } else {
-        if (sd < this.boostDistance) {
+        if ((sd < this.boostDistance) && isInHarvestLane(this.assignee, this.storePoint, this.harvestPoint)) {
           this.mode = pushToResource(this.assignee, this.mode, this.harvestPoint, this.target);
         } else {
           this.mode = harvestResource(this.assignee, this.target);
@@ -116,6 +116,15 @@ function returnHarvest(worker) {
   }
 
   return MODE_STORING;
+}
+
+function isInHarvestLane(worker, a, b) {
+  if (worker.body.x < Math.min(a.x, b.x) - 0.1) return false;
+  if (worker.body.x > Math.max(a.x, b.x) + 0.1) return false;
+  if (worker.body.y < Math.min(a.y, b.y) - 0.1) return false;
+  if (worker.body.y > Math.max(a.y, b.y) + 0.1) return false;
+
+  return true;
 }
 
 function isSamePoint(a, b) {
