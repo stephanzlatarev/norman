@@ -139,8 +139,7 @@ function orderAttack(warrior, pos) {
 
 function orderMove(warrior, pos) {
   if (!warrior || !warrior.order || !warrior.body || !pos) return;
-
-  if (!warrior.order.abilityId && isCloseTo(warrior.body, pos)) return;
+  if (isCloseTo(warrior.body, pos)) return;
 
   if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isSamePosition(warrior.order.targetWorldSpacePos, pos)) {
     new Order(warrior, 16, pos);
