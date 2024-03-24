@@ -3,9 +3,11 @@ import Order from "../order.js";
 import Types from "../types.js";
 import Units from "../units.js";
 
+const ACKNOWLEDGE_TIME = 10;
+
 export default class Build extends Job {
 
-  isProgressing = false;
+  progress = 0;
 
   constructor(building, target) {
     super("Worker", building.name ? building : Types.unit(building), target);
@@ -19,18 +21,23 @@ export default class Build extends Job {
     } else if (this.order.isAccepted) {
       const pos = this.target.body || this.target;
 
-      // Make sure the worker is no longer building it
-      if ((this.assignee.order.abilityId !== this.output.abilityId) && isWorkerAtPosition(this.assignee, pos)) {
-        this.isProgressing = true;
+      // Make sure the worker is at the right position and no longer has the command to build
+      if (!this.progress && (this.assignee.order.abilityId !== this.output.abilityId) && isWorkerAtPosition(this.assignee, pos)) {
+        this.progress = 1;
       }
 
       // Close the job when the building appears
-      if (this.isProgressing) {
+      if (this.progress) {
         const building = findBuilding(pos);
 
         if (building) {
           this.close(building);
+        } else if (this.progress > ACKNOWLEDGE_TIME) {
+          // Although the worker is at the right position and no longer has the command to build, the building hasn't appeared for this long
+          this.close(false);
         }
+
+        this.progress++;
       }
     }
   }
