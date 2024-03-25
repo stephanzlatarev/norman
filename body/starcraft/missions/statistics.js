@@ -5,6 +5,9 @@ import Resources from "../memo/resources.js";
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = Math.round(LOOPS_PER_SECOND * 60);
 
+let timeTotal = 0;
+let timeSupplyBlocked = 0;
+
 const harvestersMinerals = new Map();
 const harvestersVespene = new Map();
 
@@ -23,6 +26,7 @@ export default class Statistics extends Mission {
 
   run() {
     if (Resources.loop > 0) {
+      trackSupply();
       trackHarvest();
       trackWorkerProduction();
       trackGatewayProduction();
@@ -37,6 +41,9 @@ export default class Statistics extends Mission {
 }
 
 function clear() {
+  timeTotal = 0;
+  timeSupplyBlocked = 0;
+
   harvestersMinerals.clear();
   harvestersVespene.clear();
 
@@ -50,6 +57,14 @@ function clear() {
   gatewayProduction.clear();
   gatewayProductionUsed = 0;
   gatewayProductionTotal = 0;
+}
+
+function trackSupply() {
+  timeTotal++;
+
+  if ((Resources.supplyLimit < 200) && (Resources.supplyUsed >= Resources.supplyLimit)) {
+    timeSupplyBlocked++;
+  }
 }
 
 function trackHarvest() {
@@ -104,7 +119,7 @@ function trackGatewayProduction() {
 function show() {
   const text = ["[stats]"];
 
-  text.push("Supply:", (Resources.supplyUsed - Resources.supplyWorkers), "+", Resources.supplyWorkers, "/", Resources.supplyLimit);
+  text.push("Supply:", (Resources.supplyUsed - Resources.supplyWorkers), "+", Resources.supplyWorkers, "/", Resources.supplyLimit, percentage(timeTotal - timeSupplyBlocked, timeTotal));
   text.push("|");
   text.push("Minerals:", minerals);
   text.push("|");

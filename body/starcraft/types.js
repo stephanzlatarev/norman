@@ -67,8 +67,8 @@ class Types {
       type.vespeneCost = unit.vespeneCost;
       type.techRequirement = unit.techRequirement;
 
-      // TODO: Calculate the time needed to produce the fastest building unit
-      type.produceTime = (isBuilding && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name]) ? 10 : 0;
+      // Assume average of 10 seconds for 1 supply of production
+      type.supplyConsumptionRate = (isBuilding && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name]) ? 1 / 10 / 22.4 : 0;
 
       units.set(unit.unitId, type);
       units.set(unit.name, type);

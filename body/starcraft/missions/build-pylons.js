@@ -1,8 +1,9 @@
 import Mission from "../mission.js";
+import Types from "../types.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
 import Hub from "../map/hub.js";
-import { TotalCount } from "../memo/count.js";
+import { ActiveCount, TotalCount } from "../memo/count.js";
 import Resources from "../memo/resources.js";
 
 // TODO: Calculate time to new supply from nexuses and pylons in progress of building. Calculate time to supply cap looking at production facilities and ordered units. Build pylons just in time.
@@ -35,10 +36,18 @@ export default class BuildPylonsMission extends Mission {
 function findPylonForSupply() {
   if (Resources.supplyLimit >= 200) return;
   if ((Resources.supplyUsed < 20) && (TotalCount.Pylon >= 1)) return; // Too early for a second pylon
-  if (Resources.supplyUsed < Resources.supplyLimit - 8) return;
-  if (Resources.supplyUsed + countProductionCapacity() < countExpectedSupply() - 8) return;
 
-  return findPylonPlot();
+  // TODO: Also count a nexus when currently building but only if remaining time to build is the same as the time to build a pylon
+  const expectedSupply = ActiveCount.Nexus * 15 + TotalCount.Pylon * 8;
+
+  if (Resources.supplyUsed + 8 >= expectedSupply) return findPylonPlot();
+
+  const timeToConsumeSupply = (expectedSupply - Resources.supplyUsed) / countSupplyConsumptionRate();
+  const timeToIncreaseSupply = Types.unit("Pylon").buildTime + 5 * 22.4; // Assume 5 seconds for probe to reach pylon construction site
+
+  if (timeToConsumeSupply <= timeToIncreaseSupply) {
+    return findPylonPlot();
+  }
 }
 
 function findPylonForPower() {
@@ -50,28 +59,16 @@ function findPylonForPower() {
   return hubs.next;
 }
 
-function countExpectedSupply() {
-  let count = 0;
+function countSupplyConsumptionRate() {
+  let consumption = 0;
 
   for (const building of Units.buildings().values()) {
-    count += building.type.supplyProvided;
-  }
-
-  return count;
-}
-
-function countProductionCapacity() {
-  let count = 0;
-
-  for (const building of Units.buildings().values()) {
-    if (building.type.produceTime) {
-      count++;
-
-      if (building.order.abilityId) count++;
+    if (building.type.supplyConsumptionRate) {
+      consumption += building.type.supplyConsumptionRate;
     }
   }
 
-  return count;
+  return consumption;
 }
 
 function countBuildings() {
