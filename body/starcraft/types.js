@@ -15,8 +15,8 @@ const ATTRIBUTE_STRUCTURE = 8;
 
 class Types {
 
-  product(key) {
-    return get(products, key);
+  product(abilityId) {
+    return get(products, abilityId);
   }
 
   unit(key) {
@@ -74,6 +74,10 @@ class Types {
       units.set(unit.name, type);
 
       races[unit.race].push(type);
+
+      if (type.abilityId) {
+        products.set(type.abilityId, type);
+      }
     }
 
     for (const upgrade of data.upgrades) {

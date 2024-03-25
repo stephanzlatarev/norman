@@ -13,7 +13,7 @@ export default class BuildWorkersMission extends Mission {
   run() {
     removeCompletedJobs();
 
-    if (Units.workers().size >= Limit.Worker) return;
+    if (Units.workers().size >= Limit.Probe) return;
 
     for (const nexus of Units.buildings().values()) {
       if (nexus.job) continue;
