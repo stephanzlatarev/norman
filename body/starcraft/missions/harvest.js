@@ -58,8 +58,11 @@ export default class HarvestMission extends Mission {
             }
           }
         }
+      } else {
+        capacity += depot.minerals.length * 2;
       }
 
+      depot.capacity = capacity;
       depot.isSaturated = (workerCount >= capacity);
 
       // Close extra jobs

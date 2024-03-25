@@ -13,6 +13,9 @@ export default class Depot extends Pin {
   // Is active when the depot building is operational
   isActive = false;
 
+  // The capacity for harvest workers
+  capacity = 0;
+
   // Is staturated when enough workers are assigned to this depot
   isSaturated = false;
 

@@ -1,6 +1,7 @@
 
 const units = new Map();
 const upgrades = new Map();
+const products = new Map();
 const races = [[], [], [], []];
 
 const IS_DEPOT = { Nexus: 1 };
@@ -14,28 +15,16 @@ const ATTRIBUTE_STRUCTURE = 8;
 
 class Types {
 
+  product(key) {
+    return get(products, key);
+  }
+
   unit(key) {
-    let type = units.get(key);
-
-    if (!type) {
-      type = { name: "Other" };
-
-      units.set(key, type);
-    }
-
-    return type;
+    return get(units, key);
   }
 
   upgrade(key) {
-    let type = upgrades.get(key);
-
-    if (!type) {
-      type = { name: "Other" };
-
-      upgrades.set(key, type);
-    }
-
-    return type;
+    return get(upgrades, key);
   }
 
   list(race) {
@@ -99,5 +88,17 @@ class Types {
 
 units.set("Building", { isBuilding: true });
 units.set("Worker", { isWorker: true });
+
+function get(collection, key) {
+  let type = collection.get(key);
+
+  if (!type) {
+    type = { name: "Other" };
+
+    collection.set(key, type);
+  }
+
+  return type;
+}
 
 export default new Types();
