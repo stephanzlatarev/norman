@@ -1,10 +1,11 @@
 import Mission from "../mission.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
-import Depot from "../map/depot.js";
+import Map from "../map/map.js";
 
 export default class BuildExpansionsMission extends Mission {
 
+  home;
   job;
 
   run() {
@@ -16,7 +17,11 @@ export default class BuildExpansionsMission extends Mission {
       }
     }
 
-    const pos = findDepotLocation();
+    if (!this.home) {
+      this.home = locateHomeZone();
+    }
+
+    const pos = findDepotPlot(this.home);
 
     if (pos) {
       this.job = new Build("Nexus", pos);
@@ -25,35 +30,43 @@ export default class BuildExpansionsMission extends Mission {
 
 }
 
-function findDepotLocation() {
-  const nexuses = [];
+function locateHomeZone() {
+  return Units.buildings().values().next().value.depot;
+}
 
-  for (const building of Units.buildings().values()) {
-    if (building.type.isDepot) {
-      nexuses.push(building);
+function findDepotPlot(home) {
+  const checked = new Set();
+  const next = new Set();
+
+  next.add(home);
+
+  for (const zone of next) {
+    if (zone.isDepot && Map.canPlace(zone, zone.x, zone.y, 5)) {
+      return zone;
     }
-  }
 
-  for (const depot of Depot.list()) {
-    if (depot.isFree) {
-      if (isPositionTaken(depot, nexuses)) {
-        depot.isFree = false;
-        continue;
+    checked.add(zone);
+
+    for (const one of getNeighborZones(zone)) {
+      if (!checked.has(one)) {
+        next.add(one);
       }
-
-      return depot;
     }
+
+    next.delete(zone);
   }
 }
 
-function isSamePosition(a, b) {
-  return (Math.abs(a.x - b.x) < 1) && (Math.abs(a.y - b.y) < 1);
-}
+function getNeighborZones(zone) {
+  const zones = new Set();
 
-function isPositionTaken(pos) {
-  for (const building of Units.buildings().values()) {
-    if (isSamePosition(pos, building.body)) {
-      return true;
+  for (const corridor of zone.corridors) {
+    for (const one of corridor.zones) {
+      if (one !== zone) {
+        zones.add(one);
+      }
     }
   }
+
+  return zones;
 }

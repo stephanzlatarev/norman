@@ -2,15 +2,17 @@ import Mission from "../mission.js";
 import Types from "../types.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
-import Hub from "../map/hub.js";
+import Map from "../map/map.js";
+import Wall from "../map/wall.js";
 import { TotalCount } from "../memo/count.js";
 import Limit from "../memo/limit.js";
 
 const DEFAULT_FACILITIES = ["Gateway"];
 const SPECIAL_FACILITIES = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil"];
 
-// TODO: Convert to skill and run one skill per facility type
+let wallPylon = null;
 
+// TODO: Convert to skill and run one skill per facility type
 export default class BuildFacilitiesMission extends Mission {
 
   job;
@@ -33,7 +35,7 @@ export default class BuildFacilitiesMission extends Mission {
     const facility = selectFacilityType();
     if (!facility) return;
 
-    const pos = findBuildingPlot();
+    const pos = findBuildingPlot(facility);
     if (!pos) return;
 
     this.job = new Build(facility, pos);
@@ -61,31 +63,41 @@ function selectFacilityType() {
   }
 }
 
-function findBuildingPlot() {
-  for (const hub of Hub.list()) {
-    if (!hub.isPowered) continue;
+//TODO: Optimize by remembering found plots and re-using them when pylons are destroyed but otherwise continue the search from where last plot was found
+function findBuildingPlot(facility) {
+  for (const wall of Wall.list()) {
+    if (!wallPylon) {
+      wallPylon = findPylon(wall);
+    }
 
-    for (const plot of hub.buildingPlots) {
-      if (plot.isFree) {
-        if (isPositionTaken(plot)) {
-          plot.isFree = false;
-          continue;
-        }
+    if (wallPylon && wallPylon.isActive) {
+      const plot = wall.getPlot(Types.unit(facility));
 
+      if (plot && Map.canPlace(plot, plot.x, plot.y, 3)) {
         return plot;
       }
     }
   }
-}
 
-function isPositionTaken(pos) {
   for (const building of Units.buildings().values()) {
-    if (isSamePosition(pos, building.body)) {
-      return true;
-    }
+    if (!building.type.isPylon || !building.isActive || building.isWall) continue;
+
+    const pos = building.body;
+
+    if (Map.canPlace(pos, pos.x + 2.5, pos.y + 1.5, 3)) return { x: pos.x + 2.5, y: pos.y + 1.5 };
+    if (Map.canPlace(pos, pos.x + 2.5, pos.y - 1.5, 3)) return { x: pos.x + 2.5, y: pos.y - 1.5 };
+    if (Map.canPlace(pos, pos.x - 2.5, pos.y + 1.5, 3)) return { x: pos.x - 2.5, y: pos.y + 1.5 };
+    if (Map.canPlace(pos, pos.x - 2.5, pos.y - 1.5, 3)) return { x: pos.x - 2.5, y: pos.y - 1.5 };
   }
 }
 
-function isSamePosition(a, b) {
-  return (Math.abs(a.x - b.x) < 1) && (Math.abs(a.y - b.y) < 1);
+function findPylon(wall) {
+  const plot = wall.getPlot(Types.unit("Pylon"));
+
+  for (const building of Units.buildings().values()) {
+    if (building.type.isPylon && (building.body.x === plot.x) && (building.body.y === plot.y)) {
+      building.isWall = true;
+      return building;
+    }
+  }
 }

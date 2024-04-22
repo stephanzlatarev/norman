@@ -7,7 +7,8 @@ export default class Zone extends Pin {
   constructor(x, y, r) {
     super({ x, y });
 
-    this.r = r;
+    this.r = (r > 0) ? r : 1;
+    this.corridors = [];
 
     zones.push(this);
   }

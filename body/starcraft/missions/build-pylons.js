@@ -2,7 +2,8 @@ import Mission from "../mission.js";
 import Types from "../types.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
-import Hub from "../map/hub.js";
+import Map from "../map/map.js";
+import Wall from "../map/wall.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
 import Resources from "../memo/resources.js";
 
@@ -10,11 +11,10 @@ import Resources from "../memo/resources.js";
 
 export default class BuildPylonsMission extends Mission {
 
+  home;
   job;
 
   run() {
-    if (Resources.supplyUsed < 14) return;
-
     if (this.job) {
       if (this.job.isFailed) {
         this.job = null;
@@ -23,7 +23,13 @@ export default class BuildPylonsMission extends Mission {
       }
     }
 
-    const pos = findPylonForSupply() || findPylonForPower();
+    if (!this.home) {
+      this.home = locateHomeZone();
+    }
+
+    if ((Resources.supplyUsed < 20) && (TotalCount.Pylon >= 1)) return; // Too early for a second pylon
+
+    const pos = findFirstPylon() || findPylonForSupply(this.home);
 
     if (pos) {
       this.job = new Build("Pylon", pos);
@@ -33,30 +39,40 @@ export default class BuildPylonsMission extends Mission {
 
 }
 
-function findPylonForSupply() {
+function locateHomeZone() {
+  return Units.buildings().values().next().value.depot;
+}
+
+function findFirstPylon() {
+  if (TotalCount.Pylon >= 1) return; // First pylon is already built
+
+  const pylon = Types.unit("Pylon");
+
+  for (const wall of Wall.list()) {
+    const plot = wall.getPlot(pylon);
+
+    if (plot && Map.canPlace(plot, plot.x, plot.y, 2)) {
+      return plot;
+    }
+  }
+}
+
+function findPylonForSupply(home) {
   if (Resources.supplyLimit >= 200) return;
-  if ((Resources.supplyUsed < 20) && (TotalCount.Pylon >= 1)) return; // Too early for a second pylon
 
   // TODO: Also count a nexus when currently building but only if remaining time to build is the same as the time to build a pylon
   const expectedSupply = ActiveCount.Nexus * 15 + TotalCount.Pylon * 8;
 
-  if (Resources.supplyUsed + 8 >= expectedSupply) return findPylonPlot();
+  if (Resources.supplyUsed + 8 >= expectedSupply) {
+    return findPylonPlotOnMap(home);
+  }
 
   const timeToConsumeSupply = (expectedSupply - Resources.supplyUsed) / countSupplyConsumptionRate();
   const timeToIncreaseSupply = Types.unit("Pylon").buildTime + 5 * 22.4; // Assume 5 seconds for probe to reach pylon construction site
 
   if (timeToConsumeSupply <= timeToIncreaseSupply) {
-    return findPylonPlot();
+    return findPylonPlotOnMap(home);
   }
-}
-
-function findPylonForPower() {
-  const buildings = countBuildings();
-  const hubs = reviewHubs();
-
-  if (!hubs.next || (buildings + 1 < hubs.powered * 3)) return;
-
-  return hubs.next;
 }
 
 function countSupplyConsumptionRate() {
@@ -71,56 +87,65 @@ function countSupplyConsumptionRate() {
   return consumption;
 }
 
-function countBuildings() {
-  let count = 0;
+// TODO: Optimize by remembering found plots and re-using them when pylons are destroyed but otherwise continue the search from where last plot was found
+function findPylonPlotOnMap(home) {
+  const checked = new Set();
+  const next = new Set();
 
-  for (const building of Units.buildings().values()) {
-    if (building.type.needsPower) {
-      count++;
+  next.add(home);
+
+  for (const zone of next) {
+    const plot = findPylonPlotInZone(zone.isDepot ? findDepotExitZone(zone) : zone);
+
+    if (plot) return plot;
+
+    checked.add(zone);
+
+    for (const one of getNeighborZones(zone)) {
+      if (!checked.has(one)) {
+        next.add(one);
+      }
     }
-  }
 
-  return count;
+    next.delete(zone);
+  }
 }
 
-function reviewHubs() {
-  let powered = 0;
-  let next = null;
-
-  for (const hub of Hub.list()) {
-    if (hub.isPowered || !hub.pylonPlots[0].isFree) {
-      powered++;
-    } else if (!next) {
-      next = hub;
-    }
-  }
-
-  return { powered, next };
+function findDepotExitZone(depot) {
+  return {
+    x: (depot.exitRally.x > depot.x) ? Math.floor(depot.exitRally.x + 1) : Math.ceil(depot.exitRally.x - 1),
+    y: (depot.exitRally.y > depot.y) ? Math.floor(depot.exitRally.y + 1) : Math.ceil(depot.exitRally.y - 1)
+  };
 }
 
-function findPylonPlot() {
-  for (const hub of Hub.list()) {
-    for (const plot of hub.pylonPlots) {
-      if (plot.isFree) {
-        if (isPositionTaken(plot)) {
-          plot.isFree = false;
-          continue;
-        }
+function getNeighborZones(zone) {
+  const zones = new Set();
 
-        return plot;
+  for (const corridor of zone.corridors) {
+    for (const one of corridor.zones) {
+      if (one !== zone) {
+        zones.add(one);
       }
     }
   }
+
+  return zones;
 }
 
-function isPositionTaken(pos) {
-  for (const building of Units.buildings().values()) {
-    if (building.type.isPylon && isSamePosition(pos, building.body)) {
-      return true;
-    }
-  }
-}
+function findPylonPlotInZone(zone) {
+  const x = Math.floor(zone.x);
+  const y = Math.floor(zone.y);
 
-function isSamePosition(a, b) {
-  return (Math.abs(a.x - b.x) < 1) && (Math.abs(a.y - b.y) < 1);
+  if (Map.canPlace(zone, x, y, 2)) return { x: x, y: y };
+
+  if (Map.canPlace(zone, x + 10, y, 2)) return { x: x + 10, y: y };
+  if (Map.canPlace(zone, x - 10, y, 2)) return { x: x - 10, y: y };
+
+  if (Map.canPlace(zone, x + 5, y - 10, 2)) return { x: x + 5, y: y - 10 };
+  if (Map.canPlace(zone, x - 5, y - 10, 2)) return { x: x - 5, y: y - 10 };
+  if (Map.canPlace(zone, x - 5, y + 10, 2)) return { x: x - 5, y: y + 10 };
+  if (Map.canPlace(zone, x + 5, y + 10, 2)) return { x: x + 5, y: y + 10 };
+
+  if (Map.canPlace(zone, x, y + 20, 2)) return { x: x, y: y + 20 };
+  if (Map.canPlace(zone, x, y - 20, 2)) return { x: x, y: y - 20 };
 }

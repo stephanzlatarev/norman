@@ -1,273 +1,177 @@
 import Board from "./board.js";
-import Depot from "./depot.js";
-import Hub from "./hub.js";
+import Corridor from "./corridor.js";
 import Zone from "./zone.js";
 import Units from "../units.js";
-import createWall from "./wall.js";
+import { createDepots } from "./depot.js";
+import { createWalls } from "./wall.js";
 
 class Map {
 
-  sync(gameInfo) {
+  create(gameInfo) {
     this.left = gameInfo.startRaw.playableArea.p0.x;
     this.top = gameInfo.startRaw.playableArea.p0.y;
     this.right = gameInfo.startRaw.playableArea.p1.x;
     this.bottom = gameInfo.startRaw.playableArea.p1.y;
 
+    this.gameInfo = null;
+    this.gameLoop = 0;
+    this.loop = 0;
+
     this.width = this.right - this.left;
     this.height = this.bottom - this.top;
 
-    this.board = newBoard(gameInfo.startRaw.placementGrid, gameInfo.startRaw.pathingGrid);
+    this.board = new Board(this, gameInfo.startRaw.placementGrid, gameInfo.startRaw.pathingGrid);
 
-    createDepots(populateBoard(this.board.copy(), { harvest: 1, resources: 1, obstacles: 1 }));
-    createZones(populateBoard(this.board.copy(), { depots: 1, resources: 1, obstacles: 1 }));
+    clearInitialPathing(this.board);
 
-    createWall(populateBoard(this.board.copy(), { obstacles: 1 }));
+    this.board.path();
+
+    markResources(this.board);
+
+    const base = Units.buildings().values().next().value;
+
+    createDepots(this.board, Units.resources().values(), base);
+    createZones(this.board);
+    markZones(this.board);
+
+    createWalls(this.board, base);
   }
 
-  get(filter) {
-    return populateBoard(this.board.copy(), filter);
-  }
+  sync(gameInfoOrEnforce, gameLoop) {
+    if ((gameInfoOrEnforce === true) && (this.loop !== this.gameLoop)) {
+      this.board.sync(this.gameInfo.startRaw.pathingGrid);
 
-}
-
-function newBoard(placementGrid, pathingGrid) {
-  const lines = [];
-  const size = placementGrid.size;
-
-  for (let y = 0; y < size.y; y++) {
-    const line = [];
-    for (let x = 0; x < size.x; x++) {
-      const index = x + y * size.x;
-      const pos = 7 - index % 8;
-      const mask = 1 << pos;
-
-      const placement = (placementGrid.data[Math.floor(index / 8)] & mask) != 0;
-      const pathing = (pathingGrid.data[Math.floor(index / 8)] & mask) != 0;
-
-      if (placement && pathing) {
-        line.push(" ");
-      } else if (placement || pathing) {
-        line.push("/");
-      } else {
-        line.push("-");
-      }
-    }
-    lines.push(line.join(""));
-  }
-
-  for (const building of Units.buildings().values()) {
-    if (building.type.isBuilding) {
-      for (let i = 0; i < 5; i++) {
-        const col = building.body.x - 2.5;
-        const row = building.body.y - 2.5 + i;
-        const line = lines[row];
-
-        lines[row] = line.substring(0, col) + "     " + line.substring(col + 5);
-      }
+      this.loop = this.gameLoop;
+    } else if (gameInfoOrEnforce && (gameLoop > 0)) {
+      this.gameInfo = gameInfoOrEnforce;
+      this.gameLoop = gameLoop;
     }
   }
 
-  return new Board(lines);
-}
+  canPlace(zone, x, y, size) {
+    this.sync(true);
 
-function createDepots(board) {
-  const clusters = clusterResources(findClusters());
+    x = Math.floor(x);
+    y = Math.floor(y);
 
-  for (const cluster of clusters) {
-    const depot = board.base(Math.floor(cluster.x), Math.floor(cluster.y), 5, 10);
+    const cells = this.board.cells;
 
-    if (!depot) continue;
+    if (cells[y][x].area !== cells[Math.floor(zone.y)][Math.floor(zone.x)].area) return false;
 
-    cluster.depot = { x: depot.x + 2.5, y: depot.y + 2.5 };
-    cluster.rally = { x: cluster.depot.x + Math.sign(cluster.x - cluster.depot.x) * 3, y: cluster.depot.y + Math.sign(cluster.y - cluster.depot.y) * 3 };
+    const head = Math.floor(size / 2);
+    const tail = Math.floor((size - 1) / 2);
+    const minx = x - head;
+    const maxx = x + tail;
+    const miny = y - head;
+    const maxy = y + tail;
 
-    // Calculate distance to depot for each resource in the cluster
-    for (const resource of cluster.resources) {
-      const dx = resource.body.x - cluster.depot.x;
-      const dy = resource.body.y - cluster.depot.y;
+    for (let row = miny; row <= maxy; row++) {
+      const line = cells[row];
 
-      resource.d = Math.sqrt(dx * dx + dy * dy);
-    }
-
-    const minerals = cluster.resources.filter(resource => resource.type.isMinerals);
-    const vespene = cluster.resources.filter(resource => resource.type.isVespene);
-
-    new Depot(cluster.depot, cluster.rally, minerals, vespene);
-  }
-}
-
-function findClusters() {
-  let clusters = [];
-
-  for (const resource of Units.resources().values()) {
-    if (!resource.type.isMinerals) continue;
-
-    const list = [];
-
-    for (const cluster of clusters) {
-      if (isResourceInCluster(resource, cluster, 6)) {
-        list.push(cluster);
-      }
-    }
-
-    if (list.length === 0) {
-      clusters.push([resource]);
-    } else if (list.length === 1) {
-      list[0].push(resource);
-    } else {
-      let join = [resource];
-      for (const cluster of list) {
-        join = join.concat(cluster);
-      }
-
-      let newClusters = [join];
-      for (const cluster of clusters) {
-        if (list.indexOf(cluster) < 0) {
-          newClusters.push(cluster);
+      for (let col = minx; col <= maxx; col++) {
+        if (!canBuildOn(line[col])) {
+          return false;
         }
       }
-      clusters = newClusters;
     }
+
+    return true;
   }
 
-  for (const cluster of clusters) {
-    for (const resource of Units.resources().values()) {
-      if (resource.type.isVespene && isResourceInCluster(resource, cluster, 10)) {
-        cluster.push(resource);
+  show() {
+    for (const line of this.board.cells) {
+      const text = [];
+
+      for (const cell of line) {
+        if (!cell.isPath) {
+          text.push("#");
+        } else if (cell.isObstacle) {
+          text.push("X");
+        } else if (!cell.isPlot) {
+          text.push("/");
+        } else {
+          text.push(" ");
+        }
       }
-    }
-  }
 
-  return clusters;
-}
-
-function isResourceInCluster(resource, cluster, distance) {
-  for (const object of cluster) {
-    if ((Math.abs(object.body.x - resource.body.x) < distance) && (Math.abs(object.body.y - resource.body.y) < distance)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function clusterResources(clusters) {
-  const result = [];
-  let index = 1;
-
-  for (const cluster of clusters) {
-    if (cluster.length < 10) continue;
-
-    let minX = 1000;
-    let minY = 1000;
-    let maxX = 0;
-    let maxY = 0;
-
-    for (const resource of cluster) {
-      if (resource.type.isMinerals) {
-        minX = Math.min(minX, resource.body.x);
-        maxX = Math.max(maxX, resource.body.x);
-        minY = Math.min(minY, resource.body.y);
-        maxY = Math.max(maxY, resource.body.y);
-      }
-    }
-
-    const x = (maxX + minX) / 2;
-    const y = (maxY + minY) / 2;
-
-    result.push({
-      index: index++,
-      resources: cluster,
-      x: Math.floor(x),
-      y: Math.floor(y),
-      depot: null,
-      rally: null,
-    });
-  }
-
-  return result;
-}
-
-function createZones(board) {
-  for (let size = 16; size >= 6; size -= 2) {
-    const type = (size >= 10) ? "H" : "O";
-    const radius = size / 2;
-    const blocks = board.many(type, size, size, true);
-
-    for (const block of blocks) {
-      if (size >= 10) {
-        new Hub(block.x + radius, block.y + radius, radius);
-      } else {
-        new Zone(block.x + radius, block.y + radius, radius);
-      }
+      console.log(text.join(""));
     }
   }
 }
 
-function populateBoard(board, filter) {
-  if (filter && filter.harvest) {
-    for (const unit of Units.resources().values()) {
-      const x = Math.floor(unit.body.x);
-      const y = Math.floor(unit.body.y);
-
-      if (unit.type.isMinerals) {
-        board.one("·", x - 4, y - 2, 8, 5);
-        board.one("·", x - 3, y - 3, 6, 7);
-      } else if (unit.type.isVespene) {
-        board.one("·", x - 4, y - 4, 9, 9);
-      }
+function clearInitialPathing(board) {
+  for (const building of Units.buildings().values()) {
+    if (building.type.isBuilding) {
+      board.clear(building.body.x - 2.5, building.body.y - 2.5, 5, 5);
     }
   }
 
-  if (!filter || filter.resources) {
-    for (const unit of Units.resources().values()) {
-      const x = Math.floor(unit.body.x);
-      const y = Math.floor(unit.body.y);
+  for (const unit of Units.resources().values()) {
+    const x = Math.floor(unit.body.x);
+    const y = Math.floor(unit.body.y);
 
-      if (unit.type.isMinerals) {
-        board.one("M", x - 1, y, 2, 1);
-      } else if (unit.type.isVespene) {
-        board.one("V", x - 1, y - 1, 3, 3);
-      } else {
-        board.one("?", x, y, 1, 1);
-      }
+    if (unit.type.isMinerals) {
+      board.clear(x - 1, y, 2, 1);
+    } else if (unit.type.isVespene) {
+      board.clear(x - 1, y - 1, 3, 3);
+    }
+  }
+}
+
+export function createZones(board) {
+  const zones = {};
+
+  for (const area of board.areas) {
+    if (area.depot) {
+      zones[area.id] = area.depot;
+    } else {
+      zones[area.id] = new Zone(area.center.x, area.center.y, area.center.margin);
     }
   }
 
-  if (!filter || filter.obstacles) {
-    for (const unit of Units.obstacles().values()) {
-      board.one("X", Math.floor(unit.body.x) - 1, Math.floor(unit.body.y) - 1, 3, 3);
+  for (const join of board.joins) {
+    const corridor = new Corridor(join.center.x, join.center.y, join.center.margin);
+
+    for (const area of join.areas) {
+      const zone = zones[area.id];
+
+      zone.corridors.push(corridor);
+      corridor.zones.push(zone);
     }
   }
+}
 
-  if (!filter || filter.depots) {
-    for (const depot of Depot.list()) {
-      board.one("N", Math.floor(depot.x - 2.5), Math.floor(depot.y - 2.5), 5, 5);
+function markResources(board) {
+  for (const unit of Units.resources().values()) {
+    const x = Math.floor(unit.body.x);
+    const y = Math.floor(unit.body.y);
+
+    if (unit.type.isMinerals) {
+      board.mark(x - 1, y, 2, 1, cell => (cell.isObstacle = true));
+    } else if (unit.type.isVespene) {
+      board.mark(x - 1, y - 1, 3, 3, cell => (cell.isObstacle = true));
+    } else {
+      board.mark(x, y, 1, 1, cell => (cell.isObstacle = true));
+    }
+
+    unit.cell = board.cells[y][x];
+  }
+}
+
+function markZones(board) {
+  for (const zone of Zone.list()) {
+    if (zone.isDepot) {
+      board.mark(zone.x - 2.5, zone.y - 2.5, 5, 5, cell => (cell.isMarked = true));
+      board.mark(zone.harvestRally.x - 0.5, zone.harvestRally.y - 0.5, 1, 1, cell => (cell.isMarked = true));
+      board.mark(zone.exitRally.x - 0.5, zone.exitRally.y - 0.5, 1, 1, cell => (cell.isMarked = true));
+    } else {
+      board.mark(zone.x - 1, zone.y - 1, 3, 3, cell => (cell.isMarked = true));
     }
   }
+}
 
-  if (!filter || filter.hubs) {
-    for (const hub of Hub.list()) {
-      const size = hub.r + hub.r;
-
-      board.one("H", Math.floor(hub.x - hub.r), Math.floor(hub.y - hub.r), size, size);
-
-      for (const pylon of hub.pylonPlots) {
-        board.one("P", pylon.x - 1, pylon.y - 1, 2, 2);
-      }
-      for (const building of hub.buildingPlots) {
-        board.one("B", building.x - 1.5, building.y - 1.5, 3, 3);
-      }
-    }
-  }
-
-  if (!filter || filter.zones) {
-    for (const zone of Zone.list()) {
-      board.one("O", Math.floor(zone.x), Math.floor(zone.y), 1, 1);
-    }
-  }
-
-  return board;
+function canBuildOn(cell) {
+  return cell.isPlot && cell.isPath && !cell.isObstacle;
 }
 
 export default new Map();

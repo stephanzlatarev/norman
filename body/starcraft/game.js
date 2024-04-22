@@ -4,8 +4,6 @@ import Mission from "./mission.js";
 import Order from "./order.js";
 import Types from "./types.js";
 import Units from "./units.js";
-import Depot from "./map/depot.js";
-import Hub from "./map/hub.js";
 import Map from "./map/map.js";
 import Count from "./memo/count.js";
 import Enemy from "./memo/enemy.js";
@@ -48,8 +46,7 @@ export default class Game {
     Units.sync(this.observation.rawData.units, this.me, this.enemy);
     Resources.sync(this.observation);
 
-    Map.sync(gameInfo, this.me);
-    await measureDistances(this.client, this.me);
+    Map.create(gameInfo);
 
     setTimeout(this.run.bind(this));
 
@@ -71,10 +68,12 @@ export default class Game {
   async run() {
     try {
       while (this.client) {
+        const gameInfo = await this.client.gameInfo();
         const observation = await this.client.observation();
 
         this.observation = observation.observation;
 
+        Map.sync(gameInfo, this.observation.gameLoop);
         Units.sync(this.observation.rawData.units, this.me, this.enemy);
         Resources.sync(this.observation);
         Count(this.observation, this.me.race);
@@ -170,31 +169,4 @@ function getRace(gameInfo, playerId) {
       return playerInfo.raceActual;
     }
   }
-}
-
-async function measureDistances(client, me) {
-  const points = [];
-  const mepos = { x: me.x, y: me.y };
-
-  for (const hub of Hub.list()) {
-    points.push({ startPos: mepos, endPos: { x: hub.x, y: hub.y } });
-  }
-
-  for (const depot of Depot.list()) {
-    points.push({ startPos: mepos, endPos: { x: depot.harvestRally.x, y: depot.harvestRally.y } });
-  }
-
-  const pathing = (await client.query({ pathing: points })).pathing;
-
-  let index = 0;
-
-  for (const hub of Hub.list()) {
-    hub.d = pathing[index++].distance;
-  }
-  Hub.order();
-
-  for (const depot of Depot.list()) {
-    depot.d = pathing[index++].distance;
-  }
-  Depot.order();
 }

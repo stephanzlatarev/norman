@@ -1,6 +1,5 @@
 import Types from "./types.js";
 import Harvest from "./jobs/harvest.js";
-import Hub from "./map/hub.js";
 import Resources from "./memo/resources.js";
 import Depot from "./map/depot.js";
 
@@ -153,17 +152,6 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
       if (image.depot) {
         image.depot.isActive = image.isActive;
       }
-    } else if (image.type.isPylon) {
-      if (!image.hub && !image.nohub) {
-        image.hub = findHub(image.body);
-      }
-
-      if (image.hub) {
-        image.hub.pylonPlots[0].isFree = false;
-        image.hub.isPowered = image.isActive;
-      } else {
-        image.nohub = !!findHub(image.body, 3);
-      }
     } else if (image.type.isExtractor) {
       if (!unit.vespeneContents) {
         image.isActive = false;
@@ -260,14 +248,6 @@ function findDepot(pos, distance) {
   for (const depot of Depot.list()) {
     if (isAt(depot, pos, distance)) {
       return depot;
-    }
-  }
-}
-
-function findHub(pos, distance) {
-  for (const hub of Hub.list()) {
-    if (isAt(hub, pos, distance)) {
-      return hub;
     }
   }
 }

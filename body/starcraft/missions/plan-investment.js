@@ -16,7 +16,7 @@ export default class PlanInvestmentsMission extends Mission {
       Limit.Gateway = 1;
 
       Priority.Nexus = 50;
-      Limit.Nexus = 2;
+      Limit.Nexus = !TotalCount.Gateway ? 1 : 2;
 
       Limit.Assimilator = 0;
       Limit.CyberneticsCore = 0;
