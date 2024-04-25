@@ -80,9 +80,12 @@ export function createWalls(board, base) {
   // Choose where to place the wall
   const blueprint = createBlueprint(grid, split.left, split.right, direction);
 
-  setBlueprintToCorridor(corridorToWall, blueprint);
-
-  markBlueprint(board, blueprint);
+  if (blueprint) {
+    setBlueprintToCorridor(corridorToWall, blueprint);
+    markBlueprint(board, blueprint);
+  } else {
+    console.log("WARNING! Unable to create wall blueprint!");
+  }
 }
 
 function setBlueprintToCorridor(corridor, blueprint) {
