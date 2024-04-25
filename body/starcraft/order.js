@@ -79,6 +79,8 @@ export default class Order extends Memory {
     this.isAccepted = false;
     this.isRejected = false;
 
+    if (orders.indexOf(this) < 0) orders.push(this);;
+
     return this;
   }
 

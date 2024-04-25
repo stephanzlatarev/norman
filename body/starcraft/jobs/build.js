@@ -7,6 +7,8 @@ const ACKNOWLEDGE_TIME = 10;
 
 export default class Build extends Job {
 
+  isAproaching = false;
+
   progress = 0;
 
   constructor(building, target) {
@@ -15,7 +17,17 @@ export default class Build extends Job {
 
   execute() {
     if (!this.order) {
-      this.order = new Order(this.assignee, this.output.abilityId, this.target).expect(this.output);
+      if (this.target.isDepot && this.target.minerals.length) {
+        this.order = new Order(this.assignee, 298, this.target.minerals[0]);
+        this.isAproaching = true;
+      } else {
+        this.order = new Order(this.assignee, this.output.abilityId, this.target).expect(this.output);
+      }
+    } else if (this.isAproaching) {
+      if (isWorkerCloseToDepot(this.assignee, this.target)) {
+        this.order.replace(this.output.abilityId, this.target).expect(this.output);
+        this.isAproaching = false;
+      }
     } else if (this.order.isRejected) {
       this.close(false);
     } else if (this.order.isAccepted) {
@@ -42,6 +54,10 @@ export default class Build extends Job {
     }
   }
 
+}
+
+function isWorkerCloseToDepot(worker, pos) {
+  return (Math.abs(worker.body.x - pos.x) < 15) && (Math.abs(worker.body.y - pos.y) < 15);
 }
 
 function isWorkerAtPosition(worker, pos) {

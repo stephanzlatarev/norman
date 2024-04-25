@@ -122,8 +122,11 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   image.lastSeen = Resources.loop;
   image.isActive = (unit.buildProgress >= 1);
   image.order = unit.orders.length ? { ...unit.orders[0], queue: unit.orders.length } : { abilityId: 0, queue: 0 };
+  image.rally = (unit.rallyTargets && unit.rallyTargets.length) ? unit.rallyTargets[0].point : null;
   image.direction = unit.facing;
   image.energy = unit.energy;
+  image.body.isFlying = unit.isFlying;
+  image.body.isGround = !unit.isFlying;
   image.body.x = unit.pos.x;
   image.body.y = unit.pos.y;
   image.armor.health = unit.health;
@@ -145,8 +148,6 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
     } else if (image.type.isDepot) {
       if (!image.depot) {
         image.depot = findDepot(image.body);
-      } else if (unit.rallyTargets && unit.rallyTargets.length) {
-        image.rally = unit.rallyTargets[0].point;
       }
 
       if (image.depot) {

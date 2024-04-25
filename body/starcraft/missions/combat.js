@@ -1,20 +1,50 @@
 import Mission from "../mission.js";
 import Order from "../order.js";
 import Units from "../units.js";
-import { ActiveCount } from "../memo/count.js";
+import { ActiveCount, TotalCount } from "../memo/count.js";
+import Wall from "../map/wall.js";
 import Enemy from "../memo/enemy.js";
 import Resources from "../memo/resources.js";
 
 const DEFENSE_SQUARE_DISTANCE = 15 * 15;
 
 let mode;
-let ownBase;
+let home;
+
+let wall;
+let keeper;
 
 export default class Combat extends Mission {
 
   run() {
-    if (!findOwnBase()) return;
+    if (!findHome()) return;
     if (ActiveCount.Zealot + ActiveCount.Stalker + ActiveCount.Sentry + ActiveCount.Immortal === 0) return;
+
+    if (wall && (TotalCount.Nexus <= 2)) {
+      if (!keeper || !keeper.isAlive) {
+        keeper = findKeeper();
+      }
+
+      orderHold(keeper, wall.blueprint.choke);
+
+      for (const warrior of Units.warriors().values()) {
+        if (warrior !== keeper) {
+          orderAttack(warrior, wall.blueprint.rally);
+        }
+      }
+
+      for (const facility of Units.buildings().values()) {
+        if (!facility.isActive) continue;
+
+        if ((facility.type.name === "Gateway") || (facility.type.name === "RoboticsFacility")) {
+          setRallyPoint(facility, wall.blueprint.rally);
+        }
+      }
+
+      return;
+    } else if (keeper) {
+      keeper = null;
+    }
 
     const enemy = findClosestEnemy() || Enemy.base;
     if (!enemy) return;
@@ -81,15 +111,22 @@ function isInAttackMode() {
   return (mode === "attack");
 }
 
-function findOwnBase() {
-  if (!ownBase) {
-    for (const building of Units.buildings().values()) {
-      ownBase = building;
-      return;
-    }
+function findHome() {
+  if (!home) {
+    home = Units.buildings().values().next().value;
+
+    if (Wall.list().length) wall = Wall.list()[0];
   }
 
-  return ownBase;
+  return home;
+}
+
+function findKeeper() {
+  for (const warrior of Units.warriors().values()) {
+    if (warrior.body.isGround) {
+      return warrior;
+    }
+  }
 }
 
 // Finds the closest enemy that is close to our buildings
@@ -98,7 +135,7 @@ function findClosestEnemy() {
   let closestSquareDistance = Infinity;
 
   for (const enemy of Units.enemies().values()) {
-    const squareDistance = calculateSquareDistance(enemy.body, ownBase.body);
+    const squareDistance = calculateSquareDistance(enemy.body, home.body);
 
     if (squareDistance < closestSquareDistance) {
       closestEnemy = enemy;
@@ -137,6 +174,18 @@ function orderAttack(warrior, pos) {
   }
 }
 
+function orderHold(warrior, pos) {
+  if (!warrior || !warrior.order || !warrior.body || !pos) return;
+
+  if (!isExactPosition(warrior.body, pos)) {
+    if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isExactPosition(warrior.order.targetWorldSpacePos, pos)) {
+      new Order(warrior, 16, pos);
+    }
+  } else if (warrior.order.abilityId !== 18) {
+    new Order(warrior, 18);
+  }
+}
+
 function orderMove(warrior, pos) {
   if (!warrior || !warrior.order || !warrior.body || !pos) return;
   if (isCloseTo(warrior.body, pos)) return;
@@ -144,6 +193,16 @@ function orderMove(warrior, pos) {
   if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isSamePosition(warrior.order.targetWorldSpacePos, pos)) {
     new Order(warrior, 16, pos);
   }
+}
+
+function setRallyPoint(facility, rally) {
+  if (!facility.rally || (facility.rally.x !== rally.x) || (facility.rally.y !== rally.y)) {
+    return new Order(facility, 195, rally).accept(true);
+  }
+}
+
+function isExactPosition(a, b) {
+  return (Math.abs(a.x - b.x) <= 0.01) && (Math.abs(a.y - b.y) <= 0.01);
 }
 
 function isSamePosition(a, b) {

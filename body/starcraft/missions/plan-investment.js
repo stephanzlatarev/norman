@@ -29,7 +29,7 @@ export default class PlanInvestmentsMission extends Mission {
     } else {
       if (Resources.supplyLimit < 198) {
         Priority.Nexus = 70;
-        Limit.Nexus = calculateLimitNexus();
+        Limit.Nexus = !TotalCount.RoboticsFacility ? 2 : calculateLimitNexus();
       } else {
         Priority.Nexus = 40;
         Limit.Nexus = Infinity;

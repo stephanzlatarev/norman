@@ -21,10 +21,10 @@ export default class BuildExpansionsMission extends Mission {
       this.home = locateHomeZone();
     }
 
-    const pos = findDepotPlot(this.home);
+    const depot = findDepot(this.home);
 
-    if (pos) {
-      this.job = new Build("Nexus", pos);
+    if (depot) {
+      this.job = new Build("Nexus", depot);
     }
   }
 
@@ -34,7 +34,7 @@ function locateHomeZone() {
   return Units.buildings().values().next().value.depot;
 }
 
-function findDepotPlot(home) {
+function findDepot(home) {
   const checked = new Set();
   const next = new Set();
 
@@ -42,6 +42,11 @@ function findDepotPlot(home) {
 
   for (const zone of next) {
     if (zone.isDepot && Map.canPlace(zone, zone.x, zone.y, 5)) {
+      if (zone === home) {
+        // Map is not analyzed yet
+        return;
+      }
+
       return zone;
     }
 
