@@ -6,8 +6,9 @@ import Map from "../map/map.js";
 import Wall from "../map/wall.js";
 import { TotalCount } from "../memo/count.js";
 import Limit from "../memo/limit.js";
+import Priority from "../memo/priority.js";
 
-const DEFAULT_FACILITIES = ["Gateway"];
+const DEFAULT_FACILITIES = ["ShieldBattery", "Gateway"];
 const SPECIAL_FACILITIES = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil"];
 
 let wallPylon = null;
@@ -44,16 +45,31 @@ export default class BuildFacilitiesMission extends Mission {
 }
 
 function selectFacilityType() {
-  // Try special types
+  const specialFacilityType = selectSpecialFacilityType();
+  const defaultFacilityType = selectDefaultFacilityType();
+
+  if (!defaultFacilityType) {
+    return specialFacilityType;
+  }
+
+  if (!specialFacilityType) {
+    return defaultFacilityType;
+  }
+
+  return (Priority[specialFacilityType.name] > Priority[defaultFacilityType.name]) ? specialFacilityType : defaultFacilityType;
+}
+
+function selectSpecialFacilityType() {
   if (SPECIAL_FACILITIES.length) {
     const facility = Types.unit(SPECIAL_FACILITIES[0]);
-  
+
     if (TotalCount[facility.name] < Limit[facility.name]) {
       return facility;
     }
   }
+}
 
-  // Try default type
+function selectDefaultFacilityType() {
   for (const one of DEFAULT_FACILITIES) {
     const facility = Types.unit(one);
 
@@ -71,9 +87,10 @@ function findBuildingPlot(facility) {
     }
 
     if (wallPylon && wallPylon.isActive) {
-      const plot = wall.getPlot(Types.unit(facility));
+      const plot = wall.getPlot(facility);
+      const size = (facility.name !== "ShieldBattery") ? 3 : 2; // TODO: Get Types to know the size of unit types
 
-      if (plot && Map.canPlace(plot, plot.x, plot.y, 3)) {
+      if (plot && Map.canPlace(plot, plot.x, plot.y, size)) {
         return plot;
       }
     }

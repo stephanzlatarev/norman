@@ -15,28 +15,16 @@ export const ActiveCount = {
   Probe: 0,
   Pylon: 0,
   RoboticsFacility: 0,
+  ShieldBattery: 0,
   Sentry: 0,
   Stalker: 0,
+  TwilightCouncil: 0,
   Zealot: 0,
 
   HarvesterCapacity: 0,
 };
 
-export const TotalCount = {
-  CyberneticsCore: 0,
-  Gateway: 0,
-  Immortal: 0,
-  Nexus: 0,
-  Observer: 0,
-  Probe: 0,
-  Pylon: 0,
-  RoboticsFacility: 0,
-  Sentry: 0,
-  Stalker: 0,
-  Zealot: 0,
-
-  HarvesterCapacity: 0,
-};
+export const TotalCount = { ...ActiveCount };
 
 export default function(observation, race) {
   // Count units by type

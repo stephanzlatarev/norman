@@ -19,7 +19,7 @@ export default class Job extends Memory {
   output;
 
   // The target location or unit of the job, if any
-  output;
+  target;
 
   // This is the unit assigned to execute the job
   assignee;

@@ -5,7 +5,8 @@ import Order from "./order.js";
 import Types from "./types.js";
 import Units from "./units.js";
 import Map from "./map/map.js";
-import Count from "./memo/count.js";
+import countUnits from "./memo/count.js";
+import countEncounters from "./memo/encounters.js";
 import Enemy from "./memo/enemy.js";
 import Resources from "./memo/resources.js";
 import scheduleJobs from "./schedule/schedule.js";
@@ -76,7 +77,8 @@ export default class Game {
         Map.sync(gameInfo, this.observation.gameLoop);
         Units.sync(this.observation.rawData.units, this.me, this.enemy);
         Resources.sync(this.observation);
-        Count(this.observation, this.me.race);
+        countUnits(this.observation, this.me.race);
+        countEncounters();
 
         for (const job of Job.list()) {
           if (job.assignee && !job.assignee.isAlive) {

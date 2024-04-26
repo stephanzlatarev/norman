@@ -27,12 +27,6 @@ export default class Combat extends Mission {
 
       orderHold(keeper, wall.blueprint.choke);
 
-      for (const warrior of Units.warriors().values()) {
-        if (warrior !== keeper) {
-          orderAttack(warrior, wall.blueprint.rally);
-        }
-      }
-
       for (const facility of Units.buildings().values()) {
         if (!facility.isActive) continue;
 
@@ -182,7 +176,7 @@ function orderHold(warrior, pos) {
       new Order(warrior, 16, pos);
     }
   } else if (warrior.order.abilityId !== 18) {
-    new Order(warrior, 18);
+    new Order(warrior, 18).accept(true);
   }
 }
 

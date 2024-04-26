@@ -11,6 +11,12 @@ export default {
 
   CyberneticsCore: 30,
   Forge: 30,
+  ShieldBattery: 30,
   TwilightCouncil: 30,
+
+  Immortal: 50,
+  Sentry: 50,
+  Stalker: 50,
+  Zealot: 50,
 
 }
