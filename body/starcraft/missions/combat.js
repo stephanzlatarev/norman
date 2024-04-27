@@ -37,6 +37,8 @@ export default class Combat extends Mission {
 
       return;
     } else if (keeper) {
+      orderMove(keeper, wall.blueprint.rally);
+
       keeper = null;
     }
 
