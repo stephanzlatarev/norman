@@ -64,7 +64,7 @@ function doEnforceWallNatural() {
 
   if (TotalCount.Immortal > 1) {
     plan = doGroundArmyMaxOut;
-    console.log("Transition to ground army max out.");
+    console.log("Transition to maxing out with ground army.");
   }
 }
 
@@ -98,6 +98,11 @@ function doGroundArmyMaxOut() {
   Limit.Forge = (TotalCount.Gateway >= 3) ? 1 : 0;
   Limit.CyberneticsCore = 1;
   Limit.ShieldBattery = 0;
+
+  if ((Resources.loop < 3000) && VisibleCount.Zergling) {
+    plan = doEnforceWallNatural;
+    console.log("Transition to enforcing wall to natural expansion.");
+  }
 }
 
 // When time to reach harvester capacity is less than time to increase harvester capacity, then build a new nexus
