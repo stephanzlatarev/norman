@@ -32,9 +32,9 @@ class Map {
 
     createDepots(this.board, Units.resources().values(), base);
     createZones(this.board);
-    markZones(this.board);
-
     createWalls(this.board, base);
+
+    markZones(this.board);
   }
 
   sync(gameInfoOrEnforce, gameLoop) {
@@ -164,8 +164,10 @@ function markZones(board) {
       board.mark(zone.x - 2.5, zone.y - 2.5, 5, 5, cell => (cell.isMarked = true));
       board.mark(zone.harvestRally.x - 0.5, zone.harvestRally.y - 0.5, 1, 1, cell => (cell.isMarked = true));
       board.mark(zone.exitRally.x - 0.5, zone.exitRally.y - 0.5, 1, 1, cell => (cell.isMarked = true));
+    } else if (zone.isCorridor || zone.isWall) {
+      board.mark(Math.floor(zone.x), Math.floor(zone.y), 1, 1, cell => (cell.isMarked = true));
     } else {
-      board.mark(zone.x - 1, zone.y - 1, 3, 3, cell => (cell.isMarked = true));
+      board.mark(Math.floor(zone.x - 1), Math.floor(zone.y - 1), 3, 3, cell => (cell.isMarked = true));
     }
   }
 }

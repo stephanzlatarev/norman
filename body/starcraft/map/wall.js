@@ -7,6 +7,8 @@ const walls = [];
 
 export default class Wall extends Zone {
 
+  isWall = true;
+
   constructor(x, y, r, blueprint) {
     super(x, y, r);
 
@@ -106,6 +108,8 @@ function setBlueprintToCorridor(corridor, blueprint) {
   blueprint.rally.x += corridor.x - SPAN + 0.5;
   blueprint.rally.y += corridor.y - SPAN + 0.5;
 
+  corridor.x = blueprint.rally.x;
+  corridor.y = blueprint.rally.y;
   corridor.wall = new Wall(blueprint.rally.x, blueprint.rally.y, SPAN, blueprint);
 }
 
@@ -293,12 +297,12 @@ function createBlueprint(grid, leftBorderLine, rightBorderLine, direction) {
           const maxy = Math.min(left.y + 2, right.y + 2);
 
           for (let y = miny; y <= maxy; y++) {
-            centers.push({ x: lx, y: y, choke: lc, exit: le });
-            centers.push({ x: rx, y: y, choke: rc, exit: re });
+            centers.push({ x: lx, y: y, choke: lc, exit: le, direction: { y: direction.y } });
+            centers.push({ x: rx, y: y, choke: rc, exit: re, direction: { y: direction.y } });
           }
         } else if ((hd === 6) || (hd === 5)) {
-          centers.push({ x: lx, y: right.y - 3 * dy, choke: lc, exit: le });
-          centers.push({ x: rx, y: left.y + 3 * dy, choke: rc, exit: re });
+          centers.push({ x: lx, y: right.y - 3 * dy, choke: lc, exit: le, direction: { y: direction.y } });
+          centers.push({ x: rx, y: left.y + 3 * dy, choke: rc, exit: re, direction: { y: direction.y } });
         }
       }
 
@@ -315,12 +319,12 @@ function createBlueprint(grid, leftBorderLine, rightBorderLine, direction) {
           const maxx = Math.min(left.x + 2, right.x + 2);
 
           for (let x = minx; x <= maxx; x++) {
-            centers.push({ x: x, y: ly, choke: lc, exit: le });
-            centers.push({ x: x, y: ry, choke: rc, exit: re });
+            centers.push({ x: x, y: ly, choke: lc, exit: le, direction: { x: direction.x } });
+            centers.push({ x: x, y: ry, choke: rc, exit: re, direction: { x: direction.x } });
           }
         } else if ((vd === 6) || (vd === 5)) {
-          centers.push({ x: left.x + 3 * dx, y: ry, choke: rc, exit: re });
-          centers.push({ x: right.x - 3 * dx, y: ly, choke: lc, exit: le });
+          centers.push({ x: left.x + 3 * dx, y: ry, choke: rc, exit: re, direction: { x: direction.x } });
+          centers.push({ x: right.x - 3 * dx, y: ly, choke: lc, exit: le, direction: { x: direction.x } });
         }
       }
 
@@ -343,12 +347,12 @@ function createBlueprint(grid, leftBorderLine, rightBorderLine, direction) {
         fillGrid(copy, "x", [center.choke]);
         fillGrid(copy, "o", [center.exit]);
 
-        const battery = selectSupport(copy, left, center, right, direction, 6);
+        const battery = selectSupport(copy, left, center, right, 6);
         if (!battery) continue;
 
         fillGrid(copy, "@", [battery], 1, 1, 0, 0);
 
-        const pylon = selectSupport(copy, left, center, right, direction, 6.5);
+        const pylon = selectSupport(copy, left, center, right, 6.5);
         if (!pylon) continue;
 
         fillGrid(copy, "O", [pylon], 1, 1, 0, 0);
@@ -368,17 +372,17 @@ function createBlueprint(grid, leftBorderLine, rightBorderLine, direction) {
   }
 }
 
-function selectSupport(grid, left, right, center, direction, range) {
+function selectSupport(grid, left, center, right, range) {
   for (let row = 1; row < grid.length - 1; row++) {
     for (let col = 1; col < grid[row].length - 1; col++) {
-      if (canPlaceSupport(grid, col, row) && isGoodPlaceForSupport(col, row, left, right, center, direction, range)) {
+      if (canPlaceSupport(grid, col, row) && isGoodPlaceForSupport(col, row, left, center, right, range)) {
         return { x: col, y: row };
       }
     }
   }
 }
 
-function isGoodPlaceForSupport(x, y, left, right, center, direction, range) {
+function isGoodPlaceForSupport(x, y, left, center, right, range) {
   const squareRange = range * range;
 
   for (const wing of [left, center, right]) {
@@ -390,10 +394,10 @@ function isGoodPlaceForSupport(x, y, left, right, center, direction, range) {
   }
 
   // Check if the support is in the proper direction
-  if ((direction.x > 0) && (center.x < x)) return false;
-  if ((direction.x < 0) && (center.x > x)) return false;
-  if ((direction.y > 0) && (center.y < y)) return false;
-  if ((direction.y < 0) && (center.y > y)) return false;
+  if ((center.direction.x > 0) && (center.x < x)) return false;
+  if ((center.direction.x < 0) && (center.x > x)) return false;
+  if ((center.direction.y > 0) && (center.y < y)) return false;
+  if ((center.direction.y < 0) && (center.y > y)) return false;
 
   return true;
 }
