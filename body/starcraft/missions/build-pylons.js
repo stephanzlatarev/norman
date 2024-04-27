@@ -2,6 +2,7 @@ import Mission from "../mission.js";
 import Types from "../types.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
+import Depot from "../map/depot.js";
 import Map from "../map/map.js";
 import Wall from "../map/wall.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
@@ -89,13 +90,29 @@ function countSupplyConsumptionRate() {
 
 // TODO: Optimize by remembering found plots and re-using them when pylons are destroyed but otherwise continue the search from where last plot was found
 function findPylonPlotOnMap(home) {
+  return findPylonPlotByDepot() || findPylonPlotByZone(home);
+}
+
+function findPylonPlotByDepot() {
+  for (const depot of Depot.list()) {
+    if (!depot.isActive) continue;
+
+    const plot = getAnchor(depot);
+
+    if (Map.canPlace(depot, plot.x, plot.y, 2)) {
+      return plot;
+    }
+  }
+}
+
+function findPylonPlotByZone(home) {
   const checked = new Set();
   const next = new Set();
 
   next.add(home);
 
   for (const zone of next) {
-    const plot = findPylonPlotInZone(zone.isDepot ? findDepotExitZone(zone) : zone);
+    const plot = findPylonPlotInZone(zone);
 
     if (plot) return plot;
 
@@ -109,13 +126,6 @@ function findPylonPlotOnMap(home) {
 
     next.delete(zone);
   }
-}
-
-function findDepotExitZone(depot) {
-  return {
-    x: (depot.exitRally.x > depot.x) ? Math.floor(depot.exitRally.x + 1) : Math.ceil(depot.exitRally.x - 1),
-    y: (depot.exitRally.y > depot.y) ? Math.floor(depot.exitRally.y + 1) : Math.ceil(depot.exitRally.y - 1)
-  };
 }
 
 function getNeighborZones(zone) {
@@ -132,20 +142,51 @@ function getNeighborZones(zone) {
   return zones;
 }
 
+const ANCHORS = [
+  { x: +10, y: 0 }, { x: -10, y: 0 },
+  { x: +5, y: +10 }, { x: +5, y: -10 },
+  { x: -5, y: +10 }, { x: -5, y: -10 },
+];
+const PLOTS = [...ANCHORS, ...ANCHORS.map(one => ({ x: one.x, y : one.y + 2})), ...ANCHORS.map(one => ({ x: one.x, y : one.y - 2}))];
+
 function findPylonPlotInZone(zone) {
-  const x = Math.floor(zone.x);
-  const y = Math.floor(zone.y);
+  const { x, y } = getAnchor(zone);
 
-  if (Map.canPlace(zone, x, y, 2)) return { x: x, y: y };
+  for (const one of PLOTS) {
+    const xx = x + one.x;
+    const yy = y + one.y;
 
-  if (Map.canPlace(zone, x + 10, y, 2)) return { x: x + 10, y: y };
-  if (Map.canPlace(zone, x - 10, y, 2)) return { x: x - 10, y: y };
+    if (zone.isDepot && isHarvestArea(zone, xx, yy)) continue;
 
-  if (Map.canPlace(zone, x + 5, y - 10, 2)) return { x: x + 5, y: y - 10 };
-  if (Map.canPlace(zone, x - 5, y - 10, 2)) return { x: x - 5, y: y - 10 };
-  if (Map.canPlace(zone, x - 5, y + 10, 2)) return { x: x - 5, y: y + 10 };
-  if (Map.canPlace(zone, x + 5, y + 10, 2)) return { x: x + 5, y: y + 10 };
+    if (Map.canPlace(zone, xx, yy, 2)) {
+      return { x: xx, y: yy };
+    }
+  }
+}
 
-  if (Map.canPlace(zone, x, y + 20, 2)) return { x: x, y: y + 20 };
-  if (Map.canPlace(zone, x, y - 20, 2)) return { x: x, y: y - 20 };
+function getAnchor(zone) {
+  if (zone.isDepot) {
+    return {
+      x: (zone.exitRally.x > zone.x) ? Math.floor(zone.exitRally.x + 1) : Math.ceil(zone.exitRally.x - 1),
+      y: (zone.exitRally.y > zone.y) ? Math.floor(zone.exitRally.y + 1) : Math.ceil(zone.exitRally.y - 1),
+    };
+  } else {
+    return {
+      x: Math.floor(zone.x),
+      y: Math.floor(zone.y),
+    };
+  }
+}
+
+function isHarvestArea(zone, x, y) {
+  const dx = Math.sign(zone.x - zone.harvestRally.x);
+  const dy = Math.sign(zone.y - zone.harvestRally.y);
+
+  if (dx === 0) {
+    return Math.sign(zone.y - y) === dy;
+  } else if (dy === 0) {
+    return Math.sign(zone.x - x) === dx;
+  }
+
+  return (Math.sign(zone.x - x) === dx) && (Math.sign(zone.y - y) === dy);
 }
