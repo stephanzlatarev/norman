@@ -29,7 +29,7 @@ function doStartUp() {
   Limit.Forge = 0;
   Limit.ShieldBattery = 0;
 
-  if (VisibleCount.Zergling) {
+  if (VisibleCount.SpawningPool || VisibleCount.Zergling) {
     plan = doEnforceWallNatural;
     console.log("Transition to enforcing wall to natural expansion.");
   }

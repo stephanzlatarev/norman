@@ -4,6 +4,7 @@ import Units from "../units.js";
 const visible = new Map();
 
 export const VisibleCount = {
+  SpawningPool: 0,
   Zergling: 0,
 };
 
