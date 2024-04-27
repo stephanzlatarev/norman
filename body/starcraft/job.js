@@ -56,17 +56,25 @@ export default class Job extends Memory {
   assign(unit) {
     if (unit) {
       if (unit.job) {
-        console.log("WARNING! Unit", unit.type.name, unit.nick, "re-assigned from job", unit.job.summary, "to job", this.summary);
+        console.log("Unit", unit.type.name, unit.nick, "re-assigned from job", unit.job.summary, "to job", this.summary);
 
         unit.job.assignee = null;
       } else {
-        console.log("INFO: Unit", unit.type.name, unit.nick, "assigned to job", this.summary);
+        console.log("Unit", unit.type.name, unit.nick, "assigned to job", this.summary);
       }
 
       unit.job = this;
     }
 
     this.assignee = unit;
+  }
+
+  release(unit) {
+    if (unit && (unit.job === this)) {
+      unit.job = null;
+    }
+
+    this.assignee = null;
   }
 
   // Executes one step of the job.
@@ -81,7 +89,7 @@ export default class Job extends Memory {
     this.isFailed = !outcome;
 
     if (this.assignee && (this.assignee.job === this)) {
-      console.log("INFO: Unit", this.assignee.type.name, this.assignee.nick, "released from job", this.summary);
+      console.log("Unit", this.assignee.type.name, this.assignee.nick, "released from job", this.summary);
 
       this.assignee.job = null;
     }

@@ -36,6 +36,7 @@ export default class Build extends Job {
       // Make sure the worker is at the right position and no longer has the command to build
       if (!this.progress && (this.assignee.order.abilityId !== this.output.abilityId) && isWorkerAtPosition(this.assignee, pos)) {
         this.progress = 1;
+        this.release(this.assignee);
       }
 
       // Close the job when the building appears

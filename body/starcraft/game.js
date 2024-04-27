@@ -82,6 +82,7 @@ export default class Game {
 
         for (const job of Job.list()) {
           if (job.assignee && !job.assignee.isAlive) {
+            console.log("Unit", job.assignee.type.name, job.assignee.nick, "died on job", job.summary);
             job.close(false);
           }
         }
@@ -97,6 +98,13 @@ export default class Game {
         scheduleJobs();
 
         await this.executeOrders();
+
+        for (const job of Job.list()) {
+          if (job.order && job.order.isAccepted && job.assignee && !job.assignee.order.abilityId) {
+            console.log("WARNING! Unit", job.assignee.type.name, job.assignee.nick, "idle on job", job.summary);
+            job.close(false);
+          }
+        }
 
         if (Units.workers().size && Units.buildings().size) {
           await this.step();
