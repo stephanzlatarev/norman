@@ -61,6 +61,7 @@ function doEnforceWallNatural() {
   Priority.ShieldBattery = 70;
   Priority.RoboticsFacility = 60;
   Priority.Zealot = 50;
+  Priority.Probe = 40;
 
   if (TotalCount.Immortal > 1) {
     plan = doGroundArmyMaxOut;
@@ -73,6 +74,7 @@ function doGroundArmyMaxOut() {
   Limit.Observer = 1;
   Limit.Sentry = Infinity;
   Limit.Zealot = Infinity;
+  Priority.Probe = 90;
   Priority.Immortal = 50;
   Priority.Sentry = 50;
   Priority.Stalker = 50;
