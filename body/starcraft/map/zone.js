@@ -26,7 +26,7 @@ export default class Zone extends Pin {
       this.enemies.add(unit);
 
       if (previousZone) previousZone.enemies.delete(unit);
-    } else if (unit.type.isWarrior) {
+    } else if (unit.type.isWarrior && !unit.type.isWorker) {
       this.warriors.add(unit);
 
       if (previousZone) previousZone.warriors.delete(unit);

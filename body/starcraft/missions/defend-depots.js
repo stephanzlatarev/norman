@@ -1,7 +1,6 @@
 import Mission from "../mission.js";
 import Units from "../units.js";
 import Attack from "../jobs/attack.js";
-import { ActiveCount } from "../memo/count.js";
 
 // TODO: Remove the hack of closing a job when adding a defender after implementing jit-mining
 import Job from "../job.js";
@@ -13,17 +12,13 @@ const jobs = new Map();
 export default class DefendDepotsMission extends Mission {
 
   run() {
-    if (ActiveCount.Zealot + ActiveCount.Stalker + ActiveCount.Sentry + ActiveCount.Immortal > 0) {
-      return closeAllJobs();
-    }
-
     removeCompletedJobs();
 
     for (const nexus of Units.buildings().values()) {
       if (!nexus.depot) continue;
       if (!nexus.depot.workers.size) continue;
 
-      const enemies = countEnemies(nexus.body);
+      const enemies = nexus.depot.enemies.size;
       let defenders = 0;
 
       if (enemies > 0) {
@@ -40,18 +35,6 @@ export default class DefendDepotsMission extends Mission {
     }
   }
 
-}
-
-function closeAllJobs() {
-  if (jobs.size) {
-    for (const job of jobs.values()) {
-      job.close(true);
-    }
-  }
-
-  jobs.clear();
-
-  return true;
 }
 
 function removeCompletedJobs() {
@@ -86,20 +69,4 @@ function closeJob(nexus, index) {
     job.close(true);
     jobs.delete(jobId);
   }
-}
-
-function countEnemies(pos) {
-  let count = 0;
-
-  for (const enemy of Units.enemies().values()) {
-    if (isCloseTo(enemy.body, pos)) {
-      count++;
-    }
-  }
-
-  return count;
-}
-
-function isCloseTo(a, b) {
-  return (Math.abs(a.x - b.x) <= 10) && (Math.abs(a.y - b.y) <= 10);
 }

@@ -2,6 +2,7 @@ import Types from "./types.js";
 import Harvest from "./jobs/harvest.js";
 import Resources from "./memo/resources.js";
 import Depot from "./map/depot.js";
+import GameMap from "./map/map.js";
 
 const resources = new Map();
 const workers = new Map();
@@ -169,6 +170,14 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   } else if (image.type.isVespene) {
     if (!unit.vespeneContents) {
       image.isActive = false;
+    }
+  }
+
+  if (GameMap.board) {
+    const zone = GameMap.zone(image.body.x, image.body.y);
+
+    if (zone) {
+      zone.add(image);
     }
   }
 
