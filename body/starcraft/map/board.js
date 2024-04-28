@@ -78,11 +78,12 @@ class Cell {
     this.isPath = isPath;
     this.isPlot = isPlot;
     this.isObstacle = false;
-    this.isMarked = false;
 
     this.margin = 0;
     this.area = null;
     this.join = null;
+
+    this.zone = null;
   }
 
   clear() {

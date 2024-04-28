@@ -52,7 +52,7 @@ function findFirstPylon() {
   for (const wall of Wall.list()) {
     const plot = wall.getPlot(pylon);
 
-    if (plot && Map.canPlace(plot, plot.x, plot.y, 2)) {
+    if (plot && Map.accepts(plot, plot.x, plot.y, 2)) {
       return plot;
     }
   }
@@ -99,7 +99,7 @@ function findPylonPlotByDepot() {
 
     const plot = getAnchor(depot);
 
-    if (Map.canPlace(depot, plot.x, plot.y, 2)) {
+    if (Map.accepts(depot, plot.x, plot.y, 2)) {
       return plot;
     }
   }
@@ -158,7 +158,7 @@ function findPylonPlotInZone(zone) {
 
     if (zone.isDepot && isHarvestArea(zone, xx, yy)) continue;
 
-    if (Map.canPlace(zone, xx, yy, 2)) {
+    if (Map.accepts(zone, xx, yy, 2)) {
       return { x: xx, y: yy };
     }
   }

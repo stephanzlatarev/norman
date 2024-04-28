@@ -1,11 +1,11 @@
-import Zone from "./zone.js";
+import { Corridor } from "./zone.js";
 
 const TRACE = false;
 const SPAN = 8;
 
 const walls = [];
 
-export default class Wall extends Zone {
+export default class Wall extends Corridor {
 
   isWall = true;
 
@@ -83,14 +83,13 @@ export function createWalls(board, base) {
   const blueprint = createBlueprint(grid, split.left, split.right, direction);
 
   if (blueprint) {
-    setBlueprintToCorridor(corridorToWall, blueprint);
-    markBlueprint(board, blueprint);
+    setBlueprintToCorridor(board, corridorToWall, blueprint);
   } else {
     console.log("WARNING! Unable to create wall blueprint!");
   }
 }
 
-function setBlueprintToCorridor(corridor, blueprint) {
+function setBlueprintToCorridor(board, corridor, blueprint) {
   blueprint.left.x += corridor.x - SPAN + 0.5;
   blueprint.left.y += corridor.y - SPAN + 0.5;
   blueprint.center.x += corridor.x - SPAN + 0.5;
@@ -108,17 +107,34 @@ function setBlueprintToCorridor(corridor, blueprint) {
   blueprint.rally.x += corridor.x - SPAN + 0.5;
   blueprint.rally.y += corridor.y - SPAN + 0.5;
 
-  corridor.x = blueprint.rally.x;
-  corridor.y = blueprint.rally.y;
-  corridor.wall = new Wall(blueprint.rally.x, blueprint.rally.y, SPAN, blueprint);
+  const wall = new Wall(blueprint.rally.x, blueprint.rally.y, SPAN, blueprint);
+
+  wall.replace(corridor);
+
+  // Set the wall as the zone to all cells near the wall
+  for (const one of [blueprint.left, blueprint.center, blueprint.right, blueprint.pylon, blueprint.battery]) {
+    assignCellsToWall(board, wall, one);
+  }
 }
 
-function markBlueprint(board, blueprint) {
-  board.mark(blueprint.left.x - 1.5, blueprint.left.y - 1.5, 3, 3, cell => (cell.isMarked = true));
-  board.mark(blueprint.center.x - 1.5, blueprint.center.y - 1.5, 3, 3, cell => (cell.isMarked = true));
-  board.mark(blueprint.right.x - 1.5, blueprint.right.y - 1.5, 3, 3, cell => (cell.isMarked = true));
-  board.mark(blueprint.pylon.x - 1, blueprint.pylon.y - 1, 2, 2, cell => (cell.isMarked = true));
-  board.mark(blueprint.battery.x - 1, blueprint.battery.y - 1, 2, 2, cell => (cell.isMarked = true));
+function assignCellsToWall(board, wall, wing) {
+  const minx = Math.floor(wing.x) - 3;
+  const maxx = Math.ceil(wing.x) + 3;
+  const miny = Math.floor(wing.y) - 3;
+  const maxy = Math.ceil(wing.y) + 3;
+
+  for (let y = miny; y <= maxy; y++) {
+    for (let x = minx; x <= maxx; x++) {
+      const cell = board.cells[y][x];
+
+      if (cell.zone) {
+        cell.zone.cells.delete(cell);
+
+        wall.cells.add(cell);
+        cell.zone = wall;
+      }
+    }
+  }
 }
 
 function createGrid(board, corridor) {
@@ -287,44 +303,56 @@ function createBlueprint(grid, leftBorderLine, rightBorderLine, direction) {
       if (hd >= vd) {
         const lx = left.x + 4 * dx;
         const rx = right.x - 4 * dx;
-        const lc = { x: left.x + 2 * dx, y: left.y + dy};
-        const rc = { x: right.x - 2 * dx, y: right.y - dy };
-        const le = { x: lc.x, y: lc.y - direction.y };
-        const re = { x: rc.x, y: rc.y - direction.y };
+        const lcx = left.x + 2 * dx;
+        const rcx = right.x - 2 * dx;
 
         if (hd === 7) {
           const miny = Math.max(left.y - 2, right.y - 2);
           const maxy = Math.min(left.y + 2, right.y + 2);
 
           for (let y = miny; y <= maxy; y++) {
-            centers.push({ x: lx, y: y, choke: lc, exit: le, direction: { y: direction.y } });
-            centers.push({ x: rx, y: y, choke: rc, exit: re, direction: { y: direction.y } });
+            const lcy = (left.y + y) / 2;
+            const rcy = (right.y + y) / 2;
+
+            centers.push({ x: lx, y: y, choke: { x: lcx, y: lcy }, exit: { x: lcx, y: lcy - direction.y }, direction: { y: direction.y } });
+            centers.push({ x: rx, y: y, choke: { x: rcx, y: rcy }, exit: { x: rcx, y: rcy - direction.y }, direction: { y: direction.y } });
           }
         } else if ((hd === 6) || (hd === 5)) {
-          centers.push({ x: lx, y: right.y - 3 * dy, choke: lc, exit: le, direction: { y: direction.y } });
-          centers.push({ x: rx, y: left.y + 3 * dy, choke: rc, exit: re, direction: { y: direction.y } });
+          const ly = left.y + 3 * dy;
+          const ry = right.y - 3 * dy;
+          const lcy = (left.y + ry) / 2;
+          const rcy = (right.y + ly) / 2;
+
+          centers.push({ x: lx, y: ry, choke: { x: lcx, y: lcy }, exit: { x: lcx, y: lcy - direction.y }, direction: { y: direction.y } });
+          centers.push({ x: rx, y: ly, choke: { x: rcx, y: rcy }, exit: { x: rcx, y: rcy - direction.y }, direction: { y: direction.y } });
         }
       }
 
       if (vd >= hd) {
         const ly = left.y + 4 * dy;
         const ry = right.y - 4 * dy;
-        const lc = { x: left.x + dx, y: left.y + 2 * dy };
-        const rc = { x: right.x - dx, y: right.y - 2 * dy };
-        const le = { x: lc.x - direction.x, y: lc.y };
-        const re = { x: rc.x - direction.x, y: rc.y };
+        const lcy = left.y + 2 * dy;
+        const rcy = right.y - 2 * dy;
 
         if (vd === 7) {
           const minx = Math.max(left.x - 2, right.x - 2);
           const maxx = Math.min(left.x + 2, right.x + 2);
 
           for (let x = minx; x <= maxx; x++) {
-            centers.push({ x: x, y: ly, choke: lc, exit: le, direction: { x: direction.x } });
-            centers.push({ x: x, y: ry, choke: rc, exit: re, direction: { x: direction.x } });
+            const lcx = (left.x + x) / 2;
+            const rcx = (right.x + x) / 2;
+
+            centers.push({ x: x, y: ly, choke: { x: lcx, y: lcy }, exit: { x: lcx - direction.x, y: lcy }, direction: { x: direction.x } });
+            centers.push({ x: x, y: ry, choke: { x: rcx, y: rcy }, exit: { x: rcx - direction.x, y: rcy }, direction: { x: direction.x } });
           }
         } else if ((vd === 6) || (vd === 5)) {
-          centers.push({ x: left.x + 3 * dx, y: ry, choke: rc, exit: re, direction: { x: direction.x } });
-          centers.push({ x: right.x - 3 * dx, y: ly, choke: lc, exit: le, direction: { x: direction.x } });
+          const lx = left.x + 3 * dx;
+          const rx = right.x - 3 * dx;
+          const lcx = (left.x + rx) / 2;
+          const rcx = (right.x + lx) / 2;
+
+          centers.push({ x: lx, y: ry, choke: { x: rcx, y: rcy }, exit: { x: rcx - direction.x, y: rcy }, direction: { x: direction.x } });
+          centers.push({ x: rx, y: ly, choke: { x: lcx, y: lcy }, exit: { x: lcx - direction.x, y: lcy }, direction: { x: direction.x } });
         }
       }
 
@@ -390,14 +418,16 @@ function isGoodPlaceForSupport(x, y, left, center, right, range) {
     const dx = wing.x + 0.5 - x;
     const dy = wing.y + 0.5 - y;
 
+    if (wing === center) {
+      // Check if the support is in the proper direction
+      if ((center.direction.x > 0) && (dx < 0)) return false;
+      if ((center.direction.x < 0) && (dx > 0)) return false;
+      if ((center.direction.y > 0) && (dy < 0)) return false;
+      if ((center.direction.y < 0) && (dy > 0)) return false;
+    }
+
     if (dx * dx + dy * dy > squareRange) return false;
   }
-
-  // Check if the support is in the proper direction
-  if ((center.direction.x > 0) && (center.x < x)) return false;
-  if ((center.direction.x < 0) && (center.x > x)) return false;
-  if ((center.direction.y > 0) && (center.y < y)) return false;
-  if ((center.direction.y < 0) && (center.y > y)) return false;
 
   return true;
 }

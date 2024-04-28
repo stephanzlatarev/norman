@@ -90,7 +90,7 @@ function findBuildingPlot(facility) {
       const plot = wall.getPlot(facility);
       const size = (facility.name !== "ShieldBattery") ? 3 : 2; // TODO: Get Types to know the size of unit types
 
-      if (plot && Map.canPlace(plot, plot.x, plot.y, size)) {
+      if (plot && Map.accepts(plot, plot.x, plot.y, size)) {
         return plot;
       }
     }
@@ -101,10 +101,10 @@ function findBuildingPlot(facility) {
 
     const pos = building.body;
 
-    if (Map.canPlace(pos, pos.x + 2.5, pos.y + 1.5, 3)) return { x: pos.x + 2.5, y: pos.y + 1.5 };
-    if (Map.canPlace(pos, pos.x + 2.5, pos.y - 1.5, 3)) return { x: pos.x + 2.5, y: pos.y - 1.5 };
-    if (Map.canPlace(pos, pos.x - 2.5, pos.y + 1.5, 3)) return { x: pos.x - 2.5, y: pos.y + 1.5 };
-    if (Map.canPlace(pos, pos.x - 2.5, pos.y - 1.5, 3)) return { x: pos.x - 2.5, y: pos.y - 1.5 };
+    if (Map.accepts(pos, pos.x + 2.5, pos.y + 1.5, 3)) return { x: pos.x + 2.5, y: pos.y + 1.5 };
+    if (Map.accepts(pos, pos.x + 2.5, pos.y - 1.5, 3)) return { x: pos.x + 2.5, y: pos.y - 1.5 };
+    if (Map.accepts(pos, pos.x - 2.5, pos.y + 1.5, 3)) return { x: pos.x - 2.5, y: pos.y + 1.5 };
+    if (Map.accepts(pos, pos.x - 2.5, pos.y - 1.5, 3)) return { x: pos.x - 2.5, y: pos.y - 1.5 };
   }
 }
 

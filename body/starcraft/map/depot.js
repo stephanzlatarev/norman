@@ -84,10 +84,10 @@ export function createDepots(board, resources, base) {
     const minerals = cluster.resources.filter(resource => resource.type.isMinerals);
     const vespene = cluster.resources.filter(resource => resource.type.isVespene);
 
-    area.depot = new Depot(cluster.depot, cluster.harvest, minerals, vespene);
+    area.zone = new Depot(cluster.depot, cluster.harvest, minerals, vespene);
 
     if ((base.body.x === cluster.depot.x) && (base.body.y === cluster.depot.y)) {
-      base.depot = area.depot;
+      base.depot = area.zone;
     }
   }
 }

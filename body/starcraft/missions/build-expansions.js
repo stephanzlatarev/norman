@@ -41,7 +41,7 @@ function findDepot(home) {
   next.add(home);
 
   for (const zone of next) {
-    if (zone.isDepot && Map.canPlace(zone, zone.x, zone.y, 5)) {
+    if (zone.isDepot && Map.accepts(zone, zone.x, zone.y, 5)) {
       if (zone === home) {
         // Map is not analyzed yet
         return;
