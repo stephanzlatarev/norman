@@ -172,13 +172,10 @@ function orderAttack(warrior, pos) {
 
 function orderHold(warrior, pos) {
   if (!warrior || !warrior.order || !warrior.body || !pos) return;
+  if (isExactPosition(warrior.body, pos)) return;
 
-  if (!isExactPosition(warrior.body, pos)) {
-    if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isExactPosition(warrior.order.targetWorldSpacePos, pos)) {
-      new Order(warrior, 16, pos);
-    }
-  } else if (warrior.order.abilityId !== 18) {
-    new Order(warrior, 18).accept(true);
+  if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isExactPosition(warrior.order.targetWorldSpacePos, pos)) {
+    new Order(warrior, 16, pos);
   }
 }
 
@@ -198,7 +195,7 @@ function setRallyPoint(facility, rally) {
 }
 
 function isExactPosition(a, b) {
-  return (Math.abs(a.x - b.x) <= 0.01) && (Math.abs(a.y - b.y) <= 0.01);
+  return (Math.abs(a.x - b.x) <= 0.3) && (Math.abs(a.y - b.y) <= 0.3);
 }
 
 function isSamePosition(a, b) {

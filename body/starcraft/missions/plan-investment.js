@@ -44,26 +44,26 @@ function doEnforceWallNatural() {
   Limit.Probe = 22;
   Limit.Sentry = 0;
   Limit.Observer = 0;
-  Limit.Zealot = 1;
+  Limit.Zealot = 2;
 
   Limit.Nexus = 1;
-  Limit.Assimilator = 2;
-  Limit.Gateway = 2;
+  Limit.Assimilator = (ActiveCount.Probe >= 18) ? 2 : 1;
+  Limit.Gateway = Math.max(2, Math.min(4, ActiveCount.Stalker));
   Limit.CyberneticsCore = 1;
-  Limit.RoboticsFacility = 1;
+  Limit.RoboticsFacility = 0;
   Limit.Forge = 0;
   Limit.ShieldBattery = ActiveCount.CyberneticsCore ? 1: 0;
 
+  Priority.ShieldBattery = 100;
   Priority.CyberneticsCore = 100;
   Priority.Immortal = 100;
-  Priority.Gateway = 90;
+  Priority.Gateway = (TotalCount.Gateway < 2) ? 90 : 60;
   Priority.Stalker = 80;
-  Priority.ShieldBattery = 70;
   Priority.RoboticsFacility = 60;
   Priority.Zealot = 50;
   Priority.Probe = 40;
 
-  if (TotalCount.Immortal > 1) {
+  if (ActiveCount.Stalker > 6) {
     plan = doGroundArmyMaxOut;
     console.log("Transition to maxing out with ground army.");
   }

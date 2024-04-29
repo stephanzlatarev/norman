@@ -173,15 +173,29 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
     }
   }
 
-  if (GameMap.board) {
+  addToZone(image);
+
+  return image;
+}
+
+function addToZone(image) {
+  if (GameMap.board && image) {
     const zone = GameMap.zone(image.body.x, image.body.y);
 
     if (zone) {
-      zone.add(image);
+      zone.addUnit(image);
     }
   }
+}
 
-  return image;
+function removeFromZone(image) {
+  if (GameMap.board && image) {
+    const zone = GameMap.zone(image.body.x, image.body.y);
+
+    if (zone) {
+      zone.removeUnit(image);
+    }
+  }
 }
 
 function isWorkerInExtractor(worker) {
@@ -205,6 +219,8 @@ function removeDeadWorkers(alive) {
 
       worker.isAlive = false;
       workers.delete(tag);
+
+      removeFromZone(worker);
     }
   }
 }
@@ -214,6 +230,8 @@ function removeDeadUnits(units, alive) {
     if (!alive.get(tag)) {
       unit.isAlive = false;
       units.delete(tag);
+
+      removeFromZone(unit);
     }
   }
 }
@@ -226,6 +244,8 @@ function removeZombieUnits(units, alive) {
       list.push(unit);
       unit.isAlive = false;
       units.delete(tag);
+
+      removeFromZone(unit);
     }
   }
 

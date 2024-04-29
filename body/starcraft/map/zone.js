@@ -19,7 +19,7 @@ export default class Zone extends Pin {
     zones.push(this);
   }
 
-  add(unit) {
+  addUnit(unit) {
     const previousZone = unitToZone.get();
 
     if (unit.isEnemy) {
@@ -37,6 +37,18 @@ export default class Zone extends Pin {
     }
 
     unitToZone.set(unit, this);
+  }
+
+  removeUnit(unit) {
+    if (unit.isEnemy) {
+      this.enemies.delete(unit);
+    } else if (unit.type.isWarrior && !unit.type.isWorker) {
+      this.warriors.delete(unit);
+    } else if (unit.type.isBuilding) {
+      this.buildings.delete(unit);
+    }
+
+    unitToZone.delete(unit);
   }
 
   replace(old) {

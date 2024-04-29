@@ -5,6 +5,8 @@ export default class Attack extends Job {
 
   constructor(warrior, target) {
     super(warrior, null, target);
+
+    this.priority = 100;
   }
 
   execute() {
