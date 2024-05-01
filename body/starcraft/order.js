@@ -154,7 +154,11 @@ export default class Order extends Memory {
 
     if (this.unit && !this.unit.isAlive) {
       // The unit meanwhile died
-      this.result(STATUS_DEAD);
+      if (this.checkIsAccepted && this.checkIsAccepted(this)) {
+        this.remove();
+      } else {
+        this.result(STATUS_DEAD);
+      }
     } else {
       if (this.checkIsAccepted) {
         this.isAccepted = this.checkIsAccepted(this);

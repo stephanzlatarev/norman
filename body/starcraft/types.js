@@ -38,17 +38,23 @@ class Types {
 
       const isNeutral = !unit.race;
       const isBuilding = (unit.attributes.indexOf(ATTRIBUTE_STRUCTURE) >= 0);
+      const weapons = parseWeapons(unit);
 
       const type = this.unit(unit.name);
 
       type.id = unit.unitId;
       type.name = unit.name;
 
+      type.damageGround = weapons.damageGround;
+      type.damageAir = weapons.damageAir;
+      type.rangeGround = weapons.rangeGround;
+      type.rangeAir = weapons.rangeAir;
+
       type.isNeutral = isNeutral;
       type.isDepot = !!IS_DEPOT[unit.name];
       type.isPylon = !!IS_PYLON[unit.name];
       type.isWorker = !!IS_WORKER[unit.name];
-      type.isWarrior = !isBuilding && !isNeutral;
+      type.isWarrior = (weapons.damageGround + weapons.damageAir > 0) && !isNeutral;
       type.isExtractor = !!IS_EXTRACTOR[unit.name];
       type.isBuilding = isBuilding && !isNeutral;
       type.isMinerals = !!unit.hasMinerals;
@@ -103,6 +109,35 @@ function get(collection, key) {
   }
 
   return type;
+}
+
+const GAME_SPEED = 1.4;
+const WEAPON_GROUND = 1;
+const WEAPON_AIR = 2;
+const WEAPON_ANY = 3;
+
+function parseWeapons(unit) {
+  let damageGround = 0;
+  let damageAir = 0;
+  let rangeGround = 0;
+  let rangeAir = 0;
+
+  if (unit.name === "Sentry") {
+    damageGround = 8.4;
+    rangeGround = 5;
+  }
+
+  for (const weapon of unit.weapons) {
+    if ((weapon.type === WEAPON_GROUND) || (weapon.type === WEAPON_ANY)) {
+      damageGround = Math.max(weapon.damage * weapon.attacks * GAME_SPEED / weapon.speed, damageGround);
+      rangeGround = Math.max(weapon.range, rangeGround);
+    } else if ((weapon.type === WEAPON_AIR) || (weapon.type === WEAPON_ANY)) {
+      damageAir = Math.max(weapon.damage * weapon.attacks * GAME_SPEED / weapon.speed, damageAir);
+      rangeAir = Math.max(weapon.range, rangeGround);
+    }
+  }
+
+  return { damageGround, damageAir, rangeGround, rangeAir };
 }
 
 export default new Types();

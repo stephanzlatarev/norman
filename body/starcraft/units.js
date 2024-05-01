@@ -121,6 +121,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
 
   image.isAlive = true;
   image.lastSeen = Resources.loop;
+  image.buildProgress = unit.buildProgress;
   image.isActive = (unit.buildProgress >= 1);
   image.order = unit.orders.length ? { ...unit.orders[0], queue: unit.orders.length } : { abilityId: 0, queue: 0 };
   image.rally = (unit.rallyTargets && unit.rallyTargets.length) ? unit.rallyTargets[0].point : null;
@@ -189,12 +190,8 @@ function addToZone(image) {
 }
 
 function removeFromZone(image) {
-  if (GameMap.board && image) {
-    const zone = GameMap.zone(image.body.x, image.body.y);
-
-    if (zone) {
-      zone.removeUnit(image);
-    }
+  if (image && image.zone) {
+    image.zone.removeUnit(image);
   }
 }
 

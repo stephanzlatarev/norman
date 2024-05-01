@@ -4,6 +4,7 @@ import Mission from "./mission.js";
 import Order from "./order.js";
 import Types from "./types.js";
 import Units from "./units.js";
+import Depot from "./map/depot.js";
 import Map from "./map/map.js";
 import countUnits from "./memo/count.js";
 import countEncounters from "./memo/encounters.js";
@@ -41,13 +42,14 @@ export default class Game {
     };
 
     Enemy.id = this.enemy.id;
-    Enemy.base = { x: this.enemy.x, y: this.enemy.y };
 
     Types.sync((await this.client.data({ unitTypeId: true, upgradeId: true })));
     Units.sync(this.observation.rawData.units, this.me, this.enemy);
     Resources.sync(this.observation);
 
     Map.create(gameInfo);
+
+    Enemy.base = [...Depot.list()].find(depot => ((depot.x === this.enemy.x) && (depot.y === this.enemy.y)));
 
     setTimeout(this.run.bind(this));
 

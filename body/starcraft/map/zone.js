@@ -20,26 +20,31 @@ export default class Zone extends Pin {
   }
 
   addUnit(unit) {
-    const previousZone = unitToZone.get();
+    const previousZone = unitToZone.get(unit);
+
+    if (this === previousZone) return;
 
     if (unit.isEnemy) {
-      this.enemies.add(unit);
-
       if (previousZone) previousZone.enemies.delete(unit);
+
+      this.enemies.add(unit);
     } else if (unit.type.isWarrior && !unit.type.isWorker) {
-      this.warriors.add(unit);
-
       if (previousZone) previousZone.warriors.delete(unit);
-    } else if (unit.type.isBuilding) {
-      this.buildings.add(unit);
 
+      this.warriors.add(unit);
+    } else if (unit.type.isBuilding) {
       if (previousZone) previousZone.buildings.delete(unit);
+
+      this.buildings.add(unit);
     }
 
     unitToZone.set(unit, this);
+    unit.zone = this;
   }
 
   removeUnit(unit) {
+    if (unit.zone !== this) return;
+
     if (unit.isEnemy) {
       this.enemies.delete(unit);
     } else if (unit.type.isWarrior && !unit.type.isWorker) {
@@ -49,6 +54,7 @@ export default class Zone extends Pin {
     }
 
     unitToZone.delete(unit);
+    unit.zone = null;
   }
 
   replace(old) {

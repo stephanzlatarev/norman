@@ -8,8 +8,10 @@ const Color = {
 
 export default class Trace {
 
+  static speed = 0;
+
   constructor(speed) {
-    this.speed = speed;
+    Trace.speed = speed;
   }
 
   async step(client) {
@@ -36,7 +38,7 @@ export default class Trace {
 
     await client.debug({ debug: [{ draw: { lines: lines, spheres: spheres } }] });
 
-    await new Promise(resolve => setTimeout(resolve, this.speed));
+    await new Promise(resolve => setTimeout(resolve, Trace.speed));
   }
 
 }
@@ -57,16 +59,10 @@ function trackSpeed(unit) {
       unit.body.a = 0;
     }
 
-    if (unit.body.last.s >= 0) {
-      unit.body.a = unit.body.s - unit.last.s;
-    } else {
-      unit.body.a = 0;
-    }
-
-    image.body.last = {
-      x: image.body.x,
-      y: image.body.y,
-      s: image.body.s,
+    unit.last = {
+      x: unit.body.x,
+      y: unit.body.y,
+      s: unit.body.s,
     }
 
     console.log(unit.job ? unit.job.summary : "free",
