@@ -109,6 +109,9 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
           x: unit.pos.x,
           y: unit.pos.y,
         },
+        weapon: {
+          cooldown: 0,
+        },
         armor: {
           healthMax: unit.healthMax,
           shieldMax: unit.shieldMax,
@@ -131,15 +134,20 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   image.body.isGround = !unit.isFlying;
   image.body.x = unit.pos.x;
   image.body.y = unit.pos.y;
+  image.weapon.cooldown = unit.weaponCooldown;
   image.armor.health = unit.health;
   image.armor.shield = unit.shield;
 
   image.isSelected = unit.isSelected;
 
+  if (image.type.isWorker) {
+    image.isCarryingMinerals = isCarryingMinerals(unit);
+    image.isCarryingVespene = isCarryingVespene(unit);
+    image.isCarryingHarvest = image.isCarryingMinerals || image.isCarryingVespene;
+  }
+
   if (image.isOwn) {
     if (image.type.isWorker) {
-      image.isCarryingHarvest = isCarryingHarvest(unit);
-
       if (!image.depot && !image.job) {
         const depot = findDepot(image.body, 10);
 
@@ -259,10 +267,17 @@ function findZombie(unit, type, zombies) {
   }
 }
 
-function isCarryingHarvest(unit) {
+function isCarryingMinerals(unit) {
   for (const buffId of unit.buffIds) {
     if (buffId === 271) return true;
     if (buffId === 272) return true;
+  }
+
+  return false;
+}
+
+function isCarryingVespene(unit) {
+  for (const buffId of unit.buffIds) {
     if (buffId === 273) return true;
     if (buffId === 274) return true;
     if (buffId === 275) return true;
