@@ -9,7 +9,7 @@ export default class LocalGame extends Game {
 
     this.config = config;
 
-    if (this.config.trace) {
+    if (this.config) {
       this.trace = new Trace(this.config.trace);
     }
   }

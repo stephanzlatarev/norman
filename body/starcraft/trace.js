@@ -1,3 +1,4 @@
+import Job from "./job.js";
 import Order from "./order.js";
 
 const Color = {
@@ -15,32 +16,55 @@ export default class Trace {
   }
 
   async step(client) {
-    const lines = [];
-    const spheres = [];
+    await traceJobs(client);
 
-    for (const order of Order.list()) {
-      if (!order.unit.isSelected) continue;
-
-      if (order.action === 23) {
-        const start = order.unit.body;
-        const end = order.target.body ? order.target.body : order.target;
-        const dot = (start.x === end.x) && (start.y === end.y);
-
-        for (let z = 8; z <= 9; z += 0.2) {
-          lines.push({ line: { p0: { x: start.x, y: start.y, z: z }, p1: { x: end.x, y: end.y, z: dot ? 10 : z } }, color: Color.Attack });
-        }
-
-        spheres.push({ p: { x: end.x, y: end.y, z: 9 }, r: 0.2, color: { r: 200, g: 200, b: 200 } });
-      }
-
-      trackSpeed(order.unit);
+    if (Trace.speed >= 10) {
+      await new Promise(resolve => setTimeout(resolve, Trace.speed));
     }
-
-    await client.debug({ debug: [{ draw: { lines: lines, spheres: spheres } }] });
-
-    await new Promise(resolve => setTimeout(resolve, Trace.speed));
   }
 
+}
+
+async function traceJobs(client) {
+  const lines = [];
+  const texts = [];
+  
+  for (const job of Job.list()) {
+    if (!job.assignee) continue;
+  
+    const body = job.assignee.body;
+    const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) };
+  
+    lines.push({ line: { p0: body, p1: tag } });
+    texts.push({ text: job.constructor.name, worldPos: tag, size: 16 });
+  }
+  
+  await client.debug({ debug: [{ draw: { lines: lines, text: texts } }] });
+}
+
+async function traceOrders(client) {
+  const lines = [];
+  const spheres = [];
+
+  for (const order of Order.list()) {
+    if (!order.unit.isSelected) continue;
+  
+    if (order.action === 23) {
+      const start = order.unit.body;
+      const end = order.target.body ? order.target.body : order.target;
+      const dot = (start.x === end.x) && (start.y === end.y);
+  
+      for (let z = 8; z <= 9; z += 0.2) {
+        lines.push({ line: { p0: { x: start.x, y: start.y, z: z }, p1: { x: end.x, y: end.y, z: dot ? 10 : z } }, color: Color.Attack });
+      }
+  
+      spheres.push({ p: { x: end.x, y: end.y, z: 9 }, r: 0.2, color: { r: 200, g: 200, b: 200 } });
+    }
+  
+    trackSpeed(order.unit);
+  }
+  
+  await client.debug({ debug: [{ draw: { lines: lines, spheres: spheres } }] });  
 }
 
 function trackSpeed(unit) {
