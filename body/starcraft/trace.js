@@ -26,19 +26,31 @@ export default class Trace {
 }
 
 async function traceJobs(client) {
+  const jobs = [...Job.list()].sort((a, b) => (b.priority - a.priority));
   const lines = [];
   const texts = [];
-  
-  for (const job of Job.list()) {
-    if (!job.assignee) continue;
-  
-    const body = job.assignee.body;
-    const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) };
-  
-    lines.push({ line: { p0: body, p1: tag } });
-    texts.push({ text: job.constructor.name, worldPos: tag, size: 16 });
+  let pending = 0;
+  let total = 0;
+
+  for (const job of jobs) {
+    const summary = job.priority + " " + job.constructor.name + (job.output ? " " + job.output.name : "");
+
+    if (job.assignee) {
+      const body = job.assignee.body;
+      const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) };
+    
+      lines.push({ line: { p0: body, p1: tag } });
+      texts.push({ text: summary, worldPos: tag, size: 16 });
+    } else {
+      pending++;
+      texts.push({ text: summary, virtualPos: { x: 0.05, y: 0.05 + 0.01 * pending }, size: 16 });
+    }
+
+    total++;
   }
-  
+
+  texts.push({ text: "Pendings jobs: " + pending + "/" + total, virtualPos: { x: 0.05, y: 0.05 }, size: 16 });
+
   await client.debug({ debug: [{ draw: { lines: lines, text: texts } }] });
 }
 
