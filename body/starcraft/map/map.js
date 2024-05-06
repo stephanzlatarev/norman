@@ -1,6 +1,7 @@
 import Board from "./board.js";
 import Units from "../units.js";
 import Zone from "./zone.js";
+import syncTiers from "./tier.js";
 import { createDepots } from "./depot.js";
 import { createWalls } from "./wall.js";
 import { createZones } from "./zone.js";
@@ -33,6 +34,8 @@ class Map {
     createDepots(this.board, Units.resources().values(), base);
     createZones(this.board);
     createWalls(this.board, base);
+
+    this.tiers = syncTiers();
   }
 
   sync(gameInfoOrEnforce, gameLoop) {
@@ -44,6 +47,8 @@ class Map {
       this.gameInfo = gameInfoOrEnforce;
       this.gameLoop = gameLoop;
     }
+
+    this.tiers = syncTiers();
   }
 
   zone(x, y) {

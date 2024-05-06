@@ -118,8 +118,9 @@ function findCandidate(profile, priority) {
     }
   }
 
-  if (profile.type.isBuilding) {
-    for (const unit of Units.buildings().values()) {
+  if (profile.type.isWarrior) {
+    for (const unit of Units.warriors().values()) {
+      if (unit.type !== profile.type) continue;
       if (unit.order.abilityId) continue;
       if (unit.job) continue;
 

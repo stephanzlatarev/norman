@@ -108,6 +108,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
           r: unit.radius,
           x: unit.pos.x,
           y: unit.pos.y,
+          z: unit.pos.z,
         },
         weapon: {
           cooldown: 0,
@@ -134,6 +135,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   image.body.isGround = !unit.isFlying;
   image.body.x = unit.pos.x;
   image.body.y = unit.pos.y;
+  image.body.z = unit.pos.z;
   image.weapon.cooldown = unit.weaponCooldown;
   image.armor.health = unit.health;
   image.armor.shield = unit.shield;

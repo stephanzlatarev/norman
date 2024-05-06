@@ -110,3 +110,16 @@ function trackSpeed(unit) {
   }
 
 }
+
+async function spawnObserver(client, me) {
+  await client.debug({
+    debug: [{
+      createUnit: {
+        unitType: 82,
+        owner: me.id,
+        pos: { x: me.x, y: me.y },
+        quantity: 1,
+      }
+    }]
+  });
+}

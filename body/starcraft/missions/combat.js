@@ -71,6 +71,8 @@ function attack(target) {
   let leaderDistance = Infinity;
 
   for (const warrior of Units.warriors().values()) {
+    if (warrior.job) continue;
+
     if (warrior.type.name === "Observer") {
       observer = warrior;
     } else {
@@ -93,6 +95,8 @@ function rally(target) {
   const pos = target.body || target;
 
   for (const warrior of Units.warriors().values()) {
+    if (warrior.job) continue;
+
     orderMove(warrior, pos);
   }
 }
