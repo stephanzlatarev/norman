@@ -70,7 +70,7 @@ function doEnforceWallNatural() {
 }
 
 function doGroundArmyMaxOut() {
-  Limit.Probe = 100;
+  Limit.Probe = 85;
   Limit.Observer = (ActiveCount.Immortal < 2) ? 1 : 2;
   Limit.Sentry = Infinity;
   Limit.Zealot = Infinity;
