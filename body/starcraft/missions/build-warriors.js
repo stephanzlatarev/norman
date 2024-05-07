@@ -94,7 +94,7 @@ function selectWarriorType(facility) {
 
     return "Zealot";
   } else if (facility.type.name === "RoboticsFacility") {
-    if ((Limit.Observer >= 1) && (TotalCount.Observer < 1)) {
+    if ((Limit.Observer >= 1) && (TotalCount.Observer < Limit.Observer)) {
       return "Observer";
     }
 

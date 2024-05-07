@@ -86,7 +86,7 @@ function attack(target) {
     }
   }
 
-  if (observer && leader) {
+  if (leader && observer && !observer.job) {
     orderMove(observer, leader.body);
   }
 }
