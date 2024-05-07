@@ -108,7 +108,7 @@ function getAgent(agent) {
     return agent;
   }
 
-  return { type: Types.unit(agent) };
+  return { type: agent.name ? agent : Types.unit(agent) };
 }
 
 function getSummary(job) {
