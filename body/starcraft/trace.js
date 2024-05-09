@@ -1,10 +1,14 @@
 import Job from "./job.js";
 import Order from "./order.js";
+import Map from "./map/map.js";
 
 const Color = {
   Attack: { r: 255, g: 0, b: 0 },
   Move: { r: 0, g: 255, b: 0 },
   Cooldown: { r: 100, g: 100, b: 255 },
+
+  Corridor: { r: 0, g: 200, b: 200 },
+  Enemy: { r: 200, g: 0, b: 0 },
 };
 
 export default class Trace {
@@ -16,7 +20,15 @@ export default class Trace {
   }
 
   async step(client) {
-    await traceJobs(client);
+    const lines = [];
+    const spheres = [];
+    const texts = [];
+
+    await traceZones(texts, lines);
+    await traceJobs(texts, lines);
+    await traceEnemies(spheres);
+
+    await client.debug({ debug: [{ draw: { lines: lines, spheres: spheres, text: texts } }] });
 
     if (Trace.speed >= 10) {
       await new Promise(resolve => setTimeout(resolve, Trace.speed));
@@ -25,10 +37,22 @@ export default class Trace {
 
 }
 
-async function traceJobs(client) {
+async function traceZones(texts, lines) {
+  for (const tier of Map.tiers) {
+    for (const zone of tier.zones) {
+      for (const corridor of zone.corridors) {
+        const point = { x: zone.x, y: zone.y, z: 15 };
+
+        texts.push({ text: zone.name, worldPos: { ...point, z: point.z + 1 }, size: 40 });
+        lines.push({ line: { p0: point, p1: { x: corridor.x, y: corridor.y, z: 15 } }, color: Color.Corridor });
+        lines.push({ line: { p0: point, p1: { ...point, z: 0 } }, color: Color.Corridor });
+      }
+    }
+  } 
+}
+
+async function traceJobs(texts, lines) {
   const jobs = [...Job.list()].sort((a, b) => (b.priority - a.priority));
-  const lines = [];
-  const texts = [];
   let pending = 0;
   let total = 0;
 
@@ -37,9 +61,10 @@ async function traceJobs(client) {
 
     if (job.assignee) {
       const body = job.assignee.body;
+      const center = { x: body.x, y: body.y, z: body.z };
       const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) };
-    
-      lines.push({ line: { p0: body, p1: tag } });
+
+      lines.push({ line: { p0: center, p1: tag } });
       texts.push({ text: summary, worldPos: tag, size: 16 });
     } else {
       pending++;
@@ -50,8 +75,16 @@ async function traceJobs(client) {
   }
 
   texts.push({ text: "Pendings jobs: " + pending + "/" + total, virtualPos: { x: 0.05, y: 0.05 }, size: 16 });
+}
 
-  await client.debug({ debug: [{ draw: { lines: lines, text: texts } }] });
+async function traceEnemies(spheres) {
+  for (const tier of Map.tiers) {
+    for (const zone of tier.zones) {
+      for (const enemy of zone.enemies) {
+        spheres.push({ p: { x: enemy.body.x, y: enemy.body.y, z: enemy.body.z }, r: enemy.body.r, color: Color.Enemy });
+      }
+    }
+  } 
 }
 
 async function traceOrders(client) {
@@ -60,7 +93,7 @@ async function traceOrders(client) {
 
   for (const order of Order.list()) {
     if (!order.unit.isSelected) continue;
-  
+
     if (order.action === 23) {
       const start = order.unit.body;
       const end = order.target.body ? order.target.body : order.target;
@@ -69,13 +102,13 @@ async function traceOrders(client) {
       for (let z = 8; z <= 9; z += 0.2) {
         lines.push({ line: { p0: { x: start.x, y: start.y, z: z }, p1: { x: end.x, y: end.y, z: dot ? 10 : z } }, color: Color.Attack });
       }
-  
+
       spheres.push({ p: { x: end.x, y: end.y, z: 9 }, r: 0.2, color: { r: 200, g: 200, b: 200 } });
     }
   
     trackSpeed(order.unit);
   }
-  
+
   await client.debug({ debug: [{ draw: { lines: lines, spheres: spheres } }] });  
 }
 

@@ -35,6 +35,8 @@ class Map {
     createZones(this.board);
     createWalls(this.board, base);
 
+    labelZones(this);
+
     this.tiers = syncTiers();
   }
 
@@ -145,6 +147,20 @@ function markResources(board) {
     }
 
     unit.cell = board.cells[y][x];
+  }
+}
+
+const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+
+function labelZones(map) {
+  const colspan = (map.right - map.left) / 10;
+  const rowspan = (map.bottom - map.top) / 10;
+
+  for (const zone of Zone.list()) {
+    const col = Math.floor((zone.x - map.left) / colspan);
+    const row = Math.floor((zone.y - map.top) / rowspan);
+
+    zone.name = LETTERS[col] + row;
   }
 }
 
