@@ -57,18 +57,16 @@ async function traceJobs(texts, lines) {
   let total = 0;
 
   for (const job of jobs) {
-    const summary = job.priority + " " + job.constructor.name + (job.output ? " " + job.output.name : "");
-
     if (job.assignee) {
       const body = job.assignee.body;
       const center = { x: body.x, y: body.y, z: body.z };
       const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) };
 
       lines.push({ line: { p0: center, p1: tag } });
-      texts.push({ text: summary, worldPos: tag, size: 16 });
+      texts.push({ text: job.priority + " " + job.summary, worldPos: tag, size: 16 });
     } else {
       pending++;
-      texts.push({ text: summary, virtualPos: { x: 0.05, y: 0.05 + 0.01 * pending }, size: 16 });
+      texts.push({ text: job.priority + " " + job.summary, virtualPos: { x: 0.05, y: 0.05 + 0.01 * pending }, size: 16 });
     }
 
     total++;
