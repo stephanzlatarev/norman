@@ -9,43 +9,9 @@ const perimeter = new Set();
 export default class DeployTroopsMission extends Mission {
 
   run() {
-    // Remove jobs of dead guards
-    for (const [zone, guard] of guards) {
-      if (guard.assignee && !guard.assignee.isAlive) {
-        guards.delete(zone);
-      }
-    }
-
-    // Determine perimeter zones
-    for (const zone of Zone.list()) {
-      if (zone.isCorridor) continue;
-
-      if (zone.enemies.size > zone.warriors.size) {
-        perimeter.delete(zone);
-      } else if (zone.buildings.size) {
-        perimeter.add(zone);
-      }
-    }
-
-    // Create jobs for the new border zones
-    for (const zone of Zone.list()) {
-      if (zone.isCorridor) continue;
-
-      const guard = guards.get(zone);
-
-      if (isBorderZone(zone)) {
-        const priority = 80 - zone.tier.level;
-
-        if (guard) {
-          guard.priority = priority;
-        } else {
-          guards.set(zone, new Guard(zone, priority));
-        }
-      } else if (guard) {
-        guard.close(true);
-        guards.delete(zone);
-      }
-    }
+    closeDeadGuardJobs();
+    determinePerimeterZones();
+    createGuardJobs();
   }
 
 }
@@ -84,6 +50,47 @@ class Guard extends Job {
     this.shield = stalker.armor.shield;
   }
 
+}
+
+function closeDeadGuardJobs() {
+  for (const [zone, guard] of guards) {
+    if (guard.assignee && !guard.assignee.isAlive) {
+      guards.delete(zone);
+    }
+  }
+}
+
+function determinePerimeterZones() {
+  for (const zone of Zone.list()) {
+    if (zone.isCorridor) continue;
+
+    if (zone.enemies.size > zone.warriors.size) {
+      perimeter.delete(zone);
+    } else if (zone.buildings.size) {
+      perimeter.add(zone);
+    }
+  }
+}
+
+function createGuardJobs() {
+  for (const zone of Zone.list()) {
+    if (zone.isCorridor) continue;
+
+    const guard = guards.get(zone);
+
+    if (isBorderZone(zone)) {
+      const priority = 80 - zone.tier.level;
+
+      if (guard) {
+        guard.priority = priority;
+      } else {
+        guards.set(zone, new Guard(zone, priority));
+      }
+    } else if (guard) {
+      guard.close(true);
+      guards.delete(zone);
+    }
+  }
 }
 
 function isBorderZone(zone) {
