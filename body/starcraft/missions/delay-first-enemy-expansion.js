@@ -90,20 +90,10 @@ class AnnoyEnemy extends Job {
   }
 
   goScoutExpansion() {
-    if (this.expansion) {
-      if (isInSightRange(this.assignee.body, this.expansion)) {
-
-        if (isEnemyExpansionStarted(this.expansion)) {
-          // Enemy already built the expansion. We cannot block it
-          this.expansion = null;
-        }
-
-        this.transition(this.goApproachEnemyBase);
-      } else {
-        orderMove(this.assignee, this.expansion);
-      }
-    } else {
+    if (isInSightRange(this.assignee.body, this.expansion)) {
       this.transition(this.goApproachEnemyBase);
+    } else {
+      orderMove(this.assignee, this.expansion);
     }
   }
 
@@ -170,7 +160,7 @@ class AnnoyEnemy extends Job {
   }
 
   goBlockExpansion() {
-    if (!this.expansion || isEnemyExpansionStarted(this.expansion)) return this.transition(this.goHome);
+    if (isEnemyExpansionStarted(this.expansion)) return this.transition(this.goHome);
 
     if (isWithinBlock(this.assignee.body, this.expansion, 6) && !this.expansion.enemies.size) {
       return this.transition(this.goGuardCorridor);
@@ -319,8 +309,11 @@ function findEnemyExpansion() {
 }
 
 function isEnemyExpansionStarted(expansion) {
-  for (const enemy of expansion.enemies.values()) {
+  if (expansion.isEnemyExpansionStarted) return true;
+
+  for (const enemy of expansion.enemies) {
     if (enemy.type.isBuilding && isSamePosition(enemy.body, expansion)) {
+      expansion.isEnemyExpansionStarted = true;
       return true;
     }
   }
@@ -330,11 +323,11 @@ function findEnemyWorkerClosestToCorridor(harvest, expansion, corridor) {
   let enemies;
 
   if (expansion.enemies.size) {
-    enemies = expansion.enemies.values();
+    enemies = expansion.enemies;
   } else if (corridor.enemies.size) {
-    enemies = corridor.enemies.values();
+    enemies = corridor.enemies;
   } else if (Enemy.base.enemies.size) {
-    enemies = Enemy.base.enemies.values();
+    enemies = Enemy.base.enemies;
   } else {
     return;
   }
@@ -360,7 +353,7 @@ function findEnemyWorkerToKill(agent) {
   let bestDistance = Infinity;
   let bestTarget = null;
 
-  for (const enemyWorker of Enemy.base.enemies.values()) {
+  for (const enemyWorker of Enemy.base.enemies) {
     if (!enemyWorker.isCarryingMinerals) continue;
 
     const distance = squareDistance(agent.body, enemyWorker.body);
