@@ -16,7 +16,7 @@ class Resources {
     this.vespene = observation.playerCommon.vespene;
     this.supplyLimit = observation.playerCommon.foodCap;
     this.supplyUsed = observation.playerCommon.foodUsed;
-    this.supply = this.supplyLimit - this.supplyUsed;
+    this.supply = (this.supplyLimit > this.supplyUsed) ? this.supplyLimit - this.supplyUsed : 0;
 
     // TODO: Obsoleted by Count
     this.supplyWorkers = Units.workers().size + countWorkersInTraining();

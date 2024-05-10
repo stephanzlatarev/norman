@@ -1,10 +1,13 @@
 import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
+import Build from "../jobs/build.js";
 import Zone from "../map/zone.js";
+import Resources from "../memo/resources.js";
 
 const guards = new Map();
 const perimeter = new Set();
+let pylon;
 
 export default class DeployTroopsMission extends Mission {
 
@@ -12,6 +15,7 @@ export default class DeployTroopsMission extends Mission {
     closeDeadGuardJobs();
     determinePerimeterZones();
     createGuardJobs();
+    createPylonJob();
   }
 
 }
@@ -93,6 +97,33 @@ function createGuardJobs() {
   }
 }
 
+function createPylonJob() {
+  if (pylon) {
+    if (pylon.isFailed || pylon.isDone) {
+      pylon = null;
+    } else {
+      // A pylon is already being built
+      return;
+    }
+  }
+
+  if ((Resources.minerals < 100) || (Resources.supplyUsed < 197)) return;
+
+  let pos;
+
+  for (const zone of perimeter) {
+    if (!zone.buildings.size && !isBorderZone(zone)) {
+      pos = zone.isDepot ? zone.exitRally : zone;
+      break;
+    }
+  }
+
+  if (pos) {
+    pylon = new Build("Pylon", pos);
+    pylon.priority = 80;
+  }
+}
+
 function isBorderZone(zone) {
   if (zone.buildings.size) return false;
 
@@ -102,13 +133,17 @@ function isBorderZone(zone) {
 }
 
 function findSafeZone(zone) {
+  let safe = zone;
+
   for (const corridor of zone.corridors) {
     for (const neighbor of corridor.zones) {
-      if (neighbor.tier.level < zone.tier.level) {
-        return neighbor;
+      if (neighbor.tier.level < safe.tier.level) {
+        safe = neighbor;
       }
     }
   }
+
+  return safe;
 }
 
 function orderAttack(warrior, pos) {
