@@ -112,22 +112,23 @@ function setBlueprintToCorridor(board, corridor, blueprint) {
   wall.replace(corridor);
 
   // Set the wall as the zone to all cells near the wall
-  for (const one of [blueprint.left, blueprint.center, blueprint.right, blueprint.pylon, blueprint.battery]) {
-    assignCellsToWall(board, wall, one);
+  for (const one of [blueprint.left, blueprint.center, blueprint.right]) {
+    assignCellsToWall(board, wall, one.x - 1.5, one.x + 0.5, one.y - 1.5, one.y + 0.5);
+  }
+  for (const one of [blueprint.pylon, blueprint.battery]) {
+    assignCellsToWall(board, wall, one.x - 1, one.x, one.y - 1, one.y);
+  }
+  for (const one of [blueprint.choke, blueprint.rally]) {
+    assignCellsToWall(board, wall, one.x - 0.5, one.x - 0.5, one.y - 0.5, one.y - 0.5);
   }
 }
 
-function assignCellsToWall(board, wall, wing) {
-  const minx = Math.floor(wing.x) - 3;
-  const maxx = Math.ceil(wing.x) + 3;
-  const miny = Math.floor(wing.y) - 3;
-  const maxy = Math.ceil(wing.y) + 3;
-
+function assignCellsToWall(board, wall, minx, maxx, miny, maxy) {
   for (let y = miny; y <= maxy; y++) {
     for (let x = minx; x <= maxx; x++) {
       const cell = board.cells[y][x];
 
-      if (cell.zone) {
+      if (cell.zone && (cell.zone !== wall)) {
         cell.zone.cells.delete(cell);
 
         wall.cells.add(cell);

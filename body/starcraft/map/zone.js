@@ -69,6 +69,11 @@ export default class Zone extends Pin {
 
       this.zones = [...old.zones];
 
+      for (const cell of old.cells) {
+        this.cells.add(cell);
+        cell.zone = this;
+      }
+
       old.remove();
     } else {
       console.log("Only replacement of a corridor with another corridor is supported!");
