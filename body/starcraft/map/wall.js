@@ -128,7 +128,7 @@ function assignCellsToWall(board, wall, minx, maxx, miny, maxy) {
     for (let x = minx; x <= maxx; x++) {
       const cell = board.cells[y][x];
 
-      if (cell.zone && (cell.zone !== wall)) {
+      if (cell && cell.zone && (cell.zone !== wall)) {
         cell.zone.cells.delete(cell);
 
         wall.cells.add(cell);
