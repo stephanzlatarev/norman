@@ -18,7 +18,7 @@ class FrontierPatrol extends Job {
   constructor() {
     super("Observer");
 
-    this.priority = 100;
+    this.priority = 60;
     this.frontier = null;
     this.zones = [];
     this.index = 0;

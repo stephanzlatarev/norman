@@ -1,6 +1,6 @@
 import Job from "./job.js";
-import Order from "./order.js";
-import Map from "./map/map.js";
+import Units from "./units.js";
+import Zone from "./map/zone.js";
 
 const Color = {
   Attack: { r: 255, g: 0, b: 0 },
@@ -9,6 +9,12 @@ const Color = {
 
   Corridor: { r: 0, g: 200, b: 200 },
   Enemy: { r: 200, g: 0, b: 0 },
+
+  Perimeter: { r: 0, g: 200, b: 0 },
+  Patrol: { r: 200, g: 200, b: 0 },
+  Unknown: { r: 200, g: 200, b: 200 },
+  Fight: { r: 200, g: 0, b: 0 },
+  Threat: { r: 200, g: 0, b: 200 },
 };
 
 export default class Trace {
@@ -26,7 +32,9 @@ export default class Trace {
 
     await traceZones(texts, lines);
     await traceJobs(texts, lines);
-    await traceEnemies(spheres);
+    await traceWarriorActions(texts);
+    await traceThreats(texts, spheres);
+    await traceDeployments(texts);
 
     await client.debug({ debug: [{ draw: { lines: lines, spheres: spheres, text: texts } }] });
 
@@ -38,23 +46,24 @@ export default class Trace {
 }
 
 async function traceZones(texts, lines) {
-  for (const tier of Map.tiers) {
-    for (const zone of tier.zones) {
-      for (const corridor of zone.corridors) {
-        const point = { x: zone.x, y: zone.y, z: 15 };
+  for (const zone of Zone.list()) {
+    for (const corridor of zone.corridors) {
+      const point = { x: zone.x, y: zone.y, z: 15 };
 
-        texts.push({ text: zone.name, worldPos: { ...point, z: point.z + 1 }, size: 40 });
-        lines.push({ line: { p0: point, p1: { x: corridor.x, y: corridor.y, z: 15 } }, color: Color.Corridor });
-        lines.push({ line: { p0: point, p1: { ...point, z: 0 } }, color: Color.Corridor });
-      }
+      texts.push({ text: zone.name, worldPos: { ...point, z: point.z + 1 }, size: 40 });
+      lines.push({ line: { p0: point, p1: { x: corridor.x, y: corridor.y, z: 15 } }, color: Color.Corridor });
+      lines.push({ line: { p0: point, p1: { ...point, z: 0 } }, color: Color.Corridor });
     }
-  } 
+  }
 }
 
 async function traceJobs(texts, lines) {
   const jobs = [...Job.list()].sort((a, b) => (b.priority - a.priority));
   let pending = 0;
   let total = 0;
+  let groupY = 0.06;
+  let groupText;
+  let groupCount;
 
   for (const job of jobs) {
     if (job.assignee) {
@@ -65,49 +74,115 @@ async function traceJobs(texts, lines) {
       lines.push({ line: { p0: center, p1: tag } });
       texts.push({ text: job.priority + " " + job.summary, worldPos: tag, size: 16 });
     } else {
+      const text = job.priority + " " + job.summary;
+
+      if (text !== groupText) {
+        if (groupCount) {
+          const multiplier = (groupCount > 1) ? " (x" + groupCount + ")": "";
+          texts.push({ text: groupText + multiplier, virtualPos: { x: 0.05, y: groupY }, size: 16 });
+        }
+
+        groupY += 0.01;
+        groupText = text;
+        groupCount = 1;
+      } else {
+        groupCount++;
+      }
+
       pending++;
-      texts.push({ text: job.priority + " " + job.summary, virtualPos: { x: 0.05, y: 0.05 + 0.01 * pending }, size: 16 });
     }
 
     total++;
   }
 
   texts.push({ text: "Pendings jobs: " + pending + "/" + total, virtualPos: { x: 0.05, y: 0.05 }, size: 16 });
+
+  if (groupCount) {
+    const multiplier = (groupCount > 1) ? " (x" + groupCount + ")": "";
+    texts.push({ text: groupText + multiplier, virtualPos: { x: 0.05, y: groupY }, size: 16 });
+  }
 }
 
-async function traceEnemies(spheres) {
-  for (const tier of Map.tiers) {
-    for (const zone of tier.zones) {
-      for (const enemy of zone.enemies) {
-        spheres.push({ p: { x: enemy.body.x, y: enemy.body.y, z: enemy.body.z }, r: enemy.body.r, color: Color.Enemy });
-      }
+async function traceWarriorActions(texts) {
+  for (const warrior of Units.warriors().values()) {
+    const body = warrior.body;
+    const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) - 0.2 };
+
+    texts.push({ text: "Order: " + warrior.order.abilityId, worldPos: tag, size: 16 });
+  }
+}
+
+async function traceThreats(texts, spheres) {
+  for (const zone of Zone.list()) {
+    for (const enemy of zone.threats) {
+      const body = enemy.body;
+
+      texts.push({ text: enemy.tag, worldPos: { x: body.x, y: body.y, z: body.z + body.r }, size: 16 });
+      spheres.push({ p: { x: body.x, y: body.y, z: body.z }, r: body.r, color: Color.Enemy });
     }
   } 
 }
 
-async function traceOrders(client) {
-  const lines = [];
-  const spheres = [];
+async function traceDeployments(texts) {
+  const fights = [];
+  const codeA = "A".charCodeAt(0);
+  const code0 = "0".charCodeAt(0);
 
-  for (const order of Order.list()) {
-    if (!order.unit.isSelected) continue;
+  texts.push({ text: "Troop deployment:", virtualPos: { x: 0.8, y: 0.05 }, size: 16 });
 
-    if (order.action === 23) {
-      const start = order.unit.body;
-      const end = order.target.body ? order.target.body : order.target;
-      const dot = (start.x === end.x) && (start.y === end.y);
-  
-      for (let z = 8; z <= 9; z += 0.2) {
-        lines.push({ line: { p0: { x: start.x, y: start.y, z: z }, p1: { x: end.x, y: end.y, z: dot ? 10 : z } }, color: Color.Attack });
+  for (const zone of Zone.list()) {
+    if (zone.isCorridor) {
+      const corridor = zone;
+
+      if (corridor.deployment === 4) {
+        const neighbora = corridor.zones[0];
+        const neighborb = corridor.zones[1];
+
+        zone.traceName = (neighbora.tier.level < neighborb.tier.level) ? neighbora.name + "->" + neighborb.name : neighborb.name + "->" + neighbora.name;
+        fights.push(zone);
       }
-
-      spheres.push({ p: { x: end.x, y: end.y, z: 9 }, r: 0.2, color: { r: 200, g: 200, b: 200 } });
-    }
+    } else {
+      const x = 0.8 + (zone.name.charCodeAt(0) - codeA) * 0.01;
+      const y = 0.05 + (10 - zone.name.charCodeAt(1) + code0) * 0.01;
   
-    trackSpeed(order.unit);
+      let color = Color.Unknown;
+      if (zone.deployment === 1) {
+        color = Color.Perimeter;
+      } else if (zone.deployment === 2) {
+        color = Color.Patrol;
+      } else if (zone.deployment === 4) {
+        color = Color.Fight;
+
+        zone.traceName = "  " + zone.name + "  ";
+        fights.push(zone);
+      } else if (zone.deployment === 5) {
+        color = Color.Threat;
+      }
+  
+      texts.push({ text: zone.name, virtualPos: { x: x, y: y }, size: 16, color: color });
+    }
   }
 
-  await client.debug({ debug: [{ draw: { lines: lines, spheres: spheres } }] });  
+  if (fights.length) {
+    let y = 0.17;
+    fights.sort((a, b) => (a.tier.level - b.tier.level));
+
+    texts.push({ text: "Fights:", virtualPos: { x: 0.8, y: y }, size: 16 });
+    for (const zone of fights) {
+      const text = [zone.traceName, "units:", zone.warriors.size, "vs", zone.threats.size];
+
+      if (zone.fight) {
+        let assigned = 0;
+        for (const job of zone.fight.jobs) {
+          if (job.assignee) assigned++;
+        }
+        text.push("jobs:", assigned, "/", zone.fight.jobs.length);
+      }
+
+      y += 0.01;
+      texts.push({ text: text.join(" "), virtualPos: { x: 0.8, y: y }, size: 16 });
+    }
+  }
 }
 
 function trackSpeed(unit) {

@@ -99,6 +99,7 @@ class Types {
 
 units.set("Building", { isBuilding: true });
 units.set("Worker", { isWorker: true });
+units.set("Warrior", { isWarrior: true });
 
 function get(collection, key) {
   let type = collection.get(key);

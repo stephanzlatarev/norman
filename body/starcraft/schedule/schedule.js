@@ -120,8 +120,7 @@ function findCandidate(profile, priority) {
 
   if (profile.type.isWarrior) {
     for (const unit of Units.warriors().values()) {
-      if (unit.type !== profile.type) continue;
-      if (unit.order.abilityId) continue;
+      if (profile.type.name && (unit.type !== profile.type)) continue;
       if (unit.job) continue;
 
       return unit;

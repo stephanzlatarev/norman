@@ -1,13 +1,14 @@
 import Pin from "./pin.js";
 
 const zones = [];
-const unitToZone = new Map();
+const knownThreats = new Map();
 
 export default class Zone extends Pin {
 
   buildings = new Set();
   warriors = new Set();
   enemies = new Set();
+  threats = new Set();
 
   constructor(x, y, r) {
     super({ x, y });
@@ -20,25 +21,35 @@ export default class Zone extends Pin {
   }
 
   addUnit(unit) {
-    const previousZone = unitToZone.get(unit);
-
-    if (this === previousZone) return;
+    if (this === unit.zone) return;
 
     if (unit.isEnemy) {
-      if (previousZone) previousZone.enemies.delete(unit);
+      if (unit.zone) {
+        unit.zone.enemies.delete(unit);
+        unit.zone.threats.delete(unit);
+      } else {
+        const previous = knownThreats.get(unit.tag);
+
+        if (previous && previous.zone) {
+          previous.zone.enemies.delete(previous);
+          previous.zone.threats.delete(previous);
+        }
+
+        knownThreats.set(unit.tag, unit);
+      }
 
       this.enemies.add(unit);
+      this.threats.add(unit);
     } else if (unit.type.isWarrior && !unit.type.isWorker) {
-      if (previousZone) previousZone.warriors.delete(unit);
+      if (unit.zone) unit.zone.warriors.delete(unit);
 
       this.warriors.add(unit);
     } else if (unit.type.isBuilding) {
-      if (previousZone) previousZone.buildings.delete(unit);
+      if (unit.zone) unit.zone.buildings.delete(unit);
 
       this.buildings.add(unit);
     }
 
-    unitToZone.set(unit, this);
     unit.zone = this;
   }
 
@@ -52,9 +63,6 @@ export default class Zone extends Pin {
     } else if (unit.type.isBuilding) {
       this.buildings.delete(unit);
     }
-
-    unitToZone.delete(unit);
-    unit.zone = null;
   }
 
   replace(old) {

@@ -1,4 +1,5 @@
 import Depot from "./depot.js";
+import Zone from "./zone.js";
 
 const tiers = [];
 
@@ -39,6 +40,18 @@ export default function() {
 
     zones = nextTierZones;
     back = fore;
+  }
+
+  for (const zone of Zone.list()) {
+    if (zone.isCorridor) {
+      const corridor = zone;
+
+      for (const neighbor of corridor.zones) {
+        if (!corridor.tier || (neighbor.tier.level < corridor.tier.level)) {
+          corridor.tier = neighbor.tier;
+        }
+      }
+    }
   }
 
   return tiers;
