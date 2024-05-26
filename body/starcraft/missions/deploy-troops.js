@@ -12,13 +12,19 @@ const UNKNOWN = 3;
 const FIGHT = 4;
 const THREAT = 5;
 
+const ALL_IN_START = 25;
+const ALL_IN_STOP = 20;
+
 const guards = new Map();
 const retreat = new Map();
+let safeZone;
 let pylon;
 
 export default class DeployTroopsMission extends Mission {
 
   run() {
+    if (!safeZone) safeZone = Zone.list().find(zone => (zone.tier && (zone.tier.level === 1)));
+
     closeDeadGuardJobs();
     classifyZones();
     createGuardJobs();
@@ -50,6 +56,8 @@ class Guard extends Job {
     } else {
       if (isSamePosition(stalker.body, this.zone) && isZoneSecure(this.zone)) {
         this.zone.deployment = PERIMETER;
+      } else if (this.zone.isDepot) {
+        orderMove(stalker, this.zone.exitRally);
       } else {
         orderMove(stalker, this.zone);
       }
@@ -60,65 +68,150 @@ class Guard extends Job {
 
 }
 
+const ATTACK = 1;
+const RALLY = 2;
+const RETREAT = 3;
+
+const REQUEST_FIGHTER_DPS = 15;
+const REQUEST_FIGHTER_HEALTH = 150;
+const REQUEST_FIGHTER_STRENGTH = REQUEST_FIGHTER_DPS * REQUEST_FIGHTER_HEALTH;
+
 class Fight {
 
-  constructor(priority, zone, corridor, rally) {
+  constructor(priority, zone) {
     this.summary = "Fight " + zone.name;
     this.priority = priority;
     this.zone = zone;
-    this.corridor = corridor;
-    this.rally = rally;
-    this.jobs = [];
-    this.isInAttack = false;
+
+    const zones = new Set();
+    if (zone.isCorridor) {
+      for (const neighbor of zone.zones) {
+        zones.add(neighbor);
+      }
+    } else {
+      for (const corridor of zone.corridors) {
+        zones.add(corridor);
+
+        for (const neighbor of corridor.zones) {
+          zones.add(neighbor);
+        }
+      }
+    }
+    zones.add(zone);
+    this.zones = [...zones];
+
+    this.mode = RALLY;
     this.detector = new Detector(this);
+    this.fighters = [];
 
     zone.fight = this;
   }
 
-  ask() {
-    return Math.max(1, this.zone.threats.size * 2);
+  isWarriorRallied(warrior) {
+    return !!(warrior && this.zones.find(zone => (warrior.zone === zone)));
   }
 
-  use(availableWarriorCount, extraWarriorCount) {
-    const neededWarriorCount = this.ask();
-    const engagedWarriorCount = (availableWarriorCount >= neededWarriorCount) ? neededWarriorCount + extraWarriorCount : availableWarriorCount;
+  isWarriorInThreatRange(warrior) {
+    const BUFFER = 3;
+    const wx = warrior.body.x;
+    const wy = warrior.body.y;
+    const wr = warrior.body.r;
+
+    for (const zone of this.zones) {
+      for (const enemy of zone.threats) {
+        if (enemy.type.damageGround > 0) {
+          const range = enemy.body.r + Math.max(enemy.type.rangeGround, 1) + wr + BUFFER;
+          const squareRange = range * range;
+          const squareDistance = (enemy.body.x - wx) * (enemy.body.x - wx) + (enemy.body.y - wy) * (enemy.body.y - wy);
+
+          if (squareDistance <= squareRange) return true;
+        }
+      }
+    }
+  }
+
+  evaluate() {
+    // TODO: Calculate ground and air DPS, and ground and air health
+    let availableDps = 1;
+    let availableHealth = 1;
+    let requestedDps = 1;
+    let requestedHealth = 1;
+    let enemyDps = 1;
+    let enemyHealth = 1;
     let ralliedWarriorCount = 0;
 
-    if (this.jobs.length < engagedWarriorCount) {
-      for (let i = this.jobs.length; i < engagedWarriorCount; i++) {
-        this.jobs.push(new Fighter(this));
+    for (const zone of this.zones) {
+      for (const enemy of zone.threats) {
+        if (enemy.type.damageGround > 0) {
+          enemyDps += enemy.type.damageGround;
+          enemyHealth += enemy.armor.health + enemy.armor.shield;
+        }
       }
-    } else if (this.jobs.length > engagedWarriorCount) {
-      for (let i = engagedWarriorCount; i < this.jobs.length; i++) {
-        this.jobs[i].close(true);
-      }
-
-      this.jobs.length = engagedWarriorCount;
     }
 
-    for (const job of this.jobs) {
+    for (const job of this.fighters) {
       const warrior = job.assignee;
 
-      if (warrior && ((warrior.zone === this.zone) || (warrior.zone === this.corridor) || (warrior.zone === this.rally))) {
-        ralliedWarriorCount++;
+      if (warrior) {
+        requestedDps += warrior.type.damageGround;
+        requestedHealth += warrior.armor.health + warrior.armor.shield;
+
+        if (this.isWarriorRallied(warrior)) {
+          ralliedWarriorCount++;
+
+          availableDps += warrior.type.damageGround;
+          availableHealth += warrior.armor.health + warrior.armor.shield;
+        }
+      } else {
+        // TODO: Tune the request expectations and put the expectations in the job description so that the right warriors are hired
+        requestedDps += REQUEST_FIGHTER_DPS;
+        requestedHealth += REQUEST_FIGHTER_HEALTH;
       }
     }
 
-this.traceSummary = "Fight " + this.zone.summary + " (" + ralliedWarriorCount + " / " + neededWarriorCount + ")";
+    const availableStrength = availableHealth * availableDps;
+    const requestedStrength = requestedHealth * requestedDps;
+    const enemyStrength = enemyHealth * enemyDps;
 
-    this.isInAttack = (ralliedWarriorCount >= neededWarriorCount) || (ralliedWarriorCount >= 30) || (this.rally === this.zone);
+    const requestedFightRatio = requestedStrength / enemyStrength;
+    if (requestedFightRatio < 2) {
+      const neededFighters = Math.ceil(enemyStrength * (2 - requestedFightRatio) / REQUEST_FIGHTER_STRENGTH);
 
-    return this.jobs.length;
+      for (let i = 0; i < neededFighters; i++) {
+        new Fighter(this);
+      }
+    }
+    // TODO: Release fighters when the ratio is too much in our favor
+
+    const availableFightRatio = availableStrength / enemyStrength;
+
+    if (ralliedWarriorCount >= ALL_IN_START) {
+      this.mode = ATTACK;
+    } else if ((this.mode === ATTACK) && (ralliedWarriorCount >= ALL_IN_STOP)) {
+      this.mode = ATTACK;
+    } else if (availableFightRatio > 2) {
+      this.mode = ATTACK;
+    } else if (availableFightRatio < 1) {
+      this.mode = ((this.mode === ATTACK) || (this.mode === RETREAT)) ? RETREAT : RALLY;
+    }
+
+    this.balance = availableFightRatio;
+
+//    if (this.mode === ATTACK) {
+//      assignTargets(this);
+//    }
   }
 
   close() {
     this.detector.close(true);
 
-    for (const job of this.jobs) {
+    for (const job of this.fighters) {
       job.close(true);
     }
 
-    this.zone.fight = null;
+    if (this.zone.fight === this) {
+      this.zone.fight = null;
+    }
   }
 }
 
@@ -131,6 +224,25 @@ class Detector extends Job {
     this.priority = fight.priority;
     this.fight = fight;
     this.shield = 0;
+
+    this.escapeZone = this.findEscapeZone();
+  }
+
+  findEscapeZone() {
+    let bestZone = this.fight.zone;
+    let bestDanger = this.fight.zone.threats.size;
+
+    for (const zone of this.fight.zones) {
+      if (zone.isCorridor) continue;
+      if (!zone.threats.size) return zone;
+
+      if (zone.threats.size < bestDanger) {
+        bestZone = zone;
+        bestDanger = zone.threats.size;
+      }
+    }
+
+    return bestZone;
   }
 
   execute() {
@@ -138,7 +250,11 @@ class Detector extends Job {
     const zone = this.fight.zone;
 
     if (observer.armor.shield < this.shield) {
-      orderMove(observer, this.fight.rally);
+      if (this.escapeZone.threats.size) {
+        this.escapeZone = this.findEscapeZone();
+      }
+
+      orderMove(observer, this.escapeZone);
     } else if (observer.zone !== zone) {
       orderMove(observer, zone);
     } else if (zone.threats.size) {
@@ -168,8 +284,6 @@ class Detector extends Job {
 
 }
 
-let id = 101;
-
 class Fighter extends Job {
 
   constructor(fight) {
@@ -179,14 +293,13 @@ class Fighter extends Job {
     this.summary = fight.summary;
     this.priority = fight.priority - 1;
     this.zone = fight.zone;
+    this.isCommitted = false;
+    this.isInRallyMove = false;
 
-this.id = id++;
-this.summary = (this.fight.isInAttack ? "Attack" : "Rally") + "#" + this.id + " " + this.fight.rally.name + "-" + this.fight.corridor.name + "->" + this.fight.zone.name;
+    fight.fighters.push(this);
   }
 
   execute() {
-this.summary = (this.fight.isInAttack ? "Attack" : "Rally") + "#" + this.id + " " + this.fight.rally.name + "-" + this.fight.corridor.name + "->" + this.fight.zone.name;
-    const isInAttack = this.fight.isInAttack;
     const zone = this.zone;
     const warrior = this.assignee;
 
@@ -197,9 +310,25 @@ this.summary = (this.fight.isInAttack ? "Attack" : "Rally") + "#" + this.id + " 
 
     if (!warrior.isAlive) {
       this.release(warrior);
-    } else if (!isInAttack) {
-      // TODO: Select approach zone based on warrior zone. Maintain global pathing which gets lazy recalculation when zone classification changes
-      orderMove(warrior, this.fight.rally);
+    } else if ((this.fight.mode === RALLY) || (this.fight.mode === RETREAT)) {
+      if (this.fight.isWarriorInThreatRange(warrior)) {
+        orderMove(warrior, safeZone);
+
+        this.isCommitted = true;
+        this.isInRallyMove = true;
+      } else if (this.fight.isWarriorRallied(warrior)) {
+        this.isCommitted = true;
+
+        if (this.isInRallyMove) {
+          orderStop(warrior);
+
+          this.isInRallyMove = false;
+        }
+      } else {
+        orderMove(warrior, this.fight.zone);
+        this.isInRallyMove = true;
+      }
+
       this.isAttacking = false;
     } else if (this.target) {
       orderAttack(warrior, this.target);
@@ -231,22 +360,78 @@ this.summary = (this.fight.isInAttack ? "Attack" : "Rally") + "#" + this.id + " 
 
 }
 
-// TODO: Focus fire on enemy units in range
+//function assignTargets(fight) {
+//  const zone = fight.zone;
+//  const attackers = new Map();
+//
+//  for (const fighter of fight.fighters) {
+//    const warrior = fighter.assignee;
+//
+//    if (!warrior || warrior.weapon.cooldown) continue;
+//
+//    for (const enemy of zone.enemies) {
+//      // Don't focus fire on enemy units that cannot hit us
+//      if (!enemy.type.damageGround) continue;
+//      if (enemy.body.isGround && (!warrior.type.damageGround || !isInRange(warrior, enemy, warrior.type.rangeGround))) continue;
+//      if (enemy.body.isFlying && (!warrior.type.damageAir || !isInRange(warrior, enemy, warrior.type.rangeAir))) continue;
+//
+//      const list = attackers.get(enemy);
+//
+//      if (list) {
+//        list.push(warrior);
+//      } else {
+//        attackers.set(enemy, [warrior]);
+//      }
+//    }
+//
+//    warrior.target = null;
+//  }
+//
+//  const sorted = [];
+//  for (const [target, warriors] of attackers) {
+//    sorted.push({ target, warriors });
+//  }
+//  sorted.sort((a, b) => (b.warriors.length - a.warriors.length));
+//
+//  for (const one of sorted) {
+//    const target = one.target;
+//
+//    for (const warrior of one.warriors) {
+//      if (!warrior.target) {
+//        warrior.target = target;
+//      }
+//    }
+//  }
+//}
+//
+//function isInRange(warrior, enemy, range) {
+//  const dr = warrior.body.r + range + enemy.body.r;
+//  const dx = (enemy.body.x - warrior.body.x);
+//  const dy = (enemy.body.y - warrior.body.y);
+//  const squareRange = dr * dr;
+//  const squareDistance = dx * dx + dy * dy;
+//
+//  return (squareDistance <= squareRange);
+//}
+
 function findClosestTarget(warrior, units) {
   const canHitGround = (warrior.type.damageGround > 0);
   const canHitAir = (warrior.type.damageAir > 0);
 
   let targetUnit;
   let targetDistance = Infinity;
+  let targetFights = false;
 
   for (const unit of units) {
-    if ((unit.isGround && !canHitGround) || (unit.isFlying && !canHitAir)) continue;
+    if ((unit.body.isGround && !canHitGround) || (unit.body.isFlying && !canHitAir)) continue;
+    if (targetFights && !unit.type.damageGround) continue;
 
     const distance = (warrior.body.x - unit.body.x) * (warrior.body.x - unit.body.x) + (warrior.body.y - unit.body.y) * (warrior.body.y - unit.body.y);
 
     if (distance < targetDistance) {
       targetUnit = unit;
       targetDistance = distance;
+      targetFights = !!unit.type.damageGround;
     }
   }
 
@@ -351,67 +536,48 @@ function createGuardJobs() {
 }
 
 function createFightJobs() {
-  const sorted = [];
+  let rallyFight;
+  let idleFighters = 0;
+
+  for (const warrior of Units.warriors().values()) {
+    if (!warrior.job) {
+      idleFighters++;
+    }
+  }
 
   for (const zone of Zone.list()) {
+    if ((zone.deployment === FIGHT) && !zone.threats.size) zone.deployment = UNKNOWN;
+
     if (zone.deployment === FIGHT) {
       const priority = 100 - zone.tier.level;
 
       if (zone.fight) {
         zone.fight.priority = priority;
       } else {
-        const approach = getFightApproach(zone);
-        new Fight(priority, zone, approach.corridor, approach.rally);
+        new Fight(priority, zone);
       }
 
-      sorted.push(zone.fight);
+      zone.fight.evaluate();
+
+      for (const job of zone.fight.fighters) {
+        if (!job.assignee) {
+          idleFighters--;
+        }
+      }
+
+      if (!rallyFight || (zone.fight.priority > rallyFight.priority)) {
+        rallyFight = zone.fight;
+      }
     } else if (zone.fight) {
       zone.fight.close();
     }
   }
 
-  sorted.sort((a, b) => (b.priority - a.priority));
-
-  let remainingWarriors = Units.warriors().size;
-  let neededWarriors = 0;
-
-  for (const fight of sorted) {
-    neededWarriors += fight.ask();
-  }
-
-  const extra = Math.max(Math.ceil((remainingWarriors - neededWarriors) / sorted.length), 0);
-  for (const fight of sorted) {
-    // TODO: Deploy troops based on DPS rather than number of units
-    if (remainingWarriors > 0) {
-      remainingWarriors -= fight.use(remainingWarriors, extra);
-    } else {
-      fight.use(0);
+  if (rallyFight && (idleFighters > 0)) {
+    for (let i = 0; i < idleFighters; i++) {
+      new Fighter(rallyFight);
     }
   }
-}
-
-function getFightApproach(zone) {
-  let corridor = zone;
-  let rally = zone;
-
-  if (zone.isCorridor) {
-    for (const neighbor of zone.zones) {
-      if ((neighbor.deployment < FIGHT) && (neighbor.tier.level <= zone.tier.level)) {
-        rally = neighbor;
-      }
-    }
-  } else {
-    for (const one of zone.corridors) {
-      for (const neighbor of one.zones) {
-        if ((neighbor.deployment < FIGHT) && (neighbor.tier.level < zone.tier.level)) {
-          corridor = one;
-          rally = neighbor;
-        }
-      }
-    }
-  }
-
-  return { corridor, rally };
 }
 
 function createPylonJob() {
@@ -443,10 +609,18 @@ function createPylonJob() {
 
 function orderMove(warrior, pos) {
   if (!warrior || !warrior.order || !pos) return;
-  if (isCloseTo(warrior.body, pos)) return;
+  if (!warrior.order.abilityId && isCloseTo(warrior.body, pos)) return;
 
   if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isSamePosition(warrior.order.targetWorldSpacePos, pos)) {
     new Order(warrior, 16, pos);
+  }
+}
+
+function orderStop(warrior) {
+  if (!warrior) return;
+
+  if (warrior.order.abilityId) {
+    new Order(warrior, 3665).accept(true);
   }
 }
 

@@ -119,9 +119,18 @@ function findCandidate(profile, priority) {
   }
 
   if (profile.type.isWarrior) {
+    // First, try to find a warrior without a job
     for (const unit of Units.warriors().values()) {
-      if (profile.type.name && (unit.type !== profile.type)) continue;
       if (unit.job) continue;
+      if (profile.type.name && (unit.type !== profile.type)) continue;
+
+      return unit;
+    }
+
+    // Second, try to find a warrior with non-committed job
+    for (const unit of Units.warriors().values()) {
+      if (unit.job && (unit.job.isCommitted || (unit.job.priority >= priority))) continue;
+      if (profile.type.name && (unit.type !== profile.type)) continue;
 
       return unit;
     }

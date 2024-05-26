@@ -24,22 +24,22 @@ export default class Zone extends Pin {
     if (this === unit.zone) return;
 
     if (unit.isEnemy) {
+      const previous = knownThreats.get(unit.tag);
+
+      if (previous && previous.zone) {
+        previous.zone.enemies.delete(previous);
+        previous.zone.threats.delete(previous);
+      }
+
       if (unit.zone) {
         unit.zone.enemies.delete(unit);
         unit.zone.threats.delete(unit);
-      } else {
-        const previous = knownThreats.get(unit.tag);
-
-        if (previous && previous.zone) {
-          previous.zone.enemies.delete(previous);
-          previous.zone.threats.delete(previous);
-        }
-
-        knownThreats.set(unit.tag, unit);
       }
 
       this.enemies.add(unit);
       this.threats.add(unit);
+
+      knownThreats.set(unit.tag, unit);
     } else if (unit.type.isWarrior && !unit.type.isWorker) {
       if (unit.zone) unit.zone.warriors.delete(unit);
 

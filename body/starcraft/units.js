@@ -123,6 +123,10 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
     units.set(unit.tag, image);
   }
 
+  if (image.type.id !== unit.unitType) {
+    image.type = Types.unit(unit.unitType);
+  }
+
   image.isAlive = true;
   image.lastSeen = Resources.loop;
   image.buildProgress = unit.buildProgress;

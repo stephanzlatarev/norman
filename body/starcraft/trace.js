@@ -38,11 +38,30 @@ export default class Trace {
 
     await client.debug({ debug: [{ draw: { lines: lines, spheres: spheres, text: texts } }] });
 
-    if (Trace.speed >= 10) {
-      await new Promise(resolve => setTimeout(resolve, Trace.speed));
+    const selection = getSelectedUnit();
+    if (selection || (Trace.speed >= 10)) {
+      await new Promise(resolve => setTimeout(resolve, selection ? 1000 : Trace.speed));
+      if (selection.job && selection.job.fight) selection.job.fight.trace = true;
     }
   }
 
+}
+
+let selection = null;
+function getSelectedUnit() {
+  if (selection && selection.isSelected) return selection;
+
+  for (const unit of Units.warriors().values()) {
+    if (unit.isSelected) {
+      selection = unit;
+      return selection;
+    }
+  }
+
+  if (selection) {
+    if (selection.job && selection.job.fight) selection.job.fight.trace = false;
+    selection = null;
+  }
 }
 
 async function traceZones(texts, lines) {
@@ -108,7 +127,7 @@ async function traceWarriorActions(texts) {
     const body = warrior.body;
     const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) - 0.2 };
 
-    texts.push({ text: "Order: " + warrior.order.abilityId, worldPos: tag, size: 16 });
+    texts.push({ text: "Zone: " + warrior.zone.name + " " + warrior.zone.traceName + " Order: " + warrior.order.abilityId, worldPos: tag, size: 16 });
   }
 }
 
@@ -118,6 +137,7 @@ async function traceThreats(texts, spheres) {
       const body = enemy.body;
 
       texts.push({ text: enemy.tag, worldPos: { x: body.x, y: body.y, z: body.z + body.r }, size: 16 });
+      texts.push({ text: "Zone: " + enemy.zone.name + " " + enemy.zone.traceName, worldPos: { x: body.x, y: body.y, z: body.z + body.r - 0.2 }, size: 16 });
       spheres.push({ p: { x: body.x, y: body.y, z: body.z }, r: body.r, color: Color.Enemy });
     }
   } 
@@ -169,14 +189,10 @@ async function traceDeployments(texts) {
 
     texts.push({ text: "Fights:", virtualPos: { x: 0.8, y: y }, size: 16 });
     for (const zone of fights) {
-      const text = [zone.traceName, "units:", zone.warriors.size, "vs", zone.threats.size];
+      const text = [zone.name, zone.traceName];
 
-      if (zone.fight) {
-        let assigned = 0;
-        for (const job of zone.fight.jobs) {
-          if (job.assignee) assigned++;
-        }
-        text.push("jobs:", assigned, "/", zone.fight.jobs.length);
+      if (zone.fight && zone.fight.balance) {
+        text.push("balance:", zone.fight.balance.toFixed(2));
       }
 
       y += 0.01;
