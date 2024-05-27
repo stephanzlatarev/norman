@@ -167,53 +167,60 @@ function traceThreats(texts, spheres) {
   } 
 }
 
+let deployments;
 function traceDeployments(texts) {
   const fights = [];
-  const codeA = "A".charCodeAt(0);
-  const code0 = "0".charCodeAt(0);
 
   texts.push({ text: "Troop deployment:", virtualPos: { x: 0.8, y: 0.05 }, size: 16 });
 
-  for (const zone of Zone.list()) {
-    if (zone.isCorridor) {
-      const corridor = zone;
+  if (!deployments) {
+    let left = Infinity;
+    let right = 0;
+    let top = Infinity;
+    let bottom = 0;
 
-      if (corridor.deployment === 4) {
-        const neighbora = corridor.zones[0];
-        const neighborb = corridor.zones[1];
-
-        zone.traceName = (neighbora.tier.level < neighborb.tier.level) ? neighbora.name + "->" + neighborb.name : neighborb.name + "->" + neighbora.name;
-        fights.push(zone);
-      }
-    } else {
-      const x = 0.8 + (zone.name.charCodeAt(0) - codeA) * 0.01;
-      const y = 0.05 + (10 - zone.name.charCodeAt(1) + code0) * 0.01;
-  
-      let color = Color.Unknown;
-      if (zone.deployment === 1) {
-        color = Color.Perimeter;
-      } else if (zone.deployment === 2) {
-        color = Color.Patrol;
-      } else if (zone.deployment === 4) {
-        color = Color.Fight;
-
-        zone.traceName = "  " + zone.name + "  ";
-        fights.push(zone);
-      } else if (zone.deployment === 5) {
-        color = Color.Threat;
-      }
-  
-      texts.push({ text: zone.name, virtualPos: { x: x, y: y }, size: 16, color: color });
+    for (const zone of Zone.list()) {
+      left = Math.min(left, zone.x);
+      right = Math.max(right, zone.x);
+      top = Math.min(top, zone.y);
+      bottom = Math.max(bottom, zone.y);
     }
+
+    const width = right - left;
+    const height = bottom - top;
+    const scaleX = (width > height) ? 1 : width / height;
+    const scaleY = (height > width) ? 1 : height / width;
+
+    deployments = { left, width, scaleX, bottom, height, scaleY };
+  }
+
+  for (const zone of Zone.list()) {
+    const x = 0.75 + ((zone.x - deployments.left) / deployments.width) * deployments.scaleX * 0.2;
+    const y = 0.07 + ((deployments.bottom - zone.y) / deployments.height) * deployments.scaleY * 0.2;
+
+    let color = Color.Unknown;
+    if (zone.deployment === 1) {
+      color = Color.Perimeter;
+    } else if (zone.deployment === 2) {
+      color = Color.Patrol;
+    } else if (zone.deployment === 4) {
+      color = Color.Fight;
+
+      fights.push(zone);
+    } else if (zone.deployment === 5) {
+      color = Color.Threat;
+    }
+
+    texts.push({ text: zone.isCorridor ? zone.name[2] : zone.name[0] + zone.name[1], virtualPos: { x: x, y: y }, size: 16, color: color });
   }
 
   if (fights.length) {
-    let y = 0.17;
+    let y = 0.1 + deployments.scaleY * 0.2;
     fights.sort((a, b) => (a.tier.level - b.tier.level));
 
-    texts.push({ text: "Fights:", virtualPos: { x: 0.8, y: y }, size: 16 });
+    texts.push({ text: "Battles:", virtualPos: { x: 0.8, y: y }, size: 16 });
     for (const zone of fights) {
-      const text = [zone.name, zone.traceName];
+      const text = [zone.name];
 
       if (zone.fight && zone.fight.balance) {
         text.push("balance:", zone.fight.balance.toFixed(2));
