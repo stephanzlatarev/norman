@@ -13,6 +13,8 @@ export default class Build extends Job {
 
   constructor(building, target) {
     super("Worker", building.name ? building : Types.unit(building), target);
+
+    this.summary = this.constructor.name + " " + (building.name ? building.name : building);
   }
 
   execute() {

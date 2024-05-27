@@ -9,8 +9,14 @@ export default class Job extends Memory {
   // A short description of the job
   summary;
 
+  // A more detailed description of the job
+  details;
+
   // Priority is a non-negative number. The higher the number, the higher the priority of the job
   priority;
+
+  // A zone where the job will be executed
+  zone;
 
   // A unit or a profile of a unit that can do the job
   agent;
@@ -46,7 +52,8 @@ export default class Job extends Memory {
     this.output = output;
     this.target = target;
 
-    this.summary = getSummary(this);
+    this.summary = this.constructor.name;
+    this.details = getDetails(this);
     this.priority = getPriority(output);
 
     jobs.add(this);
@@ -56,11 +63,11 @@ export default class Job extends Memory {
   assign(unit) {
     if (unit) {
       if (unit.job) {
-        console.log("Unit", unit.type.name, unit.nick, "re-assigned from job", unit.job.summary, "to job", this.summary);
+        console.log("Unit", unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details);
 
         unit.job.assignee = null;
       } else {
-        console.log("Unit", unit.type.name, unit.nick, "assigned to job", this.summary);
+        console.log("Unit", unit.type.name, unit.nick, "assigned to job", this.details);
       }
 
       unit.job = this;
@@ -89,7 +96,7 @@ export default class Job extends Memory {
     this.isFailed = !outcome;
 
     if (this.assignee && (this.assignee.job === this)) {
-      console.log("Unit", this.assignee.type.name, this.assignee.nick, "released from job", this.summary);
+      console.log("Unit", this.assignee.type.name, this.assignee.nick, "released from job", this.details);
 
       this.assignee.job = null;
     }
@@ -111,24 +118,24 @@ function getAgent(agent) {
   return { type: agent.name ? agent : Types.unit(agent) };
 }
 
-function getSummary(job) {
-  const summary = [job.constructor.name];
+function getDetails(job) {
+  const details = [job.constructor.name];
 
   if (job.output) {
-    summary.push(job.output.name);
+    details.push(job.output.name);
   }
 
   if (job.target) {
     if (job.target.nick && job.target.type) {
-      summary.push(job.target.type.name);
-      summary.push(job.target.nick);
+      details.push(job.target.type.name);
+      details.push(job.target.nick);
     } else if (job.target.x && job.target.y) {
-      summary.push(job.target.x.toFixed(1));
-      summary.push(job.target.y.toFixed(1));
+      details.push(job.target.x.toFixed(1));
+      details.push(job.target.y.toFixed(1));
     }
   }
 
-  return summary.join(" ");
+  return details.join(" ");
 }
 
 function getPriority(type) {

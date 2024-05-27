@@ -5,6 +5,8 @@ export default class Produce extends Job {
 
   constructor(facility, output) {
     super(facility, output);
+
+    this.summary = this.constructor.name + " " + output.name;
   }
 
   execute() {

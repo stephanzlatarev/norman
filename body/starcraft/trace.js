@@ -30,11 +30,11 @@ export default class Trace {
     const spheres = [];
     const texts = [];
 
-    await traceZones(texts, lines);
-    await traceJobs(texts, lines);
-    await traceWarriorActions(texts);
-    await traceThreats(texts, spheres);
-    await traceDeployments(texts);
+    traceZones(texts, lines);
+    traceJobs(texts, lines);
+    traceWarriorActions(texts);
+    traceThreats(texts, spheres);
+    traceDeployments(texts);
 
     await client.debug({ debug: [{ draw: { lines: lines, spheres: spheres, text: texts } }] });
 
@@ -64,7 +64,7 @@ function getSelectedUnit() {
   }
 }
 
-async function traceZones(texts, lines) {
+function traceZones(texts, lines) {
   for (const zone of Zone.list()) {
     for (const corridor of zone.corridors) {
       const point = { x: zone.x, y: zone.y, z: 15 };
@@ -76,53 +76,75 @@ async function traceZones(texts, lines) {
   }
 }
 
-async function traceJobs(texts, lines) {
-  const jobs = [...Job.list()].sort((a, b) => (b.priority - a.priority));
-  let pending = 0;
-  let total = 0;
-  let groupY = 0.06;
+function traceJobs(texts, lines) {
+  const jobs = [...Job.list()];
+  const started = jobs.filter(job => !!job.assignee).sort((a, b) => (b.priority - a.priority));
+  const pending = jobs.filter(job => !job.assignee).sort((a, b) => (b.priority - a.priority));
+
+  texts.push({ text: "    Prio Zone", virtualPos: { x: 0.05, y: 0.05 }, size: 16 });
+  const divider = displayJobList(texts, started, 0.06);
+
+  texts.push({ text: "--- ---- ----", virtualPos: { x: 0.05, y: divider }, size: 16 });
+  displayJobList(texts, pending, divider + 0.01);
+
+  for (const job of started) {
+    const body = job.assignee.body;
+    const center = { x: body.x, y: body.y, z: body.z };
+    const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) };
+
+    lines.push({ line: { p0: center, p1: tag } });
+    texts.push({ text: job.details, worldPos: tag, size: 16 });
+  }
+}
+
+function displayJobList(texts, jobs, y) {
+  let groupY = y;
   let groupText;
   let groupCount;
 
   for (const job of jobs) {
-    if (job.assignee) {
-      const body = job.assignee.body;
-      const center = { x: body.x, y: body.y, z: body.z };
-      const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) };
+    const text = threeletter(" ", job.priority) + (job.zone ? threeletter("  ", job.zone.name) : "     ") + "  " + job.summary;
 
-      lines.push({ line: { p0: center, p1: tag } });
-      texts.push({ text: job.priority + " " + job.summary, worldPos: tag, size: 16 });
-    } else {
-      const text = job.priority + " " + job.summary;
-
-      if (text !== groupText) {
-        if (groupCount) {
-          const multiplier = (groupCount > 1) ? " (x" + groupCount + ")": "";
-          texts.push({ text: groupText + multiplier, virtualPos: { x: 0.05, y: groupY }, size: 16 });
-        }
-
-        groupY += 0.01;
-        groupText = text;
-        groupCount = 1;
-      } else {
-        groupCount++;
+    if (text !== groupText) {
+      if (groupCount) {
+        texts.push({ text: threeletter("", groupCount) + groupText, virtualPos: { x: 0.05, y: groupY }, size: 16 });
       }
 
-      pending++;
+      groupY += 0.01;
+      groupText = text;
+      groupCount = 1;
+    } else {
+      groupCount++;
     }
-
-    total++;
   }
-
-  texts.push({ text: "Pendings jobs: " + pending + "/" + total, virtualPos: { x: 0.05, y: 0.05 }, size: 16 });
 
   if (groupCount) {
-    const multiplier = (groupCount > 1) ? " (x" + groupCount + ")": "";
-    texts.push({ text: groupText + multiplier, virtualPos: { x: 0.05, y: groupY }, size: 16 });
+    texts.push({ text: threeletter("", groupCount) + groupText, virtualPos: { x: 0.05, y: groupY }, size: 16 });
+    groupY += 0.01;
   }
+
+  return groupY;
 }
 
-async function traceWarriorActions(texts) {
+function threeletter(tab, text) {
+  if (!text) return tab + "  -";
+
+  if (text >= 0) {
+    if (text > 999) return tab + "999";
+    if (text > 99) return tab + text;
+    if (text > 9) return tab + " " + text;
+    return tab + "  " + text;
+  } else if (text.length > 0) {
+    if (text.length > 3) return tab + text.slice(0, 3);
+    if (text.length === 3) return tab + text;
+    if (text.length === 2) return tab + " " + text;
+    return tab + "  " + text;
+  }
+
+  return tab + " X ";
+}
+
+function traceWarriorActions(texts) {
   for (const warrior of Units.warriors().values()) {
     const body = warrior.body;
     const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) - 0.2 };
@@ -131,19 +153,19 @@ async function traceWarriorActions(texts) {
   }
 }
 
-async function traceThreats(texts, spheres) {
+function traceThreats(texts, spheres) {
   for (const zone of Zone.list()) {
     for (const enemy of zone.threats) {
       const body = enemy.body;
 
-      texts.push({ text: enemy.tag, worldPos: { x: body.x, y: body.y, z: body.z + body.r }, size: 16 });
+      texts.push({ text: enemy.type.name + " " + enemy.tag, worldPos: { x: body.x, y: body.y, z: body.z + body.r }, size: 16 });
       texts.push({ text: "Zone: " + enemy.zone.name + " " + enemy.zone.traceName, worldPos: { x: body.x, y: body.y, z: body.z + body.r - 0.2 }, size: 16 });
       spheres.push({ p: { x: body.x, y: body.y, z: body.z }, r: body.r, color: Color.Enemy });
     }
   } 
 }
 
-async function traceDeployments(texts) {
+function traceDeployments(texts) {
   const fights = [];
   const codeA = "A".charCodeAt(0);
   const code0 = "0".charCodeAt(0);
@@ -223,7 +245,7 @@ function trackSpeed(unit) {
       s: unit.body.s,
     }
 
-    console.log(unit.job ? unit.job.summary : "free",
+    console.log(unit.job ? unit.job.details : "free",
       "\tdirection:", unit.direction.toFixed(1),
       "\tspeed:", unit.body.s.toFixed(2),
       "\tacceleration:", unit.body.a.toFixed(2),

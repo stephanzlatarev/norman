@@ -39,7 +39,6 @@ class Guard extends Job {
   constructor(zone, priority) {
     super("Stalker");
 
-    this.summary = "Guard " + zone.name;
     this.priority = priority;
     this.zone = zone;
     this.retreat = retreat.get(this.zone);
@@ -79,7 +78,6 @@ const REQUEST_FIGHTER_STRENGTH = REQUEST_FIGHTER_DPS * REQUEST_FIGHTER_HEALTH;
 class Fight {
 
   constructor(priority, zone) {
-    this.summary = "Fight " + zone.name;
     this.priority = priority;
     this.zone = zone;
 
@@ -220,8 +218,9 @@ class Detector extends Job {
   constructor(fight) {
     super("Observer");
 
-    this.summary = "Detect " + fight.zone.name;
     this.priority = fight.priority;
+    this.zone = fight.zone;
+
     this.fight = fight;
     this.shield = 0;
 
@@ -289,10 +288,10 @@ class Fighter extends Job {
   constructor(fight) {
     super("Warrior");
 
-    this.fight = fight;
-    this.summary = fight.summary;
     this.priority = fight.priority - 1;
     this.zone = fight.zone;
+
+    this.fight = fight;
     this.isCommitted = false;
     this.isInRallyMove = false;
 

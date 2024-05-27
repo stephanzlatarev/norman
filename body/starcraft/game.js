@@ -84,7 +84,7 @@ export default class Game {
 
         for (const job of Job.list()) {
           if (job.assignee && !job.assignee.isAlive) {
-            console.log("Unit", job.assignee.type.name, job.assignee.nick, "died on job", job.summary);
+            console.log("Unit", job.assignee.type.name, job.assignee.nick, "died on job", job.details);
             job.close(false);
           }
         }
@@ -103,7 +103,7 @@ export default class Game {
 
         for (const job of Job.list()) {
           if (job.order && job.order.isAccepted && job.assignee && !job.assignee.order.abilityId) {
-            console.log("WARNING! Unit", job.assignee.type.name, job.assignee.nick, "idle on job", job.summary);
+            console.log("WARNING! Unit", job.assignee.type.name, job.assignee.nick, "idle on job", job.details);
             job.close(false);
           }
         }

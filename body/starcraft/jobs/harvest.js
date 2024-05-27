@@ -35,6 +35,8 @@ export default class Harvest extends Job {
       this.isSpeedMining = false;
       this.priority = 0;
     }
+
+    this.summary = this.constructor.name + " " + (resource.type.isMinerals ? "minerals" : "vespene");
   }
 
   execute() {

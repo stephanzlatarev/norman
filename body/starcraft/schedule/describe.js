@@ -46,7 +46,7 @@ function describeJob(job, index) {
     statusJob(job),
     describeAssignee(job.assignee),
     statusOrder(job.order),
-    job.summary,
+    job.details,
   ].join("\t");
 }
 
