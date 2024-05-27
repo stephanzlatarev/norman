@@ -5,6 +5,10 @@ export default class Transfer extends Job {
 
   constructor(fromDepot, toDepot) {
     super({ type: { isWorker: true }, depot: fromDepot }, null, toDepot);
+
+    this.priority = 50;
+    this.zone = toDepot;
+    this.details = this.constructor.name + " " + fromDepot.name + " to " + toDepot.name;
   }
 
   execute() {

@@ -147,9 +147,10 @@ function threeletter(tab, text) {
 function traceWarriorActions(texts) {
   for (const warrior of Units.warriors().values()) {
     const body = warrior.body;
-    const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) - 0.2 };
+    const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) };
 
-    texts.push({ text: "Zone: " + warrior.zone.name + " " + warrior.zone.traceName + " Order: " + warrior.order.abilityId, worldPos: tag, size: 16 });
+    texts.push({ text: "Zone: " + warrior.zone.name + " " + Math.floor(warrior.body.x) + ":" + Math.floor(warrior.body.y), worldPos: { ...tag, z: tag.z - 0.22 }, size: 16 });
+    texts.push({ text: "Order: " + warrior.order.abilityId, worldPos: { ...tag, z: tag.z - 0.44 }, size: 16 });
   }
 }
 
@@ -157,9 +158,10 @@ function traceThreats(texts, spheres) {
   for (const zone of Zone.list()) {
     for (const enemy of zone.threats) {
       const body = enemy.body;
+      const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) };
 
-      texts.push({ text: enemy.type.name + " " + enemy.tag, worldPos: { x: body.x, y: body.y, z: body.z + body.r }, size: 16 });
-      texts.push({ text: "Zone: " + enemy.zone.name + " " + enemy.zone.traceName, worldPos: { x: body.x, y: body.y, z: body.z + body.r - 0.2 }, size: 16 });
+      texts.push({ text: enemy.type.name + " " + enemy.tag, worldPos: tag, size: 16 });
+      texts.push({ text: "Zone: " + enemy.zone.name + " " + Math.floor(enemy.body.x) + ":" + Math.floor(enemy.body.y), worldPos: { ...tag, z: tag.z - 0.22 }, size: 16 });
       spheres.push({ p: { x: body.x, y: body.y, z: body.z }, r: body.r, color: Color.Enemy });
     }
   } 
