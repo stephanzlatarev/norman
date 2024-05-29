@@ -1,8 +1,5 @@
 import Zone from "./zone.js";
 
-const DEPOT_MINERAL_DISTANCE = { left: 6, top: 5.5, right: 7, bottom: 6.5 };
-const DEPOT_VESPENE_DISTANCE = { left: 6.5, top: 6.5, right: 7.5, bottom: 7.5 };
-
 const depots = [];
 
 export default class Depot extends Zone {
@@ -21,14 +18,21 @@ export default class Depot extends Zone {
   // Is staturated when enough workers are assigned to this depot
   isSaturated = false;
 
-  constructor(location, rally, minerals, vespene) {
-    super(location.x, location.y, location.margin);
+  constructor(cell, resources) {
+    super(cell.x + 0.5, cell.y + 0.5, cell.margin);
 
-    this.harvestRally = rally;
-    this.exitRally = rally ? { x: location.x + location.x - rally.x, y: location.y + location.y - rally.y } : null;
+    for (const resource of resources) {
+      const dx = resource.body.x - cell.x;
+      const dy = resource.body.y - cell.y;
 
-    this.minerals = minerals.sort((a, b) => (a.d - b.d));
-    this.vespene = vespene.sort((a, b) => (a.d - b.d));
+      resource.d = Math.sqrt(dx * dx + dy * dy);
+    }
+
+    this.minerals = resources.filter(resource => resource.type.isMinerals).sort((a, b) => (a.d - b.d));
+    this.vespene = resources.filter(resource => resource.type.isVespene).sort((a, b) => (a.d - b.d));
+
+    this.harvestRally = findRally(cell, this.minerals);
+    this.exitRally = { x: this.x + this.x - this.harvestRally.x, y: this.y + this.y - this.harvestRally.y };
 
     depots.push(this);
   }
@@ -65,135 +69,118 @@ export default class Depot extends Zone {
 
 }
 
-export function createDepots(board, resources, base) {
-  const resourceset = new Set(resources);
+function findRally(cell, resources) {
+  let sumx = 0;
+  let sumy = 0;
 
-  for (const area of board.areas) {
-    const cluster = findResourceCluster(area, resourceset);
-
-    if (!cluster) continue;
-
-    // Calculate distance to depot for each resource in the cluster
-    for (const resource of cluster.resources) {
-      const dx = resource.body.x - cluster.depot.x;
-      const dy = resource.body.y - cluster.depot.y;
-
-      resource.d = Math.sqrt(dx * dx + dy * dy);
-    }
-
-    const minerals = cluster.resources.filter(resource => resource.type.isMinerals);
-    const vespene = cluster.resources.filter(resource => resource.type.isVespene);
-
-    area.zone = new Depot(cluster.depot, cluster.harvest, minerals, vespene);
-
-    if ((base.body.x === cluster.depot.x) && (base.body.y === cluster.depot.y)) {
-      base.depot = area.zone;
-    }
+  for (const one of resources) {
+    sumx += one.body.x;
+    sumy += one.body.y;
   }
+
+  const dx = Math.sign(Math.floor(sumx / resources.length) - cell.x);
+  const dy = Math.sign(Math.floor(sumy / resources.length) - cell.y);
+
+  return { x: cell.x + dx * 3 + 0.5, y: cell.y + dy * 3 + 0.5 };
 }
 
-function findResourceCluster(area, resources) {
-  const cluster = {
-    boundary: { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity },
-    depot: { x: area.center.x, y: area.center.y },
-    harvest: { x: area.center.x, y: area.center.y },
-    resources: [],
-  };
+export function createDepots(board, resources, base) {
+  const coordinates = new Map();
+  const covered = new Set();
 
   for (const resource of resources) {
-    if (resource.cell.area === area) {
-      addResourceToCluster(resource, cluster, resources);
+    populateDepotCoordinates(coordinates, resource);
+  }
+
+  const candidates = [...coordinates.keys()].filter(a => (coordinates.get(a).length > 5)).sort((a, b) => (coordinates.get(b).length - coordinates.get(a).length));
+
+  for (const one of candidates) {
+    const resources = coordinates.get(one);
+
+    if (resources.find(resource => !!covered.has(resource))) continue;
+
+    const cell = getCellAtCoordinatesKey(board, one);
+
+    if (cell.margin >= 3) {
+      const depot = new Depot(cell, resources);
+
+      cell.area.zone = depot;
+
+      for (const resource of resources) {
+        covered.add(resource);
+      }
+
+      if ((base.body.x === depot.x) && (base.body.y === depot.y)) {
+        base.depot = depot;
+        depot.isActive = true;
+      }
+
+      for (let x = cell.x - 5; x <= cell.x + 5; x++) {
+        for (let y = cell.y - 5; y <= cell.y + 5; y++) {
+          const plot = board.cells[y][x];
+
+          if (plot.isPath && (plot.area !== cell.area)) {
+            if (plot.area) plot.area.cells.delete(plot);
+            cell.area.cells.add(plot);
+            plot.area = cell.area;
+          }
+        }
+      }
     }
   }
 
-  if (cluster.resources.length) {
-    return positionDepot(cluster);
+}
+
+function populateDepotCoordinates(coordinates, resource) {
+  const list = [];
+
+  if (resource.type.isMinerals) {
+    for (let x = resource.body.x - 6; x <= resource.body.x + 4; x++) {
+      list.push(getCoordinatesKey(x, resource.body.y - 7));
+      list.push(getCoordinatesKey(x, resource.body.y - 6));
+      list.push(getCoordinatesKey(x, resource.body.y + 6));
+      list.push(getCoordinatesKey(x, resource.body.y + 7));
+    }
+    for (let y = resource.body.y - 5; y <= resource.body.y + 5; y++) {
+      list.push(getCoordinatesKey(resource.body.x - 8, y));
+      list.push(getCoordinatesKey(resource.body.x - 7, y));
+      list.push(getCoordinatesKey(resource.body.x + 6, y));
+      list.push(getCoordinatesKey(resource.body.x + 7, y));
+    }
+    list.push(getCoordinatesKey(resource.body.x - 6, resource.body.y - 5));
+    list.push(getCoordinatesKey(resource.body.x - 6, resource.body.y + 5));
+    list.push(getCoordinatesKey(resource.body.x + 5, resource.body.y - 5));
+    list.push(getCoordinatesKey(resource.body.x + 5, resource.body.y + 5));
+  } else {
+    for (let x = resource.body.x - 7; x <= resource.body.x + 7; x++) {
+      list.push(getCoordinatesKey(x, resource.body.y - 7));
+      list.push(getCoordinatesKey(x, resource.body.y + 7));
+    }
+    for (let y = resource.body.y - 6; y <= resource.body.y + 6; y++) {
+      list.push(getCoordinatesKey(resource.body.x - 7, y));
+      list.push(getCoordinatesKey(resource.body.x + 7, y));
+    }
+  }
+
+  for (const one of list) {
+    let resources = coordinates.get(one);
+
+    if (!resources) {
+      resources = [];
+      coordinates.set(one, resources);
+    }
+
+    resources.push(resource);
   }
 }
 
-function addResourceToCluster(resource, cluster, resources) {
-  const b = cluster.boundary;
-  const r = resource.body;
-
-  b.left = Math.min(b.left, r.x);
-  b.top = Math.min(b.top, r.y);
-  b.right = Math.max(b.right, r.x);
-  b.bottom = Math.max(b.bottom, r.y);
-
-  cluster.resources.push(resource);
-  resources.delete(resource);
+function getCoordinatesKey(x, y) {
+  return Math.floor(x) * 1000 + Math.floor(y);
 }
 
-function positionDepot(cluster) {
-  const clusterCenterX = (cluster.boundary.left + cluster.boundary.right) / 2;
-  const clusterCenterY = (cluster.boundary.top + cluster.boundary.bottom) / 2;
+function getCellAtCoordinatesKey(board, key) {
+  const x = Math.floor(key / 1000);
+  const y = Math.floor(key - x * 1000);
 
-  let xs = new Map();
-  let ys = new Map();
-
-  for (const resource of cluster.resources) {
-    const distance = resource.type.isMinerals ? DEPOT_MINERAL_DISTANCE : DEPOT_VESPENE_DISTANCE;
-    const body = resource.body;
-
-    if (body.x < clusterCenterX) {
-      inc(xs, body.x + distance.right);
-    } else {
-      inc(xs, body.x - distance.left);
-    }
-
-    if (body.y < clusterCenterY) {
-      inc(ys, body.y + distance.bottom);
-    } else {
-      inc(ys, body.y - distance.top);
-    }
-  }
-
-  const depotX = most(xs);
-  const depotY = most(ys);
-
-  let dx = 0;
-  let dy = 0;
-
-  for (const resource of cluster.resources) {
-    const body = resource.body;
-
-    if (body.x < depotX) {
-      dx--;
-    } else {
-      dx++;
-    }
-
-    if (body.y < depotY) {
-      dy--;
-    } else {
-      dy++;
-    }
-  }
-
-  cluster.depot.x = depotX - 0.5;
-  cluster.depot.y = depotY - 0.5;
-  cluster.harvest.x = cluster.depot.x + 3 * Math.sign(dx);
-  cluster.harvest.y = cluster.depot.y + 3 * Math.sign(dy);
-
-  return cluster;
-}
-
-function inc(map, key) {
-  const value = map.get(key);
-
-  map.set(key, value ? value + 1 : 1);
-}
-
-function most(map) {
-  let mostValue = 0;
-  let mostCount = 0;
-
-  for (const [value, count] of map) {
-    if (count > mostCount) {
-      mostValue = value;
-      mostCount = count;
-    }
-  }
-
-  return mostValue;
+  return board.cells[y][x];
 }

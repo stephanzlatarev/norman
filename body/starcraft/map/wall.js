@@ -41,30 +41,23 @@ export default class Wall extends Corridor {
 }
 
 // TODO: Move this function to Corridor to wall the given corridor
-export function createWalls(board, base) {
-  // There must be exactly one corridor out of the base, leading to the natural
-  if (TRACE) console.log("base:", !!base.depot);
-  if (!base.depot || !base.depot.corridors || (base.depot.corridors.length !== 1)) return;
+export function createWalls(board, tiers) {
+  if (TRACE) console.log("tiers:", tiers ? tiers.length : "not found!");
+  if (!tiers || !tiers.length) return;
 
-  const corridorToNatural = base.depot.corridors[0];
+  const natural = findNaturalExpansion(tiers);
 
-  // The corridor to the natural must connect exactly two zones, leading to the natural
-  if (TRACE) console.log("corridor to natural:", !!corridorToNatural);
-  if (!corridorToNatural || !corridorToNatural.zones || (corridorToNatural.zones.length !== 2)) return;
+  if (TRACE) console.log("natural:", natural ? natural.name : "not found!");
+  if (!natural) return;
 
-  const natural = corridorToNatural.zones.find(zone => (zone !== base.depot));
+  const corridorToWall = findCorridorToWall(natural);
 
-  // There must be exactly two corridors out of the natural, one from the natural and one to be walled
-  if (TRACE) console.log("natural:", !!natural);
-  if (!natural || !natural.corridors || (natural.corridors.length !== 2)) return;
-
-  const corridorToWall = natural.corridors.find(corridor => (corridor !== corridorToNatural));
-
-  if (TRACE) console.log("corridor to wall:", !!corridorToWall);
+  if (TRACE) console.log("corridor to wall:", corridorToWall ? corridorToWall.name : "not found!");
   if (!corridorToWall) return;
 
-  const grid = createGrid(board, corridorToWall);
-  const direction = calculateDirection(natural, corridorToWall);
+  const center = { x: Math.floor(corridorToWall.x), y: Math.floor(corridorToWall.y) };
+  const grid = createGrid(board, center);
+  const direction = calculateDirection(natural, center);
 
   if (TRACE) showGrid(grid);
 
@@ -83,29 +76,76 @@ export function createWalls(board, base) {
   const blueprint = createBlueprint(grid, split.left, split.right, direction);
 
   if (blueprint) {
-    setBlueprintToCorridor(board, corridorToWall, blueprint);
+    setBlueprintToCorridor(board, corridorToWall, center, blueprint);
   } else {
     console.log("WARNING! Unable to create wall blueprint!");
   }
 }
 
-function setBlueprintToCorridor(board, corridor, blueprint) {
-  blueprint.left.x += corridor.x - SPAN + 0.5;
-  blueprint.left.y += corridor.y - SPAN + 0.5;
-  blueprint.center.x += corridor.x - SPAN + 0.5;
-  blueprint.center.y += corridor.y - SPAN + 0.5;
-  blueprint.right.x += corridor.x - SPAN + 0.5;
-  blueprint.right.y += corridor.y - SPAN + 0.5;
+function findNaturalExpansion(tiers) {
+  for (let i = 1; i < tiers.length; i++) {
+    const tier = tiers[i];
+    let expansion;
 
-  blueprint.pylon.x += corridor.x - SPAN;
-  blueprint.pylon.y += corridor.y - SPAN;
-  blueprint.battery.x += corridor.x - SPAN;
-  blueprint.battery.y += corridor.y - SPAN;
+    for (const zone of tier.zones) {
+      if (!zone.isDepot) continue;
 
-  blueprint.choke.x += corridor.x - SPAN + 0.5;
-  blueprint.choke.y += corridor.y - SPAN + 0.5;
-  blueprint.rally.x += corridor.x - SPAN + 0.5;
-  blueprint.rally.y += corridor.y - SPAN + 0.5;
+      if (!expansion) {
+        expansion = zone;
+      } else {
+        // At least two depots are found in this tier. There's no single expansion
+        return;
+      }
+    }
+
+    if (expansion) {
+      return expansion;
+    }
+  }
+}
+
+function findCorridorToWall(natural) {
+  const level = natural.tier.level + 1;
+
+  let exit;
+
+  for (const corridor of natural.tier.fore) {
+    for (const closeZone of corridor.zones) {
+      for (const farCorridor of closeZone.corridors) {
+        for (const zone of farCorridor.zones) {
+          if (zone.tier.level <= level) continue;
+
+          if (!exit || (exit === corridor)) {
+            exit = corridor;
+          } else {
+            // At least two corridors lead to the next tier zones. There's no single corridor to wall
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  return exit;
+}
+
+function setBlueprintToCorridor(board, corridor, center, blueprint) {
+  blueprint.left.x += center.x - SPAN + 0.5;
+  blueprint.left.y += center.y - SPAN + 0.5;
+  blueprint.center.x += center.x - SPAN + 0.5;
+  blueprint.center.y += center.y - SPAN + 0.5;
+  blueprint.right.x += center.x - SPAN + 0.5;
+  blueprint.right.y += center.y - SPAN + 0.5;
+
+  blueprint.pylon.x += center.x - SPAN;
+  blueprint.pylon.y += center.y - SPAN;
+  blueprint.battery.x += center.x - SPAN;
+  blueprint.battery.y += center.y - SPAN;
+
+  blueprint.choke.x += center.x - SPAN + 0.5;
+  blueprint.choke.y += center.y - SPAN + 0.5;
+  blueprint.rally.x += center.x - SPAN + 0.5;
+  blueprint.rally.y += center.y - SPAN + 0.5;
 
   const wall = new Wall(blueprint.rally.x, blueprint.rally.y, SPAN, blueprint);
 
@@ -138,11 +178,11 @@ function assignCellsToWall(board, wall, minx, maxx, miny, maxy) {
   }
 }
 
-function createGrid(board, corridor) {
-  const minx = corridor.x - SPAN;
-  const maxx = corridor.x + SPAN;
-  const miny = corridor.y - SPAN;
-  const maxy = corridor.y + SPAN;
+function createGrid(board, center) {
+  const minx = center.x - SPAN;
+  const maxx = center.x + SPAN;
+  const miny = center.y - SPAN;
+  const maxy = center.y + SPAN;
 
   const grid = [];
 

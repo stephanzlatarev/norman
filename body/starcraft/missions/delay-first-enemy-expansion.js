@@ -295,16 +295,46 @@ function findClosestUnitToPos(units, pos) {
 }
 
 function findEnemyExpansion() {
-  if (Enemy.base.corridors.length === 1) {
-    const corridor = Enemy.base.corridors[0];
+  const passed = new Set();
+  let hops = new Set();
 
-    if (corridor.zones.length === 2) {
-      const expansion = corridor.zones.find(zone => (zone !== Enemy.base));
+  hops.add(Enemy.base);
 
-      if (expansion) {
-        return { expansion: expansion, corridor: corridor };
+  while (hops.size) {
+    const nextHops = new Set();
+    let expansion;
+    let corridor;
+
+    for (const hop of hops) {
+      if (passed.has(hop)) continue;
+
+      passed.add(hop);
+
+      for (const path of hop.corridors) {
+        for (const zone of path.zones) {
+          if (passed.has(zone)) continue;
+          if (zone === Enemy.base) continue;
+
+          if (zone.isDepot) {
+            if (!expansion || (expansion === zone)) {
+              expansion = zone;
+              corridor = path;
+            } else {
+              // At least two depots are found at this distance. There's no single expansion
+              return;
+            }
+          }
+
+          nextHops.add(zone);
+        }
       }
     }
+
+    if (expansion) {
+      return { expansion: expansion, corridor: corridor };
+    }
+
+    hops = nextHops;
   }
 }
 

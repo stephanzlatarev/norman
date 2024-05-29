@@ -75,6 +75,8 @@ export default class Zone extends Pin {
         }
       }
 
+      this.name = old.name;
+      this.tier = old.tier;
       this.zones = [...old.zones];
 
       for (const cell of old.cells) {
@@ -117,25 +119,22 @@ export class Corridor extends Zone {
 
 export function createZones(board) {
   const mapping = new Map();
+  const zones = [];
 
   for (const area of board.areas) {
-    const zone = area.zone ? area.zone : new Zone(area.center.x, area.center.y, area.center.margin);
+    const zone = area.zone ? area.zone : new Zone(area.x, area.y, area.level);
 
     for (const cell of area.cells) {
       zone.cells.add(cell);
       cell.zone = zone;
     }
 
-    for (const cell of area.ramps) {
-      zone.cells.add(cell);
-      cell.zone = zone;
-    }
-
+    zones.push(zone);
     mapping.set(area, zone);
   }
 
   for (const join of board.joins) {
-    const corridor = new Corridor(join.center.x, join.center.y, join.center.margin);
+    const corridor = new Corridor(join.x, join.y, join.margin);
 
     for (const cell of join.cells) {
       corridor.cells.add(cell);
@@ -147,6 +146,60 @@ export function createZones(board) {
 
       zone.corridors.push(corridor);
       corridor.zones.push(zone);
+    }
+  }
+
+  labelZones(zones);
+}
+
+const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+
+function labelZones(zones) {
+  let left = Infinity;
+  let right = 0;
+  let top = Infinity;
+  let bottom = 0;
+
+  for (const zone of zones) {
+    left = Math.min(left, zone.x);
+    right = Math.max(right, zone.x);
+    top = Math.min(top, zone.y);
+    bottom = Math.max(bottom, zone.y);
+  }
+  right++;
+  bottom++;
+
+  const colspan = (right - left) / 10;
+  const rowspan = (bottom - top) / 10;
+
+  for (const zone of zones) {
+    if (zone.isCorridor) continue;
+
+    const col = Math.floor((zone.x - left) / colspan);
+    const row = Math.floor((zone.y - top) / rowspan);
+    const type = zone.isDepot ? "#" : "*"
+
+    zone.name = LETTERS[col] + row + type;
+
+    for (const corridor of zone.corridors) {
+      if (corridor.name) continue;
+
+      const neighbor = (corridor.zones[0] === zone) ? corridor.zones[1] : corridor.zones[0];
+      const neighborCol = Math.floor((neighbor.x - left) / colspan);
+      const neighborRow = Math.floor((neighbor.y - top) / rowspan);
+
+      if (neighborCol < col) continue;
+      if ((neighborCol === col) && (neighborRow < row)) continue;
+
+      if (neighborCol === col) {
+        corridor.name = LETTERS[col] + row + "|";
+      } else if (neighborRow < row) {
+        corridor.name = LETTERS[col] + row + "\\";
+      } else if (neighborRow > row) {
+        corridor.name = LETTERS[col] + row + "/";
+      } else {
+        corridor.name = LETTERS[col] + row + "-";
+      }
     }
   }
 }

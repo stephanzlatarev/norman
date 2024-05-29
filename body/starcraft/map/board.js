@@ -1,4 +1,9 @@
 
+const MIN_AREA_MARGIN = 3;
+const AREA_RADIUS = 10;
+
+let ids = 1;
+
 export default class Board {
 
   constructor(box, placementGrid, pathingGrid) {
@@ -26,6 +31,21 @@ export default class Board {
 
       this.cells.push(row);
     }
+
+    const SIDES = [{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }, { dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: -1 }, { dx: 1, dy: -1 }, { dx: 1, dy: 1 }, { dx: -1, dy: 1 }];
+    for (let y = box.top; y <= box.bottom; y++) {
+      for (let x = box.left; x < box.right; x++) {
+        const cell = this.cells[y][x];
+
+        for (const side of SIDES) {
+          const neighbor = this.cells[y + side.dy][x + side.dx];
+
+          if (neighbor.isOn) {
+            cell.neighbors.push(neighbor);
+          }
+        }
+      }
+    }
   }
 
   sync(grid) {
@@ -47,7 +67,10 @@ export default class Board {
   }
 
   path() {
-    findAreas(this, listLayers(this));
+    const peaks = findMarginPeaks(this);
+    clumpMarginPeaks(this, peaks);
+    spreadAreas(this);
+    locateJoins(this);
   }
 
   mark(left, top, width, height, mark) {
@@ -58,10 +81,25 @@ export default class Board {
     }
   }
 
+  block(left, top, width, height) {
+    for (let row = top; row < top + height; row++) {
+      for (let col = left; col < left + width; col++) {
+        const cell = this.cells[row][col];
+
+        cell.isPath = true;
+        cell.isPlot = true;
+        cell.isObstacle = true;
+      }
+    }
+  }
+
   clear(left, top, width, height) {
     for (let row = top; row < top + height; row++) {
       for (let col = left; col < left + width; col++) {
-        this.cells[row][col].clear();
+        const cell = this.cells[row][col];
+
+        cell.isPath = true;
+        cell.isPlot = true;
       }
     }
   }
@@ -79,6 +117,7 @@ class Cell {
     this.isPlot = isPlot;
     this.isObstacle = false;
 
+    this.neighbors = [];
     this.margin = 0;
     this.area = null;
     this.join = null;
@@ -93,251 +132,131 @@ class Cell {
 
 }
 
-class Area {
+class Clump {
 
-  constructor(board, cell) {
-    this.id = cell.id;
-    this.board = board;
-    this.boundary = { left: cell.x, top: cell.y, right: cell.x, bottom: cell.y };
-    this.center = cell;
-    this.level = cell.margin;
+  static SQUARE_RADIUS = AREA_RADIUS * AREA_RADIUS;
 
-    this.cells = new Set();
-    this.joins = new Set();
-    this.ramps = new Set();
+  constructor(cell) {
+    this.margin = cell.margin;
+    this.x = cell.x;
+    this.y = cell.y;
 
-    this.addCell(cell);
+    this.top = new Set();
+    this.top.add(cell);
+  }
 
-    board.areas.add(this);
+  canAddCell(cell) {
+    if (squareDistance(this, cell) > Clump.SQUARE_RADIUS) return false;
+
+    for (const one of this.top) {
+      const margin = this.margin + cell.margin;
+
+      if ((Math.abs(cell.x - one.x) <= margin) && (Math.abs(cell.y - one.y) <= margin)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   addCell(cell) {
-    if (cell.join && ((cell.join.areas.size >= 2) && !cell.join.areas.has(this))) return;
-
-    if (cell.area && (cell.area !== this)) console.log("OOOPS! A cell that belongs to an area is added to another area!");
-
-    cell.area = this;
-
-    if (cell.isPlot) {
-      this.cells.add(cell);
-
-      if (cell.join) {
-        this.joins.add(cell.join);
-        cell.join.areas.add(this);
-      }
-
-      const boundary = this.boundary;
-  
-      boundary.left = Math.min(boundary.left, cell.x);
-      boundary.top = Math.min(boundary.top, cell.y);
-      boundary.right = Math.max(boundary.right, cell.x);
-      boundary.bottom = Math.max(boundary.bottom, cell.y);
-    } else {
-      this.ramps.add(cell);
-
-      if (cell.join && ((cell.join.areas.size < 2) || cell.join.areas.has(this))) {
-        this.joins.add(cell.join);
-        cell.join.areas.add(this);
-      }
+    if (cell.margin === this.margin) {
+      this.top.add(cell);
+      this.recalculateCenter();
     }
   }
 
-  addArea(area) {
-    if (area.level > this.level) console.log("OOOPS! A higher-level area is added to a lower-level area!");
+  canAddClump(clump) {
+    if (clump.margin > this.margin) return false;
 
-    for (const cell of area.cells) {
-      cell.area = null;
-      this.addCell(cell);
-    }
+    const dx = this.x - clump.x;
+    const dy = this.y - clump.y;
+    const sq = dx * dx + dy * dy;
 
-    for (const cell of area.ramps) {
-      cell.area = null;
-      this.addCell(cell);
-    }
+    if (sq > Clump.SQUARE_RADIUS) return false;
 
-    for (const join of area.joins) {
-      this.joins.add(join);
+    const margin = this.margin + clump.margin;
 
-      join.areas.delete(area);
-      join.areas.add(this);
-    }
-
-    this.board.areas.delete(area);
+    return (Math.abs(this.x - clump.x) <= margin) && (Math.abs(this.y - clump.y) <= margin);
   }
 
-  canMerge(area) {
-    // Check if cells from the two areas at the highest same level of each area are adjacent.
-    const higher = (this.level >= area.level) ? this : area;
-    const lower = (this === higher) ? area : this;
-    const higherTerrace = [];
-    const higherTop = [];
-    const lowerTop = [];
-
-    for (const a of lower.cells) {
-      if (a.margin !== lower.level) continue;
-
-      if (higherTerrace.length) {
-        for (const b of higherTerrace) {
-          if (Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) <= 2) {
-            return true;
-          }
-        }
-      } else {
-        for (const b of higher.cells) {
-          if (b.margin === higher.level) higherTop.push(b);
-          if (b.margin !== lower.level) continue;
-  
-          if (Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) <= 2) {
-            return true;
-          }
-
-          higherTerrace.push(b);
-        }
-      }
-
-      lowerTop.push(a);
-    }
-
-    for (const a of lowerTop) {
-      for (const b of higherTop) {
-        if (Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) > higher.level + 10) {
-          return false;
-        }
+  addClump(clump) {
+    if (clump.margin === this.margin) {
+      for (const cell of clump.top) {
+        this.top.add(cell);
       }
     }
 
-    return true;
+    this.recalculateCenter();
   }
 
-  merge(area) {
-    if (this.level < area.level) {
-      area.addArea(this);
-    } else {
-      this.addArea(area);
+  recalculateCenter() {
+    let sumx = 0;
+    let sumy = 0;
+
+    for (const one of this.top) {
+      sumx += one.x;
+      sumy += one.y;
     }
+
+    this.x = sumx / this.top.size;
+    this.y = sumy / this.top.size;
   }
 
-  findCenter() {
-    this.center = findCenter(this.cells);
+}
+
+class Area {
+
+  constructor(board, clump) {
+    this.id = ids++;
+    this.x = clump.x;
+    this.y = clump.y;
+    this.level = clump.margin;
+
+    this.cells = new Set();
+    this.joins = new Set();
+
+    board.areas.add(this);
   }
 
 }
 
 class Join {
 
-  constructor(board, leftCell, rightCell) {
-    this.id = leftCell.id;
-    this.board = board;
-    this.center = leftCell;
+  constructor(board, cell, areas) {
+    this.id = ids++;
+    this.x = cell.x;
+    this.y = cell.y;
+    this.level = cell.margin;
 
     this.cells = new Set();
-    this.areas = new Set();
-
-    this.addCell(leftCell);
-
-    if (rightCell) {
-      this.addCell(rightCell);
-    }
+    this.areas = new Set(areas);
 
     board.joins.add(this);
   }
 
   addCell(cell) {
-    if (cell.join === this) return;
-    if (cell.area && (this.areas.size === 2) && !this.areas.has(cell.area)) return;
-
-    this.cells.add(cell);
-
-    if (cell.area) {
-      this.areas.add(cell.area);
-      cell.area.joins.add(this);
-
-      if (cell.join && (cell.join !== this)) {
-        this.merge(cell.join);
-      } else {
-        cell.join = this;
-      }
-    } else {
-      cell.join = this;
-    }
-  }
-
-  merge(join) {
-    if (this === join) return;
-
-    // Check that the merge will not result in more than two connected areas
-    if (this.areas.size + [...join.areas].filter(area => !this.areas.has(area)).length > 2) return;
-
-    for (const cell of join.cells) {
+    if (cell.margin === this.level) {
       this.cells.add(cell);
-
-      if (cell.area && !this.areas.has(cell.area)) {
-        this.areas.add(cell.area);
-        cell.area.joins.add(this);
-      }
-
-      cell.join = this;
     }
-
-    for (const area of join.areas) {
-      this.areas.add(area);
-
-      area.joins.delete(join);
-      area.joins.add(this);
-    }
-
-    this.board.joins.delete(join);
-  }
-
-  remove() {
-    for (const cell of this.cells) {
-      cell.join = null;
-    }
-
-    for (const area of this.areas) {
-      area.joins.delete(this);
-    }
-
-    this.board.joins.delete(this);
-  }
-
-  findCenter() {
-    this.center = findCenter(this.cells);
   }
 }
 
-function listLayers(board) {
-  const margins = [];
-  const SIDES = [{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }, { dx: 1, dy: 0 }, { dx: 0, dy: 1 }];
-  const SIDE_MARGIN = 1;
-  const CORNERS = [{ dx: -1, dy: -1 }, { dx: 1, dy: -1 }, { dx: 1, dy: 1 }, { dx: -1, dy: 1 }];
-  const CORNER_MARGIN = 1;
+function findMarginPeaks(board) {
+  const peaks = new Set();
 
   let batch = new Set();
-  let margin = 2;
+  let margin = 1;
 
+  // Get all pathable cells that border with non-pathable cells to be the first layer
   for (let row = board.box.top + 1; row < board.box.bottom; row++) {
     for (let col = board.box.left + 1; col < board.box.right; col++) {
       const cell = board.cells[row][col];
 
       if (cell.isPath) {
-        for (const side of SIDES) {
-          const neighbor = board.cells[row + side.dy][col + side.dx];
-
+        for (const neighbor of cell.neighbors) {
           if (!neighbor.isPath) {
-            cell.margin = SIDE_MARGIN;
-            batch.add(cell);
-            break;
-          }
-        }
-
-        if (cell.margin) continue;
-
-        for (const corner of CORNERS) {
-          const neighbor = board.cells[row + corner.dy][col + corner.dx];
-
-          if (!neighbor.isPath) {
-            cell.margin = CORNER_MARGIN;
+            cell.margin = 1;
             batch.add(cell);
             break;
           }
@@ -346,160 +265,181 @@ function listLayers(board) {
     }
   }
 
+  // Get layer by layer of cells that border the previous layer
   while (batch.size) {
-    margins.push(batch);
-
-    const next = new Set();
+    const nextBatch = new Set();
+    const nextMargin = margin + 1;
 
     for (const cell of batch) {
-      if (cell.margin <= margin) {
-        for (const side of SIDES) {
-          const neighbor = board.cells[cell.y + side.dy][cell.x + side.dx];
+      let hasNextMarginNeighbor = false;
 
-          if (neighbor.isPath) {
-            if (neighbor.margin) {
-              neighbor.margin = Math.min(cell.margin + SIDE_MARGIN, neighbor.margin);
-            } else {
-              neighbor.margin = cell.margin + SIDE_MARGIN;
-              next.add(neighbor);
-            }
-          }
+      for (const neighbor of cell.neighbors) {
+        if (!neighbor.isPath) continue;
+
+        if (neighbor.margin === nextMargin) {
+          hasNextMarginNeighbor = true;
+        } else if (!neighbor.margin) {
+          nextBatch.add(neighbor);
+          neighbor.margin = nextMargin;
+          hasNextMarginNeighbor = true;
+        }
+      }
+
+      if (cell.isPlot && !hasNextMarginNeighbor && (cell.margin >= MIN_AREA_MARGIN)) {
+        peaks.add(cell);
+      }
+    }
+
+    batch = nextBatch;
+    margin = nextMargin;
+  }
+
+  return peaks;
+}
+
+function clumpMarginPeaks(board, peaks) {
+  let clumps = [];
+
+  // Clump nearby peaks
+  for (const peak of [...peaks].sort((a, b) => (b.margin - a.margin))) {
+    let isClumped = false;
+
+    for (const clump of clumps) {
+      if (clump.canAddCell(peak)) {
+        clump.addCell(peak);
+        isClumped = true;
+        break;
+      }
+    }
+
+    if (!isClumped) {
+      clumps.push(new Clump(peak))
+    }
+  }
+
+  // Clump nearby clumps
+  for (let i = 0; i < clumps.length; i++) {
+    const clump = clumps[i];
+    if (!clump) continue;
+
+    for (let j = i + 1; j < clumps.length; j++) {
+      const another = clumps[j];
+
+      if (another && clump.canAddClump(another)) {
+        clump.addClump(another);
+        clumps[j] = null;
+      }
+    }
+  }
+  clumps = clumps.filter(clump => !!clump);
+
+  // Create areas based on the clumps
+  for (const clump of clumps) {
+    new Area(board, clump);
+  }
+}
+
+function spreadAreas(board) {
+  if (!board.areas.size) return;
+
+  const areas = [...board.areas].sort((a, b) => (b.level - a.level));
+  const claims = new Map();
+  const joins = new Map();
+
+  let wave = new Set();
+  let level = 1;
+  let areaStart = areas[0].level;
+  let areaLevel = areaStart;
+  let areaIndex = 0;
+
+  while (!areaIndex || wave.size) {
+    const nextWave = new Set();
+
+    // Add more areas
+    while ((areaIndex < areas.length) && (areas[areaIndex].level >= areaLevel)) {
+      const area = areas[areaIndex];
+      const cell = board.cells[Math.round(area.y)][Math.round(area.x)];
+      const claim = new Set();
+
+      wave.add(cell);
+      claim.add(area);
+      claims.set(cell, claim);
+
+      areaIndex++;
+    }
+    areaLevel--;
+
+    // Spread areas with wave
+    for (const cell of wave) {
+      const claim = claims.get(cell);
+      const area = claim.values().next().value;
+
+      if (claim.size === 1) {
+        cell.area = area;
+        area.cells.add(cell);
+      } else if (claim.size === 2) {
+        const key = [...claim].map(area => area.id).sort((a, b) => (a - b)).join("-");
+        let join = joins.get(key);
+
+        if (!join) {
+          join = new Join(board, cell, claim);
+          joins.set(key, join);
         }
 
-        for (const corner of CORNERS) {
-          const neighbor = board.cells[cell.y + corner.dy][cell.x + corner.dx];
-
-          if (neighbor.isPath) {
-            if (neighbor.margin) {
-              neighbor.margin = Math.min(cell.margin + CORNER_MARGIN, neighbor.margin);
-            } else {
-              neighbor.margin = cell.margin + CORNER_MARGIN;
-              next.add(neighbor);
-            }
-          }
-        }
+        cell.area = area;
+        area.cells.add(cell);
+        join.addCell(cell);
+        continue;
       } else {
-        next.add(cell);
+        cell.area = area;
+        area.cells.add(cell);
+        continue;
+      }
+
+      for (const neighbor of cell.neighbors) {
+        if (!neighbor.isPath) continue;
+        if (neighbor.area) continue;
+
+        const squareLevel = (level + area.level - areaStart) * (level + area.level - areaStart);
+        if (squareDistance(neighbor, area) > squareLevel) continue;
+
+        nextWave.add(neighbor);
+
+        const claimNeighbor = claims.get(neighbor);
+        if (claimNeighbor) {
+          claimNeighbor.add(area);
+        } else {
+          const claim = new Set();
+          claim.add(area);
+          claims.set(neighbor, claim);
+        }
       }
     }
 
-    batch = next;
-    margin++;
+    wave = nextWave;
+    level++;
   }
-
-  return margins.reverse();
 }
 
-function findAreas(board, margins) {
-  board.areas.clear();
-  board.joins.clear();
-
-  // Create joins for all non-plot cells.
-  for (const layer of margins) {
-    for (const cell of layer) {
-      if (!cell.isPlot) {
-        new Join(board, cell);
-      }
-    }
-  }
-
-  for (const layer of margins) {
-    for (const cell of [...layer].reverse()) {
-      markSideNeighbors(board.cells, cell, function(neighbor) {
-        if (!neighbor.isPath) return;
- 
-        if (cell.isPlot && !cell.area && !cell.join && !neighbor.join && (cell.margin > neighbor.margin)) {
-          // Create an area around this cell to ensure areas merge instead of this cell being added to the neighbor area regardless of margin.
-          new Area(board, cell);
-        }
-
-        if (cell.join && neighbor.join) {
-          cell.join.merge(neighbor.join);
-        } else if (cell.area) {
-          if (neighbor.area === cell.area) {
-            // Both cells belong to the same area. Do nothing.
-          } else if (neighbor.area) {
-            // The two cells belong to different areas. The areas should either merge or form a join.
-            if (cell.area.canMerge(neighbor.area)) {
-              cell.area.merge(neighbor.area);
-            } else {
-              new Join(board, cell, neighbor);
-            }
-          } else {
-            // The neighbor cell doesn't belong to an area. Add it to this area.
-            cell.area.addCell(neighbor);
-          }
-        } else if (neighbor.area) {
-          neighbor.area.addCell(cell);
-        } else  if (neighbor.isPlot && (neighbor.margin > cell.margin)) {
-          new Area(board, neighbor).addCell(cell);
-        } else if (cell.isPlot) {
-          new Area(board, cell).addCell(neighbor);
-        }
-      });
-    }
-  }
-
-  for (const area of board.areas) {
-    area.findCenter();
-  }
-
+function locateJoins(board) {
   for (const join of board.joins) {
-    if (join.areas.size < 2) {
-      join.remove();
+    if (join.cells.size > 1) {
+      let sumx = 0;
+      let sumy = 0;
+
+      for (const cell of join.cells) {
+        sumx += cell.x;
+        sumy += cell.y;
+      }
+
+      join.x = sumx / join.cells.size;
+      join.y = sumy / join.cells.size;
     }
 
-    join.findCenter();
+    join.cells.clear();
   }
 }
 
-function markSideNeighbors(cells, cell, mark) {
-  return mark(cells[cell.y + 1][cell.x + 1], cell)
-      || mark(cells[cell.y + 1][cell.x    ], cell)
-      || mark(cells[cell.y + 1][cell.x - 1], cell)
-      || mark(cells[cell.y    ][cell.x + 1], cell)
-      || mark(cells[cell.y    ][cell.x - 1], cell)
-      || mark(cells[cell.y - 1][cell.x + 1], cell)
-      || mark(cells[cell.y - 1][cell.x    ], cell)
-      || mark(cells[cell.y - 1][cell.x - 1], cell);
-}
-
-function findCenter(cells) {
-  const list = [];
-  let maxlevel = 0;
-  let sumx = 0;
-  let sumy = 0;
-
-  for (const cell of cells) {
-    if (cell.margin > maxlevel) {
-      list.length = 0;
-      maxlevel = cell.margin;
-      sumx = 0;
-      sumy = 0;
-    }
-
-    if (cell.margin === maxlevel) {
-      list.push(cell);
-
-      sumx += cell.x;
-      sumy += cell.y;
-    }
-  }
-
-  const avgx = sumx / list.length;
-  const avgy = sumy / list.length;
-
-  let center;
-  let bestDistance = Infinity;
-
-  for (const cell of list) {
-    const distance = Math.max(Math.abs(cell.x - avgx), Math.abs(cell.y - avgy));
-
-    if (distance < bestDistance) {
-      center = cell;
-      bestDistance = distance;
-    }
-  }
-
-  return center;
+function squareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
