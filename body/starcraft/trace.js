@@ -1,5 +1,6 @@
 import Job from "./job.js";
 import Units from "./units.js";
+import Map from "./map/map.js";
 import Zone from "./map/zone.js";
 
 const Color = {
@@ -275,4 +276,36 @@ async function spawnObserver(client, me) {
       }
     }]
   });
+}
+
+let spawnLocation;
+let spawnCooldown;
+async function spawnZergling(client) {
+  if (spawnCooldown-- > 0) return;
+  if (!spawnLocation) {
+    const field = [...Map.tiers[3].fore][0];
+    spawnLocation = { x: field.x, y: field.y };
+  }
+
+  const warriors = Units.warriors().size;
+  if (!warriors) return;
+  
+  const zealot = [...Units.warriors().values()].find(warrior => (warrior.type.name === "Zealot"));
+  if (!zealot || (zealot.armor.shield < 50)) return;
+  
+  const enemies = Units.enemies().size;
+  if (enemies >= warriors) return;
+
+  await client.debug({
+    debug: [{
+      createUnit: {
+        unitType: 105,
+        owner: 2,
+        pos: spawnLocation,
+        quantity: warriors,
+      }
+    }]
+  });
+
+  spawnCooldown = 100;
 }
