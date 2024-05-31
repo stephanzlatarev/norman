@@ -2,7 +2,9 @@ import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
 import Types from "../types.js";
+import Depot from "../map/depot.js";
 import Map from "../map/map.js";
+import Wall from "../map/wall.js";
 import { VisibleCount } from "../memo/encounters.js";
 import Enemy from "../memo/enemy.js";
 import Resources from "../memo/resources.js";
@@ -14,28 +16,14 @@ export default class DelayFirstEnemyExpansionMission extends Mission {
   run() {
     if (this.job || !Enemy.base) return;
 
-    if (this.pylonJob) {
-      // Waiting for the pylon job to be assigned
-      if (this.pylonJob.assignee) {
-        this.pylonBuilder = this.pylonJob.assignee;
-      }
+    const home = Depot.list().find(depot => depot.isActive);
+    const homePylonPlot = findHomePylonPlot();
+    const { expansion, corridor } = findEnemyExpansion();
 
-      // Waiting for the pylon job to finish
-      if (this.pylonJob.isDone) {
-        const enemyZones = findEnemyExpansion();
-
-        if (enemyZones && enemyZones.expansion && enemyZones.corridor) {
-          this.job = new AnnoyEnemy(this.pylonBuilder.depot, enemyZones.expansion, enemyZones.corridor);
-          this.job.assign(this.pylonBuilder);
-        } else {
-          this.job = true;
-        }
-      } else if (this.pylonJob.isFailed) {
-        this.job = true;
-      }
+    if (home && homePylonPlot && expansion && corridor) {
+      this.job = new AnnoyEnemy(home, homePylonPlot, expansion, corridor);
     } else {
-      // Waiting for the pylon job to appear
-      this.pylonJob = Array.from(Job.list()).find(job => job.output && job.output.isPylon);
+      this.job = "skip";
     }
   }
 
@@ -47,22 +35,25 @@ const MODE_DAMAGE = 2;
 class AnnoyEnemy extends Job {
 
   home = null;
+  homePylonPlot = null;
+  homePylonJob = null;
   expansion = null;
   corridor = null;
   mode = null;
   pylon = null;
 
-  constructor(home, expansion, corridor) {
+  constructor(home, homePylonPlot, expansion, corridor) {
     super("Worker");
 
     this.home = home;
+    this.homePylonPlot = homePylonPlot;
     this.expansion = expansion;
     this.corridor = corridor;
     this.priority = 100;
 
     this.harvest = new HarvestLine(corridor);
 
-    this.transition(this.goScoutExpansion);
+    this.transition(this.goBuildHomePylon);
   }
 
   execute() {
@@ -87,6 +78,49 @@ class AnnoyEnemy extends Job {
     orderSlip(this.assignee, this.home);
 
     this.close(true);
+  }
+
+  goBuildHomePylon() {
+    if (!this.homePylonJob) {
+      let job = [...Job.list()].find(job => job.output && job.output.isPylon);
+
+      if (!job) {
+        job = new Build("Pylon", this.homePylonPlot);
+      } else if (job.assignee && (job.assignee !== this.assignee)) {
+        job.release(job.assignee);
+      }
+
+      job.priority = 0;
+
+      this.homePylonJob = job;
+    }
+
+    if (this.homePylonJob && (Resources.minerals >= 100)) {
+      this.homePylonJob.assignee = this.assignee;
+      this.homePylonJob.target = this.homePylonPlot;
+      this.homePylonJob.priority = 100;
+
+      this.transition(this.goWaitForHomePylon);
+    } else {
+      orderMove(this.assignee, this.homePylonPlot);
+    }
+
+    // Reserve minerals for the pylon
+    Resources.minerals -= 100;
+  }
+
+  goWaitForHomePylon() {
+    if (this.homePylonJob.order && !this.homePylonJob.order.next) {
+      this.homePylonJob.order.queue(16, this.expansion);
+    }
+
+    if (this.homePylonJob.isDone) {
+      this.transition(this.goScoutExpansion);
+    } else if (this.homePylonJob.isFailed) {
+      this.transition(this.goHome);
+    } else {
+      Resources.minerals -= 100;
+    }
   }
 
   goScoutExpansion() {
@@ -245,9 +279,7 @@ class AnnoyEnemy extends Job {
       if ((this.pylon.buildProgress >= 0.99) || (this.pylon.armor.health < 20)) {
         new Order(this.pylon, 3659).accept(true);
 
-        console.log("Mission 'Delay first enemy expansion' is over.");
-
-        this.close(true);
+        this.transition(this.goHome);
       }
     }
   }
@@ -276,6 +308,18 @@ class HarvestLine {
     return (cy * this.bx - cx * this.by) * this.dc / this.ab;
   }
 
+}
+
+function findHomePylonPlot() {
+  const pylon = Types.unit("Pylon");
+
+  for (const wall of Wall.list()) {
+    const plot = wall.getPlot(pylon);
+
+    if (plot && Map.accepts(plot, plot.x, plot.y, 2)) {
+      return plot;
+    }
+  }
 }
 
 function findClosestUnitToPos(units, pos) {
@@ -336,6 +380,8 @@ function findEnemyExpansion() {
 
     hops = nextHops;
   }
+
+  return { expansion: null, corridor: null };
 }
 
 function isEnemyExpansionStarted(expansion) {
