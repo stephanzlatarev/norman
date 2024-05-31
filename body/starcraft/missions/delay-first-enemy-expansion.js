@@ -4,7 +4,6 @@ import Order from "../order.js";
 import Types from "../types.js";
 import Depot from "../map/depot.js";
 import Map from "../map/map.js";
-import Wall from "../map/wall.js";
 import { VisibleCount } from "../memo/encounters.js";
 import Enemy from "../memo/enemy.js";
 import Resources from "../memo/resources.js";
@@ -17,11 +16,13 @@ export default class DelayFirstEnemyExpansionMission extends Mission {
     if (this.job || !Enemy.base) return;
 
     const home = Depot.list().find(depot => depot.isActive);
-    const homePylonPlot = findHomePylonPlot();
+    const homePylonJob = [...Job.list()].find(job => job.output && job.output.isPylon);
     const { expansion, corridor } = findEnemyExpansion();
 
-    if (home && homePylonPlot && expansion && corridor) {
-      this.job = new AnnoyEnemy(home, homePylonPlot, expansion, corridor);
+    if (home && homePylonJob && homePylonJob.target && !homePylonJob.assignee && expansion && corridor) {
+      this.job = new AnnoyEnemy(home, homePylonJob, expansion, corridor);
+
+      console.log("Mission 'Delay first enemy expansion' is started.");
     } else {
       this.job = "skip";
     }
@@ -35,18 +36,17 @@ const MODE_DAMAGE = 2;
 class AnnoyEnemy extends Job {
 
   home = null;
-  homePylonPlot = null;
   homePylonJob = null;
   expansion = null;
   corridor = null;
   mode = null;
   pylon = null;
 
-  constructor(home, homePylonPlot, expansion, corridor) {
+  constructor(home, homePylonJob, expansion, corridor) {
     super("Worker");
 
     this.home = home;
-    this.homePylonPlot = homePylonPlot;
+    this.homePylonJob = homePylonJob;
     this.expansion = expansion;
     this.corridor = corridor;
     this.priority = 100;
@@ -81,28 +81,11 @@ class AnnoyEnemy extends Job {
   }
 
   goBuildHomePylon() {
-    if (!this.homePylonJob) {
-      let job = [...Job.list()].find(job => job.output && job.output.isPylon);
-
-      if (!job) {
-        job = new Build("Pylon", this.homePylonPlot);
-      } else if (job.assignee && (job.assignee !== this.assignee)) {
-        job.release(job.assignee);
-      }
-
-      job.priority = 0;
-
-      this.homePylonJob = job;
-    }
-
-    if (this.homePylonJob && (Resources.minerals >= 100)) {
+    if (Resources.minerals >= 100) {
       this.homePylonJob.assignee = this.assignee;
-      this.homePylonJob.target = this.homePylonPlot;
-      this.homePylonJob.priority = 100;
-
       this.transition(this.goWaitForHomePylon);
     } else {
-      orderMove(this.assignee, this.homePylonPlot);
+      orderMove(this.assignee, this.homePylonJob.target);
     }
 
     // Reserve minerals for the pylon
@@ -305,18 +288,6 @@ class HarvestLine {
     return (cy * this.bx - cx * this.by) * this.dc / this.ab;
   }
 
-}
-
-function findHomePylonPlot() {
-  const pylon = Types.unit("Pylon");
-
-  for (const wall of Wall.list()) {
-    const plot = wall.getPlot(pylon);
-
-    if (plot && Map.accepts(plot, plot.x, plot.y, 2)) {
-      return plot;
-    }
-  }
 }
 
 function findClosestUnitToPos(units, pos) {
