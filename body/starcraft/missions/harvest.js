@@ -161,7 +161,7 @@ function squareDistance(a, b) {
 }
 
 function initialSetup(nexus) {
-  const workers = new Set(nexus.depot.workers);
+  const workers = new Set([...nexus.depot.workers].filter(worker => !worker.job));
   const firstLine = [];
   const secondLine = [];
 

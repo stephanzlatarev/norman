@@ -16,13 +16,15 @@ export default class DelayFirstEnemyExpansionMission extends Mission {
     if (this.job || !Enemy.base) return;
 
     const home = Depot.list().find(depot => depot.isActive);
+    const agent = selectAgent(home);
     const homePylonJob = [...Job.list()].find(job => job.output && job.output.isPylon);
     const { expansion, corridor } = findEnemyExpansion();
 
-    if (home && homePylonJob && homePylonJob.target && !homePylonJob.assignee && expansion && corridor) {
-      this.job = new AnnoyEnemy(home, homePylonJob, expansion, corridor);
+    if (home && agent && homePylonJob && homePylonJob.target && !homePylonJob.assignee && expansion && corridor) {
+      console.log("Mission 'Delay first enemy expansion' starts");
 
-      console.log("Mission 'Delay first enemy expansion' is started.");
+      this.job = new AnnoyEnemy(home, homePylonJob, expansion, corridor);
+      this.job.assign(agent);
     } else {
       this.job = "skip";
     }
@@ -288,6 +290,23 @@ class HarvestLine {
     return (cy * this.bx - cx * this.by) * this.dc / this.ab;
   }
 
+}
+
+function selectAgent(home) {
+  const selectUp = (home.exitRally.y > home.y);
+  let agent;
+
+  for (const worker of home.workers) {
+    if (!agent) {
+      agent = worker;
+    } else if (selectUp && (worker.body.y > agent.body.y)) {
+      agent = worker;
+    } else if (!selectUp && (worker.body.y < agent.body.y)) {
+      agent = worker;
+    }
+  }
+
+  return agent;
 }
 
 function findClosestUnitToPos(units, pos) {
