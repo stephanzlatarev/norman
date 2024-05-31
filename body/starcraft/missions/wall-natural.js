@@ -61,7 +61,7 @@ class WallKeeper extends Job {
       if (!facility.isActive) continue;
 
       if (WARRIOR_FACTORY[facility.type.name]) {
-        setRallyPoint(facility, this.wall.blueprint.rally);
+        setRallyPoint(facility, selectRallyPoint(facility, this.wall));
       }
     }
   }
@@ -75,6 +75,20 @@ function findWallKeeperType() {
   } else if (ActiveCount.Stalker) {
     return Types.unit("Stalker");
   }
+}
+
+function selectRallyPoint(facility, wall) {
+  if (facility.zone === wall) {
+    const dx = Math.sign(wall.blueprint.rally.x - wall.blueprint.choke.x);
+    const dy = Math.sign(wall.blueprint.rally.y - wall.blueprint.choke.y);
+
+    return {
+      x: facility.body.x + dx + dx,
+      y: facility.body.y + dy + dy,
+    };
+  }
+
+  return wall.blueprint.rally;
 }
 
 function orderHold(warrior, pos) {
