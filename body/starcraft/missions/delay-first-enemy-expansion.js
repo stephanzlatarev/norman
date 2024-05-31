@@ -110,15 +110,12 @@ class AnnoyEnemy extends Job {
   }
 
   goWaitForHomePylon() {
-    if (this.homePylonJob.order && !this.homePylonJob.order.next) {
-      this.homePylonJob.order.queue(16, this.expansion);
-    }
-
     if (this.homePylonJob.isDone) {
       this.transition(this.goScoutExpansion);
     } else if (this.homePylonJob.isFailed) {
       this.transition(this.goHome);
     } else {
+      // Keep a reserve of minerals for the pylon
       Resources.minerals -= 100;
     }
   }
