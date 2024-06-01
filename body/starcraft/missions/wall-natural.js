@@ -3,8 +3,11 @@ import Mission from "../mission.js";
 import Order from "../order.js";
 import Types from "../types.js";
 import Units from "../units.js";
-import { ActiveCount } from "../memo/count.js";
+import Attack from "../jobs/attack.js";
 import Wall from "../map/wall.js";
+import { ActiveCount } from "../memo/count.js";
+import { VisibleCount } from "../memo/encounters.js";
+import Resources from "../memo/resources.js";
 
 const MODE_DEFEND = 1;
 const MODE_READY = 2;
@@ -20,6 +23,7 @@ let wall;
 let field;
 let wallKeeperJob;
 const defenderJobs = new Set();
+const pullProbeJobs = new Set();
 
 export default class WallNatural extends Mission {
 
@@ -36,6 +40,8 @@ export default class WallNatural extends Mission {
     maintainWallKeeperJob();
     maintainDefenderJobs();
     maintainRallyPoints();
+    maintainPullProbeJobs();
+    maintainHarvestJobs();
   }
 
   close() {
@@ -48,6 +54,10 @@ export default class WallNatural extends Mission {
 
     for (const defenderJob of defenderJobs) {
       defenderJob.close(true);
+    }
+
+    for (const pullProbeJob of pullProbeJobs) {
+      pullProbeJob.close(true);
     }
   }
 
@@ -166,6 +176,43 @@ function maintainRallyPoints() {
   for (const facility of Units.buildings().values()) {
     if (facility.isActive && WARRIOR_FACTORY[facility.type.name]) {
       setRallyPoint(facility, selectRallyPoint(facility, wall));
+    }
+  }
+}
+
+function maintainPullProbeJobs() {
+  if (Resources.loop < 2500) return;
+
+  for (const job of pullProbeJobs) {
+    if (job.isDone || job.isFailed) {
+      pullProbeJobs.delete(job);
+    }
+  }
+
+  const shouldPullProbes = (VisibleCount.Zergling && !ActiveCount.Zealot && !ActiveCount.Stalker) || ((VisibleCount.Zergling >= 4) && (ActiveCount.Stalker < VisibleCount.Zergling / 2));
+  const pullProbeCount = shouldPullProbes ? (ActiveCount.Probe - 12) : 0;
+
+  if (pullProbeCount > pullProbeJobs.size) {
+    const jobsToOpen = pullProbeCount - pullProbeJobs.size;
+
+    for (let i = 0; i < jobsToOpen; i++) {
+      pullProbeJobs.add(new Attack("Worker", wall.blueprint.choke));
+    }
+  } else if (pullProbeCount < pullProbeJobs.size) {
+    const jobsToClose = pullProbeJobs.size - pullProbeCount;
+    const jobs = [...pullProbeJobs];
+
+    for (let i = 0; i < jobsToClose; i++) {
+      jobs[i].close(true);
+      pullProbeJobs.delete(jobs[i]);
+    }
+  }
+}
+
+function maintainHarvestJobs() {
+  for (const job of Job.list()) {
+    if (job.target && job.target.type && job.target.type.isExtractor) {
+      job.priority = 90;
     }
   }
 }
