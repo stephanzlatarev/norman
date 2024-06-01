@@ -2,6 +2,7 @@ import Mission from "../mission.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
 import Map from "../map/map.js";
+import Priority from "../memo/priority.js";
 
 export default class BuildExpansionsMission extends Mission {
 
@@ -10,6 +11,8 @@ export default class BuildExpansionsMission extends Mission {
 
   run() {
     if (this.job) {
+      if (this.job.priority !== Priority.Nexus) this.job.priority = Priority.Nexus;
+
       if (this.job.isFailed) {
         this.job = null;
       } else if (!this.job.isDone) {

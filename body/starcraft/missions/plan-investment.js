@@ -41,12 +41,14 @@ function doStartUp() {
 }
 
 function doEnforceWallNatural() {
-  Limit.Probe = 22;
+  const twoBases = (ActiveCount.Immortal >= 2);
+
+  Limit.Probe = twoBases ? 33 : 22;
   Limit.Sentry = 0;
   Limit.Observer = 0;
   Limit.Zealot = ActiveCount.Immortal ? 0 : 1;
 
-  Limit.Nexus = 1;
+  Limit.Nexus = twoBases ? 2 : 1;
   Limit.Assimilator = (ActiveCount.Probe >= 18) ? 2 : 1;
   Limit.Gateway = 2;
   Limit.CyberneticsCore = 1;
@@ -56,14 +58,15 @@ function doEnforceWallNatural() {
 
   Priority.ShieldBattery = 100;
   Priority.CyberneticsCore = 100;
-  Priority.Immortal = 100;
+  Priority.Nexus = (twoBases && (TotalCount.Nexus === 1)) ? 100 : 0;
+  Priority.Immortal = 95;
   Priority.Gateway = (TotalCount.Gateway < 2) ? 90 : 60;
   Priority.Stalker = 80;
   Priority.RoboticsFacility = 60;
   Priority.Zealot = 50;
   Priority.Probe = 40;
 
-  if ((ActiveCount.Immortal > 1) && (ActiveCount.Stalker > 4)) {
+  if (twoBases && (ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 33) && (ActiveCount.Stalker > 4)) {
     plan = doGroundArmyMaxOut;
     console.log("Transition to maxing out with ground army.");
   }
@@ -75,6 +78,7 @@ function doGroundArmyMaxOut() {
   Limit.Sentry = Infinity;
   Limit.Zealot = Infinity;
   Priority.Probe = 90;
+  Priority.Observer = (ActiveCount.Immortal < 2) ? 10 : 90;
   Priority.Immortal = 50;
   Priority.Sentry = 50;
   Priority.Stalker = 50;

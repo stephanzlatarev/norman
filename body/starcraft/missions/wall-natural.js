@@ -33,7 +33,7 @@ export default class WallNatural extends Mission {
 
     mode = field.enemies.size ? MODE_DEFEND : MODE_READY;
 
-    if ((ActiveCount.Immortal > 1) && (mode === MODE_READY)) {
+    if ((mode === MODE_READY) && (ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 30)) {
       return this.close();
     }
 

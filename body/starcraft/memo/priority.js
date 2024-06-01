@@ -18,5 +18,6 @@ export default {
   Sentry: 50,
   Stalker: 50,
   Zealot: 50,
+  Observer: 10,
 
 }
