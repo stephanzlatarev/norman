@@ -81,6 +81,10 @@ export default class Job extends Memory {
         console.log(unit.type.name, unit.nick, "assigned to job", this.details);
       }
 
+      if (this.assignee && (this.assignee.job === this)) {
+        this.assignee.job = null;
+      }
+
       this.assignee = unit;
       this.assignee.job = this;
     } else if (this.assignee) {
