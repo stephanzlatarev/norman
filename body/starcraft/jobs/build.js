@@ -21,7 +21,8 @@ export default class Build extends Job {
   execute() {
     if (!this.order) {
       if (this.target.isDepot && this.target.minerals.length) {
-        this.order = new Order(this.assignee, 298, this.target.minerals[0]);
+        this.order = new Order(this.assignee, 298, this.target.minerals[0]).expect(this.output);
+        this.order.isCompound = true;
         this.isAproaching = true;
       } else {
         this.order = new Order(this.assignee, this.output.abilityId, this.target).expect(this.output);
@@ -29,6 +30,7 @@ export default class Build extends Job {
     } else if (this.isAproaching) {
       if (isWorkerCloseToDepot(this.assignee, this.target)) {
         this.order.replace(this.output.abilityId, this.target).expect(this.output);
+        this.order.isCompound = false;
         this.isAproaching = false;
       }
     } else if (this.order.isRejected) {

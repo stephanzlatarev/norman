@@ -10,18 +10,31 @@ export default function() {
   const jobs = Array.from(Job.list().values());
   const started = jobs.filter(job => !!job.assignee);
   const pending = jobs.filter(job => !job.assignee).sort(prioritizeJobs);
+  const accountedOrders = new Set();
+
+  // Account for resources required for outstanding orders
+  for (const order of Order.list()) {
+    if (order.output && (!order.isIssued || !order.isAccepted || order.isCompound)) {
+      accountForProduction(order.output);
+      accountedOrders.add(order);
+    }
+  }
 
   // Execute all previously started jobs
   for (const job of started) {
     job.execute();
+
+    if (job.order && job.order.output && (!job.order.isIssued || !job.order.isAccepted || job.order.isCompound) && !accountedOrders.has(job.order)) {
+      accountForProduction(job.order.output);
+      accountedOrders.add(job.order);
+    }
   }
 
-  // Account for resources required for outstanding orders
+  // Account for resources required for leaked orders
   for (const order of Order.list()) {
-    if (order.output && (!order.isIssued || !order.isAccepted)) {
-      if (order.output.foodRequired) Resources.supply -= order.output.foodRequired;
-      if (order.output.mineralCost) Resources.minerals -= order.output.mineralCost;
-      if (order.output.vespeneCost) Resources.vespene -= order.output.vespeneCost;
+    if (order.output && (!order.isIssued || !order.isAccepted || order.isCompound) && !accountedOrders.has(order)) {
+      console.log("ERROR: Leaked order for", order.output.name);
+      accountForProduction(order.output);
     }
   }
 
@@ -76,17 +89,21 @@ export default function() {
       job.execute();
 
       if (job.output) {
-        TotalCount[job.output.name]++;
-
-        if (job.output.foodRequired) Resources.supply -= job.output.foodRequired;
-        if (job.output.mineralCost) Resources.minerals -= job.output.mineralCost;
-        if (job.output.vespeneCost) Resources.vespene -= job.output.vespeneCost;
+        accountForProduction(job.output);
       }
 
       started.push(job);
       pending.splice(i--, 1);
     }
   }
+}
+
+function accountForProduction(product) {
+  TotalCount[product.name]++;
+
+  if (product.foodRequired) Resources.supply -= product.foodRequired;
+  if (product.mineralCost) Resources.minerals -= product.mineralCost;
+  if (product.vespeneCost) Resources.vespene -= product.vespeneCost;
 }
 
 function prioritizeJobs(a, b) {

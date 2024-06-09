@@ -23,6 +23,9 @@ export default class Order extends Memory {
   // The expected resulting product of the order, if any
   output;
 
+  // The order is compound when the expected resulting product depends on additional steps and the required resources must be blocked for those steps
+  isCompound = false;
+
   // A follow-up order
   next;
 
@@ -68,6 +71,10 @@ export default class Order extends Memory {
   replace(ability, target) {
     this.ability = ability;
     this.target = target;
+
+    this.output = null;
+    this.isCompound = false;
+
     this.next = null;
 
     this.checkIsAccepted = null;

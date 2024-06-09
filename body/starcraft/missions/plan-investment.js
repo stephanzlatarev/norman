@@ -62,7 +62,7 @@ function doEnforceWallNatural() {
   Priority.Immortal = 95;
   Priority.Gateway = (TotalCount.Gateway < 2) ? 90 : 60;
   Priority.Stalker = 80;
-  Priority.RoboticsFacility = 60;
+  Priority.RoboticsFacility = 70;
   Priority.Zealot = 50;
   Priority.Probe = 40;
 
