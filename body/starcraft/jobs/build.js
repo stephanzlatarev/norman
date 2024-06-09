@@ -4,6 +4,7 @@ import Types from "../types.js";
 import Units from "../units.js";
 
 const ACKNOWLEDGE_TIME = 10;
+const PROGRESS = { type: { name: "Progress" }, nick: "tracker", body: {}, isAlive: true, order: { abilityId: 1 } };
 
 export default class Build extends Job {
 
@@ -37,8 +38,8 @@ export default class Build extends Job {
 
       // Make sure the worker is at the right position and no longer has the command to build
       if (!this.progress && (this.assignee.order.abilityId !== this.output.abilityId) && isWorkerAtPosition(this.assignee, pos)) {
+        this.assign(PROGRESS);
         this.progress = 1;
-        this.release(this.assignee);
       }
 
       // Close the job when the building appears

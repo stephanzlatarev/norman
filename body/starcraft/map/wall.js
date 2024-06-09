@@ -1,4 +1,5 @@
 import { Corridor } from "./zone.js";
+import Tiers from "./tier.js";
 
 const TRACE = false;
 const SPAN = 8;
@@ -41,11 +42,11 @@ export default class Wall extends Corridor {
 }
 
 // TODO: Move this function to Corridor to wall the given corridor
-export function createWalls(board, tiers) {
-  if (TRACE) console.log("tiers:", tiers ? tiers.length : "not found!");
-  if (!tiers || !tiers.length) return;
+export function createWalls(board) {
+  if (TRACE) console.log("tiers:", Tiers ? Tiers.length : "not found!");
+  if (!Tiers || !Tiers.length) return;
 
-  const natural = findNaturalExpansion(tiers);
+  const natural = findNaturalExpansion();
 
   if (TRACE) console.log("natural:", natural ? natural.name : "not found!");
   if (!natural) return;
@@ -82,9 +83,9 @@ export function createWalls(board, tiers) {
   }
 }
 
-function findNaturalExpansion(tiers) {
-  for (let i = 1; i < tiers.length; i++) {
-    const tier = tiers[i];
+function findNaturalExpansion() {
+  for (let i = 1; i < Tiers.length; i++) {
+    const tier = Tiers[i];
     let expansion;
 
     for (const zone of tier.zones) {

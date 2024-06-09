@@ -30,6 +30,9 @@ export default class Job extends Memory {
   // This is the unit assigned to execute the job
   assignee;
 
+  // This is the current mode of the job. It's job-specific
+  mode;
+
   // This is the current order issued to the assignee
   order;
 
@@ -61,32 +64,42 @@ export default class Job extends Memory {
 
   // Assigns the given unit to the job.
   assign(unit) {
+    if (unit === this.assignee) return;
+
     if (unit) {
       if (unit.job) {
-        console.log("Unit", unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details);
+        if (this.assignee) {
+          console.log(unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details, "replacing", this.assignee.type.name, this.assignee.nick);
+        } else {
+          console.log(unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details);
+        }
 
         unit.job.assignee = null;
+      } else if (this.assignee) {
+        console.log(unit.type.name, unit.nick, "assigned to job", this.details, "replacing", this.assignee.type.name, this.assignee.nick);
       } else {
-        console.log("Unit", unit.type.name, unit.nick, "assigned to job", this.details);
+        console.log(unit.type.name, unit.nick, "assigned to job", this.details);
       }
 
-      unit.job = this;
+      this.assignee = unit;
+      this.assignee.job = this;
+    } else if (this.assignee) {
+      console.log(this.assignee.type.name, this.assignee.nick, "released from job", this.details);
+      this.assignee = null;
     }
-
-    this.assignee = unit;
-  }
-
-  release(unit) {
-    if (unit && (unit.job === this)) {
-      unit.job = null;
-    }
-
-    this.assignee = null;
   }
 
   // Executes one step of the job.
   // Job implementations will implement this by issuing the next order.
   execute() {
+  }
+
+  shift(mode, silent) {
+    if (!silent && (this.mode !== mode) && (this.mode !== undefined) && this.assignee) {
+      console.log(this.assignee.type.name, this.assignee.nick, "switches from", this.modes[this.mode], "to", this.modes[mode], "on job", this.details);
+    }
+
+    this.mode = mode;
   }
 
   // Closes the job and removes the link from the assigned unit.
@@ -96,7 +109,7 @@ export default class Job extends Memory {
     this.isFailed = !outcome;
 
     if (this.assignee && (this.assignee.job === this)) {
-      console.log("Unit", this.assignee.type.name, this.assignee.nick, "released from job", this.details);
+      console.log(this.assignee.type.name, this.assignee.nick, "released on", (outcome ? "success" : "failure"), "of job", this.details);
 
       this.assignee.job = null;
     }

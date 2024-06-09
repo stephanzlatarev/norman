@@ -1,6 +1,5 @@
 import Job from "./job.js";
 import Units from "./units.js";
-import Map from "./map/map.js";
 import Zone from "./map/zone.js";
 
 const Color = {
@@ -12,8 +11,8 @@ const Color = {
   Enemy: { r: 200, g: 0, b: 0 },
 
   Perimeter: { r: 0, g: 200, b: 0 },
-  Patrol: { r: 200, g: 200, b: 0 },
-  Unknown: { r: 200, g: 200, b: 200 },
+  Frontier: { r: 200, g: 200, b: 200 },
+  Unknown: { r: 200, g: 200, b: 0 },
   Fight: { r: 200, g: 0, b: 0 },
   Threat: { r: 200, g: 0, b: 200 },
 };
@@ -42,7 +41,7 @@ export default class Trace {
     const selection = getSelectedUnit();
     if (selection || (Trace.speed >= 10)) {
       await new Promise(resolve => setTimeout(resolve, selection ? 1000 : Trace.speed));
-      if (selection.job && selection.job.fight) selection.job.fight.trace = true;
+      if (selection && selection.job && selection.job.fight) selection.job.fight.trace = true;
     }
   }
 
@@ -203,7 +202,7 @@ function traceDeployments(texts) {
     if (zone.deployment === 1) {
       color = Color.Perimeter;
     } else if (zone.deployment === 2) {
-      color = Color.Patrol;
+      color = Color.Frontier;
     } else if (zone.deployment === 4) {
       color = Color.Fight;
 

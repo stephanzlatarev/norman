@@ -15,7 +15,7 @@ class Tier {
 }
 
 // Update tiers and return them
-export default function() {
+export function syncTiers() {
   const depots = [...Depot.list()].filter(depot => !!depot.isActive);
 
   // Check if active depot changed, assuming only one depot changes state in a single game loop
@@ -74,3 +74,5 @@ function findCorridorsAndZones(zones, lowTierZones) {
 
   return { fore, nextTierZones };
 }
+
+export default tiers;

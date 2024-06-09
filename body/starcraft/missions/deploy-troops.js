@@ -2,78 +2,137 @@ import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
 import Units from "../units.js";
-import Build from "../jobs/build.js";
 import Zone from "../map/zone.js";
-import Resources from "../memo/resources.js";
 
 const PERIMETER = 1;
-const PATROL = 2;
+const FRONTIER = 2;
 const UNKNOWN = 3;
 const FIGHT = 4;
 const THREAT = 5;
 
+const REQUEST_FIGHTER_DPS = 15;
+const REQUEST_FIGHTER_HEALTH = 150;
+const REQUEST_FIGHTER_STRENGTH = REQUEST_FIGHTER_DPS * REQUEST_FIGHTER_HEALTH;
+
 const ALL_IN_START = 25;
 const ALL_IN_STOP = 20;
-
-const guards = new Map();
-const retreat = new Map();
-let safeZone;
-let pylon;
 
 export default class DeployTroopsMission extends Mission {
 
   run() {
-    if (!safeZone) safeZone = Zone.list().find(zone => (zone.tier && (zone.tier.level === 1)));
 
-    closeDeadGuardJobs();
-    classifyZones();
-    createGuardJobs();
-    createFightJobs();
-    createPylonJob();
-  }
+    // Classify zones
 
-}
+    const armyZones = Zone.list().filter(zone => !!zone.warriors.size);
+    if (!armyZones.length) return;
 
-class Guard extends Job {
+    const classified = new Set();
+    let wave = new Set(armyZones);
 
-  constructor(zone, priority) {
-    super("Stalker");
+    for (const zone of armyZones) {
+      zone.deployment = zone.threats.size ? FIGHT : PERIMETER;
+      classified.add(zone);
+    }
 
-    this.priority = priority;
-    this.zone = zone;
-    this.retreat = retreat.get(this.zone);
-    this.shield = 0;
-  }
+    while (wave.size) {
+      const nextWave = new Set();
 
-  execute() {
-    const stalker = this.assignee;
+      for (const zone of wave) {
+        for (const corridor of zone.corridors) {
+          for (const neighbor of corridor.zones) {
+            if (!classified.has(neighbor)) {
+              nextWave.add(neighbor);
+            }
+          }
+        }
+      }
 
-    if (stalker.zone.threats.size || (stalker.armor.shield < this.shield)) {
-      stalker.zone.deployment = THREAT;
+      for (const zone of nextWave) {
+        const entryClassification = getEntryClassification(zone, classified);
 
-      orderMove(stalker, this.retreat);
-    } else {
-      if (isSamePosition(stalker.body, this.zone) && isZoneSecure(this.zone)) {
-        this.zone.deployment = PERIMETER;
-      } else if (this.zone.isDepot) {
-        orderMove(stalker, this.zone.exitRally);
-      } else {
-        orderMove(stalker, this.zone);
+        if (zone.threats.size) {
+          zone.deployment = (entryClassification < UNKNOWN) ? FIGHT : THREAT;
+        } else if (zone.warriors.size) {
+          zone.deployment = PERIMETER;
+        } else if (entryClassification < UNKNOWN) {
+          zone.deployment = zone.buildings.size ? PERIMETER : FRONTIER;
+        } else {
+          zone.deployment = UNKNOWN;
+        }
+
+        classified.add(zone);
+      }
+
+      wave = nextWave;
+    }
+
+    for (const zone of Zone.list().filter(zone => !classified.has(zone))) {
+      zone.deployment = zone.threats.size ? THREAT : UNKNOWN;
+    }
+
+    // Create fights
+    
+    let rallyFight; // TODO: Map rally fights for each zone while classifying the zones
+    let idleFighters = 0;
+
+    for (const warrior of Units.warriors().values()) {
+      if (!warrior.job) {
+        idleFighters++;
       }
     }
 
-    this.shield = stalker.armor.shield;
+    for (const zone of Zone.list()) {
+      if (zone.deployment === FIGHT) {
+        const priority = 100 - zone.tier.level;
+
+        if (zone.fight) {
+          zone.fight.priority = priority;
+        } else {
+          new Fight(priority, zone);
+        }
+
+        zone.fight.evaluate();
+
+        for (const job of zone.fight.fighters) {
+          if (!job.assignee) {
+            idleFighters--;
+          }
+        }
+
+        if (!rallyFight || (zone.fight.priority > rallyFight.priority)) {
+          rallyFight = zone.fight;
+        }
+      } else if (zone.fight) {
+        zone.fight.close();
+        zone.fight = null;
+      }
+    }
+
+    if (rallyFight && (idleFighters > 0)) {
+      for (let i = 0; i < idleFighters; i++) {
+        new Fighter(rallyFight);
+      }
+    }
   }
 
 }
 
+function getEntryClassification(zone, classified) {
+  for (const corridor of zone.corridors) {
+    for (const neighbor of corridor.zones) {
+      if (classified.has(neighbor) && (neighbor.deployment < UNKNOWN)) {
+        return FRONTIER;
+      }
+    }
+  }
+
+  return UNKNOWN;
+}
+
+const STAND = 0;
 const ATTACK = 1;
 const RALLY = 2;
 const RETREAT = 3;
-
-const REQUEST_FIGHTER_DPS = 15;
-const REQUEST_FIGHTER_HEALTH = 150;
-const REQUEST_FIGHTER_STRENGTH = REQUEST_FIGHTER_DPS * REQUEST_FIGHTER_HEALTH;
 
 class Fight {
 
@@ -82,27 +141,21 @@ class Fight {
     this.zone = zone;
 
     const zones = new Set();
-    if (zone.isCorridor) {
-      for (const neighbor of zone.zones) {
+    for (const corridor of zone.corridors) {
+      for (const neighbor of corridor.zones) {
         zones.add(neighbor);
-      }
-    } else {
-      for (const corridor of zone.corridors) {
-        zones.add(corridor);
-
-        for (const neighbor of corridor.zones) {
-          zones.add(neighbor);
-        }
       }
     }
     zones.add(zone);
     this.zones = [...zones];
 
-    this.mode = RALLY;
     this.detector = new Detector(this);
     this.fighters = [];
 
     zone.fight = this;
+
+    this.modes = ["stand", "attack", "rally", "retreat"];
+    this.shift(RALLY);
   }
 
   isWarriorRallied(warrior) {
@@ -184,13 +237,17 @@ class Fight {
     const availableFightRatio = availableStrength / enemyStrength;
 
     if (ralliedWarriorCount >= ALL_IN_START) {
-      this.mode = ATTACK;
+      this.shift(ATTACK);
     } else if ((this.mode === ATTACK) && (ralliedWarriorCount >= ALL_IN_STOP)) {
-      this.mode = ATTACK;
+      this.shift(ATTACK);
     } else if (availableFightRatio > 2) {
-      this.mode = ATTACK;
+      this.shift(ATTACK);
     } else if (availableFightRatio < 1) {
-      this.mode = ((this.mode === ATTACK) || (this.mode === RETREAT)) ? RETREAT : RALLY;
+      if ((this.mode === ATTACK) || (this.mode === RETREAT)) {
+        this.shift(RETREAT);
+      } else {
+        this.shift(RALLY);
+      }
     }
 
     this.balance = availableFightRatio;
@@ -198,6 +255,14 @@ class Fight {
 //    if (this.mode === ATTACK) {
 //      assignTargets(this);
 //    }
+  }
+
+  shift(mode, silent) {
+    if (!silent && (this.mode !== mode) && (this.mode !== undefined)) {
+      console.log("Fight", this.zone.name, "switches from", this.modes[this.mode], "to", this.modes[mode]);
+    }
+
+    this.mode = mode;
   }
 
   close() {
@@ -220,6 +285,7 @@ class Detector extends Job {
 
     this.priority = fight.priority;
     this.zone = fight.zone;
+    this.details = this.summary + " " + fight.zone.name;
 
     this.fight = fight;
     this.shield = 0;
@@ -274,7 +340,6 @@ class Detector extends Job {
         }
       }
     } else {
-      zone.deployment = UNKNOWN;
       this.seek = null;
     }
 
@@ -290,52 +355,79 @@ class Fighter extends Job {
 
     this.priority = fight.priority - 1;
     this.zone = fight.zone;
+    this.details = this.summary + " " + fight.zone.name;
+    this.isCommitted = false;
 
     this.fight = fight;
-    this.isCommitted = false;
-    this.isInRallyMove = false;
+    this.thisZone = null;
+    this.lastZone = null;
+    this.rallyZone = null;
 
     fight.fighters.push(this);
+
+    this.modes = ["stand", "attack", "rally", "retreat"];
+    this.shift(STAND);
   }
 
   execute() {
     const zone = this.zone;
     const warrior = this.assignee;
 
-    if (this.target && (!this.target.isAlive || (this.target.zone !== zone))) {
-      this.isAttacking = false;
+    if (this.target && (!this.target.isAlive || ((this.target.zone !== zone) && (this.target.zone !== warrior.zone)))) {
+      this.shift(STAND);
       this.target = null;
     }
 
+    if (this.thisZone !== warrior.zone) {
+      this.lastZone = this.thisZone;
+      this.thisZone = warrior.zone;
+    }
+
     if (!warrior.isAlive) {
-      this.release(warrior);
+      this.assignee = null;
     } else if ((this.fight.mode === RALLY) || (this.fight.mode === RETREAT)) {
       if (this.fight.isWarriorInThreatRange(warrior)) {
-        orderMove(warrior, safeZone);
-
-        this.isCommitted = true;
-        this.isInRallyMove = true;
-      } else if (this.fight.isWarriorRallied(warrior)) {
-        this.isCommitted = true;
-
-        if (this.isInRallyMove) {
-          orderStop(warrior);
-
-          this.isInRallyMove = false;
+        if (!this.rallyZone || isCloseTo(warrior.body, this.rallyZone)) {
+          this.rallyZone = findSafeZone(warrior.zone);
         }
-      } else {
-        orderMove(warrior, this.fight.zone);
-        this.isInRallyMove = true;
-      }
 
-      this.isAttacking = false;
+        if (this.rallyZone) {
+          orderMove(warrior, this.rallyZone);
+          this.shift(RALLY);
+        } else if (this.mode !== ATTACK) {
+          orderFight(warrior, warrior.zone);
+          this.shift(ATTACK);
+        }
+      } else if (this.fight.isWarriorRallied(warrior)) {
+        orderStop(warrior);
+        this.shift(STAND);
+        this.rallyZone = warrior.zone;
+      } else {
+        orderMove(warrior, zone);
+        this.shift(RALLY);
+        this.rallyZone = zone;
+      }
     } else if (this.target) {
       orderAttack(warrior, this.target);
+    } else if (warrior.zone.enemies.size) {
+      this.target = findClosestTarget(warrior, warrior.zone.enemies);
+
+      if (this.target) {
+        orderAttack(warrior, this.target);
+        this.shift(ATTACK);
+      } else if (this.mode !== ATTACK) {
+        orderFight(warrior, warrior.zone);
+        this.shift(ATTACK);
+      }
     } else if (zone.enemies.size) {
       this.target = findClosestTarget(warrior, zone.enemies);
 
       if (this.target) {
         orderAttack(warrior, this.target);
+        this.shift(ATTACK);
+      } else if (this.mode !== ATTACK) {
+        orderFight(warrior, zone);
+        this.shift(ATTACK);
       }
     } else if (zone.threats.size) {
       const threat = findClosestTarget(warrior, zone.threats);
@@ -346,14 +438,13 @@ class Fighter extends Job {
         } else {
           orderMove(warrior, threat.body);
         }
+      } else if (this.mode !== ATTACK) {
+        orderFight(warrior, zone);
+        this.shift(ATTACK);
       }
-
-      this.isAttacking = false;
-    } else if (!this.isAttacking) {
-      zone.deployment = UNKNOWN;
-
-      new Order(warrior, 23, zone).accept(true);
-      this.isAttacking = true;
+    } else if (this.mode !== ATTACK) {
+      orderFight(warrior, zone);
+      this.shift(ATTACK);
     }
   }
 
@@ -413,6 +504,16 @@ class Fighter extends Job {
 //  return (squareDistance <= squareRange);
 //}
 
+function findSafeZone(zone) {
+  for (const corridor of zone.corridors) {
+    for (const neighbor of corridor.zones) {
+      if (neighbor.deployment < UNKNOWN) {
+        return neighbor;
+      }
+    }
+  }
+}
+
 function findClosestTarget(warrior, units) {
   const canHitGround = (warrior.type.damageGround > 0);
   const canHitAir = (warrior.type.damageAir > 0);
@@ -437,175 +538,6 @@ function findClosestTarget(warrior, units) {
   return targetUnit;
 }
 
-function isZoneSecure(zone) {
-  for (const corridor of zone.corridors) {
-    if (corridor.deployment >= FIGHT) return false;
-
-    for (const neighbor of corridor.zones) {
-      if (neighbor.deployment >= UNKNOWN) return false;
-      if (!neighbor.warriors.size) return false;
-    }
-  }
-
-  return true;
-}
-
-function closeDeadGuardJobs() {
-  for (const [zone, guard] of guards) {
-    if (guard.assignee && !guard.assignee.isAlive) {
-      guards.delete(zone);
-    }
-  }
-}
-
-function classifyZones() {
-  const zones = Zone.list().sort((a, b) => (a.tier.level + (a.isCorridor ? 0.5 : 0) - b.tier.level - (b.isCorridor ? 0.5 : 0)));
-  const blocked = new Set();
-
-  for (const zone of zones) {
-    if (zone.threats.size) {
-      zone.deployment = (zone.deployment === PERIMETER) ? FIGHT : THREAT;
-    } else if (zone.buildings.size) {
-      zone.deployment = PERIMETER;
-    } else if (!zone.deployment) {
-      zone.deployment = UNKNOWN;
-    }
-  }
-
-  for (const zone of zones) {
-    if (zone.isCorridor) {
-      const corridor = zone;
-      const neighbora = corridor.zones[0];
-      const neighborb = corridor.zones[1];
-
-      if (corridor.deployment < FIGHT) {
-        if ((neighbora.deployment === UNKNOWN) && (neighborb.deployment === PERIMETER)) {
-          neighbora.deployment = PATROL;
-          retreat.set(neighbora, neighborb);
-        } else if ((neighborb.deployment === UNKNOWN) && (neighbora.deployment === PERIMETER)) {
-          neighborb.deployment = PATROL;
-          retreat.set(neighborb, neighbora);
-        }
-      }
-    }
-  }
-
-  for (const zone of zones) {
-    const isBlocked = blocked.has(zone);
-
-    if (isBlocked) {
-      if (zone.deployment === FIGHT) zone.deployment = THREAT;
-    } else {
-      if (zone.deployment === THREAT) zone.deployment = FIGHT;
-    }
-
-    if (isBlocked || (zone.deployment >= FIGHT)) {
-      if (zone.isCorridor) {
-        for (const neighbor of zone.zones) {
-          if ((neighbor.tier.level >= zone.tier.level) && (neighbor.deployment !== PERIMETER)) blocked.add(neighbor);
-        }
-      } else {
-        for (const neighbor of zone.corridors) {
-          if ((neighbor.tier.level >= zone.tier.level) && (neighbor.deployment !== PERIMETER)) blocked.add(neighbor);
-        }
-      }
-    }
-  }
-}
-
-function createGuardJobs() {
-  for (const zone of Zone.list()) {
-    if (zone.isCorridor) continue;
-
-    const guard = guards.get(zone);
-
-    if (zone.deployment === PATROL) {
-      const priority = 80 - zone.tier.level;
-
-      if (guard) {
-        guard.priority = priority;
-      } else {
-        guards.set(zone, new Guard(zone, priority));
-      }
-    } else if (guard) {
-      guard.close(true);
-      guards.delete(zone);
-    }
-  }
-}
-
-function createFightJobs() {
-  let rallyFight;
-  let idleFighters = 0;
-
-  for (const warrior of Units.warriors().values()) {
-    if (!warrior.job) {
-      idleFighters++;
-    }
-  }
-
-  for (const zone of Zone.list()) {
-    if ((zone.deployment === FIGHT) && !zone.threats.size) zone.deployment = UNKNOWN;
-
-    if (zone.deployment === FIGHT) {
-      const priority = 100 - zone.tier.level;
-
-      if (zone.fight) {
-        zone.fight.priority = priority;
-      } else {
-        new Fight(priority, zone);
-      }
-
-      zone.fight.evaluate();
-
-      for (const job of zone.fight.fighters) {
-        if (!job.assignee) {
-          idleFighters--;
-        }
-      }
-
-      if (!rallyFight || (zone.fight.priority > rallyFight.priority)) {
-        rallyFight = zone.fight;
-      }
-    } else if (zone.fight) {
-      zone.fight.close();
-    }
-  }
-
-  if (rallyFight && (idleFighters > 0)) {
-    for (let i = 0; i < idleFighters; i++) {
-      new Fighter(rallyFight);
-    }
-  }
-}
-
-function createPylonJob() {
-  if (pylon) {
-    if (pylon.isFailed || pylon.isDone) {
-      pylon = null;
-    } else {
-      // A pylon is already being built
-      return;
-    }
-  }
-
-  if ((Resources.minerals < 100) || (Resources.supplyUsed < 197)) return;
-
-  let pos;
-
-  for (const zone of Zone.list()) {
-    if ((zone.deployment === PERIMETER) && !zone.buildings.size) {
-      pos = zone.isDepot ? zone.exitRally : zone;
-      break;
-    }
-  }
-
-  if (pos) {
-    pylon = new Build("Pylon", pos);
-    pylon.priority = 80;
-  }
-}
-
 function orderMove(warrior, pos) {
   if (!warrior || !warrior.order || !pos) return;
   if (!warrior.order.abilityId && isCloseTo(warrior.body, pos)) return;
@@ -625,9 +557,19 @@ function orderStop(warrior) {
 
 function orderAttack(warrior, enemy) {
   if (!warrior || !enemy) return;
+  if (!warrior.type.damageGround && !warrior.type.damageAir) return;
 
   if ((warrior.order.abilityId !== 23) || (warrior.order.targetUnitTag !== enemy.tag)) {
     new Order(warrior, 23, enemy);
+  }
+}
+
+function orderFight(warrior, zone) {
+  if (!warrior || !zone) return;
+  if (!warrior.type.damageGround && !warrior.type.damageAir) return;
+
+  if (warrior.order.abilityId !== 23) {
+    new Order(warrior, 23, zone).accept(true);
   }
 }
 

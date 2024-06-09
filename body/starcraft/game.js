@@ -84,7 +84,7 @@ export default class Game {
 
         for (const job of Job.list()) {
           if (job.assignee && !job.assignee.isAlive) {
-            console.log("Unit", job.assignee.type.name, job.assignee.nick, "died on job", job.details);
+            console.log(job.assignee.type.name, job.assignee.nick, "died on job", job.details);
             job.close(false);
           }
         }
