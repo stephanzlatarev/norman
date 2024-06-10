@@ -7,7 +7,6 @@ import Attack from "../jobs/attack.js";
 import Wall from "../map/wall.js";
 import { ActiveCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
-import Resources from "../memo/resources.js";
 
 const MODE_DEFEND = 1;
 const MODE_READY = 2;
@@ -181,16 +180,19 @@ function maintainRallyPoints() {
 }
 
 function maintainPullProbeJobs() {
-  if (Resources.loop < 2500) return;
-
   for (const job of pullProbeJobs) {
     if (job.isDone || job.isFailed) {
       pullProbeJobs.delete(job);
     }
   }
 
-  const shouldPullProbes = (VisibleCount.Zergling && !ActiveCount.Zealot && !ActiveCount.Stalker) || ((VisibleCount.Zergling >= 4) && (ActiveCount.Stalker < VisibleCount.Zergling / 2));
-  const pullProbeCount = shouldPullProbes ? (ActiveCount.Probe - 12) : 0;
+  const defendersCount = ActiveCount.Zealot + ActiveCount.Stalker + ActiveCount.Immortal;
+  const attackersCount = countAttackers();
+
+  let pullProbeCount = (defendersCount < 4) ? (attackersCount * 2 - defendersCount * 3) : 0;
+  if (pullProbeCount) pullProbeCount += 2;
+  pullProbeCount = Math.min(pullProbeCount, ActiveCount.Probe - 12);
+  pullProbeCount = Math.max(pullProbeCount, 0);
 
   if (pullProbeCount > pullProbeJobs.size) {
     const jobsToOpen = pullProbeCount - pullProbeJobs.size;
@@ -207,6 +209,18 @@ function maintainPullProbeJobs() {
       pullProbeJobs.delete(jobs[i]);
     }
   }
+}
+
+function countAttackers() {
+  if (!VisibleCount.Zergling) return 0;
+
+  let count = 0;
+
+  for (const enemy of Units.enemies().values()) {
+    if (Math.abs(enemy.body.x - wall.x) + Math.abs(enemy.body.y - wall.y) < 20) count++
+  }
+
+  return count;
 }
 
 function maintainHarvestJobs() {
