@@ -191,7 +191,7 @@ function maintainPullProbeJobs() {
 
   let pullProbeCount = (defendersCount < 4) ? (attackersCount * 2 - defendersCount * 3) : 0;
   if (pullProbeCount) pullProbeCount += 2;
-  pullProbeCount = Math.min(pullProbeCount, ActiveCount.Probe - 12);
+  pullProbeCount = Math.min(pullProbeCount, ActiveCount.Probe - 11);
   pullProbeCount = Math.max(pullProbeCount, 0);
 
   if (pullProbeCount > pullProbeJobs.size) {
@@ -224,9 +224,27 @@ function countAttackers() {
 }
 
 function maintainHarvestJobs() {
+  let count = 0;
+
   for (const job of Job.list()) {
-    if (job.target && job.target.type && job.target.type.isExtractor) {
+    if (job.target && job.target.type && job.target.type.isExtractor && (job.priority >= 90)) {
+      if (count >= 3) {
+        job.priority = 0;
+        job.assign(null);
+      } else {
+        count++;
+      }
+    }
+  }
+
+  if (count >= 3) return;
+
+  for (const job of Job.list()) {
+    if (job.target && job.target.type && job.target.type.isExtractor && (job.priority < 90)) {
       job.priority = 90;
+      count++;
+
+      if (count >= 3) return;
     }
   }
 }

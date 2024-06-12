@@ -39,7 +39,7 @@ export default class HarvestMission extends Mission {
           capacity += 2;
 
           for (let i = 1; i <= 2; i++) {
-            if ((jobIndex < workerCount) && (jobIndex < MAX_HARVEST_JOBS)) {
+            if (jobIndex < MAX_HARVEST_JOBS) {
               createHarvestJob(jobIndex, nexus, minerals);
               jobIndex++;
             }
@@ -52,7 +52,7 @@ export default class HarvestMission extends Mission {
           capacity += 3;
 
           for (let i = 1; i <= 3; i++) {
-            if ((jobIndex < workerCount) && (jobIndex < MAX_HARVEST_JOBS)) {
+            if (jobIndex < MAX_HARVEST_JOBS) {
               createHarvestJob(jobIndex, nexus, vespene.extractor);
               jobIndex++;
             }
