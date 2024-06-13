@@ -28,6 +28,7 @@ function doStartUp() {
   Limit.CyberneticsCore = 0;
   Limit.Forge = 0;
   Limit.ShieldBattery = 0;
+  Limit.Zealot = 0;
 
   if (VisibleCount.SpawningPool || VisibleCount.Zergling) {
     plan = doEnforceWallNatural;
@@ -76,7 +77,7 @@ function doGroundArmyMaxOut() {
   Limit.Probe = 85;
   Limit.Observer = (ActiveCount.Immortal < 2) ? 1 : 2;
   Limit.Sentry = Infinity;
-  Limit.Zealot = Infinity;
+  Limit.Zealot = !TotalCount.CyberneticsCore ? 0 : Infinity;
   Priority.Probe = 90;
   Priority.Observer = (ActiveCount.Immortal < 2) ? 10 : 90;
   Priority.Immortal = 50;
@@ -85,19 +86,18 @@ function doGroundArmyMaxOut() {
   Priority.Zealot = 50;
 
   if (Resources.supplyLimit < 198) {
-    Priority.Nexus = 70;
     Limit.Nexus = !TotalCount.RoboticsFacility ? 2 : calculateLimitNexus();
+    Priority.Nexus = (TotalCount.Nexus < Limit.Nexus) ? 70 : 0;
   } else {
-    Priority.Nexus = 40;
     Limit.Nexus = Infinity;
+    Priority.Nexus = 40;
   }
   Limit.Assimilator = calculateLimitAssimilator();
 
   Priority.Gateway = 50;
   Limit.Gateway = Math.floor(Math.min(
-      (TotalCount.Nexus - 1) * 3,                            // Gateways should not grow more than nexuses
-      TotalCount.Probe / 12 - TotalCount.RoboticsFacility,   // Gateways should not grow more than income
-      TotalCount.RoboticsFacility ? Infinity : 1,            // Prioritize first Robotics facility before second Gateway
+    TotalCount.RoboticsFacility ? Infinity : 1,               // Prioritize first Robotics facility before second Gateway
+    (TotalCount.Probe - TotalCount.RoboticsFacility * 6) / 5, // Gateways should not grow more than income
   ));
   Limit.RoboticsFacility = 1;
 
@@ -117,6 +117,9 @@ function doGroundArmyMaxOut() {
 // TODO: Improve precision by calculating the remaining time of all building probes, and by calculating the time for a probe to move to the next expansion site
 function calculateLimitNexus() {
   if (TotalCount.HarvesterCapacity >= Limit.Probe) return TotalCount.Nexus;
+  if ((TotalCount.Nexus === 2) && (TotalCount.Gateway < 3)) return 2;
+  if ((TotalCount.Nexus === 3) && (TotalCount.Gateway < 6)) return 3;
+  if ((TotalCount.Nexus === 4) && (TotalCount.Gateway < 9)) return 4;
 
   const timeForProbeToReachConstructionSite = 5 * 22.4; // Assume 5 seconds
   const timeToBuildNexus = Types.unit("Nexus").buildTime;
@@ -130,6 +133,8 @@ function calculateLimitNexus() {
 }
 
 function calculateLimitAssimilator() {
+  if (!TotalCount.CyberneticsCore) return 0;
+
   let limit = 0;
 
   for (const depot of Depot.list()) {
