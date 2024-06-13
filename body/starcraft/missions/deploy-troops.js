@@ -373,6 +373,12 @@ class Fighter extends Job {
     const zone = this.zone;
     const warrior = this.assignee;
 
+    if (!warrior.zone) {
+      console.log("OOOPS! Warrior", warrior.type.name, warrior.nick, "is outside any zone at", warrior.body.x.toFixed(1), warrior.body.y.toFixed(1), "near", zone.name);
+      this.assign(null);
+      return;
+    }
+
     if (this.target && (!this.target.isAlive || ((this.target.zone !== zone) && (this.target.zone !== warrior.zone)))) {
       this.shift(STAND);
       this.target = null;
