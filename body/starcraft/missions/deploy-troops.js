@@ -12,10 +12,10 @@ const THREAT = 5;
 
 const REQUEST_FIGHTER_DPS = 15;
 const REQUEST_FIGHTER_HEALTH = 150;
-const REQUEST_FIGHTER_STRENGTH = REQUEST_FIGHTER_DPS * REQUEST_FIGHTER_HEALTH;
 
-const ALL_IN_START = 25;
-const ALL_IN_STOP = 20;
+const ALL_IN_THRESHOLD = 25; // Implement focus fire for warriors that cannot retreat
+const ATTACK_THRESHOLD = 2;
+const RETREAT_THRESHOLD = 1;
 
 export default class DeployTroopsMission extends Mission {
 
@@ -140,14 +140,13 @@ class Fight {
     this.priority = priority;
     this.zone = zone;
 
-    const zones = new Set();
+    this.zones = new Set();
+    this.zones.add(zone);
     for (const corridor of zone.corridors) {
       for (const neighbor of corridor.zones) {
-        zones.add(neighbor);
+        this.zones.add(neighbor);
       }
     }
-    zones.add(zone);
-    this.zones = [...zones];
 
     this.detector = new Detector(this);
     this.fighters = [];
@@ -156,10 +155,9 @@ class Fight {
 
     this.modes = ["stand", "attack", "rally", "retreat"];
     this.shift(RALLY);
-  }
 
-  isWarriorRallied(warrior) {
-    return !!(warrior && this.zones.find(zone => (warrior.zone === zone)));
+    this.thresholdAttack = ATTACK_THRESHOLD;
+    this.thresholdRetreat = RETREAT_THRESHOLD;
   }
 
   isWarriorInThreatRange(warrior) {
@@ -182,67 +180,18 @@ class Fight {
   }
 
   evaluate() {
-    // TODO: Calculate ground and air DPS, and ground and air health
-    let availableDps = 1;
-    let availableHealth = 1;
-    let requestedDps = 1;
-    let requestedHealth = 1;
-    let enemyDps = 1;
-    let enemyHealth = 1;
-    let ralliedWarriorCount = 0;
+    this.balance = assessCurrentBalance(this);
 
-    for (const zone of this.zones) {
-      for (const enemy of zone.threats) {
-        if (enemy.type.damageGround > 0) {
-          enemyDps += enemy.type.damageGround;
-          enemyHealth += enemy.armor.health + enemy.armor.shield;
-        }
-      }
+    const ralliedWarriorCount = countRalliedWarriors(this);
+
+    if (ralliedWarriorCount >= ALL_IN_THRESHOLD) {
+      this.thresholdAttack = 0;
+      this.thresholdRetreat = 0;
     }
 
-    for (const job of this.fighters) {
-      const warrior = job.assignee;
-
-      if (warrior) {
-        requestedDps += warrior.type.damageGround;
-        requestedHealth += warrior.armor.health + warrior.armor.shield;
-
-        if (this.isWarriorRallied(warrior)) {
-          ralliedWarriorCount++;
-
-          availableDps += warrior.type.damageGround;
-          availableHealth += warrior.armor.health + warrior.armor.shield;
-        }
-      } else {
-        // TODO: Tune the request expectations and put the expectations in the job description so that the right warriors are hired
-        requestedDps += REQUEST_FIGHTER_DPS;
-        requestedHealth += REQUEST_FIGHTER_HEALTH;
-      }
-    }
-
-    const availableStrength = availableHealth * availableDps;
-    const requestedStrength = requestedHealth * requestedDps;
-    const enemyStrength = enemyHealth * enemyDps;
-
-    const requestedFightRatio = requestedStrength / enemyStrength;
-    if (requestedFightRatio < 2) {
-      const neededFighters = Math.ceil(enemyStrength * (2 - requestedFightRatio) / REQUEST_FIGHTER_STRENGTH);
-
-      for (let i = 0; i < neededFighters; i++) {
-        new Fighter(this);
-      }
-    }
-    // TODO: Release fighters when the ratio is too much in our favor
-
-    const availableFightRatio = availableStrength / enemyStrength;
-
-    if (ralliedWarriorCount >= ALL_IN_START) {
+    if (this.balance >= this.thresholdAttack) {
       this.shift(ATTACK);
-    } else if ((this.mode === ATTACK) && (ralliedWarriorCount >= ALL_IN_STOP)) {
-      this.shift(ATTACK);
-    } else if (availableFightRatio > 2) {
-      this.shift(ATTACK);
-    } else if (availableFightRatio < 1) {
+    } else if (this.balance <= this.thresholdRetreat) {
       if ((this.mode === ATTACK) || (this.mode === RETREAT)) {
         this.shift(RETREAT);
       } else {
@@ -250,11 +199,11 @@ class Fight {
       }
     }
 
-    this.balance = availableFightRatio;
+    if (assessRequestedBalance(this) < this.thresholdAttack) {
+      new Fighter(this);
+    }
 
-//    if (this.mode === ATTACK) {
-//      assignTargets(this);
-//    }
+    assignTargets(this);
   }
 
   shift(mode, silent) {
@@ -359,6 +308,7 @@ class Fighter extends Job {
     this.isCommitted = false;
 
     this.fight = fight;
+    this.target = null;
     this.thisZone = null;
     this.lastZone = null;
     this.rallyZone = null;
@@ -400,53 +350,34 @@ class Fighter extends Job {
         if (this.rallyZone) {
           orderMove(warrior, this.rallyZone);
           this.shift(RALLY);
+        } else if (this.target) {
+          orderAttack(warrior, this.target);
+          this.shift(ATTACK);
         } else if (this.mode !== ATTACK) {
-          orderFight(warrior, warrior.zone);
+          orderFight(warrior, zone);
           this.shift(ATTACK);
         }
-      } else if (this.fight.isWarriorRallied(warrior)) {
+      } else if (this.fight.zones.has(warrior.zone)) {
         orderStop(warrior);
         this.shift(STAND);
         this.rallyZone = warrior.zone;
       } else {
         orderMove(warrior, zone);
         this.shift(RALLY);
-        this.rallyZone = zone;
       }
     } else if (this.target) {
       orderAttack(warrior, this.target);
-    } else if (warrior.zone.enemies.size) {
-      this.target = findClosestTarget(warrior, warrior.zone.enemies);
-
-      if (this.target) {
-        orderAttack(warrior, this.target);
-        this.shift(ATTACK);
-      } else if (this.mode !== ATTACK) {
-        orderFight(warrior, warrior.zone);
-        this.shift(ATTACK);
-      }
+      this.shift(ATTACK);
     } else if (zone.enemies.size) {
-      this.target = findClosestTarget(warrior, zone.enemies);
-
-      if (this.target) {
-        orderAttack(warrior, this.target);
-        this.shift(ATTACK);
-      } else if (this.mode !== ATTACK) {
-        orderFight(warrior, zone);
-        this.shift(ATTACK);
-      }
+      orderFight(warrior, zone);
+      this.shift(ATTACK);
     } else if (zone.threats.size) {
-      const threat = findClosestTarget(warrior, zone.threats);
+      const threat = findClosestThreat(warrior, zone.threats);
 
-      if (threat) {
-        if (isCloseTo(warrior.body, threat.body)) {
-          zone.threats.delete(threat);
-        } else {
-          orderMove(warrior, threat.body);
-        }
-      } else if (this.mode !== ATTACK) {
-        orderFight(warrior, zone);
-        this.shift(ATTACK);
+      if (isCloseTo(warrior.body, threat.body)) {
+        zone.threats.delete(threat);
+      } else {
+        orderMove(warrior, threat.body);
       }
     } else if (this.mode !== ATTACK) {
       orderFight(warrior, zone);
@@ -456,59 +387,226 @@ class Fighter extends Job {
 
 }
 
-//function assignTargets(fight) {
-//  const zone = fight.zone;
-//  const attackers = new Map();
-//
-//  for (const fighter of fight.fighters) {
-//    const warrior = fighter.assignee;
-//
-//    if (!warrior || warrior.weapon.cooldown) continue;
-//
-//    for (const enemy of zone.enemies) {
-//      // Don't focus fire on enemy units that cannot hit us
-//      if (!enemy.type.damageGround) continue;
-//      if (enemy.body.isGround && (!warrior.type.damageGround || !isInRange(warrior, enemy, warrior.type.rangeGround))) continue;
-//      if (enemy.body.isFlying && (!warrior.type.damageAir || !isInRange(warrior, enemy, warrior.type.rangeAir))) continue;
-//
-//      const list = attackers.get(enemy);
-//
-//      if (list) {
-//        list.push(warrior);
-//      } else {
-//        attackers.set(enemy, [warrior]);
-//      }
-//    }
-//
-//    warrior.target = null;
-//  }
-//
-//  const sorted = [];
-//  for (const [target, warriors] of attackers) {
-//    sorted.push({ target, warriors });
-//  }
-//  sorted.sort((a, b) => (b.warriors.length - a.warriors.length));
-//
-//  for (const one of sorted) {
-//    const target = one.target;
-//
-//    for (const warrior of one.warriors) {
-//      if (!warrior.target) {
-//        warrior.target = target;
-//      }
-//    }
-//  }
-//}
-//
-//function isInRange(warrior, enemy, range) {
-//  const dr = warrior.body.r + range + enemy.body.r;
-//  const dx = (enemy.body.x - warrior.body.x);
-//  const dy = (enemy.body.y - warrior.body.y);
-//  const squareRange = dr * dr;
-//  const squareDistance = dx * dx + dy * dy;
-//
-//  return (squareDistance <= squareRange);
-//}
+function countRalliedWarriors(fight) {
+  let count = 0;
+
+  for (const job of fight.fighters) {
+    const warrior = job.assignee;
+
+    if (warrior && fight.zones.has(warrior.zone)) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+function assessCurrentBalance(fight) {
+  // TODO: Calculate ground and air DPS, and ground and air health
+  let availableDps = 1;
+  let availableHealth = 1;
+  let enemyDps = 1;
+  let enemyHealth = 1;
+
+  for (const zone of fight.zones) {
+    for (const enemy of zone.threats) {
+      if (enemy.type.damageGround > 0) {
+        enemyDps += enemy.type.damageGround;
+        enemyHealth += enemy.armor.health + enemy.armor.shield;
+      }
+    }
+  }
+
+  for (const job of fight.fighters) {
+    const warrior = job.assignee;
+
+    if (warrior && fight.zones.has(warrior.zone)) {
+      availableDps += warrior.type.damageGround;
+      availableHealth += warrior.armor.health + warrior.armor.shield;
+    }
+  }
+
+  const availableStrength = availableHealth * availableDps;
+  const enemyStrength = enemyHealth * enemyDps;
+
+  return (availableStrength / enemyStrength);
+}
+
+function assessRequestedBalance(fight) {
+  // TODO: Calculate ground and air DPS, and ground and air health
+  let requestedDps = 1;
+  let requestedHealth = 1;
+  let enemyDps = 1;
+  let enemyHealth = 1;
+
+  for (const zone of fight.zones) {
+    for (const enemy of zone.threats) {
+      if (enemy.type.damageGround > 0) {
+        enemyDps += enemy.type.damageGround;
+        enemyHealth += enemy.armor.health + enemy.armor.shield;
+      }
+    }
+  }
+
+  for (const job of fight.fighters) {
+    const warrior = job.assignee;
+
+    if (warrior) {
+      requestedDps += warrior.type.damageGround;
+      requestedHealth += warrior.armor.health + warrior.armor.shield;
+    } else {
+      // TODO: Tune the request expectations and put the expectations in the job description so that the right warriors are hired
+      requestedDps += REQUEST_FIGHTER_DPS;
+      requestedHealth += REQUEST_FIGHTER_HEALTH;
+    }
+  }
+
+  const requestedStrength = requestedHealth * requestedDps;
+  const enemyStrength = enemyHealth * enemyDps;
+
+  return (requestedStrength / enemyStrength);
+}
+
+function assignTargets(fight) {
+  const zone = fight.zone;
+  const fighters = new Set();
+  const attacks = new Set();
+
+  for (const fighter of fight.fighters) {
+    const warrior = fighter.assignee;
+
+    if (warrior && warrior.isAlive) {
+      fighter.targets = new Set();
+      fighter.walk = (warrior.weapon.cooldown < warrior.type.weaponCooldown) ? warrior.type.movementSpeed * warrior.weapon.cooldown : 0;
+
+      fighters.add(fighter);
+    }
+  }
+
+  for (const enemy of zone.enemies) {
+    const attackers = new Set();
+    let damage = 0;
+
+    for (const fighter of fighters) {
+      const warrior = fighter.assignee;
+
+      if (!isValidTarget(fighter, warrior, enemy)) continue;
+
+      fighter.targets.add(enemy);
+
+      if (enemy.body.isGround) {
+        damage += warrior.type.attackGround;
+      } else if (enemy.body.isFlying) {
+        damage += warrior.type.attackAir;
+      }
+      attackers.add(fighter);
+    }
+
+    if (damage > 0) {
+      attacks.add({ enemy: enemy, damage: damage, fighters: attackers });
+    }
+  }
+
+  while (attacks.size) {
+    const attack = findBestAttack(attacks);
+    const enemy = attack.enemy;
+    let health = enemy.armor.health + enemy.armor.shield;
+
+    attacks.delete(attack);
+
+    const attackers = [...attack.fighters].sort(function(a, b) {
+      if (a.targets.size === b.targets.size) return (b.assignee.weapon.cooldown - a.assignee.weapon.cooldown);
+      return (a.targets.size - b.targets.size);
+    });
+
+    // Keep fighters already targeting this enemy unit preferring those with less weapon cooldown
+    for (const fighter of attack.fighters) {
+      if (fighter.target !== enemy) continue;
+
+      health -= lockFighterOnEnemyAndRemoveFromOtherAttacks(fighters, attacks, fighter, enemy);
+
+      if (health <= 0) break;
+    }
+
+    if (health <= 0) continue;
+
+    // Add fighters with least other enemies in range preferring those with less weapon cooldown
+    for (const fighter of attackers) {
+      if (fighter.target === enemy) continue;
+
+      health -= lockFighterOnEnemyAndRemoveFromOtherAttacks(fighters, attacks, fighter, enemy);
+
+      if (health <= 0) break;
+    }
+  }
+}
+
+function lockFighterOnEnemyAndRemoveFromOtherAttacks(fighters, attacks, fighter, enemy) {
+  const warrior = fighter.assignee;
+  const damage = enemy.body.isGround ? warrior.type.attackGround : warrior.type.attackAir;
+
+  fighter.target = enemy;
+  fighters.delete(fighter);
+
+  for (const attack of attacks) {
+    if (attack.fighters.has(fighter)) {
+      attack.fighters.delete(fighter);
+
+      if (attack.enemy.body.isGround) {
+        attack.damage -= warrior.type.attackGround;
+      } else if (other.enemy.body.isFlying) {
+        attack.damage -= warrior.type.attackAir;
+      }
+
+      if (attack.damage <= 0) {
+        attacks.delete(attack);
+      }
+    }
+  }
+
+  return damage;
+}
+
+function findBestAttack(attacks) {
+  // TODO: Prefer instant kills (damage >= health)
+  // TODO: Prefer lower health (min health)
+  // TODO: Prefer enemy with higher DPS
+  // TODO: Prefer attack which concentrates higher warrior DPS
+  // TODO: Prefer cast spellers with large impact
+  let bestAttack;
+  let bestRemain = Infinity;
+
+  for (const attack of attacks) {
+    const remain = attack.enemy.armor.shield + attack.enemy.armor.health - attack.damage;
+    if (remain < bestRemain) {
+      bestAttack = attack;
+      bestRemain = remain;
+    }
+  }
+
+  return bestAttack;
+}
+
+function isValidTarget(fighter, warrior, target) {
+  // Don't focus fire on enemy units that cannot hit us
+  if (!target.type.damageGround) return false;
+
+  // Don't focus fire on enemy units that are not in range
+  if (target.body.isGround && (!warrior.type.damageGround || !isInRange(warrior, target, warrior.type.rangeGround, fighter.walk))) return false;
+  if (target.body.isFlying && (!warrior.type.damageAir || !isInRange(warrior, target, warrior.type.rangeAir, fighter.walk))) return false;
+
+  return true;
+}
+
+function isInRange(warrior, target, range, walk) {
+  const dr = warrior.body.r + range + walk + target.body.r;
+  const dx = (target.body.x - warrior.body.x);
+  const dy = (target.body.y - warrior.body.y);
+  const squareRange = dr * dr;
+  const squareDistance = dx * dx + dy * dy;
+
+  return (squareDistance <= squareRange);
+}
 
 function findSafeZone(zone) {
   for (const corridor of zone.corridors) {
@@ -520,24 +618,16 @@ function findSafeZone(zone) {
   }
 }
 
-function findClosestTarget(warrior, units) {
-  const canHitGround = (warrior.type.damageGround > 0);
-  const canHitAir = (warrior.type.damageAir > 0);
-
+function findClosestThreat(warrior, units) {
   let targetUnit;
   let targetDistance = Infinity;
-  let targetFights = false;
 
   for (const unit of units) {
-    if ((unit.body.isGround && !canHitGround) || (unit.body.isFlying && !canHitAir)) continue;
-    if (targetFights && !unit.type.damageGround) continue;
-
     const distance = (warrior.body.x - unit.body.x) * (warrior.body.x - unit.body.x) + (warrior.body.y - unit.body.y) * (warrior.body.y - unit.body.y);
 
     if (distance < targetDistance) {
       targetUnit = unit;
       targetDistance = distance;
-      targetFights = !!unit.type.damageGround;
     }
   }
 

@@ -108,7 +108,7 @@ export default class Game {
           }
         }
 
-        if (Units.workers().size && Units.buildings().size) {
+        if (Units.buildings().size) {
           await this.step();
         } else {
           await this.say("gg");

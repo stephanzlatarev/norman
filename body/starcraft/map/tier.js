@@ -21,6 +21,22 @@ export function syncTiers() {
   // Check if active depot changed, assuming only one depot changes state in a single game loop
   if (tiers.length && (depots.length === tiers[0].zones.size)) return tiers;
 
+  if (!depots.length) {
+    const zones = Zone.list();
+
+    if (!tiers.length || (zones.length !== tiers[0].zones.size)) {
+      const tier = new Tier(1, new Set(), new Set(zones), new Set());
+
+      for (const zone of zones) {
+        zone.tier = tier;
+      }
+
+      tiers.push(tier);
+    }
+
+    return tiers;
+  }
+
   tiers.length = 0;
 
   let zones = new Set(depots);

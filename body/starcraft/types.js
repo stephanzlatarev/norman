@@ -1,3 +1,4 @@
+export const NORMAL_LOOPS_PER_SECOND = 16;
 
 const units = new Map();
 const upgrades = new Map();
@@ -46,10 +47,13 @@ class Types {
       type.id = unit.unitId;
       type.name = unit.name;
 
+      type.attackGround = weapons.attackGround;
+      type.attackAir = weapons.attackAir;
       type.damageGround = weapons.damageGround;
       type.damageAir = weapons.damageAir;
       type.rangeGround = weapons.rangeGround;
       type.rangeAir = weapons.rangeAir;
+      type.weaponCooldown = weapons.weaponCooldown;
 
       type.isNeutral = isNeutral;
       type.isDepot = !!IS_DEPOT[unit.name];
@@ -64,7 +68,7 @@ class Types {
       type.supplyProvided = unit.foodProvided;
       type.needsPower = (unit.race === RACE_PROTOSS) && !IS_DEPOT[unit.name] && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name];
 
-      type.movementSpeed = unit.movementSpeed;
+      type.movementSpeed = unit.movementSpeed / NORMAL_LOOPS_PER_SECOND;
       type.sightRange = unit.sightRange;
 
       type.abilityId = unit.abilityId;
@@ -119,27 +123,41 @@ const WEAPON_AIR = 2;
 const WEAPON_ANY = 3;
 
 function parseWeapons(unit) {
+  let attackGround = 0;
+  let attackAir = 0;
   let damageGround = 0;
   let damageAir = 0;
   let rangeGround = 0;
   let rangeAir = 0;
+  let weaponCooldown = Infinity;
 
   if (unit.name === "Sentry") {
+    attackGround = 6;
     damageGround = 8.4;
     rangeGround = 5;
+    attackAir = 6;
+    damageAir = 8.4;
+    rangeAir = 5;
   }
 
   for (const weapon of unit.weapons) {
     if ((weapon.type === WEAPON_GROUND) || (weapon.type === WEAPON_ANY)) {
+      attackGround = weapon.damage;
       damageGround = Math.max(weapon.damage * weapon.attacks * GAME_SPEED / weapon.speed, damageGround);
       rangeGround = Math.max(weapon.range, rangeGround);
-    } else if ((weapon.type === WEAPON_AIR) || (weapon.type === WEAPON_ANY)) {
+      weaponCooldown = Math.min((weapon.speed * NORMAL_LOOPS_PER_SECOND / weapon.attacks) * 0.9, weaponCooldown);
+    }
+    if ((weapon.type === WEAPON_AIR) || (weapon.type === WEAPON_ANY)) {
+      attackAir = weapon.damage;
       damageAir = Math.max(weapon.damage * weapon.attacks * GAME_SPEED / weapon.speed, damageAir);
       rangeAir = Math.max(weapon.range, rangeGround);
+      weaponCooldown = Math.min((weapon.speed * NORMAL_LOOPS_PER_SECOND / weapon.attacks) * 0.9, weaponCooldown);
     }
   }
 
-  return { damageGround, damageAir, rangeGround, rangeAir };
+  weaponCooldown = Math.max(weaponCooldown, 0);
+
+  return { attackGround, attackAir, damageGround, damageAir, rangeGround, rangeAir, weaponCooldown };
 }
 
 export default new Types();

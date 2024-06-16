@@ -34,7 +34,7 @@ export default class BuildExpansionsMission extends Mission {
 }
 
 function locateHomeZone() {
-  return Units.buildings().values().next().value.depot;
+  return Units.buildings().values().next().value.zone;
 }
 
 function findDepot(home) {

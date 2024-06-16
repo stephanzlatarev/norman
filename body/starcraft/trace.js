@@ -32,7 +32,7 @@ export default class Trace {
 
     traceZones(texts, lines);
     traceJobs(texts, lines);
-    traceWarriorActions(texts);
+    traceWarriorActions(texts, lines);
     traceThreats(texts, spheres);
     traceDeployments(texts);
 
@@ -144,14 +144,32 @@ function threeletter(tab, text) {
   return tab + " X ";
 }
 
-function traceWarriorActions(texts) {
+function traceWarriorActions(texts, lines) {
   for (const warrior of Units.warriors().values()) {
     const zoneName = warrior.zone ? warrior.zone.name : "-";
     const body = warrior.body;
+    const mode = (warrior.job && warrior.job.modes && warrior.job.modes[warrior.job.mode]) ? warrior.job.modes[warrior.job.mode] + " " : "";
     const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) };
 
     texts.push({ text: "Zone: " + zoneName + " " + Math.floor(warrior.body.x) + ":" + Math.floor(warrior.body.y), worldPos: { ...tag, z: tag.z - 0.22 }, size: 16 });
-    texts.push({ text: "Order: " + warrior.order.abilityId, worldPos: { ...tag, z: tag.z - 0.44 }, size: 16 });
+    texts.push({ text: mode + "Order: " + warrior.order.abilityId, worldPos: { ...tag, z: tag.z - 0.44 }, size: 16 });
+
+    if ((warrior.order.abilityId === 23) && warrior.order.targetUnitTag) {
+      const target = Units.enemies().get(warrior.order.targetUnitTag);
+
+      if (target) {
+        const color = warrior.weapon.cooldown ? Color.Cooldown : Color.Attack;
+        const wx = warrior.body.x;
+        const wy = warrior.body.y;
+        const wz = warrior.body.z;
+
+        lines.push({ line: { p0: { x: wx, y: wy, z: wz + 0.1}, p1: target.body }, color: color });
+        lines.push({ line: { p0: { x: wx, y: wy, z: wz + 0.3}, p1: target.body }, color: color });
+        lines.push({ line: { p0: { x: wx, y: wy, z: wz + 0.5}, p1: target.body }, color: color });
+        lines.push({ line: { p0: { x: wx, y: wy, z: wz + 0.7}, p1: target.body }, color: color });
+        lines.push({ line: { p0: { x: wx, y: wy, z: wz + 0.9}, p1: target.body }, color: color });
+      }
+    }
   }
 }
 
@@ -188,10 +206,10 @@ function traceDeployments(texts) {
       bottom = Math.max(bottom, zone.y);
     }
 
-    const width = right - left;
-    const height = bottom - top;
-    const scaleX = (width > height) ? 1 : width / height;
-    const scaleY = (height > width) ? 1 : height / width;
+    const width = Math.max(right - left, 1);
+    const height = Math.max(bottom - top, 1);
+    const scaleX = (width >= height) ? 1 : width / height;
+    const scaleY = (height >= width) ? 1 : height / width;
 
     deployments = { left, width, scaleX, bottom, height, scaleY };
   }
@@ -224,8 +242,9 @@ function traceDeployments(texts) {
     for (const zone of fights) {
       const text = [zone.name];
 
-      if (zone.fight && zone.fight.balance) {
-        text.push("balance:", zone.fight.balance.toFixed(2));
+      if (zone.fight) {
+        if (zone.fight.modes && zone.fight.modes[zone.fight.mode]) text.push(zone.fight.modes[zone.fight.mode]);
+        if (zone.fight.balance) text.push("balance:", zone.fight.balance.toFixed(2));
       }
 
       y += 0.01;

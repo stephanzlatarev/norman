@@ -23,8 +23,8 @@ export default class Board {
         const mask = 1 << pos;
 
         const isOn = (x >= box.left) && (x <= box.right) && (y >= box.top) && (y <= box.bottom);
-        const isPlot = (placementGrid.data[Math.floor(index / 8)] & mask) != 0;
-        const isPath = (pathingGrid.data[Math.floor(index / 8)] & mask) != 0;
+        const isPlot = isOn && ((placementGrid.data[Math.floor(index / 8)] & mask) != 0);
+        const isPath = isOn && ((pathingGrid.data[Math.floor(index / 8)] & mask) != 0);
 
         row.push(new Cell(x, y, isOn, isPath, isPlot));
       }
@@ -248,7 +248,59 @@ function findMarginPeaks(board) {
   let batch = new Set();
   let margin = 1;
 
-  // Get all pathable cells that border with non-pathable cells to be the first layer
+  // Get all edges that border with pathable cells to be in the first layer
+  for (let row = board.box.top; row <= board.box.bottom; row++) {
+    const leftCell = board.cells[row][board.box.left];
+
+    if (leftCell.isPath) {
+      for (const neighbor of leftCell.neighbors) {
+        if (neighbor.isPath) {
+          leftCell.margin = 1;
+          batch.add(leftCell);
+          break;
+        }
+      }
+    }
+
+    const rightCell = board.cells[row][board.box.right];
+
+    if (rightCell.isPath) {
+      for (const neighbor of rightCell.neighbors) {
+        if (neighbor.isPath) {
+          rightCell.margin = 1;
+          batch.add(rightCell);
+          break;
+        }
+      }
+    }
+  }
+  for (let col = board.box.left + 1; col < board.box.right; col++) {
+    const topCell = board.cells[board.box.top][col];
+
+    if (topCell.isPath) {
+      for (const neighbor of topCell.neighbors) {
+        if (neighbor.isPath) {
+          topCell.margin = 1;
+          batch.add(topCell);
+          break;
+        }
+      }
+    }
+
+    const bottomCell = board.cells[board.box.bottom][col];
+
+    if (bottomCell.isPath) {
+      for (const neighbor of bottomCell.neighbors) {
+        if (neighbor.isPath) {
+          bottomCell.margin = 1;
+          batch.add(bottomCell);
+          break;
+        }
+      }
+    }
+  }
+
+  // Get all pathable cells that border with non-pathable cells to be in the first layer
   for (let row = board.box.top + 1; row < board.box.bottom; row++) {
     for (let col = board.box.left + 1; col < board.box.right; col++) {
       const cell = board.cells[row][col];

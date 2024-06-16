@@ -112,7 +112,7 @@ export default class Job extends Memory {
     this.isDone = !!outcome;
     this.isFailed = !outcome;
 
-    if (this.assignee && (this.assignee.job === this)) {
+    if (this.assignee && this.assignee.isAlive && (this.assignee.job === this)) {
       console.log(this.assignee.type.name, this.assignee.nick, "released on", (outcome ? "success" : "failure"), "of job", this.details);
 
       this.assignee.job = null;
