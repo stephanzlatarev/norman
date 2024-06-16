@@ -470,7 +470,7 @@ function lockFighterOnEnemyAndRemoveFromOtherAttacks(fighters, attacks, fighter,
 
       if (attack.enemy.body.isGround) {
         attack.damage -= warrior.type.attackGround;
-      } else if (other.enemy.body.isFlying) {
+      } else if (attack.enemy.body.isFlying) {
         attack.damage -= warrior.type.attackAir;
       }
 
