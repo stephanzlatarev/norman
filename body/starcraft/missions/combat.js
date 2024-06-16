@@ -15,7 +15,7 @@ const RETREAT_THRESHOLD = 1;
 
 const ALERT_YELLOW = 4;
 
-export default class DeployTroopsMission extends Mission {
+export default class CombatMission extends Mission {
 
   run() {
     let focus = null;
