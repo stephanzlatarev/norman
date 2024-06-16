@@ -3,18 +3,19 @@ import Units from "./units.js";
 import Zone from "./map/zone.js";
 
 const Color = {
+  Blue: { r: 0, g: 150, b: 250 },
+  Green: { r: 0, g: 200, b: 0 },
+  White: { r: 200, g: 200, b: 200 },
+  Yellow: { r: 200, g: 200, b: 0 },
+  Red: { r: 200, g: 0, b: 0 },
+  Unknown: { r: 100, g: 100, b: 100 },
+
   Attack: { r: 255, g: 0, b: 0 },
   Move: { r: 0, g: 255, b: 0 },
   Cooldown: { r: 100, g: 100, b: 255 },
 
   Corridor: { r: 0, g: 200, b: 200 },
   Enemy: { r: 200, g: 0, b: 0 },
-
-  Perimeter: { r: 0, g: 200, b: 0 },
-  Frontier: { r: 200, g: 200, b: 200 },
-  Unknown: { r: 200, g: 200, b: 0 },
-  Fight: { r: 200, g: 0, b: 0 },
-  Threat: { r: 200, g: 0, b: 200 },
 };
 
 export default class Trace {
@@ -34,7 +35,8 @@ export default class Trace {
     traceJobs(texts, lines);
     traceWarriorActions(texts, lines);
     traceThreats(texts, spheres);
-    traceDeployments(texts);
+    traceAlertLevels(texts);
+    traceBattles(texts);
 
     await client.debug({ debug: [{ draw: { lines: lines, spheres: spheres, text: texts } }] });
 
@@ -187,13 +189,12 @@ function traceThreats(texts, spheres) {
   } 
 }
 
-let deployments;
-function traceDeployments(texts) {
-  const fights = [];
+const ALERT_COLOR = [Color.Unknown, Color.Blue, Color.Green, Color.White, Color.Yellow, Color.Red];
+let alertbox;
+function traceAlertLevels(texts) {
+  texts.push({ text: "Alert levels:", virtualPos: { x: 0.8, y: 0.05 }, size: 16 });
 
-  texts.push({ text: "Troop deployment:", virtualPos: { x: 0.8, y: 0.05 }, size: 16 });
-
-  if (!deployments) {
+  if (!alertbox) {
     let left = Infinity;
     let right = 0;
     let top = Infinity;
@@ -211,45 +212,60 @@ function traceDeployments(texts) {
     const scaleX = (width >= height) ? 1 : width / height;
     const scaleY = (height >= width) ? 1 : height / width;
 
-    deployments = { left, width, scaleX, bottom, height, scaleY };
+    alertbox = { left, width, scaleX, bottom, height, scaleY };
   }
 
   for (const zone of Zone.list()) {
-    const x = 0.75 + ((zone.x - deployments.left) / deployments.width) * deployments.scaleX * 0.2;
-    const y = 0.07 + ((deployments.bottom - zone.y) / deployments.height) * deployments.scaleY * 0.2;
+    if (zone.isCorridor) {
+      const text = zone.name[2];
+      const color = Color.Unknown;
+      const x = 0.75 + ((zone.x - alertbox.left) / alertbox.width) * alertbox.scaleX * 0.2;
+      const y = 0.07 + ((alertbox.bottom - zone.y) / alertbox.height) * alertbox.scaleY * 0.2;
 
-    let color = Color.Unknown;
-    if (zone.deployment === 1) {
-      color = Color.Perimeter;
-    } else if (zone.deployment === 2) {
-      color = Color.Frontier;
-    } else if (zone.deployment === 4) {
-      color = Color.Fight;
-
-      fights.push(zone);
-    } else if (zone.deployment === 5) {
-      color = Color.Threat;
+      texts.push({ text: text, virtualPos: { x: x, y: y }, size: 16, color: color });
     }
-
-    texts.push({ text: zone.isCorridor ? zone.name[2] : zone.name[0] + zone.name[1], virtualPos: { x: x, y: y }, size: 16, color: color });
   }
 
-  if (fights.length) {
-    let y = 0.1 + deployments.scaleY * 0.2;
-    fights.sort((a, b) => (a.tier.level - b.tier.level));
+  for (const zone of Zone.list()) {
+    if (!zone.isCorridor) {
+      const text = zone.name[0] + zone.name[1];
+      const color = ALERT_COLOR[zone.alertLevel] || Color.Unknown;
+      const x = 0.75 + ((zone.x - alertbox.left) / alertbox.width) * alertbox.scaleX * 0.2;
+      const y = 0.07 + ((alertbox.bottom - zone.y) / alertbox.height) * alertbox.scaleY * 0.2;
 
-    texts.push({ text: "Battles:", virtualPos: { x: 0.8, y: y }, size: 16 });
-    for (const zone of fights) {
-      const text = [zone.name];
+      texts.push({ text: text, virtualPos: { x: x, y: y }, size: 16, color: color });
+    }
+  }
+}
 
-      if (zone.fight) {
-        if (zone.fight.modes && zone.fight.modes[zone.fight.mode]) text.push(zone.fight.modes[zone.fight.mode]);
-        if (zone.fight.balance) text.push("balance:", zone.fight.balance.toFixed(2));
+function traceBattles(texts) {
+  let y = 0.32;
+
+  texts.push({ text: "Battles:", virtualPos: { x: 0.8, y: 0.3 }, size: 16 });
+  texts.push({ text: "Tier Zone Balance Mode", virtualPos: { x: 0.8, y: 0.31 }, size: 16 });
+
+  for (const zone of Zone.list().filter(zone => !!zone.fight).sort((a, b) => (a.tier.level - b.tier.level))) {
+    const text = [threeletter(" ", zone.tier.level), threeletter(" ", zone.name)];
+
+    if (zone.fight) {
+      const balance = zone.fight.balance || 0;
+      if (balance >= 1000) {
+        text.push(" high  ");
+      } else if (balance >= 100) {
+        text.push(balance.toFixed(3));
+      } else if (balance >= 10) {
+        text.push(balance.toFixed(4));
+      } else {
+        text.push(balance.toFixed(5));
       }
 
-      y += 0.01;
-      texts.push({ text: text.join(" "), virtualPos: { x: 0.8, y: y }, size: 16 });
+      if (zone.fight.modes && zone.fight.modes[zone.fight.mode]) {
+        text.push(zone.fight.modes[zone.fight.mode]);
+      }
     }
+
+    texts.push({ text: text.join(" "), virtualPos: { x: 0.8, y: y }, size: 16 });
+    y += 0.01;
   }
 }
 
