@@ -250,7 +250,7 @@ function traceBattles(texts) {
     if (zone.fight) {
       const balance = zone.fight.balance || 0;
       if (balance >= 1000) {
-        text.push(" high  ");
+        text.push(" all in");
       } else if (balance >= 100) {
         text.push(balance.toFixed(3));
       } else if (balance >= 10) {

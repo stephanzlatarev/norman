@@ -1,88 +1,27 @@
 import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
-import Units from "../units.js";
 import Zone from "../map/zone.js";
-
-const PERIMETER = 1;
-const FRONTIER = 2;
-const UNKNOWN = 3;
-const FIGHT = 4;
-const THREAT = 5;
 
 const REQUEST_FIGHTER_DPS = 15;
 const REQUEST_FIGHTER_HEALTH = 150;
 
-const ALL_IN_THRESHOLD = 25; // Implement focus fire for warriors that cannot retreat
+const ALL_IN_BEGIN_DPS = 300;
+const ALL_IN_END_DPS = 200;
+const ALL_IN_BALANCE = 1000;
+
 const ATTACK_THRESHOLD = 2;
 const RETREAT_THRESHOLD = 1;
+
+const ALERT_YELLOW = 4;
 
 export default class DeployTroopsMission extends Mission {
 
   run() {
-
-    // Classify zones
-
-    const armyZones = Zone.list().filter(zone => !!zone.warriors.size);
-    if (!armyZones.length) return;
-
-    const classified = new Set();
-    let wave = new Set(armyZones);
-
-    for (const zone of armyZones) {
-      zone.deployment = zone.threats.size ? FIGHT : PERIMETER;
-      classified.add(zone);
-    }
-
-    while (wave.size) {
-      const nextWave = new Set();
-
-      for (const zone of wave) {
-        for (const corridor of zone.corridors) {
-          for (const neighbor of corridor.zones) {
-            if (!classified.has(neighbor)) {
-              nextWave.add(neighbor);
-            }
-          }
-        }
-      }
-
-      for (const zone of nextWave) {
-        const entryClassification = getEntryClassification(zone, classified);
-
-        if (zone.threats.size) {
-          zone.deployment = (entryClassification < UNKNOWN) ? FIGHT : THREAT;
-        } else if (zone.warriors.size) {
-          zone.deployment = PERIMETER;
-        } else if (entryClassification < UNKNOWN) {
-          zone.deployment = zone.buildings.size ? PERIMETER : FRONTIER;
-        } else {
-          zone.deployment = UNKNOWN;
-        }
-
-        classified.add(zone);
-      }
-
-      wave = nextWave;
-    }
-
-    for (const zone of Zone.list().filter(zone => !classified.has(zone))) {
-      zone.deployment = zone.threats.size ? THREAT : UNKNOWN;
-    }
-
-    // Create fights
-    
-    let rallyFight; // TODO: Map rally fights for each zone while classifying the zones
-    let idleFighters = 0;
-
-    for (const warrior of Units.warriors().values()) {
-      if (!warrior.job) {
-        idleFighters++;
-      }
-    }
+    let focus = null;
 
     for (const zone of Zone.list()) {
-      if (zone.deployment === FIGHT) {
+      if (zone.alertLevel === ALERT_YELLOW) {
         const priority = 100 - zone.tier.level;
 
         if (zone.fight) {
@@ -90,43 +29,27 @@ export default class DeployTroopsMission extends Mission {
         } else {
           new Fight(priority, zone);
         }
-
-        zone.fight.evaluate();
-
-        for (const job of zone.fight.fighters) {
-          if (!job.assignee) {
-            idleFighters--;
-          }
-        }
-
-        if (!rallyFight || (zone.fight.priority > rallyFight.priority)) {
-          rallyFight = zone.fight;
-        }
       } else if (zone.fight) {
         zone.fight.close();
         zone.fight = null;
       }
     }
 
-    if (rallyFight && (idleFighters > 0)) {
-      for (let i = 0; i < idleFighters; i++) {
-        new Fighter(rallyFight);
+    for (const zone of Zone.list()) {
+      if (zone.fight) {
+        if (!focus || (zone.fight.priority < focus.priority)) {
+          focus = zone.flight;
+        }
+      }
+    }
+
+    for (const zone of Zone.list()) {
+      if (zone.fight) {
+        zone.fight.evaluate(zone.fight === focus);
       }
     }
   }
 
-}
-
-function getEntryClassification(zone, classified) {
-  for (const corridor of zone.corridors) {
-    for (const neighbor of corridor.zones) {
-      if (classified.has(neighbor) && (neighbor.deployment < UNKNOWN)) {
-        return FRONTIER;
-      }
-    }
-  }
-
-  return UNKNOWN;
 }
 
 const STAND = 0;
@@ -179,16 +102,10 @@ class Fight {
     }
   }
 
-  evaluate() {
+  evaluate(isFocusFight) {
     this.balance = assessCurrentBalance(this);
 
-    const ralliedWarriorCount = countRalliedWarriors(this);
-
-    if (ralliedWarriorCount >= ALL_IN_THRESHOLD) {
-      this.thresholdAttack = 0;
-      this.thresholdRetreat = 0;
-    }
-
+    // Check if fight mode should change
     if (this.balance >= this.thresholdAttack) {
       this.shift(ATTACK);
     } else if (this.balance <= this.thresholdRetreat) {
@@ -199,7 +116,11 @@ class Fight {
       }
     }
 
-    if (assessRequestedBalance(this) < this.thresholdAttack) {
+    // Check if the fight is recruiting fighters
+    if (
+      (isFocusFight && !this.fighters.find(fighter => !fighter.assignee)) ||
+      (assessRequestedBalance(this) < this.thresholdAttack)
+    ) {
       new Fighter(this);
     }
 
@@ -215,9 +136,11 @@ class Fight {
   }
 
   close() {
+    if (this.detector.assignee) orderStop(this.detector.assignee);
     this.detector.close(true);
 
     for (const job of this.fighters) {
+      if (job.assignee) orderStop(job.assignee);
       job.close(true);
     }
 
@@ -387,20 +310,6 @@ class Fighter extends Job {
 
 }
 
-function countRalliedWarriors(fight) {
-  let count = 0;
-
-  for (const job of fight.fighters) {
-    const warrior = job.assignee;
-
-    if (warrior && fight.zones.has(warrior.zone)) {
-      count++;
-    }
-  }
-
-  return count;
-}
-
 function assessCurrentBalance(fight) {
   // TODO: Calculate ground and air DPS, and ground and air health
   let availableDps = 1;
@@ -408,21 +317,28 @@ function assessCurrentBalance(fight) {
   let enemyDps = 1;
   let enemyHealth = 1;
 
-  for (const zone of fight.zones) {
-    for (const enemy of zone.threats) {
-      if (enemy.type.damageGround > 0) {
-        enemyDps += enemy.type.damageGround;
-        enemyHealth += enemy.armor.health + enemy.armor.shield;
-      }
-    }
-  }
-
   for (const job of fight.fighters) {
     const warrior = job.assignee;
 
     if (warrior && fight.zones.has(warrior.zone)) {
       availableDps += warrior.type.damageGround;
       availableHealth += warrior.armor.health + warrior.armor.shield;
+    }
+
+    if (availableDps >= ALL_IN_BEGIN_DPS) {
+      return ALL_IN_BALANCE;
+    }
+  }
+  if ((fight.balance === ALL_IN_BALANCE) && (availableDps >= ALL_IN_END_DPS)) {
+    return ALL_IN_BALANCE;
+  }
+
+  for (const zone of fight.zones) {
+    for (const enemy of zone.threats) {
+      if (enemy.type.damageGround > 0) {
+        enemyDps += enemy.type.damageGround;
+        enemyHealth += enemy.armor.health + enemy.armor.shield;
+      }
     }
   }
 
@@ -611,7 +527,7 @@ function isInRange(warrior, target, range, walk) {
 function findSafeZone(zone) {
   for (const corridor of zone.corridors) {
     for (const neighbor of corridor.zones) {
-      if (neighbor.deployment < UNKNOWN) {
+      if ((neighbor.tier.level < zone.tier.level) && (neighbor.alertLevel < ALERT_YELLOW)) {
         return neighbor;
       }
     }
