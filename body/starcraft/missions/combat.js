@@ -38,7 +38,7 @@ export default class CombatMission extends Mission {
     for (const zone of Zone.list()) {
       if (zone.fight) {
         if (!focus || (zone.fight.priority < focus.priority)) {
-          focus = zone.flight;
+          focus = zone.fight;
         }
       }
     }
