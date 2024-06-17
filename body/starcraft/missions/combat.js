@@ -73,6 +73,7 @@ class Fight {
 
     this.detector = new Detector(this);
     this.fighters = [];
+    this.rallied = new Set();
 
     zone.fight = this;
 
@@ -263,9 +264,12 @@ class Fighter extends Job {
     }
 
     if (!warrior.isAlive) {
-      this.assignee = null;
+      this.fight.rallied.delete(warrior);
+      this.close(false);
     } else if ((this.fight.mode === RALLY) || (this.fight.mode === RETREAT)) {
       if (this.fight.isWarriorInThreatRange(warrior)) {
+        this.fight.rallied.add(warrior);
+
         if (!this.rallyZone || isCloseTo(warrior.body, this.rallyZone)) {
           this.rallyZone = findSafeZone(warrior.zone);
         }
@@ -281,6 +285,7 @@ class Fighter extends Job {
           this.shift(ATTACK);
         }
       } else if (this.fight.zones.has(warrior.zone)) {
+        this.fight.rallied.add(warrior);
         orderStop(warrior);
         this.shift(STAND);
         this.rallyZone = warrior.zone;
@@ -320,7 +325,7 @@ function assessCurrentBalance(fight) {
   for (const job of fight.fighters) {
     const warrior = job.assignee;
 
-    if (warrior && fight.zones.has(warrior.zone)) {
+    if (fight.rallied.has(warrior)) {
       availableDps += warrior.type.damageGround;
       availableHealth += warrior.armor.health + warrior.armor.shield;
     }
