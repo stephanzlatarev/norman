@@ -156,36 +156,28 @@ export default class Order extends Memory {
 
   // Check if the order is accepted and if so then remove it.
   check() {
+    if (this.unit && !this.unit.isAlive) this.result(STATUS_DEAD);
     if (!this.isIssued) return;
     if (this.isAccepted) return;
 
-    if (this.unit && !this.unit.isAlive) {
-      // The unit meanwhile died
-      if (this.checkIsAccepted && this.checkIsAccepted(this)) {
-        this.remove();
-      } else {
-        this.result(STATUS_DEAD);
+    if (this.checkIsAccepted) {
+      this.isAccepted = this.checkIsAccepted(this);
+    } else if (checkIsAccepted(this)) {
+      this.isAccepted = true;
+    }
+
+    if (this.isAccepted) {
+      // This order moves from the unit's todo list to its active order list
+      if (this.unit.todo === this) {
+        this.unit.todo = null;
       }
+
+      // This order is removed from to-be-issued list in memory
+      this.remove();
     } else {
-      if (this.checkIsAccepted) {
-        this.isAccepted = this.checkIsAccepted(this);
-      } else if (checkIsAccepted(this)) {
-        this.isAccepted = true;
-      }
-
-      if (this.isAccepted) {
-        // This order moves from the unit's todo list to its active order list
-        if (this.unit.todo === this) {
-          this.unit.todo = null;
-        }
-
-        // This order is removed from to-be-issued list in memory
-        this.remove();
-      } else {
-        console.log("INFO: Waiting for", this.unit.type.name, this.unit.nick,
-          "to accept order", this.ability, "of status", this.status, this.isIssued ? "issued" : "", this.isAccepted ? "accepted" : "", this.isRejected ? "rejected" : "",
-          "while busy with action", this.unit.order.abilityId);
-      }
+      console.log("INFO: Waiting for", this.unit.type.name, this.unit.nick,
+        "to accept order", this.ability, "of status", this.status, this.isIssued ? "issued" : "", this.isAccepted ? "accepted" : "", this.isRejected ? "rejected" : "",
+        "while busy with action", this.unit.order.abilityId);
     }
   }
 
