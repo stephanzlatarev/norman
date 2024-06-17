@@ -66,7 +66,7 @@ class Types {
       type.isVespene = !!unit.hasVespene && !unit.race;
 
       type.supplyProvided = unit.foodProvided;
-      type.needsPower = (unit.race === RACE_PROTOSS) && !IS_DEPOT[unit.name] && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name];
+      type.needsPower = (unit.race === RACE_PROTOSS) && isBuilding && !IS_DEPOT[unit.name] && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name];
 
       type.movementSpeed = unit.movementSpeed / NORMAL_LOOPS_PER_SECOND;
       type.sightRange = unit.sightRange;
