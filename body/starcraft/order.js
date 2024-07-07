@@ -105,7 +105,7 @@ export default class Order extends Memory {
     if (this.isIssued) {
       if (!this.isAccepted && !this.isRejected && (Resources.loop > this.timeIssued + RETRY_AFTER)) {
         // Commands get lost in the arena. Retry them...
-        console.log("INFO: Retrying command for", this.unit.type.name, this.unit.nick, "action", this.ability);
+        log("INFO: Retrying command for", this.unit.type.name, this.unit.nick, "action", this.ability);
       } else {
         // Don't repeat commands
         return;
@@ -129,7 +129,7 @@ export default class Order extends Memory {
   }
 
   abort() {
-    console.log("INFO: Abort order for", this.unit.type.name, this.unit.nick,
+    log("INFO: Abort order for", this.unit.type.name, this.unit.nick,
       "action", this.ability, "of status", this.status, this.isIssued ? "issued" : "", this.isAccepted ? "accepted" : "", this.isRejected ? "rejected" : "");
 
     this.status = STATUS_ABORT;
@@ -150,7 +150,7 @@ export default class Order extends Memory {
       this.isAccepted = false;
       this.remove();
 
-      console.log("ERROR:", this.toString(), ">>", status);
+      log("ERROR:", this.toString(), ">>", status);
     }
   }
 
@@ -175,7 +175,7 @@ export default class Order extends Memory {
       // This order is removed from to-be-issued list in memory
       this.remove();
     } else {
-      console.log("INFO: Waiting for", this.unit.type.name, this.unit.nick,
+      log("INFO: Waiting for", this.unit.type.name, this.unit.nick,
         "to accept order", this.ability, "of status", this.status, this.isIssued ? "issued" : "", this.isAccepted ? "accepted" : "", this.isRejected ? "rejected" : "",
         "while busy with action", this.unit.order.abilityId);
     }
@@ -205,6 +205,10 @@ export default class Order extends Memory {
     return orders;
   }
 
+}
+
+function log(...line) {
+  console.log(...line);
 }
 
 function checkIsAccepted(order) {
