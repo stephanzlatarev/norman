@@ -212,7 +212,7 @@ function maintainPullProbeJobs() {
 }
 
 function countAttackers() {
-  if (!VisibleCount.Zergling) return 0;
+  if (!VisibleCount.Warrior) return 0;
 
   let count = 0;
 
@@ -224,11 +224,12 @@ function countAttackers() {
 }
 
 function maintainHarvestJobs() {
+  const limit = (ActiveCount.Probe - pullProbeJobs.size >= 18) ? 6 : 3;
   let count = 0;
 
   for (const job of Job.list()) {
     if (job.target && job.target.type && job.target.type.isExtractor && (job.priority >= 90)) {
-      if (count >= 3) {
+      if (count >= limit) {
         job.priority = 0;
         job.assign(null);
       } else {
@@ -237,14 +238,14 @@ function maintainHarvestJobs() {
     }
   }
 
-  if (count >= 3) return;
+  if (count >= limit) return;
 
   for (const job of Job.list()) {
     if (job.target && job.target.type && job.target.type.isExtractor && (job.priority < 90)) {
       job.priority = 90;
       count++;
 
-      if (count >= 3) return;
+      if (count >= limit) return;
     }
   }
 }

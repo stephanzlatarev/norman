@@ -30,7 +30,7 @@ export default class BuildPylonsMission extends Mission {
 
     if ((Resources.supplyUsed < 20) && (TotalCount.Pylon >= 1)) return; // Too early for a second pylon
 
-    const pos = findFirstPylon() || findPylonForSupply(this.home);
+    const pos = findWallPylon() || findPylonForSupply(this.home);
 
     if (pos) {
       this.job = new Build("Pylon", pos);
@@ -44,8 +44,22 @@ function locateHomeZone() {
   return Units.buildings().values().next().value.zone;
 }
 
-function findFirstPylon() {
-  if (TotalCount.Pylon >= 1) return; // First pylon is already built
+let wallPlot;
+let wallPylon;
+
+function findWallPylon() {
+  if (wallPylon && wallPylon.isAlive) return; // Wall pylon is already built
+
+  if (wallPlot) {
+    for (const building of Units.buildings().values()) {
+      if ((building.body.x === wallPlot.x) && (building.body.y === wallPlot.y)) {
+        wallPylon = building;
+        return;
+      }
+    }
+
+    return wallPlot;
+  }
 
   const pylon = Types.unit("Pylon");
 
@@ -53,6 +67,7 @@ function findFirstPylon() {
     const plot = wall.getPlot(pylon);
 
     if (plot && Map.accepts(plot, plot.x, plot.y, 2)) {
+      wallPlot = plot;
       return plot;
     }
   }

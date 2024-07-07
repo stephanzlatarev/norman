@@ -105,7 +105,7 @@ function doGroundArmyMaxOut() {
   Limit.CyberneticsCore = 1;
   Limit.ShieldBattery = 0;
 
-  if ((Resources.loop < 3000) && VisibleCount.Zergling) {
+  if ((Resources.loop < 3000) && VisibleCount.Warrior) {
     plan = doEnforceWallNatural;
     console.log("Transition to enforcing wall to natural expansion.");
   }
