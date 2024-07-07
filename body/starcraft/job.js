@@ -69,16 +69,16 @@ export default class Job extends Memory {
     if (unit) {
       if (unit.job) {
         if (this.assignee) {
-          console.log(unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details, "replacing", this.assignee.type.name, this.assignee.nick);
+          log(unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details, "replacing", this.assignee.type.name, this.assignee.nick);
         } else {
-          console.log(unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details);
+          log(unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details);
         }
 
         unit.job.assignee = null;
       } else if (this.assignee) {
-        console.log(unit.type.name, unit.nick, "assigned to job", this.details, "replacing", this.assignee.type.name, this.assignee.nick);
+        log(unit.type.name, unit.nick, "assigned to job", this.details, "replacing", this.assignee.type.name, this.assignee.nick);
       } else {
-        console.log(unit.type.name, unit.nick, "assigned to job", this.details);
+        log(unit.type.name, unit.nick, "assigned to job", this.details);
       }
 
       if (this.assignee && (this.assignee.job === this)) {
@@ -88,7 +88,7 @@ export default class Job extends Memory {
       this.assignee = unit;
       this.assignee.job = this;
     } else if (this.assignee) {
-      console.log(this.assignee.type.name, this.assignee.nick, "released from job", this.details);
+      log(this.assignee.type.name, this.assignee.nick, "released from job", this.details);
       this.assignee = null;
     }
   }
@@ -100,7 +100,7 @@ export default class Job extends Memory {
 
   shift(mode, silent) {
     if (!silent && (this.mode !== mode) && (this.mode !== undefined) && this.assignee) {
-      console.log(this.assignee.type.name, this.assignee.nick, "switches from", this.modes[this.mode], "to", this.modes[mode], "on job", this.details);
+      log(this.assignee.type.name, this.assignee.nick, "switches from", this.modes[this.mode], "to", this.modes[mode], "on job", this.details);
     }
 
     this.mode = mode;
@@ -113,7 +113,7 @@ export default class Job extends Memory {
     this.isFailed = !outcome;
 
     if (this.assignee && this.assignee.isAlive && (this.assignee.job === this)) {
-      console.log(this.assignee.type.name, this.assignee.nick, "released on", (outcome ? "success" : "failure"), "of job", this.details);
+      log(this.assignee.type.name, this.assignee.nick, "released on", (outcome ? "success" : "failure"), "of job", this.details);
 
       this.assignee.job = null;
     }
@@ -125,6 +125,10 @@ export default class Job extends Memory {
     return jobs;
   }
 
+}
+
+function log(...line) {
+  console.log(...line);
 }
 
 function getAgent(agent) {
