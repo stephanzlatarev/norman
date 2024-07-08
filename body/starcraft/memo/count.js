@@ -7,6 +7,7 @@ const active = new Map();
 const total = new Map();
 
 export const ActiveCount = {
+  Assimilator: 0,
   CyberneticsCore: 0,
   Gateway: 0,
   Immortal: 0,

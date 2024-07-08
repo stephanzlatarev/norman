@@ -114,9 +114,7 @@ function doGroundArmyMaxOut() {
 // TODO: Improve precision by calculating the remaining time of all building probes, and by calculating the time for a probe to move to the next expansion site
 function calculateLimitNexus() {
   if (TotalCount.HarvesterCapacity >= Limit.Probe) return TotalCount.Nexus;
-  if ((TotalCount.Nexus === 2) && (TotalCount.Gateway < 3)) return 2;
-  if ((TotalCount.Nexus === 3) && (TotalCount.Gateway < 6)) return 3;
-  if ((TotalCount.Nexus === 4) && (TotalCount.Gateway < 9)) return 4;
+  if (TotalCount.Nexus >= ActiveCount.Gateway) return TotalCount.Nexus;
 
   const timeForProbeToReachConstructionSite = 5 * 22.4; // Assume 5 seconds
   const timeToBuildNexus = Types.unit("Nexus").buildTime;
@@ -164,7 +162,10 @@ const MineralCostPerSecondExpand   = 500 / 60; // 1 Nexus every 2 minutes and py
 // TODO: Take into account costs for expansion and costs for supply
 function calculateLimitGateway() {
   // Prioritize first Robotics facility before second Gateway
-  if (TotalCount.Gateway && !TotalCount.RoboticsFacility) return TotalCount.Gateway;
+  if (TotalCount.Gateway && !TotalCount.RoboticsFacility) return 1;
+
+  // Prioritize new Gateway to have more Gateways than Nexuses
+  if (TotalCount.Gateway <= ActiveCount.Nexus) return ActiveCount.Gateway + 1;
 
   const isProducingWorkers = (TotalCount.Probe < Limit.Probe);
   const idleNexuses = isProducingWorkers ? ActiveCount.Nexus - (TotalCount.Probe - ActiveCount.Probe) : 0;

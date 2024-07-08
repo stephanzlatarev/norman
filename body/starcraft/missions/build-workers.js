@@ -3,6 +3,7 @@ import Order from "../order.js";
 import Types from "../types.js";
 import Units from "../units.js";
 import Produce from "../jobs/produce.js";
+import { TotalCount } from "../memo/count.js";
 import Limit from "../memo/limit.js";
 
 // TODO: When mission is converted to skill, there will be one instance per active nexus and just one job at a time
@@ -13,7 +14,9 @@ export default class BuildWorkersMission extends Mission {
   run() {
     removeCompletedJobs();
 
-    if (Units.workers().size >= Limit.Probe) return;
+    const limit = Math.min(Limit.Probe, TotalCount.Nexus * 16 + TotalCount.Assimilator * 3 + TotalCount.Nexus);
+
+    if (TotalCount.Probe >= limit) return;
 
     for (const nexus of Units.buildings().values()) {
       if (nexus.job) continue;
@@ -22,6 +25,8 @@ export default class BuildWorkersMission extends Mission {
       if (setRallyPoint(nexus)) continue;
 
       createBuildWorkerJob(nexus);
+
+      if (TotalCount.Probe >= limit) return;
     }
   }
 
@@ -50,5 +55,6 @@ function createBuildWorkerJob(nexus) {
     job = new Produce(nexus, Types.unit("Probe"));
 
     jobs.set(nexus, job);
+    TotalCount.Probe++;
   }
 }
