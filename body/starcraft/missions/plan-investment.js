@@ -159,6 +159,7 @@ const MineralCostPerSecondZealot   = 100 / 27;
 const MineralCostPerSecondGateway  = Math.max(MineralCostPerSecondSentry, MineralCostPerSecondStalker, MineralCostPerSecondZealot);
 const MineralCostPerSecondImmortal = 275 / 39;
 const MineralCostPerSecondRobo     =  MineralCostPerSecondImmortal;
+const MineralCostPerSecondExpand   = 500 / 60; // 1 Nexus every 2 minutes and pylons all the time
 
 // TODO: Take into account costs for expansion and costs for supply
 function calculateLimitGateway() {
@@ -175,6 +176,9 @@ function calculateLimitGateway() {
 
   const mineralIncomePerSecond = ActiveCount.Probe - TotalCount.Assimilator * 3;
   let mineralCostPerSecond = TotalCount.Gateway * MineralCostPerSecondGateway + TotalCount.RoboticsFacility * MineralCostPerSecondRobo;
+  if (Resources.supplyLimit < 200) {
+    mineralCostPerSecond += MineralCostPerSecondExpand;
+  }
   if (isProducingWorkers) {
     mineralCostPerSecond += TotalCount.Nexus * MineralCostPerSecondNexus;
   }
