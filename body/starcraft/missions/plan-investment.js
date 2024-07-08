@@ -95,10 +95,7 @@ function doGroundArmyMaxOut() {
   Limit.Assimilator = calculateLimitAssimilator();
 
   Priority.Gateway = 50;
-  Limit.Gateway = Math.floor(Math.min(
-    TotalCount.RoboticsFacility ? Infinity : 1,               // Prioritize first Robotics facility before second Gateway
-    (TotalCount.Probe - TotalCount.RoboticsFacility * 6) / 5, // Gateways should not grow more than income
-  ));
+  Limit.Gateway = calculateLimitGateway();
   Limit.RoboticsFacility = 1;
 
   Limit.Forge = (TotalCount.Gateway >= 3) ? 1 : 0;
@@ -152,4 +149,37 @@ function calculateLimitAssimilator() {
   }
 
   return limit;
+}
+
+const MineralCostPerSecondProbe    =  50 / 12;
+const MineralCostPerSecondNexus    =  MineralCostPerSecondProbe;
+const MineralCostPerSecondSentry   =  50 / 23;
+const MineralCostPerSecondStalker  = 125 / 30;
+const MineralCostPerSecondZealot   = 100 / 27;
+const MineralCostPerSecondGateway  = Math.max(MineralCostPerSecondSentry, MineralCostPerSecondStalker, MineralCostPerSecondZealot);
+const MineralCostPerSecondImmortal = 275 / 39;
+const MineralCostPerSecondRobo     =  MineralCostPerSecondImmortal;
+
+// TODO: Take into account costs for expansion and costs for supply
+function calculateLimitGateway() {
+  // Prioritize first Robotics facility before second Gateway
+  if (TotalCount.Gateway && !TotalCount.RoboticsFacility) return TotalCount.Gateway;
+
+  const isProducingWorkers = (TotalCount.Probe < Limit.Probe);
+  const idleNexuses = isProducingWorkers ? ActiveCount.Nexus - (TotalCount.Probe - ActiveCount.Probe) : 0;
+  const idleGateways = ActiveCount.Gateway - (TotalCount.Sentry - ActiveCount.Sentry) - (TotalCount.Stalker - ActiveCount.Stalker) - (TotalCount.Zealot - ActiveCount.Zealot);
+  const idleRobos = ActiveCount.RoboticsFacility - (TotalCount.Immortal - ActiveCount.Immortal) - (TotalCount.Observer - ActiveCount.Observer);
+
+  // Don't build more production facilities while there are idle ones
+  if (idleNexuses || idleGateways || idleRobos) return TotalCount.Gateway;
+
+  const mineralIncomePerSecond = ActiveCount.Probe - TotalCount.Assimilator * 3;
+  let mineralCostPerSecond = TotalCount.Gateway * MineralCostPerSecondGateway + TotalCount.RoboticsFacility * MineralCostPerSecondRobo;
+  if (isProducingWorkers) {
+    mineralCostPerSecond += TotalCount.Nexus * MineralCostPerSecondNexus;
+  }
+
+  const availableMineralIncomePerSecond = (mineralIncomePerSecond - mineralCostPerSecond);
+
+  return TotalCount.Gateway + Math.floor(availableMineralIncomePerSecond / MineralCostPerSecondGateway);
 }
