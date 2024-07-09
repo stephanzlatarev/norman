@@ -8,13 +8,14 @@ const resources = new Map();
 const workers = new Map();
 const buildings = new Map();
 const warriors = new Map();
+const hallucinations = new Map();
 const enemies = new Map();
 const obstacles = new Map();
 
 class Units {
 
   get(tag) {
-    return resources.get(tag) || workers.get(tag) || buildings.get(tag) || warriors.get(tag) || enemies.get(tag) || obstacles.get(tag);
+    return resources.get(tag) || workers.get(tag) || buildings.get(tag) || warriors.get(tag) || enemies.get(tag) || obstacles.get(tag) || hallucinations.get(tag);
   }
 
   resources() {
@@ -31,6 +32,10 @@ class Units {
 
   warriors() {
     return warriors;
+  }
+
+  hallucinations() {
+    return hallucinations;
   }
 
   enemies() {
@@ -53,6 +58,7 @@ class Units {
     removeDeadWorkers(alive);
     removeDeadUnits(buildings, alive);
     removeDeadUnits(warriors, alive);
+    removeDeadUnits(hallucinations, alive);
     removeDeadUnits(enemies, alive);
     removeDeadUnits(obstacles, alive);
 
@@ -70,7 +76,9 @@ class Units {
 
 function findGroup(unit, type, me, enemy) {
   if (unit.owner === me.id) {
-    if (type.isWorker) {
+    if (unit.isHallucination) {
+      return hallucinations;
+    } else if (type.isWorker) {
       return workers;
     } else if (type.isWarrior) {
       return warriors;
@@ -78,7 +86,9 @@ function findGroup(unit, type, me, enemy) {
       return buildings;
     }
   } else if (unit.owner === enemy.id) {
-    return enemies;
+    if (!unit.isHallucination) {
+      return enemies;
+    }
   } else if (type.isMinerals || type.isVespene) {
     return resources;
   }
@@ -128,6 +138,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   }
 
   image.isAlive = true;
+  image.isHallucination = unit.isHallucination;
   image.lastSeen = Resources.loop;
   image.buildProgress = unit.buildProgress;
   image.isActive = (unit.buildProgress >= 1) && (unit.isPowered || !image.type.needsPower);
