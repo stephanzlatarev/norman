@@ -89,6 +89,7 @@ export default class Job extends Memory {
       this.assignee.job = this;
     } else if (this.assignee) {
       log(this.assignee.type.name, this.assignee.nick, "released from job", this.details);
+      this.assignee.job = null;
       this.assignee = null;
     }
   }

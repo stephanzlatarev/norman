@@ -58,6 +58,7 @@ export default class WallNatural extends Mission {
     for (const pullProbeJob of pullProbeJobs) {
       pullProbeJob.close(true);
     }
+    pullProbeJobs.clear();
   }
 
 }
@@ -183,16 +184,23 @@ function maintainPullProbeJobs() {
   for (const job of pullProbeJobs) {
     if (job.isDone || job.isFailed) {
       pullProbeJobs.delete(job);
+      console.log("[wall] closed job - done:", !!job.isDone, "failed:", !!job.isFailed, "- attack jobs:", pullProbeJobs.size);
     }
   }
 
   const defendersCount = ActiveCount.Zealot + ActiveCount.Stalker + ActiveCount.Immortal;
   const attackersCount = countAttackers();
 
-  let pullProbeCount = (defendersCount < 4) ? (attackersCount * 2 - defendersCount * 3) : 0;
-  if (pullProbeCount) pullProbeCount += 2;
-  pullProbeCount = Math.min(pullProbeCount, ActiveCount.Probe - 11);
-  pullProbeCount = Math.max(pullProbeCount, 0);
+  let pullProbeCount = 0;
+
+  if (defendersCount < 4) {
+    pullProbeCount = attackersCount * 2 - defendersCount * 3;
+
+    if ((pullProbeCount > 0) && (defendersCount < 2)) pullProbeCount += 2;
+
+    pullProbeCount = Math.min(pullProbeCount, ActiveCount.Probe - 11);
+    pullProbeCount = Math.max(pullProbeCount, 0);
+  }
 
   if (pullProbeCount > pullProbeJobs.size) {
     const jobsToOpen = pullProbeCount - pullProbeJobs.size;
@@ -200,14 +208,21 @@ function maintainPullProbeJobs() {
     for (let i = 0; i < jobsToOpen; i++) {
       pullProbeJobs.add(new Attack("Worker", wall.blueprint.choke));
     }
+
+    console.log("[wall pull probes] attackers:", attackersCount, "defenders:", defendersCount, "pull probes:", pullProbeCount, "new attack jobs:", jobsToOpen, "-> attack jobs:", pullProbeJobs.size);
   } else if (pullProbeCount < pullProbeJobs.size) {
     const jobsToClose = pullProbeJobs.size - pullProbeCount;
-    const jobs = [...pullProbeJobs];
+    let count = 0;
 
-    for (let i = 0; i < jobsToClose; i++) {
-      jobs[i].close(true);
-      pullProbeJobs.delete(jobs[i]);
+    for (const job of pullProbeJobs) {
+      if (count >= jobsToClose) break;
+
+      job.close(true);
+      pullProbeJobs.delete(job);
+      count++;
     }
+
+    console.log("[wall free probes] attackers:", attackersCount, "defenders:", defendersCount, "pull probes:", pullProbeCount, "close attack jobs:", jobsToClose, "-> attack jobs:", pullProbeJobs.size);
   }
 }
 
@@ -217,7 +232,7 @@ function countAttackers() {
   let count = 0;
 
   for (const enemy of Units.enemies().values()) {
-    if (Math.abs(enemy.body.x - wall.x) + Math.abs(enemy.body.y - wall.y) < 20) count++
+    if (Math.abs(enemy.body.x - wall.x) + Math.abs(enemy.body.y - wall.y) < 20) count++;
   }
 
   return count;
@@ -227,27 +242,75 @@ function maintainHarvestJobs() {
   const limit = (ActiveCount.Probe - pullProbeJobs.size >= 18) ? 6 : 3;
   let count = 0;
 
+  console.log("[wall harvest] limit:", ActiveCount.Probe, "-", pullProbeJobs.size, "=", limit);
+
+  // Keep the priority of vespene harvest jobs up to the limit, and lower the priority of any additional jobs
   for (const job of Job.list()) {
     if (job.target && job.target.type && job.target.type.isExtractor && (job.priority >= 90)) {
-      if (count >= limit) {
+      if (count < limit) {
+        showJob("keep", job);
+        job.priority = 90;
+        count++;
+      } else {
+        showJob("release", job);
         job.priority = 0;
         job.assign(null);
-      } else {
-        count++;
       }
     }
   }
 
-  if (count >= limit) return;
-
+  // Increase the priority of vespene harvest jobs to the reach limit, and unassign any additional jobs
   for (const job of Job.list()) {
     if (job.target && job.target.type && job.target.type.isExtractor && (job.priority < 90)) {
-      job.priority = 90;
-      count++;
-
-      if (count >= limit) return;
+      if (count < limit) {
+        showJob("prioritize", job);
+        job.priority = 90;
+        count++;
+      } else {
+        showJob("block", job);
+        job.priority = 0;
+        job.assign(null);
+      }
     }
   }
+
+  for (const worker of Units.workers().values()) {
+    showWorker(worker);
+  }
+}
+
+function showJob(label, job) {
+  const log = ["[wall harvest]", label, "job:", job.details, "assignee:"];
+
+  if (job.assignee) {
+    log.push(job.assignee.type.name, job.assignee.nick);
+  } else {
+    log.push("none");
+  }
+
+  console.log(log.join(" "));
+}
+
+function showWorker(worker) {
+  const log = ["[wall harvest] worker:", worker.type.name, worker.nick];
+
+  log.push("depot:");
+  if (worker.depot) {
+    log.push(worker.depot.name);
+  } else {
+    log.push("none");
+  }
+
+  log.push("job:");
+  if (worker.job) {
+    log.push(worker.job.details);
+  } else {
+    log.push("none");
+  }
+
+  log.push("order:", worker.order ? JSON.stringify(worker.order) : "none");
+
+  console.log(log.join(" "));
 }
 
 function findWallKeeperType() {

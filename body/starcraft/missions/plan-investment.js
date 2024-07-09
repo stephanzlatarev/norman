@@ -53,9 +53,9 @@ function doEnforceWallNatural() {
   Limit.Assimilator = (ActiveCount.Probe >= 18) ? 2 : 1;
   Limit.Gateway = 2;
   Limit.CyberneticsCore = 1;
-  Limit.RoboticsFacility = 1;
+  Limit.ShieldBattery = ((TotalCount.Gateway >= 2) && ((TotalCount.Stalker >= 1) || (TotalCount.Zealot >= 1))) ? 1 : 0;
+  Limit.RoboticsFacility = (TotalCount.ShieldBattery && (ActiveCount.Stalker >= 3)) ? 1 : 0;
   Limit.Forge = 0;
-  Limit.ShieldBattery = ActiveCount.CyberneticsCore ? 1: 0;
 
   Priority.ShieldBattery = 100;
   Priority.CyberneticsCore = 100;
