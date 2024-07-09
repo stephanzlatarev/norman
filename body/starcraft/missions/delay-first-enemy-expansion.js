@@ -2,6 +2,7 @@ import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
 import Types from "../types.js";
+import Units from "../units.js";
 import Depot from "../map/depot.js";
 import Map from "../map/map.js";
 import { VisibleCount } from "../memo/encounters.js";
@@ -142,7 +143,7 @@ class AnnoyEnemy extends Job {
       const target = findEnemyWorkerClosestToCorridor(this.harvest, this.expansion, this.corridor);
 
       if (target) {
-        if (this.harvest.distance(target.body) > 0.5) {
+        if ((this.harvest.distance(target.body) > 0.5) && !isEnemyWorkerBuildingStructures(target)) {
           // The enemy worker is outside the harvest zone, presumably going to build an expansion
           return this.transition(this.goGuardCorridor);
         } else if (!this.mode && isDamaged(target)) {
@@ -379,6 +380,14 @@ function isEnemyExpansionStarted(expansion) {
       expansion.isEnemyExpansionStarted = true;
       return true;
     }
+  }
+}
+
+function isEnemyWorkerBuildingStructures(worker) {
+  if (worker.type.name !== "SCV") return false;
+
+  for (const unit of Units.enemies().values()) {
+    if ((unit.buildProgress < 1) && isWithinBlock(unit.body, worker.body, unit.body.r)) return true;
   }
 }
 
