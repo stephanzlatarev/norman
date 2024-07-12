@@ -9,9 +9,15 @@ import Resources from "../memo/resources.js";
 
 const jobs = new Map();
 
-const WARRIOR_PRODUCER = {
-  Gateway: true,
-  RoboticsFacility: true,
+// Units are ordered from cheapest to most expensive so that the cheaper ones are not blocked by resources
+const FACILITY_PRODUCTS = {
+  Gateway: ["Zealot", "Stalker", "Sentry"],
+  RoboticsFacility: ["Observer", "Immortal", "Colossus"],
+};
+const UNIT_PREREQUISITES = {
+  Colossus: "RoboticsBay",
+  Sentry: "CyberneticsCore",
+  Stalker: "CyberneticsCore",
 };
 
 export default class BuildWarriorsMission extends Mission {
@@ -22,10 +28,9 @@ export default class BuildWarriorsMission extends Mission {
     if (Resources.supplyUsed >= Resources.supplyLimit) return;
 
     for (const facility of Units.buildings().values()) {
-      if (!WARRIOR_PRODUCER[facility.type.name]) continue;
-      if (!facility.isActive) continue;
-
-      createProduceWarriorJob(facility);
+      if (facility.isActive && FACILITY_PRODUCTS[facility.type.name] && !jobs.has(facility)) {
+        createProduceJob(facility);
+      }
     }
   }
 
@@ -37,7 +42,6 @@ function removeCompletedJobs() {
       jobs.delete(tag);
     } else if (isObsolete(job)) {
       job.close(false);
-
       jobs.delete(tag);
     }
   }
@@ -48,56 +52,52 @@ function isObsolete(job) {
   return !job.order && (TotalCount[job.output.name] >= Limit[job.output.name]);
 }
 
-function createProduceWarriorJob(facility) {
+function createProduceJob(facility) {
   let job = jobs.get(facility);
 
   if (!job) {
-    const warrior = selectWarriorType(facility);
+    const product = selectProductType(facility);
 
-    if (warrior && !hasReachedLimit(warrior)) {
-      job = new Produce(facility, Types.unit(warrior));
+    if (product) {
+      job = new Produce(facility, Types.unit(product));
 
       jobs.set(facility, job);
 
-      TotalCount[warrior]++;
+      TotalCount[product]++;
     }
   }
 }
 
-function hasReachedLimit(type) {
-  const limit = Limit[type];
+function selectProductType(facility) {
+  const products = FACILITY_PRODUCTS[facility.type.name];
+  const available = [];
 
-  return (limit >= 0) ? (TotalCount[type] >= limit) : false;
-}
+  for (const product of products) {
+    if (TotalCount[product] >= Limit[product]) continue;
 
-function selectWarriorType(facility) {
-  if (facility.type.name === "Gateway") {
-    if (ActiveCount.CyberneticsCore >= 1) {
-      if (Priority.Zealot === Priority.Stalker) {
-        // Keep ratio
-        if ((TotalCount.Stalker <= TotalCount.Zealot * 4) && (TotalCount.Stalker <= TotalCount.Sentry * 4)) {
-          return "Stalker";
-        } else if ((TotalCount.Sentry * 4 <= TotalCount.Stalker) && (TotalCount.Sentry <= TotalCount.Zealot)) {
-          return "Sentry";
-        }
-      } else {
-        // Build highest priority
-        if (Priority.Stalker > Priority.Zealot) {
-          if (Priority.Stalker > Priority.Sentry) {
-            return "Stalker";
-          } else {
-            return "Sentry";
-          }
-        }
-      }
-    }
+    const prerequisite = UNIT_PREREQUISITES[product];
+    if (prerequisite && !ActiveCount[prerequisite]) continue;
 
-    return "Zealot";
-  } else if (facility.type.name === "RoboticsFacility") {
-    if ((Limit.Observer >= 1) && (TotalCount.Observer < Limit.Observer)) {
-      return "Observer";
-    }
-
-    return "Immortal";
+    available.push(product);
   }
+
+  if (!available.length) return;
+  if (available.length === 1) return available[0];
+
+  available.sort((a, b) => (Priority[b] - Priority[a]));
+
+  for (let index = 0; index < available.length - 1; index++) {
+    const first = available[index];
+    const second = available[index + 1];
+
+    if (Priority[first] > Priority[second]) {
+      // Higher priority is produced first
+      return first;
+    } else if (TotalCount[first] * Limit[second] <= TotalCount[second] * Limit[first]) {
+      // First in the list is produced first to reach ratio
+      return first;
+    }
+  }
+
+  return available[available.length - 1];
 }

@@ -6,10 +6,10 @@ const products = new Map();
 const races = [[], [], [], []];
 
 const IS_DEPOT = { Nexus: 1 };
-const IS_DETECTOR = { Observer: 1, Overseer: 1, Raven: 1 };
 const IS_EXTRACTOR = { Assimilator: 1 };
 const IS_PYLON = { Pylon: 1 };
 const IS_WORKER = { Drone: 1, MULE: 1, Probe: 1, SCV: 1 };
+const IS_OFFENSIVE = { Observer: 1, Overseer: 1, Raven: 1, NydusCanal: 1, NydusNetwork: 1 };
 
 const RACE_PROTOSS = 3;
 
@@ -59,7 +59,7 @@ class Types {
       type.isDepot = !!IS_DEPOT[unit.name];
       type.isPylon = !!IS_PYLON[unit.name];
       type.isWorker = !!IS_WORKER[unit.name];
-      type.isWarrior = (weapons.damageGround + weapons.damageAir > 0) || IS_DETECTOR[unit.name];
+      type.isWarrior = (weapons.damageGround + weapons.damageAir > 0) || IS_OFFENSIVE[unit.name];
       type.isExtractor = !!IS_EXTRACTOR[unit.name];
       type.isBuilding = isBuilding && !isNeutral;
       type.isMinerals = !!unit.hasMinerals;

@@ -4,53 +4,47 @@ import Units from "../units.js";
 import Produce from "../jobs/produce.js";
 import { ActiveCount } from "../memo/count.js";
 
-const FACILITY = "Forge";
-const UPGRADES = [
-  "ProtossGroundWeaponsLevel1", "ProtossGroundArmorsLevel1",
-  "ProtossGroundWeaponsLevel2", "ProtossGroundArmorsLevel2",
-  "ProtossGroundWeaponsLevel3", "ProtossGroundArmorsLevel3",
-  "ProtossShieldsLevel1", "ProtossShieldsLevel2", "ProtossShieldsLevel3",
-];
+const UPGRADES = {
+  Forge: [
+    "ProtossGroundWeaponsLevel1", "ProtossGroundArmorsLevel1",
+    "ProtossGroundWeaponsLevel2", "ProtossGroundArmorsLevel2",
+    "ProtossGroundWeaponsLevel3", "ProtossGroundArmorsLevel3",
+    "ProtossShieldsLevel1", "ProtossShieldsLevel2", "ProtossShieldsLevel3",
+  ],
+  TwilightCouncil: [
+    "Charge"
+  ],
+};
 
 export default class ResearchUpgradesMission extends Mission {
 
-  job;
-  done;
+  jobs = new Map();
 
   run() {
-    if (this.done) return;
-
-    if (this.job) {
-      if (this.job.isFailed || this.job.isDone) {
-        this.job = null;
-      } else {
-        return;
-      }
-    }
-
-    const upgrade = getUpgradeType();
-
-    if (!upgrade) {
-      this.done = true;
-      return;
-    }
-
     for (const facility of Units.buildings().values()) {
       if (facility.job) continue;
       if (!facility.isActive) continue;
+      if (facility.order.progress) continue;
 
-      if (facility.type.name !== FACILITY) continue;
+      const job = this.jobs.get(facility);
+      if (job && !job.isDone && !job.isFailed) continue;
 
-      this.job = new Produce(facility, upgrade);
+      const upgrade = getUpgradeType(UPGRADES[facility.type.name]);
+
+      if (upgrade) {
+        this.jobs.set(facility, new Produce(facility, upgrade));
+      }
     }
   }
 
 }
 
-function getUpgradeType() {
-  for (const upgrade of UPGRADES) {
-    if (!ActiveCount[upgrade]) {
-      return Types.upgrade(upgrade);
+function getUpgradeType(upgrades) {
+  if (upgrades) {
+    for (const upgrade of upgrades) {
+      if (!ActiveCount[upgrade]) {
+        return Types.upgrade(upgrade);
+      }
     }
   }
 }

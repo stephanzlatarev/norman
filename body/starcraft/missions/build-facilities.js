@@ -9,7 +9,7 @@ import Limit from "../memo/limit.js";
 import Priority from "../memo/priority.js";
 
 const DEFAULT_FACILITIES = ["ShieldBattery", "Gateway"];
-const SPECIAL_FACILITIES = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil"];
+const SPECIAL_FACILITIES = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil", "RoboticsBay"];
 
 let wallPylon = null;
 

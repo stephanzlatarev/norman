@@ -6,6 +6,7 @@ const Warrior = "Warrior";
 const Worker = "Worker";
 
 export const VisibleCount = {
+  Queen: 0,
   SpawningPool: 0,
   Zergling: 0,
 

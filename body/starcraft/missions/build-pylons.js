@@ -4,6 +4,7 @@ import Units from "../units.js";
 import Build from "../jobs/build.js";
 import Depot from "../map/depot.js";
 import Map from "../map/map.js";
+import Tiers from "../map/tier.js";
 import Wall from "../map/wall.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
 import Resources from "../memo/resources.js";
@@ -105,9 +106,10 @@ function countSupplyConsumptionRate() {
 
 // TODO: Optimize by remembering found plots and re-using them when pylons are destroyed but otherwise continue the search from where last plot was found
 function findPylonPlotOnMap(home) {
-  return findPylonPlotByDepot() || findPylonPlotByZone(home);
+  return findPylonPlotByDepot() || findPlotInFrontier() || findPylonPlotByZone(home);
 }
 
+// These pylons add build area next to the Nexus
 function findPylonPlotByDepot() {
   for (const depot of Depot.list()) {
     if (!depot.isActive) continue;
@@ -116,6 +118,17 @@ function findPylonPlotByDepot() {
 
     if (Map.accepts(depot, plot.x, plot.y, 2)) {
       return plot;
+    }
+  }
+}
+
+// These pylons add vision too
+function findPlotInFrontier() {
+  const frontier = Tiers[1].zones;
+
+  for (const zone of frontier) {
+    if (!zone.isDepot && Map.accepts(zone, zone.x, zone.y, 2)) {
+      return { x: zone.x, y: zone.y };
     }
   }
 }

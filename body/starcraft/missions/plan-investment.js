@@ -44,10 +44,13 @@ function doStartUp() {
 function doEnforceWallNatural() {
   const twoBases = (ActiveCount.Immortal >= 2);
 
+  Limit.Immortal = Infinity;
+  Limit.Stalker = Infinity;
   Limit.Probe = twoBases ? 33 : 22;
-  Limit.Sentry = 0;
-  Limit.Observer = 0;
   Limit.Zealot = ActiveCount.Immortal ? 0 : 1;
+  Limit.Colossus = 0;
+  Limit.Observer = 0;
+  Limit.Sentry = 0;
 
   Limit.Nexus = twoBases ? 2 : 1;
   Limit.Assimilator = (ActiveCount.Probe >= 18) ? 2 : 1;
@@ -60,11 +63,11 @@ function doEnforceWallNatural() {
   Priority.ShieldBattery = 100;
   Priority.CyberneticsCore = 100;
   Priority.Nexus = (twoBases && (TotalCount.Nexus === 1)) ? 100 : 0;
+  Priority.Zealot = 95;
   Priority.Immortal = 95;
   Priority.Gateway = (TotalCount.Gateway < 2) ? 90 : 60;
   Priority.Stalker = 80;
   Priority.RoboticsFacility = 70;
-  Priority.Zealot = 50;
   Priority.Probe = 40;
 
   if (twoBases && (ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 33) && (ActiveCount.Stalker > 4)) {
@@ -75,11 +78,15 @@ function doEnforceWallNatural() {
 
 function doGroundArmyMaxOut() {
   Limit.Probe = 85;
+  Limit.Immortal = 100;
+  Limit.Sentry = 100;
+  Limit.Stalker = 400; // Maintain 4:1 ratio of Stalker to Zealot and Stalker to Sentry
+  Limit.Zealot = !TotalCount.CyberneticsCore ? 0 : 100;
   Limit.Observer = (ActiveCount.Immortal < 2) ? 1 : 2;
-  Limit.Sentry = Infinity;
-  Limit.Zealot = !TotalCount.CyberneticsCore ? 0 : Infinity;
+  Limit.Colossus = 0;
+
   Priority.Probe = 90;
-  Priority.Observer = (ActiveCount.Immortal < 2) ? 10 : 90;
+  Priority.Observer = 80;
   Priority.Immortal = 50;
   Priority.Sentry = 50;
   Priority.Stalker = 50;
@@ -106,6 +113,48 @@ function doGroundArmyMaxOut() {
     plan = doEnforceWallNatural;
     console.log("Transition to enforcing wall to natural expansion.");
   }
+
+  if ((VisibleCount.Queen >= 5) && (VisibleCount.Warrior <= 5)) {
+    plan = counterMassLightZerg;
+    console.log("Transition to countering mass light zerg.");
+  }
+}
+
+function counterMassLightZerg() {
+  Limit.Probe = 100;
+  Limit.Zealot = TotalCount.CyberneticsCore ? 100 : 0;
+  Limit.Colossus = 100;
+  Limit.Sentry = 10; // Maintain 10:1 ratio of Zealot to Sentry
+  Limit.Observer = ActiveCount.RoboticsBay ? 33 : 2; // Maintain 3:1 ratio of Colossus to Observer and build 2 Observers before Colossi can be built
+  Limit.Immortal = 0;
+  Limit.Stalker = 0;
+
+  Priority.Probe = 90;
+  Priority.Observer = 90;
+  Priority.Colossus = 90;
+  Priority.Sentry = 50;
+  Priority.Zealot = 50;
+
+  if (Resources.supplyLimit < 198) {
+    Limit.Nexus = !TotalCount.RoboticsFacility ? 2 : calculateLimitNexus();
+    Priority.Nexus = (TotalCount.Nexus < Limit.Nexus) ? 70 : 0;
+  } else {
+    Limit.Nexus = Infinity;
+    Priority.Nexus = 40;
+  }
+  Limit.Assimilator = calculateLimitAssimilator();
+
+  Priority.Gateway = 50;
+  Limit.Gateway = calculateLimitGateway();
+  Limit.CyberneticsCore = 1;
+  Limit.RoboticsFacility = 1;
+  Limit.Forge = 1;
+  Limit.TwilightCouncil = 1;
+  Limit.RoboticsBay = 1;
+
+  Limit.Stalker = 0;
+  Limit.Immortal = 0;
+  Limit.ShieldBattery = 0;
 }
 
 // When time to reach harvester capacity is less than time to increase harvester capacity, then build a new nexus
