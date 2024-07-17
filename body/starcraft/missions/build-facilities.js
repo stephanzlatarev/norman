@@ -28,6 +28,10 @@ export default class BuildFacilitiesMission extends Mission {
         }
 
         this.job = null;
+      } else if (!this.job.assignee && (TotalCount[this.job.output.name] >= Limit[this.job.output.name])) {
+        // The job is not assigned yet but priorities have meanwhile changed so close it
+        this.job.close(false);
+        this.job = null;
       } else {
         return;
       }

@@ -38,20 +38,29 @@ class Map {
   }
 
   sync(gameInfoOrEnforce, gameLoop) {
-    if ((gameInfoOrEnforce === true) && (this.loop !== this.gameLoop)) {
-      this.board.sync(this.gameInfo.startRaw.pathingGrid);
+    if (gameInfoOrEnforce === true) {
+      // Sync board but only once per game loop
+      if (this.loop !== this.gameLoop) {
+        this.board.sync(this.gameInfo.startRaw.pathingGrid);
 
-      this.loop = this.gameLoop;
+        this.loop = this.gameLoop;
+      }
     } else if (gameInfoOrEnforce && (gameLoop > 0)) {
+      // Remember current game info and loop
       this.gameInfo = gameInfoOrEnforce;
       this.gameLoop = gameLoop;
-    }
 
-    syncTiers();
+      // And sync tiers
+      syncTiers();
+    }
+  }
+
+  cell(x, y) {
+    return this.board.cells[Math.floor(y)][Math.floor(x)];
   }
 
   zone(x, y) {
-    return this.board.cells[Math.floor(y)][Math.floor(x)].zone;
+    return this.cell(x, y).zone;
   }
 
   // Check if a unit of the given size can be placed in the given coordinates entirely within this zone

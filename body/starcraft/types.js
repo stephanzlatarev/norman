@@ -1,4 +1,6 @@
+export const GAME_SPEED = 1.4;
 export const NORMAL_LOOPS_PER_SECOND = 16;
+export const GAME_LOOPS_PER_SECOND = NORMAL_LOOPS_PER_SECOND * GAME_SPEED;
 
 const units = new Map();
 const upgrades = new Map();
@@ -117,7 +119,6 @@ function get(collection, key) {
   return type;
 }
 
-const GAME_SPEED = 1.4;
 const WEAPON_GROUND = 1;
 const WEAPON_AIR = 2;
 const WEAPON_ANY = 3;
@@ -133,7 +134,7 @@ function parseWeapons(unit) {
 
   if (unit.name === "Sentry") {
     attackGround = 6;
-    damageGround = 8.4;
+    damageGround = 8.4 / GAME_LOOPS_PER_SECOND;
     rangeGround = 5;
     attackAir = 6;
     damageAir = 8.4;
@@ -143,7 +144,7 @@ function parseWeapons(unit) {
   for (const weapon of unit.weapons) {
     if ((weapon.type === WEAPON_GROUND) || (weapon.type === WEAPON_ANY)) {
       attackGround = weapon.damage;
-      damageGround = Math.max(weapon.damage * weapon.attacks * GAME_SPEED / weapon.speed, damageGround);
+      damageGround = Math.max(weapon.damage * weapon.attacks / weapon.speed / NORMAL_LOOPS_PER_SECOND, damageGround);
       rangeGround = Math.max(weapon.range, rangeGround);
       weaponCooldown = Math.min((weapon.speed * NORMAL_LOOPS_PER_SECOND / weapon.attacks) * 0.9, weaponCooldown);
     }

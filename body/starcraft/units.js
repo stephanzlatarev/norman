@@ -122,10 +122,12 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
         },
         weapon: {
           cooldown: 0,
+          orbGround: type.rangeGround ? Math.ceil(type.rangeGround + unit.radius + 4) : 0,
         },
         armor: {
           healthMax: unit.healthMax,
           shieldMax: unit.shieldMax,
+          totalMax: unit.healthMax + unit.shieldMax,
         }
       };
     }
@@ -154,6 +156,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   image.weapon.cooldown = unit.weaponCooldown;
   image.armor.health = unit.health;
   image.armor.shield = unit.shield;
+  image.armor.total = unit.health + unit.shield;
 
   image.isSelected = unit.isSelected;
 
@@ -206,10 +209,12 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
 
 function addToZone(image) {
   if (GameMap.board && image) {
-    const zone = GameMap.zone(image.body.x, image.body.y);
+    const cell = GameMap.cell(image.body.x, image.body.y);
 
-    if (zone) {
-      zone.addUnit(image);
+    image.cell = cell;
+
+    if (cell.zone) {
+      cell.zone.addUnit(image);
     }
   }
 }

@@ -106,15 +106,15 @@ class WallDefender extends Job {
     let target;
     for (const enemy of field.enemies) {
       if (!enemy.body.isGround) continue;
-      if (enemy.armor.health + enemy.armor.shield < 0) continue;
+      if (enemy.armor.total < 0) continue;
       if (squareDistance(defender.body, enemy.body) > squareRange) continue;
 
-      if (!target || (enemy.armor.health + enemy.armor.shield < target.armor.health + target.armor.shield)) {
+      if (!target || (enemy.armor.total < target.armor.total)) {
         target = enemy;
       }
     }
     if (target) {
-      target.armor.health -= defender.type.damageGround;
+      target.armor.total -= defender.type.attackGround;
 
       return orderAttack(defender, target);
     }

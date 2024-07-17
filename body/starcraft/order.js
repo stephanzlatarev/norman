@@ -150,7 +150,7 @@ export default class Order extends Memory {
       this.isAccepted = false;
       this.remove();
 
-      log("ERROR:", this.toString(), ">>", status);
+      if (this.unit && this.unit.isAlive && this.ability) log("ERROR:", this.toString(), ">>", status);
     }
   }
 
@@ -214,13 +214,17 @@ function log(...line) {
 function checkIsAccepted(order) {
   const actual = order.unit.order;
 
+  // Move command will be complete when the unit reaches the target position
+  if (!actual.abilityId && (order.ability === 16) && isSamePosition(order.unit.body, order.target)) return true;
+
+  // In all other cases we expect the actual order to be for the requested ability
   if (actual.abilityId !== order.ability) return false;
 
   // Basic attack command which doesn't aim at an enemy unit will aim at the nearest enemy regardless of the target location
   if ((order.ability === 23) && !order.target.tag) return true;
 
   if (actual.targetUnitTag && (actual.targetUnitTag !== order.target.tag)) return false;
-  if (actual.targetWorldPos && !isSamePosition(actual.targetWorldPos.x, order.target)) return false;
+  if (actual.targetWorldPos && !isSamePosition(actual.targetWorldPos, order.target)) return false;
 
   return true;
 }

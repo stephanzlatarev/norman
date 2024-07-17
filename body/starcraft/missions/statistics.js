@@ -1,5 +1,6 @@
 import Mission from "../mission.js";
 import Units from "../units.js";
+import { TotalCount } from "../memo/count.js";
 import Resources from "../memo/resources.js";
 
 const LOOPS_PER_SECOND = 22.4;
@@ -119,7 +120,7 @@ function trackGatewayProduction() {
 function show() {
   const text = ["[stats]"];
 
-  text.push("Supply:", (Resources.supplyUsed - Resources.supplyWorkers), "+", Resources.supplyWorkers, "/", Resources.supplyLimit, percentage(timeTotal - timeSupplyBlocked, timeTotal));
+  text.push("Supply:", (Resources.supplyUsed - TotalCount.Probe), "+", TotalCount.Probe, "/", Resources.supplyLimit, percentage(timeTotal - timeSupplyBlocked, timeTotal));
   text.push("|");
   text.push("Minerals:", minerals);
   text.push("|");

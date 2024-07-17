@@ -23,7 +23,9 @@ export default class Zone extends Pin {
   addUnit(unit) {
     if (this === unit.zone) return;
 
-    if (unit.isEnemy) {
+    if (unit.isHallucination) {
+      // Ignore the unit
+    } else if (unit.isEnemy) {
       const previous = knownThreats.get(unit.tag);
 
       if (previous && previous.zone) {
@@ -40,7 +42,7 @@ export default class Zone extends Pin {
       this.threats.add(unit);
 
       knownThreats.set(unit.tag, unit);
-    } else if (unit.type.isWarrior && !unit.type.isWorker && !unit.isHallucination) {
+    } else if (unit.type.isWarrior && !unit.type.isWorker) {
       if (unit.zone) unit.zone.warriors.delete(unit);
 
       this.warriors.add(unit);
@@ -56,9 +58,11 @@ export default class Zone extends Pin {
   removeUnit(unit) {
     if (unit.zone !== this) return;
 
-    if (unit.isEnemy) {
+    if (unit.isHallucination) {
+      // Ignore the unit
+    } else if (unit.isEnemy) {
       this.enemies.delete(unit);
-    } else if (unit.type.isWarrior && !unit.type.isWorker && !unit.isHallucination) {
+    } else if (unit.type.isWarrior && !unit.type.isWorker) {
       this.warriors.delete(unit);
     } else if (unit.type.isBuilding) {
       this.buildings.delete(unit);

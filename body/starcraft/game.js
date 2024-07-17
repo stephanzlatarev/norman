@@ -77,8 +77,8 @@ export default class Game {
         this.observation = observation.observation;
 
         Map.sync(gameInfo, this.observation.gameLoop);
-        Units.sync(this.observation.rawData.units, this.me, this.enemy);
         Resources.sync(this.observation);
+        Units.sync(this.observation.rawData.units, this.me, this.enemy);
         countUnits(this.observation, this.me.race);
         countEncounters();
 

@@ -1,5 +1,6 @@
 import Job from "./job.js";
 import Units from "./units.js";
+import Types from "./types.js";
 import Zone from "./map/zone.js";
 
 const Color = {
@@ -8,6 +9,7 @@ const Color = {
   White: { r: 200, g: 200, b: 200 },
   Yellow: { r: 200, g: 200, b: 0 },
   Red: { r: 200, g: 0, b: 0 },
+  Purple: { r: 200, g: 0, b: 200 },
   Unknown: { r: 100, g: 100, b: 100 },
 
   Attack: { r: 255, g: 0, b: 0 },
@@ -20,13 +22,8 @@ const Color = {
 
 export default class Trace {
 
-  static speed = 0;
-
-  constructor(speed) {
-    Trace.speed = speed;
-  }
-
   async step(client) {
+    const boxes = [];
     const lines = [];
     const spheres = [];
     const texts = [];
@@ -36,44 +33,22 @@ export default class Trace {
     traceWarriorActions(texts, lines);
     traceThreats(texts, spheres);
     traceAlertLevels(texts);
-    traceBattles(texts);
+    traceBattles(texts, boxes, lines);
 
-    await client.debug({ debug: [{ draw: { lines: lines, spheres: spheres, text: texts } }] });
-
-    const selection = getSelectedUnit();
-    if (selection || (Trace.speed >= 10)) {
-      await new Promise(resolve => setTimeout(resolve, selection ? 1000 : Trace.speed));
-      if (selection && selection.job && selection.job.fight) selection.job.fight.trace = true;
-    }
+    await client.debug({ debug: [{ draw: { boxes: boxes, lines: lines, spheres: spheres, text: texts } }] });
   }
 
-}
-
-let selection = null;
-function getSelectedUnit() {
-  if (selection && selection.isSelected) return selection;
-
-  for (const unit of Units.warriors().values()) {
-    if (unit.isSelected) {
-      selection = unit;
-      return selection;
-    }
-  }
-
-  if (selection) {
-    if (selection.job && selection.job.fight) selection.job.fight.trace = false;
-    selection = null;
-  }
 }
 
 function traceZones(texts, lines) {
   for (const zone of Zone.list()) {
-    for (const corridor of zone.corridors) {
-      const point = { x: zone.x, y: zone.y, z: 15 };
+    const point = { x: zone.x, y: zone.y, z: 15 };
 
-      texts.push({ text: zone.name, worldPos: { ...point, z: point.z + 1 }, size: 40 });
+    texts.push({ text: zone.name, worldPos: { ...point, z: point.z + 1 }, size: 40 });
+    lines.push({ line: { p0: point, p1: { ...point, z: 0 } }, color: Color.Corridor });
+
+    for (const corridor of zone.corridors) {
       lines.push({ line: { p0: point, p1: { x: corridor.x, y: corridor.y, z: 15 } }, color: Color.Corridor });
-      lines.push({ line: { p0: point, p1: { ...point, z: 0 } }, color: Color.Corridor });
     }
   }
 }
@@ -238,30 +213,76 @@ function traceAlertLevels(texts) {
   }
 }
 
-function traceBattles(texts) {
+function traceBattles(texts, boxes, lines) {
   let y = 0.32;
 
   texts.push({ text: "Battles:", virtualPos: { x: 0.8, y: 0.3 }, size: 16 });
   texts.push({ text: "Tier Zone Balance Mode", virtualPos: { x: 0.8, y: 0.31 }, size: 16 });
 
-  for (const zone of Zone.list().filter(zone => !!zone.fight).sort((a, b) => (a.tier.level - b.tier.level))) {
+  for (const zone of Zone.list().filter(zone => !!zone.battle).sort((a, b) => (a.tier.level - b.tier.level))) {
     const text = [threeletter(" ", zone.tier.level), threeletter(" ", zone.name)];
+    const battle = zone.battle;
+    const balance = battle.balance;
 
-    if (zone.fight) {
-      const balance = zone.fight.balance || 0;
-      if (balance >= 1000) {
-        text.push(" all in");
-      } else if (balance >= 100) {
-        text.push(balance.toFixed(3));
-      } else if (balance >= 10) {
-        text.push(balance.toFixed(4));
-      } else {
-        text.push(balance.toFixed(5));
+    if (balance >= 1000) {
+      text.push(" all in");
+    } else if (balance >= 100) {
+      text.push(balance.toFixed(3));
+    } else if (balance >= 10) {
+      text.push(balance.toFixed(4));
+    } else if (balance <= 0) {
+      text.push("   -   ");
+    } else {
+      text.push(balance.toFixed(5));
+    }
+
+    text.push(battle.mode);
+
+    // TODO: Show position scores for the selected unit if any. Default to stalker
+    let warrior = { type: Types.unit("Stalker") };
+
+    for (const fighter of battle.fighters) {
+      const target = fighter.target ? fighter.target.body : null;
+      const rally = fighter.position;
+
+      if (fighter.assignee && target && rally) {
+        const body = fighter.assignee.body;
+        const prally = { x: rally.x, y: rally.y, z: 15 };
+
+        lines.push({ line: { p0: prally, p1: { x: body.x, y: body.y, z: body.z + body.r * 2 } }, color: Color.White });
+        lines.push({ line: { p0: prally, p1: { x: target.x, y: target.y, z: target.z + target.r * 2 } }, color: Color.Red });
+
+        rally.color = Color.Green;
+      } else if (target && rally) {
+        lines.push({ line: { p0: { x: rally.x, y: rally.y, z: 15 }, p1: { x: target.x, y: target.y, z: target.z + target.r * 2 } }, color: Color.Red });
+
+        rally.color = Color.Blue;
+      }
+    }
+
+    for (const position of [...battle.frontline.groundToGround, ...battle.frontline.groundToAir]) {
+      const color = position.color || Color.White;
+
+      let score = "";
+      if (position.score) {
+        const pscore = position.score(warrior);
+        score = (pscore === Infinity) ? "MAX" : pscore.toFixed(2);
       }
 
-      if (zone.fight.modes && zone.fight.modes[zone.fight.mode]) {
-        text.push(zone.fight.modes[zone.fight.mode]);
+      boxes.push({ min: { x: position.x - 0.4, y: position.y - 0.4, z: 0 }, max: { x: position.x + 0.4, y: position.y + 0.4, z: 15 }, color: color });
+      texts.push({ text: score, worldPos: { x: position.x - 0.2, y: position.y, z: 15 }, size: 20 });
+
+      if (position.entrance) {
+        const z = 15 + Math.random() * 0.5;
+        let last = position;
+
+        for (const next of position.entrance) {
+          lines.push({ line: { p0: { x: last.x, y: last.y, z: z }, p1: { x: next.x, y: next.y, z: z } }, color: Color.Purple });
+          last = next;
+        }
       }
+
+      position.color = Color.White;
     }
 
     texts.push({ text: text.join(" "), virtualPos: { x: 0.8, y: y }, size: 16 });
@@ -299,49 +320,4 @@ function trackSpeed(unit) {
     );
   }
 
-}
-
-async function spawnObserver(client, me) {
-  await client.debug({
-    debug: [{
-      createUnit: {
-        unitType: 82,
-        owner: me.id,
-        pos: { x: me.x, y: me.y },
-        quantity: 1,
-      }
-    }]
-  });
-}
-
-let spawnLocation;
-let spawnCooldown;
-async function spawnZergling(client) {
-  if (spawnCooldown-- > 0) return;
-  if (!spawnLocation) {
-    const field = [...Map.tiers[3].fore][0];
-    spawnLocation = { x: field.x, y: field.y };
-  }
-
-  const warriors = Units.warriors().size;
-  if (!warriors) return;
-  
-  const zealot = [...Units.warriors().values()].find(warrior => (warrior.type.name === "Zealot"));
-  if (!zealot || (zealot.armor.shield < 50)) return;
-  
-  const enemies = Units.enemies().size;
-  if (enemies >= warriors) return;
-
-  await client.debug({
-    debug: [{
-      createUnit: {
-        unitType: 105,
-        owner: 2,
-        pos: spawnLocation,
-        quantity: warriors,
-      }
-    }]
-  });
-
-  spawnCooldown = 100;
 }

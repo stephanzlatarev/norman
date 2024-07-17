@@ -24,6 +24,7 @@ class Tier {
 export function syncTiers() {
   reviewTiers();
   reviewAlerts();
+  reviewEntrances();
 }
 
 function reviewTiers() {
@@ -108,7 +109,9 @@ function reviewAlerts() {
   let wave = new Set();
 
   for (const zone of zones) {
-    if (zone.threats.size) {
+    if (zone.threats.size && zone.warriors.size) {
+      zone.alertLevel = ALERT_YELLOW;
+    } else if (zone.threats.size) {
       zone.alertLevel = ALERT_RED;
     } else if (zone.warriors.size) {
       zone.alertLevel = ALERT_BLUE;
@@ -140,6 +143,60 @@ function reviewAlerts() {
     }
 
     wave = next;
+  }
+}
+
+function reviewEntrances() {
+  for (const tier of tiers) {
+    for (const zone of tier.zones) {
+      if (!zone.canBeEntrance) {
+        zone.entrance = null;
+      } else if (tier.level === 1) {
+        zone.entrance = [];
+      } else if (!zone.threats.size) {
+        zone.entrance = findEntrance(zone);
+      } else {
+        zone.entrance = null;
+      }
+    }
+  }
+
+  // Clear can-be-entrance flag for next loop
+  for (const zone of Zone.list()) {
+    zone.canBeEntrance = true;
+  }
+}
+
+function findEntrance(zone) {
+  const entrances = [];
+
+  for (const corridor of zone.corridors) {
+    for (const neighbor of corridor.zones) {
+      if (!neighbor.canBeEntrance || !neighbor.entrance || neighbor.threats.size) continue;
+
+      if ((neighbor !== zone) && !neighbor.entrance.find(one => (zone === one)) && !neighbor.entrance.find(one => (corridor === one))) {
+        // Prefer entrance from neighbor of lower tier level
+        if (neighbor.tier.level < zone.tier.level) {
+          return [corridor, neighbor, ...neighbor.entrance];
+        }
+
+        entrances.push({ corridor, neighbor });
+      }
+    }
+  }
+
+  // Prefer entrance from neighbor of the same tier level
+  for (const { corridor, neighbor } of entrances) {
+    if (neighbor.tier.level === zone.tier.level) {
+      return [corridor, neighbor, ...neighbor.entrance];
+    }
+  }
+
+  // Use any entrance neighbor
+  if (entrances.length) {
+    const { corridor, neighbor } = entrances[0];
+
+    return [corridor, neighbor, ...neighbor.entrance];
   }
 }
 
