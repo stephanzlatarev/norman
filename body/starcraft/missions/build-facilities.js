@@ -108,12 +108,14 @@ function findBuildingPlot(facility) {
 }
 
 function findPylon(wall) {
-  const plot = wall.getPlot(Types.unit("Pylon"));
+  const plot = wall.getPlot("Pylon");
 
-  for (const building of Units.buildings().values()) {
-    if (building.type.isPylon && (building.body.x === plot.x) && (building.body.y === plot.y)) {
-      building.isWall = true;
-      return building;
+  if (plot) {
+    for (const building of Units.buildings().values()) {
+      if (building.type.isPylon && (building.body.x === plot.x) && (building.body.y === plot.y)) {
+        building.isWall = true;
+        return building;
+      }
     }
   }
 }

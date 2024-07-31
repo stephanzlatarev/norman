@@ -55,6 +55,7 @@ function findWallPylon() {
     for (const building of Units.buildings().values()) {
       if ((building.body.x === wallPlot.x) && (building.body.y === wallPlot.y)) {
         wallPylon = building;
+        building.isWall = true;
         return;
       }
     }
@@ -62,15 +63,10 @@ function findWallPylon() {
     return wallPlot;
   }
 
-  const pylon = Types.unit("Pylon");
-
   for (const wall of Wall.list()) {
-    const plot = wall.getPlot(pylon);
+    wallPlot = wall.getPlot("Pylon");
 
-    if (plot && Map.accepts(plot, plot.x, plot.y, 2)) {
-      wallPlot = plot;
-      return plot;
-    }
+    return wallPlot;
   }
 }
 

@@ -22,9 +22,9 @@ export default class Wall extends Corridor {
   getPlot(type) {
     const blueprint = this.blueprint;
 
-    if (type.name === "Pylon") {
-      return Map.accepts(blueprint.pylon, blueprint.pylon.x, blueprint.pylon.y, 2) ? blueprint.pylon : null;
-    } else if (type.name === "ShieldBattery") {
+    if ((type === "Pylon") || (type.name === "Pylon")) {
+      return blueprint.pylon;
+    } else if ((type === "ShieldBattery") || (type.name === "ShieldBattery")) {
       return Map.accepts(blueprint.battery, blueprint.battery.x, blueprint.battery.y, 2) ? blueprint.battery : null;
     } else if (Map.accepts(blueprint.left, blueprint.left.x, blueprint.left.y, 3)) {
       return blueprint.left;
