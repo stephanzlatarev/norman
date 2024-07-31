@@ -48,8 +48,8 @@ function doEnforceWallNatural() {
   Limit.Stalker = Infinity;
   Limit.Probe = twoBases ? 33 : 22;
   Limit.Zealot = ActiveCount.Immortal ? 0 : 1;
+  Limit.Observer = (ActiveCount.Immortal >= 3) ? 0 : 1;
   Limit.Colossus = 0;
-  Limit.Observer = 0;
   Limit.Sentry = 0;
 
   Limit.Nexus = twoBases ? 2 : 1;
@@ -62,6 +62,7 @@ function doEnforceWallNatural() {
 
   Priority.ShieldBattery = 100;
   Priority.CyberneticsCore = 100;
+  Priority.Observer = 100;
   Priority.Nexus = (twoBases && (TotalCount.Nexus === 1)) ? 100 : 0;
   Priority.Zealot = 95;
   Priority.Immortal = 95;

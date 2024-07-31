@@ -20,19 +20,15 @@ export default class BuildFacilitiesMission extends Mission {
 
   run() {
     if (this.job) {
-      if (this.job.isFailed) {
-        this.job = null;
-      } else if (this.job.isDone) {
-        if (this.job.product && (this.job.product.type === Types.unit(SPECIAL_FACILITIES[0]))) {
-          SPECIAL_FACILITIES.splice(0, 1);
-        }
-
+      if (this.job.isDone || this.job.isFailed) {
+        // This build job is closed. Free the slot to open a new build job
         this.job = null;
       } else if (!this.job.assignee && (TotalCount[this.job.output.name] >= Limit[this.job.output.name])) {
-        // The job is not assigned yet but priorities have meanwhile changed so close it
+        // This build job is not assigned yet but priorities have meanwhile changed so close it
         this.job.close(false);
         this.job = null;
       } else {
+        // This build job is still in progress
         return;
       }
     }
@@ -64,21 +60,21 @@ function selectFacilityType() {
 }
 
 function selectSpecialFacilityType() {
-  if (SPECIAL_FACILITIES.length) {
-    const facility = Types.unit(SPECIAL_FACILITIES[0]);
+  for (const facility of SPECIAL_FACILITIES) {
+    // Special facilities are to be built in order, so if there's one of this type, then move to the next
+    if (TotalCount[facility] >= 1) continue;
 
-    if (TotalCount[facility.name] < Limit[facility.name]) {
-      return facility;
-    }
+    // When this type of facility is not built yet, then either build it or build no special facility at all
+    return (TotalCount[facility] < Limit[facility]) ? Types.unit(facility) : null;
   }
 }
 
 function selectDefaultFacilityType() {
-  for (const one of DEFAULT_FACILITIES) {
-    const facility = Types.unit(one);
+  for (const facility of DEFAULT_FACILITIES) {
+    const type = Types.unit(facility);
 
-    if (TotalCount[facility.name] < Limit[facility.name]) {
-      return facility;
+    if (TotalCount[facility] < Limit[facility]) {
+      return type;
     }
   }
 }
@@ -86,15 +82,14 @@ function selectDefaultFacilityType() {
 //TODO: Optimize by remembering found plots and re-using them when pylons are destroyed but otherwise continue the search from where last plot was found
 function findBuildingPlot(facility) {
   for (const wall of Wall.list()) {
-    if (!wallPylon) {
+    if (!wallPylon || !wallPylon.isAlive) {
       wallPylon = findPylon(wall);
     }
 
     if (wallPylon && wallPylon.isActive) {
       const plot = wall.getPlot(facility);
-      const size = (facility.name !== "ShieldBattery") ? 3 : 2; // TODO: Get Types to know the size of unit types
 
-      if (plot && Map.accepts(plot, plot.x, plot.y, size)) {
+      if (plot) {
         return plot;
       }
     }

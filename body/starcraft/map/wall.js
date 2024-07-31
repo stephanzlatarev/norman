@@ -1,3 +1,4 @@
+import Map from "./map.js";
 import { Corridor } from "./zone.js";
 import Tiers from "./tier.js";
 
@@ -19,19 +20,18 @@ export default class Wall extends Corridor {
   }
 
   getPlot(type) {
+    const blueprint = this.blueprint;
+
     if (type.name === "Pylon") {
-      return this.blueprint.pylon;
+      return Map.accepts(blueprint.pylon, blueprint.pylon.x, blueprint.pylon.y, 2) ? blueprint.pylon : null;
     } else if (type.name === "ShieldBattery") {
-      return this.blueprint.battery;
-    } else if (!this.blueprint.left.isTaken) {
-      this.blueprint.left.isTaken = true;
-      return this.blueprint.left;
-    } else if (!this.blueprint.center.isTaken) {
-      this.blueprint.center.isTaken = true;
-      return this.blueprint.center;
-    } else if (!this.blueprint.right.isTaken) {
-      this.blueprint.right.isTaken = true;
-      return this.blueprint.right;
+      return Map.accepts(blueprint.battery, blueprint.battery.x, blueprint.battery.y, 2) ? blueprint.battery : null;
+    } else if (Map.accepts(blueprint.left, blueprint.left.x, blueprint.left.y, 3)) {
+      return blueprint.left;
+    } else if (Map.accepts(blueprint.center, blueprint.center.x, blueprint.center.y, 3)) {
+      return blueprint.center;
+    } else if (Map.accepts(blueprint.right, blueprint.right.x, blueprint.right.y, 3)) {
+      return blueprint.right;
     }
   }
 
