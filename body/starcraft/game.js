@@ -5,7 +5,7 @@ import Order from "./order.js";
 import Types from "./types.js";
 import Units from "./units.js";
 import Depot from "./map/depot.js";
-import Map from "./map/map.js";
+import { createMap, syncMap } from "./map/sync.js";
 import countUnits from "./memo/count.js";
 import countEncounters from "./memo/encounters.js";
 import Enemy from "./memo/enemy.js";
@@ -47,7 +47,7 @@ export default class Game {
     Units.sync(this.observation.rawData.units, this.me, this.enemy);
     Resources.sync(this.observation);
 
-    Map.create(gameInfo);
+    createMap(gameInfo);
 
     Enemy.base = [...Depot.list()].find(depot => ((depot.x === this.enemy.x) && (depot.y === this.enemy.y)));
 
@@ -76,9 +76,11 @@ export default class Game {
 
         this.observation = observation.observation;
 
-        Map.sync(gameInfo, this.observation.gameLoop);
+        syncMap(gameInfo);
+
         Resources.sync(this.observation);
         Units.sync(this.observation.rawData.units, this.me, this.enemy);
+
         countUnits(this.observation, this.me.race);
         countEncounters();
 

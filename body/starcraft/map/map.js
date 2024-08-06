@@ -1,10 +1,6 @@
 import Board from "./board.js";
 import Units from "../units.js";
 import Zone from "./zone.js";
-import { syncTiers } from "./tier.js";
-import { createDepots } from "./depot.js";
-import { createWalls } from "./wall.js";
-import { createZones } from "./zone.js";
 
 class Map {
 
@@ -14,10 +10,6 @@ class Map {
     this.right = gameInfo.startRaw.playableArea.p1.x;
     this.bottom = gameInfo.startRaw.playableArea.p1.y;
 
-    this.gameInfo = null;
-    this.gameLoop = 0;
-    this.loop = 0;
-
     this.width = this.right - this.left;
     this.height = this.bottom - this.top;
 
@@ -26,33 +18,10 @@ class Map {
     clearInitialPathing(this.board);
 
     this.board.path();
-
-    const base = Units.buildings().values().next().value;
-
-    createDepots(this.board, Units.resources().values(), base);
-    createZones(this.board);
-
-    syncTiers();
-
-    createWalls(this.board);
   }
 
-  sync(gameInfoOrEnforce, gameLoop) {
-    if (gameInfoOrEnforce === true) {
-      // Sync board but only once per game loop
-      if (this.loop !== this.gameLoop) {
-        this.board.sync(this.gameInfo.startRaw.pathingGrid);
-
-        this.loop = this.gameLoop;
-      }
-    } else if (gameInfoOrEnforce && (gameLoop > 0)) {
-      // Remember current game info and loop
-      this.gameInfo = gameInfoOrEnforce;
-      this.gameLoop = gameLoop;
-
-      // And sync tiers
-      syncTiers();
-    }
+  sync(gameInfo) {
+    this.board.sync(gameInfo.startRaw.pathingGrid);
   }
 
   cell(x, y) {
@@ -65,8 +34,6 @@ class Map {
 
   // Check if a unit of the given size can be placed in the given coordinates entirely within this zone
   accepts(zone, x, y, size) {
-    this.sync(true);
-
     zone = (zone instanceof Zone) ? zone : this.zone(x, y);
     if (!zone) {
       console.log("Cannot accept a unit outside map zones!");
