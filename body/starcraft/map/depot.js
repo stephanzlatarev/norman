@@ -19,7 +19,10 @@ export default class Depot extends Zone {
   isSaturated = false;
 
   constructor(cell, resources) {
-    super(cell.x + 0.5, cell.y + 0.5, cell.margin);
+    super(cell, cell.margin);
+
+    this.x = cell.x + 0.5;
+    this.y = cell.y + 0.5;
 
     for (const resource of resources) {
       const dx = resource.body.x - cell.x;

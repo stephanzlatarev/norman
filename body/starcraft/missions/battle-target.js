@@ -1,4 +1,6 @@
 import Mission from "../mission.js";
+import Battle from "../battle/battle.js";
+import frontline from "../battle/frontline.js";
 import Zone from "../map/zone.js";
 import Resources from "../memo/resources.js";
 
@@ -6,189 +8,114 @@ export default class BattleTargetMission extends Mission {
 
   run() {
     for (const zone of Zone.list()) {
-      const battle = zone.battle;
+      if (!zone.battle) continue;
 
-      if (!battle) continue;
-
-      if (battle.frontline.groundToGround.size) {
-        const fightersGround = battle.fighters.filter(fighter => (fighter.agent.type.attackGround > 0));
-
-        setTargets(fightersGround, battle.frontline.groundToGround);
-      }
-
-      if (battle.frontline.groundToAir.size) {
-        const fightersAir = battle.fighters.filter(fighter => (fighter.agent.type.attackAir > 0));
-
-        setTargets(fightersAir, battle.frontline.groundToAir);
+      if (zone.battle.mode === Battle.MODE_FIGHT) {
+        setFightTargets(zone.battle);
+      } else if (zone.battle.mode === Battle.MODE_SMASH) {
+        setSmashTargets(zone.battle);
       }
     }
   }
 
 }
 
-// Assign targets with focus fire
-// Swap fighters when needed. For example, a melee unit should be closer to the target than a ranged unit
-// TODO: Make sure fighters do not change targets unless necessary
-// TODO: Group warriors on targets for focused fire
-// TODO: Don't group more warriors on targets than needed for a single shot kill
-// TODO: Prefer instant kills (damage >= health)
-// TODO: Prefer lower health (min health)
-// TODO: Prefer enemy with higher DPS
-// TODO: Prefer attack which concentrates higher warrior DPS
-// TODO: Prefer cast spellers with large impact
-function setTargets(fighters, frontlinePositions) {
-  const targetPositions = new Set(frontlinePositions);
+function setFightTargets(battle) {
+  const stations = frontline(battle, getThreats(battle));
+  const targets = getTargets(battle.zone);
 
-//  focusOnVisibleTargets(fighters, targetPositions);
+  for (const fighter of battle.fighters) {
+    const warrior = fighter.assignee;
 
-  excludeOccupiedPositions(fighters, targetPositions);
-  redirectDeployedFighters(fighters, targetPositions);
-
-  redirectRallyingFighters(fighters, targetPositions, frontlinePositions);
-  assignNewlyHiredFighters(fighters, targetPositions, frontlinePositions);
+    if (warrior) {
+      fighter.direct(getClosestVisibleTarget(warrior, targets), getClosestStation(warrior, stations));
+    }
+  }
 }
 
-function focusOnVisibleTargets(fighters, positions) {
-  for (const fighter of fighters) {
-    if (fighter.position) {
-      const target = fighter.position.target;
+function getThreats(battle) {
+  const threats = [];
 
-      if (!target || (target.lastSeen < Resources.loop)) {
-        positions.delete(fighter.position);
-        fighter.direct(null);
+  for (const zone of battle.zones) {
+    for (const threat of zone.threats) {
+      // TODO: Add spell casters and later air-hitters
+      if (threat.type.damageGround) {
+        threats.push(threat);
       }
     }
   }
 
-  for (const position of positions) {
-    if (!position.target || (position.target.lastSeen < Resources.loop)) {
-      positions.delete(position);
+  return threats;
+}
+
+function getTargets(zone) {
+  const targets = [];
+
+  for (const threat of zone.threats) {
+    // TODO: Add spell casters and later air-hitters
+    if (threat.type.damageGround) {
+      targets.push(threat);
+    }
+  }
+
+  return targets;
+}
+
+function setSmashTargets(battle) {
+  for (const fighter of battle.fighters) {
+    const warrior = fighter.assignee;
+
+    if (warrior) {
+      fighter.direct(getClosestVisibleTarget(warrior, battle.zone.threats));
     }
   }
 }
 
-function excludeOccupiedPositions(fighters, positions) {
-  for (const fighter of fighters) {
-    if (fighter.position && fighter.position.isValid) {
-      positions.delete(fighter.position);
+//Assign targets with focus fire
+//TODO: Make sure fighters do not change targets unless necessary
+//TODO: Group warriors on targets for focused fire
+//TODO: Don't group more warriors on targets than needed for a single shot kill
+//TODO: Prefer instant kills (damage >= health)
+//TODO: Prefer lower health (min health)
+//TODO: Prefer enemy with higher DPS
+//TODO: Prefer attack which concentrates higher warrior DPS
+//TODO: Prefer cast spellers with large impact
+function getClosestVisibleTarget(warrior, targets) {
+  let closestTarget;
+  let closestDistance = Infinity
+
+  for (const target of targets) {
+    if (!target.isAlive || (target.lastSeen < Resources.loop)) continue;
+    if (target.body.isGround && !warrior.type.damageGround) continue;
+    if (target.body.isFlying && !warrior.type.damageAir) continue;
+
+    const distance = calculateSquareDistance(warrior.body, target.body);
+
+    if (distance < closestDistance) {
+      closestTarget = target;
+      closestDistance = distance;
     }
   }
+
+  return closestTarget;
 }
 
-function redirectDeployedFighters(fighters, positions) {
-  for (const fighter of fighters) {
-    // Check if there are available positions
-    if (!positions.size) break;
+function getClosestStation(warrior, stations) {
+  let closestStation;
+  let closestDistance = Infinity
 
-    // Check if this is a deployed fighter
-    if (!fighter.isDeployed || !fighter.position || !fighter.position.isValid) continue;
+  for (const station of stations) {
+    const distance = calculateSquareDistance(warrior.body, station);
 
-    const position = findBestNeighborPosition(fighter.agent, positions, fighter.position);
-
-    if (position) {
-      const oldScore = fighter.position.score(fighter.agent);
-      const newScore = position.score(fighter.agent);
-  
-      if (newScore > oldScore) {
-        positions.add(fighter.position);
-        positions.delete(position);
-
-        fighter.direct(position);
-      }
+    if (distance < closestDistance) {
+      closestStation = station;
+      closestDistance = distance;
     }
   }
+
+  return closestStation;
 }
 
-function redirectRallyingFighters(fighters, remainingPositions, frontlinePositions) {
-  let availablePositions = new Set(remainingPositions);
-
-  for (const fighter of fighters) {
-    // Check if this is a rallying fighter that needs to be redirected
-    if (!fighter.assignee || !fighter.position || (fighter.position && fighter.position.isValid)) continue;
-
-    // Check if there are available positions
-    if (!availablePositions.size) {
-      availablePositions = new Set(frontlinePositions);
-    }
-
-    const position = findClosestPosition(fighter.assignee, availablePositions);
-
-    if (position) {
-      availablePositions.delete(position);
-
-      fighter.direct(position);
-    }
-  }
-}
-
-function assignNewlyHiredFighters(fighters, remainingPositions, frontlinePositions) {
-  let availablePositions = new Set(remainingPositions);
-
-  for (const fighter of fighters) {
-    // Check if this is a new hire
-    if (fighter.position && fighter.position.isValid) continue;
-
-    // Check if there are available positions
-    if (!availablePositions.size) {
-      availablePositions = new Set(frontlinePositions);
-    }
-
-    const position = findBestScorePosition(fighter.agent, availablePositions);
-
-    if (position) {
-      availablePositions.delete(position);
-
-      fighter.direct(position);
-    }
-  }
-}
-
-function findBestScorePosition(warrior, positions) {
-  let bestPosition;
-  let bestScore = -Infinity;
-
-  for (const position of positions) {
-    const score = position.score(warrior);
-
-    if (score > bestScore) {
-      bestPosition = position;
-      bestScore = score;
-    }
-  }
-
-  return bestPosition;
-}
-
-function findBestNeighborPosition(warrior, positions, position) {
-  let bestPosition;
-  let bestScore = -Infinity;
-
-  for (const neighbor of positions) {
-    if ((Math.abs(neighbor.x - position.x) <= 3) && (Math.abs(neighbor.y - position.y) <= 3)) {
-      const score = position.score(warrior);
-
-      if (score > bestScore) {
-        bestPosition = position;
-        bestScore = score;
-      }
-    }
-  }
-
-  return bestPosition;
-}
-
-function findClosestPosition(warrior, positions) {
-  let bestPosition;
-  let bestDistance = Infinity;
-
-  for (const position of positions) {
-    const distance = Math.abs(warrior.body.x - position.x) + Math.abs(warrior.body.y - position.y);
-
-    if (distance < bestDistance) {
-      bestPosition = position;
-      bestDistance = distance;
-    }
-  }
-
-  return bestPosition;
+function calculateSquareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }

@@ -132,15 +132,6 @@ function parseWeapons(unit) {
   let rangeAir = 0;
   let weaponCooldown = Infinity;
 
-  if (unit.name === "Sentry") {
-    attackGround = 6;
-    damageGround = 8.4 / GAME_LOOPS_PER_SECOND;
-    rangeGround = 5;
-    attackAir = 6;
-    damageAir = 8.4;
-    rangeAir = 5;
-  }
-
   for (const weapon of unit.weapons) {
     if ((weapon.type === WEAPON_GROUND) || (weapon.type === WEAPON_ANY)) {
       attackGround = weapon.damage;
@@ -154,6 +145,28 @@ function parseWeapons(unit) {
       rangeAir = Math.max(weapon.range, rangeGround);
       weaponCooldown = Math.min((weapon.speed * NORMAL_LOOPS_PER_SECOND / weapon.attacks) * 0.9, weaponCooldown);
     }
+  }
+
+  if (unit.name === "Sentry") {
+    attackGround = 6;
+    damageGround = 8.4 / GAME_LOOPS_PER_SECOND;
+    rangeGround = 5;
+    attackAir = 6;
+    damageAir = 8.4;
+    rangeAir = 5;
+  } else if (unit.name === "VoidRay") {
+    attackGround = 6;
+    damageGround = 16.8 / GAME_LOOPS_PER_SECOND;
+    rangeGround = 6;
+    attackAir = 6;
+    damageAir = 16.8 / GAME_LOOPS_PER_SECOND;
+    rangeAir = 6;
+  } else if (unit.name === "Ravager") {
+    // Corrosive Bile
+    rangeGround = 9;
+    rangeAir = 9;
+    attackAir = 10;
+    damageAir = 10 / GAME_LOOPS_PER_SECOND;
   }
 
   weaponCooldown = Math.max(weaponCooldown, 0);

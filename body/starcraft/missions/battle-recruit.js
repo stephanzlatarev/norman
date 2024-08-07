@@ -1,5 +1,6 @@
 import Mission from "../mission.js";
 import Fight from "../jobs/fight.js";
+import { ALERT_WHITE } from "../map/alert.js";
 import Zone from "../map/zone.js";
 
 const RECRUIT_BALANCE = 2;
@@ -9,44 +10,69 @@ export default class BattleRecruitMission extends Mission {
 
   run() {
     for (const zone of Zone.list()) {
+      if (!zone.battle) continue;
+
       const battle = zone.battle;
 
-      if (battle && battle.frontline) {
-        if (battle.balance < RECRUIT_BALANCE) {
-          const frontline = battle.frontline;
+      if (battle.recruitedBalance < RECRUIT_BALANCE) {
+        const rallyZones = getRallyZones(battle);
 
-          if (frontline.groundToGround.size) {
-            openJob(battle, "Immortal");
-            openJob(battle, "Zealot");
-            openJob(battle, "Stalker");
-            openJob(battle, "Sentry");
-          } else if (frontline.groundToAir.size) {
-            openJob(battle, "Stalker");
-            openJob(battle, "Sentry");
-            closeJobs(battle, "Immortal");
-            closeJobs(battle, "Zealot");
+        if (isAirBattle(battle)) {
+          closeJobs(battle, "Immortal");
+          closeJobs(battle, "Zealot");
+        } else {
+          for (const rally of rallyZones) {
+            openJob(battle, "Immortal", rally);
+            openJob(battle, "Zealot", rally);
           }
-
-        } else if (battle.balance > DOWNSIZE_BALANCE) {
-          // Downsize is not implemented
         }
+
+        for (const rally of rallyZones) {
+          openJob(battle, "Stalker", rally);
+          openJob(battle, "Sentry", rally);
+        }
+      } else if (battle.recruitedBalance > DOWNSIZE_BALANCE) {
+        // Downsize is not implemented
       }
     }
   }
 
 }
 
-function openJob(battle, warrior) {
-  const job = battle.fighters.find(job => (!job.assignee && job.agent && (job.agent.type.name === warrior)));
+function isAirBattle(battle) {
+  for (const threat of battle.zone.threats) {
+    if (threat.type.damageGround && threat.body.isGround) {
+      // At least one ground enemy unit can attack our ground warriors, so this is not an air battle
+      return false;
+    }
+  }
 
-  if (!job) {
-    new Fight(battle, warrior);
+  return true;
+}
+
+function getRallyZones(battle) {
+  const zones = [];
+
+  for (const corridor of battle.zone.corridors) {
+    for (const neighbor of corridor.zones) {
+      if ((neighbor !== battle.zone) && (neighbor.alertLevel <= ALERT_WHITE)) {
+        zones.push(neighbor);
+      }
+    }
+  }
+
+  return zones;
+}
+
+function openJob(battle, warrior, rally) {
+  if (!battle.fighters.find(job => (!job.assignee && job.agent && (job.agent.type.name === warrior) && (job.zone === rally)))) {
+    new Fight(battle, warrior, rally);
   }
 }
 
 function closeJobs(battle, warrior) {
   for (const job of battle.fighters) {
-    if (job.agent && (job.agent.type === warrior)) {
+    if (job.agent && (job.agent.type.name === warrior)) {
       job.close(true);
     }
   }

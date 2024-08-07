@@ -1,4 +1,3 @@
-import Frontline from "./frontline.js";
 import Resources from "../memo/resources.js";
 import Detect from "../jobs/detect.js";
 
@@ -9,11 +8,12 @@ export default class Battle {
 
   static MODE_FIGHT = "fight";
   static MODE_RALLY = "rally";
+  static MODE_SMASH = "smash";
 
   mode = Battle.MODE_RALLY;
-  balance = 0;
 
-  frontline;
+  recruitedBalance = 0;
+  deployedBalance = 0;
 
   detector;
   fighters;
@@ -24,18 +24,24 @@ export default class Battle {
     zone.battle = this;
 
     this.zone = zone;
+    this.zones = getBattleZones(zone);
+
     this.detector = new Detect(this);
     this.fighters = [];
-
-    this.frontline = new Frontline(zone);
     this.priority = 0;
   }
 
   run() {
     const threats = [];
-    const passives = [];
 
-    for (const zone of this.frontline.zones) {
+    for (const job of this.fighters) {
+      if (job.isDone || job.isFailed) {
+        this.fighters.splice(this.fighters.indexOf(job), 1);
+      }
+    }
+    if (this.detector.isDone || this.detector.isFailed) this.detector = new Detect(this);
+
+    for (const zone of this.zones) {
       for (const threat of zone.threats) {
         // TODO: Add spell casters and later air-hitters
         if (threat.type.damageGround) {
@@ -43,37 +49,32 @@ export default class Battle {
         }
       }
     }
-    for (const threat of this.zone.threats) {
-      if (!threat.type.damageGround) {
-        passives.push(threat);
-      }
-    }
 
-    if ((Resources.supplyUsed > 190) && areMostFightersRallied(this.fighters, this.frontline.zones)) {
-      this.frontline.fight(threats.length ? threats : this.zone.threats, passives);
+    this.deployedBalance = calculateBalance(this.fighters, threats, this.zones);
+    this.recruitedBalance = calculateBalance(this.fighters, threats);
 
-      // Keep balance low so that new warriors are recruited
-      this.balance = 0;
+    if ((Resources.supplyUsed > 190) && ((this.deployedBalance > FIGHT_BALANCE) || areEnoughFightersRallied(this.fighters, this.zones))) {
+      // Keep recruited balance low so that new warriors are recruited
+      this.recruitedBalance = 0;
 
-      // Attack with available warriors so that army gets rotated
+      // Keep attacking
+      this.deployedBalance = Infinity;
       this.mode = Battle.MODE_FIGHT;
     } else if (threats.length) {
-      this.frontline.fight(threats, passives);
 
-      const deployedBalance = calculateBalance(this.fighters, threats, true);
-
-      if (deployedBalance > FIGHT_BALANCE) {
+      if (this.deployedBalance > FIGHT_BALANCE) {
         this.mode = Battle.MODE_FIGHT;
-      } else if (deployedBalance < RALLY_BALANCE) {
+      } else if (this.deployedBalance < RALLY_BALANCE) {
         this.mode = Battle.MODE_RALLY;
       }
 
-      this.balance = calculateBalance(this.fighters, threats);
     } else {
-      this.frontline.pillage(this.zone.threats);
+      // Keep recruited balance such that there are at least three fighters per target
+      this.recruitedBalance = this.fighters.length / (1 + this.zone.threats.size * 3);
 
-      this.balance = this.fighters.length / (1 + this.zone.threats.size * 3);
-      this.mode = Battle.MODE_FIGHT;
+      // Keep attacking
+      this.deployedBalance = Infinity;
+      this.mode = Battle.MODE_SMASH;
     }
 
     this.detector.priority = this.priority;
@@ -93,7 +94,21 @@ export default class Battle {
 
 }
 
-function calculateBalance(fighters, threats, isDeployed) {
+function getBattleZones(zone) {
+  const zones = new Set();
+
+  zones.add(zone);
+
+  for (const corridor of zone.corridors) {
+    for (const neighbor of corridor.zones) {
+      zones.add(neighbor);
+    }
+  }
+
+  return zones;
+}
+
+function calculateBalance(fighters, threats, zones) {
   let warriorDamage = 0;
   let warriorHealth = 0;
   let enemyDamage = 0;
@@ -103,7 +118,7 @@ function calculateBalance(fighters, threats, isDeployed) {
     const warrior = fighter.assignee;
 
     if (!warrior || !warrior.isAlive) continue;
-    if (isDeployed && !fighter.isDeployed) continue;
+    if (zones && !zones.has(warrior.zone)) continue;
 
     warriorDamage += warrior.type.damageGround;
     warriorHealth += warrior.armor.total;
@@ -122,7 +137,7 @@ function calculateBalance(fighters, threats, isDeployed) {
   return (enemyStrength > 0) ? (warriorStrength / enemyStrength) : Infinity;
 }
 
-function areMostFightersRallied(fighters, zones) {
+function areEnoughFightersRallied(fighters, zones) {
   let deployed = 0;
   let rallying = 0;
 
@@ -138,5 +153,5 @@ function areMostFightersRallied(fighters, zones) {
     }
   }
 
-  return deployed > rallying * 4;
+  return (deployed > rallying * 4);
 }

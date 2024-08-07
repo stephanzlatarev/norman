@@ -8,6 +8,7 @@ import Priority from "../memo/priority.js";
 import Resources from "../memo/resources.js";
 
 let plan = doStartUp;
+let encounteredZerglingCount = 0;
 
 export default class PlanInvestmentsMission extends Mission {
 
@@ -30,7 +31,9 @@ function doStartUp() {
   Limit.ShieldBattery = 0;
   Limit.Zealot = 0;
 
-  if (VisibleCount.SpawningPool || VisibleCount.Zergling) {
+  encounteredZerglingCount = Math.max(VisibleCount.Zergling, encounteredZerglingCount);
+
+  if (VisibleCount.SpawningPool || encounteredZerglingCount) {
     plan = doEnforceWallNatural;
     console.log("Transition to enforcing wall to natural expansion.");
   }
@@ -42,13 +45,13 @@ function doStartUp() {
 }
 
 function doEnforceWallNatural() {
-  const twoBases = (ActiveCount.Immortal >= 2);
+  const twoBases = (ActiveCount.Immortal + ActiveCount.Stalker >= 6);
 
   Limit.Immortal = Infinity;
   Limit.Stalker = Infinity;
   Limit.Probe = twoBases ? 33 : 22;
   Limit.Zealot = ActiveCount.Immortal ? 0 : 1;
-  Limit.Observer = (ActiveCount.Immortal >= 3) ? 0 : 1;
+  Limit.Observer = twoBases ? 1 : 0;
   Limit.Colossus = 0;
   Limit.Sentry = 0;
 
@@ -70,6 +73,13 @@ function doEnforceWallNatural() {
   Priority.Stalker = 80;
   Priority.RoboticsFacility = 70;
   Priority.Probe = 40;
+
+  encounteredZerglingCount = Math.max(VisibleCount.Zergling, encounteredZerglingCount);
+
+  if ((Resources.loop > 3000) && !encounteredZerglingCount) {
+    plan = doGroundArmyMaxOut;
+    console.log("Transition to maxing out with ground army.");
+  }
 
   if (twoBases && (ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 33) && (ActiveCount.Stalker > 4)) {
     plan = doGroundArmyMaxOut;
@@ -110,7 +120,9 @@ function doGroundArmyMaxOut() {
   Limit.CyberneticsCore = 1;
   Limit.ShieldBattery = 0;
 
-  if ((Resources.loop < 3000) && VisibleCount.Warrior) {
+  encounteredZerglingCount = Math.max(VisibleCount.Zergling, encounteredZerglingCount);
+
+  if ((Resources.loop < 3000) && encounteredZerglingCount) {
     plan = doEnforceWallNatural;
     console.log("Transition to enforcing wall to natural expansion.");
   }

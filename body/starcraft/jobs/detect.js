@@ -11,6 +11,7 @@ export default class Detect extends Job {
     this.priority = 0;
     this.zone = battle.zone;
     this.details = this.summary + " " + battle.zone.name;
+    this.isCommitted = false;
 
     this.battle = battle;
     this.shield = 0;
@@ -29,45 +30,21 @@ export default class Detect extends Job {
 
     if (observer.armor.shield < this.shield) {
       this.stayAlive();
-    } else if (mode === Battle.MODE_FIGHT) {
+    } else if ((mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH)) {
       this.supportArmy();
-    } else if (!this.battle.frontline.zones.has(observer.zone)) {
+    } else if (!this.battle.zones.has(observer.zone)) {
       // Rally to battle zone
       orderMove(observer, this.zone);
     } else {
       this.observeZone();
     }
 
+    this.isCommitted = (mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH);
     this.shield = observer.armor.shield;
   }
 
   stayAlive() {
-    const observer = this.assignee;
-    const body = observer.body;
-
-    // Play safe and move along the air frontline
-    let bestPosition;
-    let bestDistance = Infinity;
-
-    // TODO: Replace this with airToAir and airToGround
-    for (const position of this.battle.frontline.groundToGround) {
-      const distance = Math.abs(position.x - body.x) + Math.abs(position.y - body.y);
-
-      if (distance < bestDistance) {
-        bestPosition = position;
-        bestDistance = distance;
-      }
-    }
-    for (const position of this.battle.frontline.groundToAir) {
-      const distance = Math.abs(position.x - body.x) + Math.abs(position.y - body.y);
-
-      if (distance < bestDistance) {
-        bestPosition = position;
-        bestDistance = distance;
-      }
-    }
-
-    orderMove(observer, bestPosition);
+    this.observeZone();
   }
 
   supportArmy() {

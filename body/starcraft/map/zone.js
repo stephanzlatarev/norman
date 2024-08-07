@@ -10,8 +10,8 @@ export default class Zone extends Pin {
   enemies = new Set();
   threats = new Set();
 
-  constructor(x, y, r) {
-    super({ x, y });
+  constructor(cell, r) {
+    super(cell);
 
     this.r = (r > 0) ? r : 1;
     this.corridors = [];
@@ -113,8 +113,8 @@ export class Corridor extends Zone {
 
   isCorridor = true;
 
-  constructor(x, y, r) {
-    super(x, y, r);
+  constructor(cell, r) {
+    super(cell, r);
 
     this.zones = [];
   }
@@ -126,7 +126,7 @@ export function createZones(board) {
   const zones = [];
 
   for (const area of board.areas) {
-    const zone = area.zone ? area.zone : new Zone(area.x, area.y, area.level);
+    const zone = area.zone ? area.zone : new Zone(area.cell, area.level);
 
     for (const cell of area.cells) {
       zone.cells.add(cell);
@@ -138,7 +138,7 @@ export function createZones(board) {
   }
 
   for (const join of board.joins) {
-    const corridor = new Corridor(join.x, join.y, join.margin);
+    const corridor = new Corridor(join.cell, join.level);
 
     for (const cell of join.cells) {
       corridor.cells.add(cell);

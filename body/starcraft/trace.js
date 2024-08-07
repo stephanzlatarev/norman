@@ -1,6 +1,5 @@
 import Job from "./job.js";
 import Units from "./units.js";
-import Types from "./types.js";
 import Zone from "./map/zone.js";
 
 const Color = {
@@ -55,8 +54,8 @@ function traceZones(texts, lines) {
 
 function traceJobs(texts, lines) {
   const jobs = [...Job.list()];
-  const started = jobs.filter(job => !!job.assignee).sort((a, b) => (b.priority - a.priority));
-  const pending = jobs.filter(job => !job.assignee).sort((a, b) => (b.priority - a.priority));
+  const started = jobs.filter(job => !!job.assignee).sort(orderByPriorityAndSummary);
+  const pending = jobs.filter(job => !job.assignee).sort(orderByPriorityAndSummary);
 
   texts.push({ text: "    Prio Zone", virtualPos: { x: 0.05, y: 0.05 }, size: 16 });
   const divider = displayJobList(texts, started, 0.06);
@@ -72,6 +71,13 @@ function traceJobs(texts, lines) {
     lines.push({ line: { p0: center, p1: tag } });
     texts.push({ text: job.details, worldPos: tag, size: 16 });
   }
+}
+
+function orderByPriorityAndSummary(a, b) {
+  if (b.priority !== a.priority) return b.priority - a.priority;
+  if (a.zone && b.zone && (b.summary === a.summary)) return b.zone.name.localeCompare(a.zone.name);
+
+  return b.summary.localeCompare(a.summary);
 }
 
 function displayJobList(texts, jobs, y) {
@@ -213,76 +219,53 @@ function traceAlertLevels(texts) {
   }
 }
 
+function balanceText(balance) {
+  if (balance >= 1000) {
+    return " all in";
+  } else if (balance >= 100) {
+    return balance.toFixed(3);
+  } else if (balance >= 10) {
+    return balance.toFixed(4);
+  } else if (balance <= 0) {
+    return "   -   ";
+  }
+
+  return balance.toFixed(5);
+}
+
 function traceBattles(texts, boxes, lines) {
   let y = 0.32;
 
   texts.push({ text: "Battles:", virtualPos: { x: 0.8, y: 0.3 }, size: 16 });
-  texts.push({ text: "Tier Zone Balance Mode", virtualPos: { x: 0.8, y: 0.31 }, size: 16 });
+  texts.push({ text: "Tier Zone Recruit/Rallied Mode", virtualPos: { x: 0.8, y: 0.31 }, size: 16 });
 
   for (const zone of Zone.list().filter(zone => !!zone.battle).sort((a, b) => (a.tier.level - b.tier.level))) {
     const text = [threeletter(" ", zone.tier.level), threeletter(" ", zone.name)];
     const battle = zone.battle;
-    const balance = battle.balance;
 
-    if (balance >= 1000) {
-      text.push(" all in");
-    } else if (balance >= 100) {
-      text.push(balance.toFixed(3));
-    } else if (balance >= 10) {
-      text.push(balance.toFixed(4));
-    } else if (balance <= 0) {
-      text.push("   -   ");
-    } else {
-      text.push(balance.toFixed(5));
-    }
-
+    text.push(balanceText(battle.recruitedBalance));
+    text.push(balanceText(battle.deployedBalance));
     text.push(battle.mode);
 
-    // TODO: Show position scores for the selected unit if any. Default to stalker
-    let warrior = { type: Types.unit("Stalker") };
-
     for (const fighter of battle.fighters) {
-      const target = fighter.target ? fighter.target.body : null;
-      const rally = fighter.position;
+      if (!fighter.assignee) continue;
 
-      if (fighter.assignee && target && rally) {
-        const body = fighter.assignee.body;
-        const prally = { x: rally.x, y: rally.y, z: 15 };
+      const warrior = { x: fighter.assignee.body.x, y: fighter.assignee.body.y, z: fighter.assignee.body.z + fighter.assignee.body.r * 2 };
 
-        lines.push({ line: { p0: prally, p1: { x: body.x, y: body.y, z: body.z + body.r * 2 } }, color: Color.White });
-        lines.push({ line: { p0: prally, p1: { x: target.x, y: target.y, z: target.z + target.r * 2 } }, color: Color.Red });
-
-        rally.color = Color.Green;
-      } else if (target && rally) {
-        lines.push({ line: { p0: { x: rally.x, y: rally.y, z: 15 }, p1: { x: target.x, y: target.y, z: target.z + target.r * 2 } }, color: Color.Red });
-
-        rally.color = Color.Blue;
-      }
-    }
-
-    for (const position of [...battle.frontline.groundToGround, ...battle.frontline.groundToAir]) {
-      const color = position.color || Color.White;
-
-      let score = "";
-      if (position.score) {
-        const pscore = position.score(warrior);
-        score = (pscore === Infinity) ? "MAX" : pscore.toFixed(2);
+      if (fighter.target) {
+        const target = fighter.target.body;
+        lines.push({ line: { p0: warrior, p1: { x: target.x, y: target.y, z: target.z + target.r * 2 } }, color: Color.Red });
       }
 
-      boxes.push({ min: { x: position.x - 0.4, y: position.y - 0.4, z: 0 }, max: { x: position.x + 0.4, y: position.y + 0.4, z: 15 }, color: color });
-      texts.push({ text: score, worldPos: { x: position.x - 0.2, y: position.y, z: 15 }, size: 20 });
-
-      if (position.entrance) {
-        const z = 15 + Math.random() * 0.5;
-        let last = position;
-
-        for (const next of position.entrance) {
-          lines.push({ line: { p0: { x: last.x, y: last.y, z: z }, p1: { x: next.x, y: next.y, z: z } }, color: Color.Purple });
-          last = next;
-        }
+      if (fighter.station) {
+        const station = { x: fighter.station.x, y: fighter.station.y, z: 15 };
+        lines.push({ line: { p0: warrior, p1: station }, color: Color.Blue });
+        boxes.push({ min: { x: station.x - 0.4, y: station.y - 0.4, z: 0 }, max: { x: station.x + 0.4, y: station.y + 0.4, z: 15 }, color: Color.Blue });
+      } else {
+        const rally = { x: fighter.zone.x, y: fighter.zone.y, z: 15 };
+        lines.push({ line: { p0: warrior, p1: rally }, color: Color.White });
+        boxes.push({ min: { x: rally.x - 0.4, y: rally.y - 0.4, z: 0 }, max: { x: rally.x + 0.4, y: rally.y + 0.4, z: 15 }, color: Color.White });
       }
-
-      position.color = Color.White;
     }
 
     texts.push({ text: text.join(" "), virtualPos: { x: 0.8, y: y }, size: 16 });

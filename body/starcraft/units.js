@@ -153,7 +153,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   image.body.x = unit.pos.x;
   image.body.y = unit.pos.y;
   image.body.z = unit.pos.z;
-  image.weapon.cooldown = unit.weaponCooldown;
+  image.weapon.cooldown = Math.max(unit.weaponCooldown, 0);
   image.armor.health = unit.health;
   image.armor.shield = unit.shield;
   image.armor.total = unit.health + unit.shield;

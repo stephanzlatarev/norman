@@ -1,9 +1,10 @@
 
 export default class Pin {
 
-  constructor(location) {
-    this.x = location.x;
-    this.y = location.y;
+  constructor(cell) {
+    this.cell = cell;
+    this.x = cell.x;
+    this.y = cell.y;
 
     this.d = 1;
   }

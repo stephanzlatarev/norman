@@ -1,12 +1,12 @@
 import Zone from "./zone.js";
 
-const ALERT_BLUE = 1;
-const ALERT_GREEN = 2;
-const ALERT_WHITE = 3;
-const ALERT_YELLOW = 4;
-const ALERT_RED = 5;
+export const ALERT_BLUE = 1;
+export const ALERT_GREEN = 2;
+export const ALERT_WHITE = 3;
+export const ALERT_YELLOW = 4;
+export const ALERT_RED = 5;
 
-export default function() {
+export function syncAlerts() {
   const zones = Zone.list();
   const done = new Set();
   let wave = new Set();
@@ -30,10 +30,10 @@ export default function() {
     const next = new Set();
 
     for (const zone of wave) {
-      if (done.has(zone)) continue;
-
       for (const corridor of zone.corridors) {
         for (const neighbor of corridor.zones) {
+          if ((neighbor === zone) || done.has(neighbor)) continue;
+
           if (neighbor.alertLevel === ALERT_RED) {
             neighbor.alertLevel = ALERT_YELLOW;
           } else if (neighbor.alertLevel <= ALERT_WHITE) {

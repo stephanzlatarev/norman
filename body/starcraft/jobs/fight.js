@@ -4,52 +4,45 @@ import Battle from "../battle/battle.js";
 
 export default class Fight extends Job {
 
-  constructor(battle, warrior) {
+  constructor(battle, warrior, rally) {
     super(warrior);
 
+    this.zone = rally;
     this.battle = battle;
     this.priority = battle.priority;
-    this.zone = battle.zone;
-    this.details = this.summary + " " + battle.zone.name;
+    this.summary += " " + battle.zone.name;
+    this.details = this.summary;
     this.isCommitted = false;
-    this.isDeployed = false;
 
-    if (battle) {
-      battle.fighters.push(this);
-    }
+    battle.fighters.push(this);
   }
 
-  direct(position) {
-    this.position = position;
-    this.target = position ? position.target : null;
-    this.isDeployed = false;
+  direct(target, station) {
+    this.target = target;
+    this.station = station;
   }
 
   execute() {
     const warrior = this.assignee;
     const mode = this.battle.mode;
-
-    // Keep target in sync with position target
-    if (this.position && (this.target !== this.position.target)) {
-      this.target = this.position.target;
-    }
+    const isAttacking = warrior.isAlive && this.target && ((mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH)) && this.battle.zones.has(warrior.zone);
 
     if (!warrior.isAlive) {
       console.log("Warrior", warrior.type.name, warrior.nick, "died in", this.details);
       this.assignee = null;
-      this.isDeployed = false;
-    } else if (!this.position) {
-      // The warrior is just hired but the fight is not yet directed to a position
-      console.log("Warrior", warrior.type.name, warrior.nick, "is idle in", this.details);
-    } else if (this.target && (mode === Battle.MODE_FIGHT) && this.battle.frontline.zones.has(warrior.zone)) {
+    } else if (isAttacking) {
 
       if (warrior.weapon.cooldown) {
+        // TODO: Do for ground or air range depending on the type of the target
         if (this.target.type.rangeGround > warrior.type.rangeGround) {
           // When target has larger range step towards it
           orderMove(warrior, this.target.body);
-        } else {
+        } else if (this.station) {
           // Otherwise, step back
-          orderMove(warrior, this.position);
+          orderMove(warrior, this.station);
+        } else {
+          // Default to keep attacking
+          orderAttack(warrior, this.target);
         }
       } else if (this.target.lastSeen < warrior.lastSeen) {
         if (isClose(warrior.body, this.target.body)) {
@@ -63,54 +56,15 @@ export default class Fight extends Job {
         orderAttack(warrior, this.target);
       }
 
-      this.isDeployed = true;
-    } else if (this.battle.frontline.isInThreatsRange(warrior)) {
-      // Protect warrior by moving to closest frontline position
-      const position = findClosestPosition(warrior, this.battle.frontline);
-
-      if (position && (position !== this.position)) {
-        this.direct(position);
-      }
-
-      orderMove(warrior, this.position);
-
-      this.isDeployed = true;
-    } else if (this.isDeployed || (warrior.zone === this.position.zone)) {
-      orderMove(warrior, this.position);
-
-      if (!this.isDeployed && isSamePosition(warrior.body, this.position)) {
-        this.isDeployed = true;
-      }
-    } else if (this.position.entrance && this.position.entrance.length) {
-      // Rally to fight position by moving along the entrance path
-      const path = this.position.entrance;
-
-      for (let i = 0; i < path.length; i++) {
-        const point = path[i];
-        const isCloseToPoint = isClose(warrior.body, point);
-        const isInPointZone = point.isCorridor ? isCloseToPoint : (warrior.zone === point);
-
-        if (isInPointZone || (i === path.length - 1)) {
-          if ((point === this.checkpoint) || isCloseToPoint) {
-            this.checkpoint = point;
-
-            if (i > 0) {
-              orderMove(warrior, path[i - 1]);
-            } else {
-              orderMove(warrior, this.position);
-            }
-          } else {
-            // TODO: If moving to entrance root and warrior is in battle zone, it should first get out of the battle zone and then follow the local zone entrance path
-            // TODO: If moving to entrance root and warrior on the other side of the battle zone, it should follow the local zone entrance path
-            orderMove(warrior, point);
-          }
-
-          break;
-        }
-      }
+    } else if (!this.battle.zones.has(warrior.zone)) {
+      // Rally to rally point by moving along the route hops
+      // TODO: Move along the route hops
+      orderMove(warrior, this.zone);
     } else {
-      orderMove(warrior, this.position);
+      orderMove(warrior, this.zone);
     }
+
+    this.isCommitted = isAttacking;
   }
 
   close(outcome) {
@@ -145,36 +99,6 @@ function orderStop(warrior) {
   if (warrior.order.abilityId) {
     new Order(warrior, 3665).accept(true);
   }
-}
-
-function findClosestPosition(warrior, frontline) {
-  const body = warrior.body;
-  let closestPosition;
-  let closestDistance = Infinity;
-
-  if (warrior.type.attackGround) {
-    for (const position of frontline.groundToGround) {
-      const distance = Math.abs(position.x - body.x) + Math.abs(position.y - body.y);
-
-      if (distance < closestDistance) {
-        closestPosition = position;
-        closestDistance = distance;
-      }
-    }
-  }
-
-  if (warrior.type.attackAir) {
-    for (const position of frontline.groundToAir) {
-      const distance = Math.abs(position.x - body.x) + Math.abs(position.y - body.y);
-
-      if (distance < closestDistance) {
-        closestPosition = position;
-        closestDistance = distance;
-      }
-    }
-  }
-
-  return closestPosition;
 }
 
 function isSamePosition(a, b) {

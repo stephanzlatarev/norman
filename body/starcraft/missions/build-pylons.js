@@ -120,11 +120,13 @@ function findPylonPlotByDepot() {
 
 // These pylons add vision too
 function findPlotInFrontier() {
-  const frontier = Tiers[1].zones;
+  if (Tiers.length >= 2) {
+    const frontier = Tiers[1].zones;
 
-  for (const zone of frontier) {
-    if (!zone.isDepot && Map.accepts(zone, zone.x, zone.y, 2)) {
-      return { x: zone.x, y: zone.y };
+    for (const zone of frontier) {
+      if (!zone.isDepot && Map.accepts(zone, zone.x, zone.y, 2)) {
+        return { x: zone.x, y: zone.y };
+      }
     }
   }
 }

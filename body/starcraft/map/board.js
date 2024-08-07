@@ -212,6 +212,7 @@ class Area {
     this.x = clump.x;
     this.y = clump.y;
     this.level = clump.margin;
+    this.cell = board.cells[Math.floor(clump.y)][Math.floor(clump.x)];
 
     this.cells = new Set();
     this.joins = new Set();
@@ -225,6 +226,7 @@ class Join {
 
   constructor(board, cell, areas) {
     this.id = ids++;
+    this.cell = cell;
     this.x = cell.x;
     this.y = cell.y;
     this.level = cell.margin;
@@ -410,12 +412,11 @@ function spreadAreas(board) {
     // Add more areas
     while ((areaIndex < areas.length) && (areas[areaIndex].level >= areaLevel)) {
       const area = areas[areaIndex];
-      const cell = board.cells[Math.round(area.y)][Math.round(area.x)];
       const claim = new Set();
 
-      wave.add(cell);
+      wave.add(area.cell);
       claim.add(area);
-      claims.set(cell, claim);
+      claims.set(area.cell, claim);
 
       areaIndex++;
     }
@@ -487,6 +488,9 @@ function locateJoins(board) {
       join.x = sumx / join.cells.size;
       join.y = sumy / join.cells.size;
     }
+
+    join.cell = board.cells[Math.floor(join.y)][Math.floor(join.x)];
+    join.level = join.cell.margin;
 
     join.cells.clear();
   }
