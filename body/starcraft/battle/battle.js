@@ -34,11 +34,6 @@ export default class Battle {
   run() {
     const threats = [];
 
-    for (const job of this.fighters) {
-      if (job.isDone || job.isFailed) {
-        this.fighters.splice(this.fighters.indexOf(job), 1);
-      }
-    }
     if (this.detector.isDone || this.detector.isFailed) this.detector = new Detect(this);
 
     for (const zone of this.zones) {
@@ -87,7 +82,7 @@ export default class Battle {
     this.zone.battle = null;
     this.detector.close(true);
 
-    for (const job of this.fighters) {
+    for (const job of [...this.fighters]) {
       job.close(true);
     }
   }

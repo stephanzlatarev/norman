@@ -70,6 +70,11 @@ export default class Fight extends Job {
   close(outcome) {
     orderStop(this.assignee);
 
+    const index = this.battle.fighters.indexOf(this);
+    if (index >= 0) {
+      this.battle.fighters.splice(index, 1);
+    }
+
     super.close(outcome);
   }
 
