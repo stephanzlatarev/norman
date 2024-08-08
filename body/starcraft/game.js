@@ -2,6 +2,7 @@ import starcraft from "@node-sc2/proto";
 import Job from "./job.js";
 import Mission from "./mission.js";
 import Order from "./order.js";
+import scheduleJobs from "./schedule.js";
 import Types from "./types.js";
 import Units from "./units.js";
 import Depot from "./map/depot.js";
@@ -10,7 +11,6 @@ import countUnits from "./memo/count.js";
 import countEncounters from "./memo/encounters.js";
 import Enemy from "./memo/enemy.js";
 import Resources from "./memo/resources.js";
-import scheduleJobs from "./schedule/schedule.js";
 
 const LOOPS_PER_STEP = 1;
 const LOOPS_PER_SECOND = 22.4;
