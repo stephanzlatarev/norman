@@ -13,10 +13,9 @@ export default class BattleRecruitMission extends Mission {
       if (!zone.battle) continue;
 
       const battle = zone.battle;
+      const rallyZones = getRallyZones(battle);
 
-      if (battle.recruitedBalance < RECRUIT_BALANCE) {
-        const rallyZones = getRallyZones(battle);
-
+      if (rallyZones.length && (battle.recruitedBalance < RECRUIT_BALANCE)) {
         if (isAirBattle(battle)) {
           closeJobs(battle, "Immortal");
           closeJobs(battle, "Zealot");
@@ -34,6 +33,8 @@ export default class BattleRecruitMission extends Mission {
       } else if (battle.recruitedBalance > DOWNSIZE_BALANCE) {
         // Downsize is not implemented
       }
+
+      closeUnsafeJobs(battle, rallyZones);
     }
   }
 
@@ -55,13 +56,28 @@ function getRallyZones(battle) {
 
   for (const corridor of battle.zone.corridors) {
     for (const neighbor of corridor.zones) {
-      if ((neighbor !== battle.zone) && (neighbor.alertLevel <= ALERT_WHITE)) {
-        zones.push(neighbor);
-      }
+      if (neighbor === battle.zone) continue;
+      if (neighbor.alertLevel > ALERT_WHITE) continue;
+
+      // Check if neighbor zone has escape path
+      if (neighbor.corridors.length <= 1) continue;
+      if (!hasSafeNeighbor(neighbor)) continue;
+
+      zones.push(neighbor);
     }
   }
 
   return zones;
+}
+
+function hasSafeNeighbor(zone) {
+  for (const corridor of zone.corridors) {
+    for (const neighbor of corridor.zones) {
+      if ((neighbor !== zone) && (neighbor.alertLevel <= ALERT_WHITE)) return true;
+    }
+  }
+
+  return false;
 }
 
 function openJob(battle, warrior, rally) {
@@ -73,6 +89,14 @@ function openJob(battle, warrior, rally) {
 function closeJobs(battle, warrior) {
   for (const job of battle.fighters) {
     if (job.agent && (job.agent.type.name === warrior)) {
+      job.close(true);
+    }
+  }
+}
+
+function closeUnsafeJobs(battle, rallyZones) {
+  for (const job of battle.fighters) {
+    if (rallyZones.indexOf(job.zone) < 0) {
       job.close(true);
     }
   }
