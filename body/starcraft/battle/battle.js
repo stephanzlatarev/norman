@@ -100,6 +100,8 @@ function getBattleZones(zone) {
   zones.add(zone);
 
   for (const corridor of zone.corridors) {
+    if (corridor.cells.size) zones.add(corridor);
+
     for (const neighbor of corridor.zones) {
       zones.add(neighbor);
     }
