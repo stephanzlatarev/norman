@@ -58,7 +58,7 @@ function getTargets(zone) {
     }
   }
 
-  return targets;
+  return targets.length ? targets : [...zone.threats];
 }
 
 function setSmashTargets(battle) {

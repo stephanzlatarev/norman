@@ -25,29 +25,28 @@ export function syncRoutes() {
 }
 
 export function getHopDistance(startCell, destinationCell) {
-  if (!startCell || !startCell.zone || !startCell.zone.cell) return Infinity;
-  if (!destinationCell || !destinationCell.zone || !destinationCell.zone.cell) return Infinity;
-
-  const hop = getHop(startCell.zone, destinationCell.zone);
+  const hop = getHop(startCell, destinationCell);
 
   return hop ? hop.distance : Infinity;
 }
 
 export function getHopZone(startCell, destinationCell) {
-  if (!startCell || !startCell.zone || !startCell.zone.cell) return;
-  if (!destinationCell || !destinationCell.zone || !destinationCell.zone.cell) return;
-
-  const hop = getHop(startCell.zone, destinationCell.zone);
+  const hop = getHop(startCell, destinationCell);
 
   if (hop && hop.corridor) {
     return isClose(startCell, hop.corridor) ? hop.zone : hop.corridor;
   }
 }
 
-function getHop(start, destination) {
+function getHop(startCell, destinationCell) {
+  if (!startCell || !startCell.zone || !startCell.zone.cell) return;
+  if (!destinationCell || !destinationCell.zone || !destinationCell.zone.cell) return;
+
+  const destination = destinationCell.zone;
+
   if (destination.isCorridor) return { corridor: null, zone: destination, distance: 0 }; // This is a limitation for now
 
-  const direction = key(start, destination);
+  const direction = key(startCell.zone, destination);
 
   return path.get(direction) || hops.get(direction) || findHop(direction, destination);
 }
@@ -104,5 +103,5 @@ function key(zoneA, zoneB) {
 }
 
 function isClose(a, b) {
-  return (Math.abs(a.x - b.x) < 3) && (Math.abs(a.y - b.y) < 3);
+  return (Math.abs(a.x - b.x) <= 6) && (Math.abs(a.y - b.y) <= 6);
 }
