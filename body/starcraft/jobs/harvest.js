@@ -16,9 +16,10 @@ export default class Harvest extends Job {
   mode = MODE_IDLE;
 
   constructor(resource, nexus) {
-    super({ type: { isWorker: true }, depot: nexus.depot }, null, resource);
+    super("Probe", null, resource);
 
     this.nexus = nexus;
+    this.zone = nexus.depot;
 
     const distance = resource.d;
 

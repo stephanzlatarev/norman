@@ -205,7 +205,7 @@ function maintainPullProbeJobs() {
     const jobsToOpen = pullProbeCount - pullProbeJobs.size;
 
     for (let i = 0; i < jobsToOpen; i++) {
-      pullProbeJobs.add(new Attack("Worker", wall.blueprint.choke));
+      pullProbeJobs.add(new Attack("Probe", wall, wall.blueprint.choke));
     }
   } else if (pullProbeCount < pullProbeJobs.size) {
     const jobsToClose = pullProbeJobs.size - pullProbeCount;

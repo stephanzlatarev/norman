@@ -3,9 +3,10 @@ import Order from "../order.js";
 
 export default class Attack extends Job {
 
-  constructor(warrior, target) {
+  constructor(warrior, zone, target) {
     super(warrior, null, target);
 
+    this.zone = zone;
     this.priority = 100;
   }
 

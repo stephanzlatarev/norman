@@ -46,7 +46,7 @@ class AnnoyEnemy extends Job {
   pylon = null;
 
   constructor(home, homePylonJob, expansion, corridor) {
-    super("Worker");
+    super("Probe");
 
     this.home = home;
     this.homePylonJob = homePylonJob;

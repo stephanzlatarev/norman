@@ -4,11 +4,12 @@ import Order from "../order.js";
 export default class Transfer extends Job {
 
   constructor(fromDepot, toDepot) {
-    super({ type: { isWorker: true }, depot: fromDepot }, null, toDepot);
+    super("Probe", null, toDepot);
 
     this.priority = 50;
-    this.zone = toDepot;
-    this.details = this.constructor.name + " " + fromDepot.name + " to " + toDepot.name;
+    this.zone = fromDepot;
+    this.summary = this.constructor.name + " " + fromDepot.name + " to " + toDepot.name;
+    this.details = this.summary;
   }
 
   execute() {
