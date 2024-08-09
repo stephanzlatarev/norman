@@ -213,7 +213,7 @@ function addToZone(image) {
 
     image.cell = cell;
 
-    if (cell.zone) {
+    if (cell.zone && cell.zone.cell) { // TODO: Make sure all zones have a central cell and remove "&& cell.zone.cell" part of the condition here
       cell.zone.addUnit(image);
     }
   }

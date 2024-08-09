@@ -1,6 +1,7 @@
 import Job from "../job.js";
 import Order from "../order.js";
 import Battle from "../battle/battle.js";
+import { getHopZone } from "../map/route.js";
 
 export default class Fight extends Job {
 
@@ -58,10 +59,11 @@ export default class Fight extends Job {
 
     } else if (!this.battle.zones.has(warrior.zone)) {
       // Rally to rally point by moving along the route hops
-      // TODO: Move along the route hops
-      orderMove(warrior, this.zone);
+      const hop = getHopZone(warrior.cell, this.zone.cell);
+
+      orderMove(warrior, hop ? hop : getRallyPoint(this.zone));
     } else {
-      orderMove(warrior, this.zone);
+      orderMove(warrior, getRallyPoint(this.zone));
     }
 
     this.isCommitted = isAttacking;
@@ -78,6 +80,10 @@ export default class Fight extends Job {
     super.close(outcome);
   }
 
+}
+
+function getRallyPoint(zone) {
+  return zone.isDepot ? zone.exitRally : zone;
 }
 
 function orderAttack(warrior, enemy) {

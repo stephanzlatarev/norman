@@ -13,7 +13,7 @@ export function createRoutes() {
     for (const corridor of zone.corridors) {
       for (const neighbor of corridor.zones) {
         if (neighbor !== zone) {
-          path.set(key(zone, neighbor), { corridor: corridor, zone: zone, distance: corridor.distance });
+          path.set(key(neighbor, zone), { corridor: corridor, zone: zone, distance: corridor.distance });
         }
       }
     }
@@ -25,12 +25,18 @@ export function syncRoutes() {
 }
 
 export function getHopDistance(startCell, destinationCell) {
+  if (!startCell || !startCell.zone || !startCell.zone.cell) return Infinity;
+  if (!destinationCell || !destinationCell.zone || !destinationCell.zone.cell) return Infinity;
+
   const hop = getHop(startCell.zone, destinationCell.zone);
 
   return hop ? hop.distance : Infinity;
 }
 
 export function getHopZone(startCell, destinationCell) {
+  if (!startCell || !startCell.zone || !startCell.zone.cell) return;
+  if (!destinationCell || !destinationCell.zone || !destinationCell.zone.cell) return;
+
   const hop = getHop(startCell.zone, destinationCell.zone);
 
   if (hop && hop.corridor) {
@@ -39,7 +45,7 @@ export function getHopZone(startCell, destinationCell) {
 }
 
 function getHop(start, destination) {
-  if (destination.isCorridor) return { distance: 0 }; // This is a limitation for now
+  if (destination.isCorridor) return { corridor: null, zone: destination, distance: 0 }; // This is a limitation for now
 
   const direction = key(start, destination);
 

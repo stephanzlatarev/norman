@@ -67,9 +67,13 @@ function traceJobs(texts, lines) {
     const body = job.assignee.body;
     const center = { x: body.x, y: body.y, z: body.z };
     const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) };
+    const agent = job.assignee;
+    const agentZone = agent.zone ? agent.zone.name : "-";
+    const agentInfo = agent.type.name + " " + agent.nick + " at " + agentZone + " " + Math.floor(body.x) + ":" + Math.floor(body.y)
 
     lines.push({ line: { p0: center, p1: tag } });
     texts.push({ text: job.details, worldPos: tag, size: 16 });
+    texts.push({ text: agentInfo, worldPos: { ...tag, z: tag.z - 0.22 }, size: 16 });
   }
 }
 
@@ -129,12 +133,10 @@ function threeletter(tab, text) {
 
 function traceWarriorActions(texts, lines) {
   for (const warrior of Units.warriors().values()) {
-    const zoneName = warrior.zone ? warrior.zone.name : "-";
     const body = warrior.body;
     const mode = (warrior.job && warrior.job.modes && warrior.job.modes[warrior.job.mode]) ? warrior.job.modes[warrior.job.mode] + " " : "";
     const tag = { x: body.x, y: body.y, z: body.z + Math.ceil(body.r) };
 
-    texts.push({ text: "Zone: " + zoneName + " " + Math.floor(warrior.body.x) + ":" + Math.floor(warrior.body.y), worldPos: { ...tag, z: tag.z - 0.22 }, size: 16 });
     texts.push({ text: mode + "Order: " + warrior.order.abilityId, worldPos: { ...tag, z: tag.z - 0.44 }, size: 16 });
 
     if ((warrior.order.abilityId === 23) && warrior.order.targetUnitTag) {
