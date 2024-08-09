@@ -82,6 +82,7 @@ export default class Zone extends Pin {
       this.name = old.name;
       this.tier = old.tier;
       this.zones = [...old.zones];
+      this.distance = old.distance;
 
       for (const cell of old.cells) {
         this.cells.add(cell);
@@ -112,6 +113,7 @@ export default class Zone extends Pin {
 export class Corridor extends Zone {
 
   isCorridor = true;
+  distance = 0;
 
   constructor(cell, r) {
     super(cell, r);
@@ -151,9 +153,15 @@ export function createZones(board) {
       zone.corridors.push(corridor);
       corridor.zones.push(zone);
     }
+
+    corridor.distance = calculateDistance(...corridor.zones);
   }
 
   labelZones(zones);
+}
+
+function calculateDistance(a, b) {
+  return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
 
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];

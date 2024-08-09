@@ -2,6 +2,7 @@ import Job from "./job.js";
 import Order from "./order.js";
 import Types from "./types.js";
 import Units from "./units.js";
+import { getHopDistance } from "./map/route.js";
 import { ActiveCount, TotalCount } from "./memo/count.js";
 import Limit from "./memo/limit.js";
 import Resources from "./memo/resources.js";
@@ -82,7 +83,7 @@ export default function() {
       }
     }
 
-    const assignee = findCandidate(job.agent, job.priority);
+    const assignee = findCandidate(job.agent, job.priority, job.zone);
 
     if (assignee) {
       job.assign(assignee);
@@ -110,46 +111,35 @@ function prioritizeJobs(a, b) {
   return b.priority - a.priority;
 }
 
-function findCandidate(profile, priority) {
+function findCandidate(profile, priority, zone) {
   if (!profile) return;
 
   if (profile.tag) {
     return Units.get(profile.tag);
   }
 
-  if (profile.type.isWorker) {
-    // First, try to find a worker without a job
-    for (const unit of Units.workers().values()) {
-      if (unit.job) continue;
-      if (profile.depot && (unit.depot !== profile.depot)) continue;
+  const candidates = profile.type.isWorker ? Units.workers() : Units.warriors();
 
-      return unit;
-    }
+  let bestCandidate;
+  let bestDistance = Infinity;
 
-    // Second, try to find a worker with non-committed job
-    for (const unit of Units.workers().values()) {
-      if (unit.job && (unit.job.isCommitted || (unit.job.priority >= priority))) continue;
-      if (profile.depot && (unit.depot !== profile.depot)) continue;
+  for (const unit of candidates.values()) {
+    if (!unit.cell) continue;
+    if (zone && !unit.zone) continue;
+    if (unit.job && (unit.job.isCommitted || (unit.job.priority >= priority))) continue;
+    if (unit.job && bestCandidate && !bestCandidate.job) continue;
+    if (profile.type.name && (unit.type !== profile.type)) continue;
 
-      return unit;
-    }
-  }
+    const distance = zone ? getHopDistance(unit.zone.cell, zone.cell) : 0;
 
-  if (profile.type.isWarrior) {
-    // First, try to find a warrior without a job
-    for (const unit of Units.warriors().values()) {
-      if (unit.job) continue;
-      if (profile.type.name && (unit.type !== profile.type)) continue;
+    if (distance < bestDistance) {
+      bestCandidate = unit;
+      bestDistance = distance;
 
-      return unit;
-    }
-
-    // Second, try to find a warrior with non-committed job
-    for (const unit of Units.warriors().values()) {
-      if (unit.job && (unit.job.isCommitted || (unit.job.priority >= priority))) continue;
-      if (profile.type.name && (unit.type !== profile.type)) continue;
-
-      return unit;
+      // Check if an idle candidate in the same zone is found. There's no better candidate
+      if (!bestDistance && !bestCandidate.job) break;
     }
   }
+
+  return bestCandidate;
 }

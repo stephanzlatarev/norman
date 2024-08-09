@@ -12,9 +12,9 @@ export function createRoutes() {
 
     for (const corridor of zone.corridors) {
       for (const neighbor of corridor.zones) {
-        corridor.distance = calculateDistance(zone, neighbor);
-
-        path.set(key(zone, neighbor), { corridor: corridor, zone: zone, distance: corridor.distance });
+        if (neighbor !== zone) {
+          path.set(key(zone, neighbor), { corridor: corridor, zone: zone, distance: corridor.distance });
+        }
       }
     }
   }
@@ -39,12 +39,14 @@ export function getHopZone(startCell, destinationCell) {
 }
 
 function getHop(start, destination) {
+  if (destination.isCorridor) return { distance: 0 }; // This is a limitation for now
+
   const direction = key(start, destination);
 
-  return path.get(direction) || hops.get(direction) || findHop(start, destination);
+  return path.get(direction) || hops.get(direction) || findHop(direction, destination);
 }
 
-function findHop(start, destination) {
+function findHop(direction, destination) {
   const done = new Set();
   let wave = new Set();
 
@@ -54,7 +56,8 @@ function findHop(start, destination) {
     const next = new Set();
 
     for (const zone of wave) {
-      const hopZoneToDestination = hops.get(key(zone, destination));
+      const directionZoneToDestination = key(zone, destination);
+      const hopZoneToDestination = path.get(directionZoneToDestination) || hops.get(directionZoneToDestination);
 
       // Check if the destination is reachable via this zone
       if (!hopZoneToDestination) continue;
@@ -74,6 +77,10 @@ function findHop(start, destination) {
           if (!hopNeighborToDestination || (distance < hopNeighborToDestination.distance)) {
             hops.set(directionNeighborToDestination, { corridor: corridor, zone: zone, distance: distance });
           }
+
+          if (corridor.cells.size) {
+            hops.set(key(corridor, destination), { corridor: corridor, zone: zone, distance: distance });
+          }
         }
       }
 
@@ -83,7 +90,7 @@ function findHop(start, destination) {
     wave = next;
   }
 
-  return hops.get(key(start, destination));
+  return hops.get(direction);
 }
 
 function key(zoneA, zoneB) {
@@ -92,8 +99,4 @@ function key(zoneA, zoneB) {
 
 function isClose(a, b) {
   return (Math.abs(a.x - b.x) < 3) && (Math.abs(a.y - b.y) < 3);
-}
-
-function calculateDistance(a, b) {
-  return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
