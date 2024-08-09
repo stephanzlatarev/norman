@@ -1,5 +1,6 @@
 import Job from "../job.js";
 import Order from "../order.js";
+import Resources from "../memo/resources.js";
 
 const OFFSET_MINERAL = 0.95;
 const OFFSET_DEPOT = 3.0;
@@ -38,6 +39,14 @@ export default class Harvest extends Job {
     }
 
     this.summary = this.constructor.name + " " + (resource.type.isMinerals ? "minerals" : "vespene");
+    this.isCommitted = false;
+  }
+
+  assign(unit) {
+    this.mode = MODE_IDLE;
+    this.order = null;
+
+    super.assign(unit);
   }
 
   execute() {
@@ -68,12 +77,14 @@ export default class Harvest extends Job {
         } else {
           this.mode = harvestResource(this.assignee, this.target);
 
-          // While pushing to the resource, the worker is available to take hiher priority jobs
+          // While moving to the resource, the worker is available to take hiher priority jobs
           this.isCommitted = false;
         }
       }
     } else if (!this.order) {
       this.order = order(this.assignee, 298, this.target);
+    } else {
+      this.isCommitted = (this.assignee.order.abilityId !== 298) || (this.assignee.lastSeen < Resources.loop);
     }
   }
 

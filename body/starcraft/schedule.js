@@ -83,7 +83,7 @@ export default function() {
       }
     }
 
-    const assignee = findCandidate(job.agent, job.priority, job.zone);
+    const assignee = findCandidate(job);
 
     if (assignee) {
       job.assign(assignee);
@@ -111,7 +111,11 @@ function prioritizeJobs(a, b) {
   return b.priority - a.priority;
 }
 
-function findCandidate(profile, priority, zone) {
+function findCandidate(job) {
+  const profile = job.agent;
+  const priority = job.priority;
+  const zone = job.zone;
+
   if (!profile) return;
 
   if (profile.tag) {
@@ -129,6 +133,7 @@ function findCandidate(profile, priority, zone) {
     if (unit.job && (unit.job.isCommitted || (unit.job.priority >= priority))) continue;
     if (unit.job && bestCandidate && !bestCandidate.job) continue;
     if (profile.type.name && (unit.type !== profile.type)) continue;
+    if (!job.accepts(unit)) continue;
 
     const distance = zone ? getHopDistance(unit.zone.cell, zone.cell) : 0;
 

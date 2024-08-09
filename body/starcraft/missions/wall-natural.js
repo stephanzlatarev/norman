@@ -245,12 +245,11 @@ function maintainHarvestJobs() {
         count++;
       } else {
         job.priority = 0;
-        job.assign(null);
       }
     }
   }
 
-  // Increase the priority of vespene harvest jobs to the reach limit, and unassign any additional jobs
+  // Increase the priority of vespene harvest jobs to the limit, and lower the priority of any additional jobs
   for (const job of Job.list()) {
     if (job.target && job.target.type && job.target.type.isExtractor && (job.priority < 90)) {
       if (count < limit) {
@@ -258,7 +257,6 @@ function maintainHarvestJobs() {
         count++;
       } else {
         job.priority = 0;
-        job.assign(null);
       }
     }
   }

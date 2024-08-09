@@ -62,6 +62,11 @@ export default class Job extends Memory {
     jobs.add(this);
   }
 
+  // Called during job scheduling with the unit to be assigned as arguments. The job may reject a unit if it doesn't meet special criteria.
+  accepts() {
+    return true;
+  }
+
   // Assigns the given unit to the job.
   assign(unit) {
     if (unit === this.assignee) return;
