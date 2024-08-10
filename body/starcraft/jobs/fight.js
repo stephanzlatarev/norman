@@ -39,14 +39,14 @@ export default class Fight extends Job {
           // When target has larger range step towards it
           orderMove(warrior, this.target.body);
         } else if (this.station) {
-          // Otherwise, step back
-          orderMove(warrior, this.station);
+          // Otherwise, step back to the assigned station
+          orderMove(warrior, this.station, 3);
         } else {
-          // Default to keep attacking
-          orderAttack(warrior, this.target);
+          // Default to stepping back to the rally point
+          orderMove(warrior, getRallyPoint(this.zone));
         }
       } else if (this.target.lastSeen < warrior.lastSeen) {
-        if (isClose(warrior.body, this.target.body)) {
+        if (isClose(warrior.body, this.target.body, 5)) {
           // Cannot hit this target. Either it's hidden and we don't have detection, or it's gone
           this.target.zone.threats.delete(this.target);
         } else {
@@ -61,9 +61,9 @@ export default class Fight extends Job {
       // Rally to rally point by moving along the route hops
       const hop = getHopZone(warrior.cell, this.zone.cell);
 
-      orderMove(warrior, hop ? hop : getRallyPoint(this.zone));
+      orderMove(warrior, hop ? hop : getRallyPoint(this.zone), 3);
     } else {
-      orderMove(warrior, getRallyPoint(this.zone));
+      orderMove(warrior, getRallyPoint(this.zone), 3);
     }
 
     this.isCommitted = isAttacking;
@@ -95,11 +95,11 @@ function orderAttack(warrior, enemy) {
   }
 }
 
-function orderMove(warrior, pos) {
+function orderMove(warrior, pos, span) {
   if (!warrior || !warrior.order || !pos) return;
-  if (isSamePosition(warrior.body, pos)) return; // Note that here it's OK if warrior has other orders as long as it's at the right position.
+  if (isClose(warrior.body, pos, span || 1)) return; // Note that here it's OK if warrior has other orders as long as it's at the right position.
 
-  if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isSamePosition(warrior.order.targetWorldSpacePos, pos)) {
+  if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isClose(warrior.order.targetWorldSpacePos, pos, 1)) {
     new Order(warrior, 16, pos);
   }
 }
@@ -112,10 +112,6 @@ function orderStop(warrior) {
   }
 }
 
-function isSamePosition(a, b) {
-  return (Math.abs(a.x - b.x) < 1) && (Math.abs(a.y - b.y) < 1);
-}
-
-function isClose(a, b) {
-  return (Math.abs(a.x - b.x) < 5) && (Math.abs(a.y - b.y) < 5);
+function isClose(a, b, distance) {
+  return (Math.abs(a.x - b.x) <= distance) && (Math.abs(a.y - b.y) <= distance);
 }

@@ -1,6 +1,5 @@
 import Mission from "../mission.js";
 import Battle from "../battle/battle.js";
-import frontline from "../battle/frontline.js";
 import Zone from "../map/zone.js";
 import Resources from "../memo/resources.js";
 
@@ -21,14 +20,13 @@ export default class BattleTargetMission extends Mission {
 }
 
 function setFightTargets(battle) {
-  const stations = frontline(battle, getThreats(battle));
   const targets = getTargets(battle.zone);
 
   for (const fighter of battle.fighters) {
     const warrior = fighter.assignee;
 
     if (warrior) {
-      fighter.direct(getClosestVisibleTarget(warrior, targets), getClosestStation(warrior, stations));
+      fighter.direct(getClosestVisibleTarget(warrior, targets));
     }
   }
 }
@@ -98,22 +96,6 @@ function getClosestVisibleTarget(warrior, targets) {
   }
 
   return closestTarget;
-}
-
-function getClosestStation(warrior, stations) {
-  let closestStation;
-  let closestDistance = Infinity
-
-  for (const station of stations) {
-    const distance = calculateSquareDistance(warrior.body, station);
-
-    if (distance < closestDistance) {
-      closestStation = station;
-      closestDistance = distance;
-    }
-  }
-
-  return closestStation;
 }
 
 function calculateSquareDistance(a, b) {
