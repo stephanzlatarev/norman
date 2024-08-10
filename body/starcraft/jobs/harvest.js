@@ -35,7 +35,7 @@ export default class Harvest extends Job {
       this.priority = Math.round(10 - distance);
     } else {
       this.isSpeedMining = false;
-      this.priority = 0;
+      this.priority = resource.type.isExtractor ? 50 : 0;
     }
 
     this.summary = this.constructor.name + " " + (resource.type.isMinerals ? "minerals" : "vespene");

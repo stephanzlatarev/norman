@@ -55,6 +55,12 @@ export default class WallNatural extends Mission {
       defenderJob.close(true);
     }
 
+    for (const job of Job.list()) {
+      if (job.target && job.target.type && job.target.type.isExtractor) {
+        job.priority = 50;
+      }
+    }
+
     for (const pullProbeJob of pullProbeJobs) {
       pullProbeJob.close(true);
     }
