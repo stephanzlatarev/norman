@@ -38,6 +38,21 @@ export function getHopZone(startCell, destinationCell) {
   }
 }
 
+export function getHopRoute(startCell, destinationCell) {
+  const route = [];
+
+  let hop = getHop(startCell, destinationCell);
+
+  while (hop && (hop.zone !== route[route.length - 1])) {
+    if (hop.corridor) route.push(hop.corridor);
+    route.push(hop.zone);
+
+    hop = getHop(hop.zone.cell, destinationCell);
+  }
+
+  return route;
+}
+
 function getHop(startCell, destinationCell) {
   if (!startCell || !startCell.zone || !startCell.zone.cell) return;
   if (!destinationCell || !destinationCell.zone || !destinationCell.zone.cell) return;

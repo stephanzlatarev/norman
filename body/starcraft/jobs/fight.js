@@ -1,7 +1,7 @@
 import Job from "../job.js";
 import Order from "../order.js";
 import Battle from "../battle/battle.js";
-import { getHopZone } from "../map/route.js";
+import { getHopRoute, getHopZone } from "../map/route.js";
 
 export default class Fight extends Job {
 
@@ -59,9 +59,24 @@ export default class Fight extends Job {
 
     } else if (!this.battle.zones.has(warrior.zone)) {
       // Rally to rally point by moving along the route hops
-      const hop = getHopZone(warrior.cell, this.zone.cell);
+      let isMovingAlongRoute = false;
+      let hop;
 
-      orderMove(warrior, hop ? hop : getRallyPoint(this.zone), 3);
+      if (warrior.order.abilityId === 16) {
+        const route = getHopRoute(warrior.cell, this.zone.cell);
+
+        if (isOrderAlongRoute(warrior.order, route)) {
+          isMovingAlongRoute = true;
+        } else {
+          hop = route[0];
+        }
+      } else {
+        hop = getHopZone(warrior.cell, this.zone.cell);
+      }
+
+      if (!isMovingAlongRoute) {
+        orderMove(warrior, hop ? hop : getRallyPoint(this.zone), 3);
+      }
     } else {
       orderMove(warrior, getRallyPoint(this.zone), 3);
     }
@@ -80,6 +95,16 @@ export default class Fight extends Job {
     super.close(outcome);
   }
 
+}
+
+function isOrderAlongRoute(order, route) {
+  const pos = order.targetWorldSpacePos;
+
+  if (pos) {
+    for (const turn of route) {
+      if (isClose(pos, turn, 1)) return true;
+    }
+  }
 }
 
 function getRallyPoint(zone) {
