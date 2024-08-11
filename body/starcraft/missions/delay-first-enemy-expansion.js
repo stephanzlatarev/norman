@@ -80,7 +80,7 @@ class AnnoyEnemy extends Job {
 
     if ((this.mode === MODE_KILL) && agent && agent.zone) {
       for (const enemy of agent.zone.enemies) {
-        if (enemy.type.isWarrior && !enemy.type.isWorker) return true;
+        if (enemy.type.isWarrior && !enemy.type.isWorker && isInRange(agent.body, enemy.body, enemy.type.rangeGround)) return true;
       }
 
       return false;
@@ -322,6 +322,12 @@ function selectAgent(home) {
   }
 
   return agent;
+}
+
+function isInRange(a, b, range) {
+  const squareDistance = (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+  const squareRange = range * range;
+  return (squareDistance <= squareRange);
 }
 
 function findClosestUnitToPos(units, pos) {
