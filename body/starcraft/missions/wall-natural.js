@@ -78,14 +78,35 @@ class WallKeeper extends Job {
   }
 
   execute() {
-    if (!this.assignee.isAlive) {
+    const warrior = this.assignee;
+
+    if (!warrior.isAlive) {
       this.close(false);
     } else if (mode === MODE_DEFEND) {
-      orderHold(this.assignee, wall.blueprint.choke);
+      if (isEnemyMostlyMelee()) {
+        orderHold(warrior, wall.blueprint.choke);
+      } else if (warrior.order.abilityId !== 23) {
+        new Order(warrior, 23, wall.blueprint.choke).accept(true);
+      }
     } else {
-      orderMove(this.assignee, wall.blueprint.rally);
+      orderMove(warrior, wall.blueprint.rally);
     }
   }
+}
+
+function isEnemyMostlyMelee() {
+  let melee = 0;
+  let ranged = 0;
+
+  for (const enemy of field.enemies) {
+    if (enemy.type.rangeGround > 1) {
+      ranged++;
+    } else {
+      melee++;
+    }
+  }
+
+  return (melee >= ranged);
 }
 
 class WallDefender extends Job {

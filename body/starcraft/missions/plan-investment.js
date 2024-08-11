@@ -121,15 +121,18 @@ function doGroundArmyMaxOut() {
 
   if (encounteredMarineCount >= 6) {
     Priority.RoboticsBay = 100;
+    Priority.ShieldBattery = 100;
     Limit.RoboticsBay = 1;
+    Limit.ShieldBattery = (TotalCount.Stalker + TotalCount.Zealot >= 1) ? 1 : 0;
   } else {
     Priority.RoboticsBay = 0;
+    Priority.ShieldBattery = 0;
     Limit.RoboticsBay = 0;
+    Limit.ShieldBattery = 0;
   }
 
   Limit.Forge = (TotalCount.Gateway >= 3) ? 1 : 0;
   Limit.CyberneticsCore = 1;
-  Limit.ShieldBattery = 0;
 
   if ((Resources.loop < 3000) && encounteredZerglingCount) {
     plan = doEnforceWallNatural;
