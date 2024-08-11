@@ -38,6 +38,10 @@ export default class Battle {
 
     for (const zone of this.zones) {
       for (const threat of zone.threats) {
+
+        // Don't count enemy workers as threats because they are not ranged and trading warriors for enemy workers is ok.
+        if (threat.type.isWorker) continue;
+
         // TODO: Add spell casters and later air-hitters
         if (threat.type.damageGround) {
           threats.push(threat);
