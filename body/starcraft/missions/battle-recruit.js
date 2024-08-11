@@ -2,6 +2,7 @@ import Mission from "../mission.js";
 import Fight from "../jobs/fight.js";
 import { ALERT_WHITE } from "../map/alert.js";
 import Zone from "../map/zone.js";
+import { ActiveCount } from "../memo/count.js";
 
 const RECRUIT_BALANCE = 2;
 const DOWNSIZE_BALANCE = 4;
@@ -17,10 +18,12 @@ export default class BattleRecruitMission extends Mission {
 
       if (rallyZones.length && (battle.recruitedBalance < RECRUIT_BALANCE)) {
         if (isAirBattle(battle)) {
+          closeJobs(battle, "Colossus");
           closeJobs(battle, "Immortal");
           closeJobs(battle, "Zealot");
         } else {
           for (const rally of rallyZones) {
+            openJob(battle, "Colossus", rally);
             openJob(battle, "Immortal", rally);
             openJob(battle, "Zealot", rally);
           }
@@ -81,6 +84,8 @@ function hasSafeNeighbor(zone) {
 }
 
 function openJob(battle, warrior, rally) {
+  if (!ActiveCount[warrior]) return;
+
   if (!battle.fighters.find(job => (!job.assignee && job.agent && (job.agent.type.name === warrior) && (job.zone === rally)))) {
     new Fight(battle, warrior, rally);
   }

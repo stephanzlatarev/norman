@@ -11,6 +11,7 @@ export default {
 
   CyberneticsCore: 30,
   Forge: 30,
+  RoboticsBay: 30,
   ShieldBattery: 30,
   TwilightCouncil: 30,
 

@@ -9,10 +9,14 @@ import Resources from "../memo/resources.js";
 
 let plan = doStartUp;
 let encounteredZerglingCount = 0;
+let encounteredMarineCount = 0;
 
 export default class PlanInvestmentsMission extends Mission {
 
   run() {
+    encounteredMarineCount = Math.max(VisibleCount.Marine, encounteredMarineCount);
+    encounteredZerglingCount = Math.max(VisibleCount.Zergling, encounteredZerglingCount);
+
     plan();
   }
 
@@ -30,8 +34,6 @@ function doStartUp() {
   Limit.Forge = 0;
   Limit.ShieldBattery = 0;
   Limit.Zealot = 0;
-
-  encounteredZerglingCount = Math.max(VisibleCount.Zergling, encounteredZerglingCount);
 
   if (VisibleCount.SpawningPool || encounteredZerglingCount) {
     plan = doEnforceWallNatural;
@@ -74,8 +76,6 @@ function doEnforceWallNatural() {
   Priority.RoboticsFacility = 70;
   Priority.Probe = 40;
 
-  encounteredZerglingCount = Math.max(VisibleCount.Zergling, encounteredZerglingCount);
-
   if ((Resources.loop > 3000) && !encounteredZerglingCount) {
     plan = doGroundArmyMaxOut;
     console.log("Transition to maxing out with ground army.");
@@ -88,16 +88,19 @@ function doEnforceWallNatural() {
 }
 
 function doGroundArmyMaxOut() {
+  const useColossus = (ActiveCount.RoboticsBay > 0);
+
   Limit.Probe = 85;
-  Limit.Immortal = 100;
+  Limit.Colossus = useColossus ? 100 : 0;
+  Limit.Immortal = useColossus ? 0 : 100;
+  Limit.Observer = (ActiveCount.Colossus + ActiveCount.Immortal < 2) ? 1 : 2;
   Limit.Sentry = 100;
   Limit.Stalker = 400; // Maintain 4:1 ratio of Stalker to Zealot and Stalker to Sentry
   Limit.Zealot = !TotalCount.CyberneticsCore ? 0 : 100;
-  Limit.Observer = (ActiveCount.Immortal < 2) ? 1 : 2;
-  Limit.Colossus = 0;
 
   Priority.Probe = 90;
   Priority.Observer = 80;
+  Priority.Colossus = 50;
   Priority.Immortal = 50;
   Priority.Sentry = 50;
   Priority.Stalker = 50;
@@ -116,11 +119,17 @@ function doGroundArmyMaxOut() {
   Limit.Gateway = calculateLimitGateway();
   Limit.RoboticsFacility = 1;
 
+  if (encounteredMarineCount >= 6) {
+    Priority.RoboticsBay = 100;
+    Limit.RoboticsBay = 1;
+  } else {
+    Priority.RoboticsBay = 0;
+    Limit.RoboticsBay = 0;
+  }
+
   Limit.Forge = (TotalCount.Gateway >= 3) ? 1 : 0;
   Limit.CyberneticsCore = 1;
   Limit.ShieldBattery = 0;
-
-  encounteredZerglingCount = Math.max(VisibleCount.Zergling, encounteredZerglingCount);
 
   if ((Resources.loop < 3000) && encounteredZerglingCount) {
     plan = doEnforceWallNatural;
@@ -164,9 +173,6 @@ function counterMassLightZerg() {
   Limit.Forge = 1;
   Limit.TwilightCouncil = 1;
   Limit.RoboticsBay = 1;
-
-  Limit.Stalker = 0;
-  Limit.Immortal = 0;
   Limit.ShieldBattery = 0;
 }
 
@@ -232,7 +238,7 @@ function calculateLimitGateway() {
   const isProducingWorkers = (TotalCount.Probe < Limit.Probe);
   const idleNexuses = isProducingWorkers ? ActiveCount.Nexus - (TotalCount.Probe - ActiveCount.Probe) : 0;
   const idleGateways = ActiveCount.Gateway - (TotalCount.Sentry - ActiveCount.Sentry) - (TotalCount.Stalker - ActiveCount.Stalker) - (TotalCount.Zealot - ActiveCount.Zealot);
-  const idleRobos = ActiveCount.RoboticsFacility - (TotalCount.Immortal - ActiveCount.Immortal) - (TotalCount.Observer - ActiveCount.Observer);
+  const idleRobos = ActiveCount.RoboticsFacility - (TotalCount.Colossus - ActiveCount.Colossus) - (TotalCount.Immortal - ActiveCount.Immortal) - (TotalCount.Observer - ActiveCount.Observer);
 
   // Don't build more production facilities while there are idle ones
   if (idleNexuses || idleGateways || idleRobos) return TotalCount.Gateway;

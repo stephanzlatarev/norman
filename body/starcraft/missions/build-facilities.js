@@ -9,7 +9,8 @@ import Limit from "../memo/limit.js";
 import Priority from "../memo/priority.js";
 
 const DEFAULT_FACILITIES = ["ShieldBattery", "Gateway"];
-const SPECIAL_FACILITIES = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil", "RoboticsBay"];
+const SPECIAL_FACILITIES_DEFAULT = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil", "RoboticsBay"];
+const SPECIAL_FACILITIES_ROBOBAY = ["Gateway", "CyberneticsCore", "RoboticsFacility", "RoboticsBay", "Forge", "TwilightCouncil"];
 
 let wallPylon = null;
 
@@ -60,7 +61,9 @@ function selectFacilityType() {
 }
 
 function selectSpecialFacilityType() {
-  for (const facility of SPECIAL_FACILITIES) {
+  const facilities = (Priority.RoboticsBay > 50) ? SPECIAL_FACILITIES_ROBOBAY : SPECIAL_FACILITIES_DEFAULT;
+
+  for (const facility of facilities) {
     // Special facilities are to be built in order, so if there's one of this type, then move to the next
     if (TotalCount[facility] >= 1) continue;
 
