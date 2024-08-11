@@ -31,21 +31,6 @@ function setFightTargets(battle) {
   }
 }
 
-function getThreats(battle) {
-  const threats = [];
-
-  for (const zone of battle.zones) {
-    for (const threat of zone.threats) {
-      // TODO: Add spell casters and later air-hitters
-      if (threat.type.damageGround) {
-        threats.push(threat);
-      }
-    }
-  }
-
-  return threats;
-}
-
 function getTargets(zone) {
   const targets = [];
 
