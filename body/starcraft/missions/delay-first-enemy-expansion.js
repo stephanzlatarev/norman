@@ -64,7 +64,7 @@ class AnnoyEnemy extends Job {
       console.log("Agent died. Mission 'Delay first enemy expansion' is over.");
 
       this.close(false);
-    } else if (VisibleCount.Warrior) {
+    } else if (this.shouldGoHome()) {
       this.goHome();
     } else {
       this.act();
@@ -73,6 +73,20 @@ class AnnoyEnemy extends Job {
 
   transition(action) {
     this.act = action.bind(this);
+  }
+
+  shouldGoHome() {
+    const agent = this.assignee;
+
+    if ((this.mode === MODE_KILL) && agent && agent.zone) {
+      for (const enemy of agent.zone.enemies) {
+        if (enemy.type.isWarrior && !enemy.type.isWorker) return true;
+      }
+
+      return false;
+    } else {
+      return (VisibleCount.Warrior > 0);
+    }
   }
 
   goHome() {
