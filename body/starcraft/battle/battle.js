@@ -49,8 +49,8 @@ export default class Battle {
       }
     }
 
-    this.deployedBalance = calculateBalance(this.fighters, threats, this.zones);
-    this.recruitedBalance = calculateBalance(this.fighters, threats);
+    this.deployedBalance = calculateBalance(this.fighters, threats, true);
+    this.recruitedBalance = calculateBalance(this.fighters, threats, false);
 
     if ((Resources.supplyUsed > 190) && ((this.deployedBalance > FIGHT_BALANCE) || areEnoughFightersRallied(this.fighters, this.zones))) {
       // Keep recruited balance low so that new warriors are recruited
@@ -109,7 +109,7 @@ function getBattleZones(zone) {
   return zones;
 }
 
-function calculateBalance(fighters, threats, zones) {
+function calculateBalance(fighters, threats, isDeployed) {
   let warriorDamage = 0;
   let warriorHealth = 0;
   let enemyDamage = 0;
@@ -119,7 +119,7 @@ function calculateBalance(fighters, threats, zones) {
     const warrior = fighter.assignee;
 
     if (!warrior || !warrior.isAlive) continue;
-    if (zones && !zones.has(warrior.zone)) continue;
+    if (isDeployed && fighter.isDeployed) continue;
 
     warriorDamage += warrior.type.damageGround;
     warriorHealth += warrior.armor.total;
