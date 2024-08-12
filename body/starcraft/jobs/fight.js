@@ -23,6 +23,34 @@ export default class Fight extends Job {
     this.station = station;
   }
 
+  accepts(unit) {
+    if (!unit.zone) {
+      return false;
+    } else if (this.battle.zones.has(unit.zone)) {
+      // When already in the battle zone, the warrior must be closest to the rally point rather than any other corridor to the battle zone
+      let rallyCorridor;
+      let rallyDistance = Infinity;
+
+      for (const corridor of this.battle.zone.corridors) {
+        const distance = calculateSquareDistance(this.zone, corridor);
+
+        if (distance < rallyDistance) {
+          rallyCorridor = corridor;
+          rallyDistance = distance;
+        }
+      }
+
+      rallyDistance = calculateSquareDistance(unit.body, rallyCorridor);
+
+      for (const corridor of this.battle.zone.corridors) {
+        if (corridor === rallyCorridor) continue;
+        if (calculateSquareDistance(unit.body, corridor) < rallyDistance) return false;
+      }
+    }
+
+    return true;
+  }
+
   execute() {
     const warrior = this.assignee;
     const mode = this.battle.mode;
@@ -139,4 +167,8 @@ function orderStop(warrior) {
 
 function isClose(a, b, distance) {
   return (Math.abs(a.x - b.x) <= distance) && (Math.abs(a.y - b.y) <= distance);
+}
+
+function calculateSquareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
