@@ -12,7 +12,7 @@ export default class BattleTargetMission extends Mission {
       if (zone.battle.mode === Battle.MODE_FIGHT) {
         setFightTargets(zone.battle);
       } else if (zone.battle.mode === Battle.MODE_SMASH) {
-        setSmashTargets(zone.battle);
+        setFightTargets(zone.battle);
       }
     }
   }
@@ -42,16 +42,6 @@ function getTargets(zone) {
   }
 
   return targets.length ? targets : [...zone.threats];
-}
-
-function setSmashTargets(battle) {
-  for (const fighter of battle.fighters) {
-    const warrior = fighter.assignee;
-
-    if (warrior) {
-      fighter.direct(getClosestVisibleTarget(warrior, battle.zone.threats));
-    }
-  }
 }
 
 //Assign targets with focus fire

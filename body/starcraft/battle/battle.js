@@ -1,8 +1,9 @@
 import Resources from "../memo/resources.js";
 import Detect from "../jobs/detect.js";
 
-const FIGHT_BALANCE = 2;
-const RALLY_BALANCE = 1;
+const ATTACK_BALANCE = 2.0;
+const RALLY_BALANCE  = 1.0;
+const DEFEND_BALANCE = 0.7;
 
 export default class Battle {
 
@@ -52,7 +53,7 @@ export default class Battle {
     this.deployedBalance = calculateBalance(this.fighters, threats, true);
     this.recruitedBalance = calculateBalance(this.fighters, threats, false);
 
-    if ((Resources.supplyUsed > 190) && ((this.deployedBalance > FIGHT_BALANCE) || areEnoughFightersRallied(this.fighters, this.zones))) {
+    if ((Resources.supplyUsed > 190) && ((this.deployedBalance >= ATTACK_BALANCE) || areEnoughFightersRallied(this.fighters, this.zones))) {
       // Keep recruited balance low so that new warriors are recruited
       this.recruitedBalance = 0;
 
@@ -61,10 +62,24 @@ export default class Battle {
       this.mode = Battle.MODE_FIGHT;
     } else if (threats.length) {
 
-      if (this.deployedBalance > FIGHT_BALANCE) {
-        this.mode = Battle.MODE_FIGHT;
-      } else if (this.deployedBalance < RALLY_BALANCE) {
-        this.mode = Battle.MODE_RALLY;
+      if (this.zone.tier.level === 1) {
+        if ((this.deployedBalance >= DEFEND_BALANCE) || areEnoughFightersRallied(this.fighters, this.zones)) {
+          this.mode = Battle.MODE_FIGHT;
+        } else {
+          this.mode = Battle.MODE_RALLY;
+        }
+      } else if (this.zone.tier.level === 2) {
+        if (this.deployedBalance >= DEFEND_BALANCE) {
+          this.mode = Battle.MODE_FIGHT;
+        } else {
+          this.mode = Battle.MODE_RALLY;
+        }
+      } else {
+        if (this.deployedBalance >= ATTACK_BALANCE) {
+          this.mode = Battle.MODE_FIGHT;
+        } else if (this.deployedBalance < RALLY_BALANCE) {
+          this.mode = Battle.MODE_RALLY;
+        }
       }
 
     } else {
