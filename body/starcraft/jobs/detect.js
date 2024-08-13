@@ -1,8 +1,10 @@
 import Job from "../job.js";
 import Order from "../order.js";
 import Battle from "../battle/battle.js";
+import { ALERT_WHITE } from "../map/alert.js";
 
-// TODO: Make sure rally move doesn't go through threat zones
+const SAFETY_DISTANCE = 3;
+
 export default class Detect extends Job {
 
   constructor(battle) {
@@ -28,12 +30,11 @@ export default class Detect extends Job {
       }
     }
 
-    if (observer.armor.shield < this.shield) {
+    if ((observer.armor.shield < this.shield) || isInEnemyFireRange(this.battle, observer)) {
       this.stayAlive();
-    } else if ((mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH)) {
-      this.supportArmy();
     } else if (!this.battle.zones.has(observer.zone)) {
       // Rally to battle zone
+      // TODO: Make sure rally move doesn't go through threat zones
       orderMove(observer, this.zone);
     } else {
       this.observeZone();
@@ -44,39 +45,51 @@ export default class Detect extends Job {
   }
 
   stayAlive() {
-    this.observeZone();
-  }
-
-  supportArmy() {
-    // Stay with the army. Cover as much area as possible
-    this.observeZone();
-  }
-
-  observeZone() {
-    // If there are detectors and air shooters move along the air frontline
-    // Else cover as much area as possible
-    // Beware scans from orbital command centers. Don't stay within range of air shooters for too long
     const observer = this.assignee;
-    const observerBody = observer.body;
-    const threats = this.zone.threats;
 
-    let closestThreatBody;
+    let closestEnemy;
     let closestDistance = Infinity;
 
-    for (const threat of threats) {
-      if (threat.lastSeen < observer.lastSeen) {
-        const threatBody = threat.body;
-        const distance = Math.abs(threatBody.x - observerBody.x) + Math.abs(threatBody.y - observerBody.y);
-  
-        if (distance < closestDistance) {
-          closestThreatBody = threatBody;
-          closestDistance = distance;
+    for (const zone of this.battle.zones) {
+      for (const threat of zone.threats) {
+        if (threat.type.damageAir > 0) {
+          const distance = calculateSquareDistance(observer.body, threat.body);
+
+          if (distance < closestDistance) {
+            closestEnemy = threat;
+            closestDistance = distance;
+          }
         }
       }
     }
 
-    if (closestThreatBody) {
-      orderMove(observer, closestThreatBody);
+    if (closestEnemy) {
+      // Move in the opposite direction
+      orderMove(observer, { x: observer.body.x + Math.sign(observer.body.x - closestEnemy.body.x), y: observer.body.y + Math.sign(observer.body.y - closestEnemy.body.y) });
+    }
+  }
+
+  observeZone() {
+    const observer = this.assignee;
+    const order = observer.order;
+
+    const visible = new Set(this.battle.zone.enemies.values());
+    const targets = [];
+
+    for (const one of this.battle.zone.threats.values()) {
+      if (!visible.has(one)) {
+        targets.push(one.body);
+      }
+    }
+
+    if (order.abilityId === 16) {
+      const destinations = [...this.battle.zones, ...targets];
+
+      if (!destinations.find(destination => isSamePosition(observer.body, destination))) {
+        orderMove(observer, targets.length ? targets[0] : this.battle.zone);
+      }
+    } else if (isSamePosition(observer.body, this.zone)) {
+      orderMove(observer, selectRandomRallyZone(this.battle));
     } else {
       orderMove(observer, this.zone);
     }
@@ -119,4 +132,27 @@ function isInSight(observer, body) {
   const squareSight = observer.type.sightRange * observer.type.sightRange;
 
   return (squareDistance < squareSight);
+}
+
+function isInEnemyFireRange(battle, observer) {
+  for (const zone of battle.zones) {
+    for (const threat of zone.threats) {
+      const fireRange = threat.type.rangeAir + SAFETY_DISTANCE;
+
+      if (calculateSquareDistance(threat.body, observer.body) <= fireRange * fireRange) {
+        return true;
+      }
+    }
+  }
+}
+
+function selectRandomRallyZone(battle) {
+  const zones = [...battle.zones].filter(zone => ((zone !== battle.zone) && (zone.alertLevel <= ALERT_WHITE)));
+  const selection = Math.floor(zones.length * Math.random());
+
+  return zones[selection];
+}
+
+function calculateSquareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
