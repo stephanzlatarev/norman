@@ -10,31 +10,40 @@ const DOWNSIZE_BALANCE = 4;
 export default class BattleRecruitMission extends Mission {
 
   run() {
+    let focus;
+
+    for (const zone of Zone.list()) {
+      if (zone.battle && (zone.threats.size > 1) && (!focus || (zone.tier.level < focus.tier.level))) focus = zone;
+    }
+
     for (const zone of Zone.list()) {
       if (!zone.battle) continue;
 
       const battle = zone.battle;
       const rallyZones = getRallyZones(battle);
 
-      if (rallyZones.length && (battle.recruitedBalance < RECRUIT_BALANCE)) {
-        if (isAirBattle(battle)) {
-          closeJobs(battle, "Colossus");
-          closeJobs(battle, "Immortal");
-          closeJobs(battle, "Zealot");
-        } else {
-          for (const rally of rallyZones) {
-            openJob(battle, "Colossus", rally);
-            openJob(battle, "Immortal", rally);
-            openJob(battle, "Zealot", rally);
-          }
-        }
+      if (rallyZones.length) {
+        if ((zone === focus) || (battle.recruitedBalance < RECRUIT_BALANCE)) {
+          const include = ["Stalker"];
+          const exclude = [];
 
-        for (const rally of rallyZones) {
-          openJob(battle, "Stalker", rally);
-          openJob(battle, "Sentry", rally);
+          // Make sure we don't overreact to a single enemy unit in our territory
+          if (zone.threats.size > 1) {
+            include.push("Sentry");
+          }
+
+          // Make sure ground-hitting units are included only when there are ground enemy units
+          if (isAirBattle(battle)) {
+            exclude.push("Colossus", "Immortal", "Zealot");
+          } else {
+            include.push("Colossus", "Immortal", "Zealot");
+          }
+
+          for (const warrior of include) for (const rally of rallyZones) openJob(battle, warrior, rally);
+          for (const warrior of exclude) closeJobs(battle, warrior);
+        } else if (battle.recruitedBalance > DOWNSIZE_BALANCE) {
+          // Downsize is not implemented
         }
-      } else if (battle.recruitedBalance > DOWNSIZE_BALANCE) {
-        // Downsize is not implemented
       }
 
       closeUnsafeJobs(battle, rallyZones);

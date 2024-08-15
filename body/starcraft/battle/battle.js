@@ -27,7 +27,7 @@ export default class Battle {
     this.zone = zone;
     this.zones = getBattleZones(zone);
 
-    this.detector = new Detect(this);
+    this.detector = null;
     this.fighters = [];
     this.priority = 0;
   }
@@ -35,7 +35,18 @@ export default class Battle {
   run() {
     const threats = [];
 
-    if (this.detector.isDone || this.detector.isFailed) this.detector = new Detect(this);
+    if (this.fighters.find(fighter => !! fighter.assignee)) {
+      // At least one fighter is assigned. We need detection
+      if (!this.detector || this.detector.isDone || this.detector.isFailed) {
+        this.detector = new Detect(this);
+      }
+    } else {
+      // No fighters are assigned. We don't need detection yet
+      if (this.detector) {
+        this.detector.close(true);
+        this.detector = null;
+      }
+    }
 
     for (const zone of this.zones) {
       for (const threat of zone.threats) {
@@ -91,7 +102,7 @@ export default class Battle {
       this.mode = Battle.MODE_SMASH;
     }
 
-    this.detector.priority = this.priority;
+    if (this.detector) this.detector.priority = this.priority;
     for (const fighter of this.fighters) fighter.priority = this.priority;
   }
 
@@ -99,7 +110,7 @@ export default class Battle {
     console.log("Battle", this.zone.name, "ends");
 
     this.zone.battle = null;
-    this.detector.close(true);
+    if (this.detector) this.detector.close(true);
 
     for (const job of [...this.fighters]) {
       job.close(true);

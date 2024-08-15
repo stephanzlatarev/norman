@@ -20,28 +20,29 @@ export default class BattleTargetMission extends Mission {
 }
 
 function setFightTargets(battle) {
-  const targets = getTargets(battle.zone);
+  const targets = battle.zone.threats;
+  const primaryTargets = getPrimaryTargets(targets);
 
   for (const fighter of battle.fighters) {
     const warrior = fighter.assignee;
 
     if (warrior) {
-      fighter.direct(getClosestVisibleTarget(warrior, targets));
+      fighter.direct(getClosestVisibleTarget(warrior, primaryTargets) || getClosestVisibleTarget(warrior, targets));
     }
   }
 }
 
-function getTargets(zone) {
+function getPrimaryTargets(threats) {
   const targets = [];
 
-  for (const threat of zone.threats) {
+  for (const threat of threats) {
     // TODO: Add spell casters and later air-hitters
     if (threat.type.damageGround) {
       targets.push(threat);
     }
   }
 
-  return targets.length ? targets : [...zone.threats];
+  return targets;
 }
 
 //Assign targets with focus fire
@@ -55,7 +56,7 @@ function getTargets(zone) {
 //TODO: Prefer cast spellers with large impact
 function getClosestVisibleTarget(warrior, targets) {
   let closestTarget;
-  let closestDistance = Infinity
+  let closestDistance = Infinity;
 
   for (const target of targets) {
     if (!target.isAlive || (target.lastSeen < Resources.loop)) continue;

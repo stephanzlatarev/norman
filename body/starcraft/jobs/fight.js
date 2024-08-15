@@ -61,18 +61,23 @@ export default class Fight extends Job {
       console.log("Warrior", warrior.type.name, warrior.nick, "died in", this.details);
       this.assignee = null;
       this.isDeployed = false;
+      this.details = this.summary + " dead";
     } else if (isAttacking) {
       this.goAttack();
       this.isDeployed = true;
+      this.details = this.summary + " attacking";
     } else if (this.shouldRally()) {
       this.goRally();
       this.isDeployed = false;
+      this.details = this.summary + " rallying";
     } else if (this.shouldEscape()) {
       this.goEscape();
       this.isDeployed = true;
+      this.details = this.summary + " escaping";
     } else {
       orderMove(warrior, getRallyPoint(this.zone), 3);
       this.isDeployed = this.battle.zones.has(warrior.zone);
+      this.details = this.summary + (this.isDeployed ? " deployed" : " deploying");
     }
 
     this.isCommitted = isAttacking;
@@ -142,7 +147,11 @@ export default class Fight extends Job {
     }
 
     if (!isMovingAlongRoute) {
-      orderMove(warrior, hop ? hop : getRallyPoint(rally), 3);
+      if (!hop || isClose(warrior.body, hop, 3)) {
+        hop = getRallyPoint(rally);
+      }
+
+      orderMove(warrior, hop, 3);
     }
   }
 
@@ -206,7 +215,7 @@ function isInThreatsRange(battle, warrior, pos) {
       const escapeRange = Math.max(fireRange, runRange);
 
       if (calculateSquareDistance(threat.body, pos) <= escapeRange * escapeRange) {
-        return true;
+        return threat;
       }
     }
   }

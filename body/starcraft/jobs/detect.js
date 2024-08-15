@@ -96,6 +96,8 @@ export default class Detect extends Job {
   }
 
   close(outcome) {
+    if (this.isDone || this.isFailed) return;
+
     orderStop(this.assignee);
 
     super.close(outcome);
