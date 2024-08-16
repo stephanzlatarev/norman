@@ -51,8 +51,12 @@ export default class Order extends Memory {
       this.unit = subject;
 
       if (this.unit.todo) {
-        // Abort the previous order for this unit
-        this.unit.todo.abort();
+        this.unit.todo.check();
+
+        if (this.unit.todo) {
+          // Abort the previous order for this unit
+          this.unit.todo.abort();
+        }
       }
 
       this.unit.todo = this;
@@ -205,6 +209,37 @@ export default class Order extends Memory {
     return orders;
   }
 
+  static attack(unit, target) {
+    if (!unit || !target) return;
+    if (!unit.type.damageGround && !unit.type.damageAir) return;
+    if (unit.todo && (unit.todo.ability === 23) && (unit.todo.target === target)) return unit.todo;
+
+    if ((unit.order.abilityId !== 23) || (unit.order.targetUnitTag !== target.tag)) {
+      return new Order(unit, 23, target);
+    }
+  }
+
+  static MOVE_CLOSE_TO = 0b0001;
+
+  static move(unit, pos, options) {
+    if (!unit || !unit.order || !pos) return;
+    if (unit.todo && (unit.todo.ability === 16) && isSamePosition(unit.todo.target, pos)) return unit.todo;
+    if (isClose(unit.body, pos, (options & Order.MOVE_CLOSE_TO) ? 3 : 1)) return;
+
+    if ((unit.order.abilityId !== 16) || !unit.order.targetWorldSpacePos || !isSamePosition(unit.order.targetWorldSpacePos, pos)) {
+      return new Order(unit, 16, { x: pos.x, y: pos.y }).accept(true);
+    }
+  }
+
+  static stop(unit) {
+    if (!unit) return;
+    if (unit.todo && (unit.todo.ability === 3665)) return unit.todo;
+
+    if (unit.order.abilityId) {
+      return new Order(unit, 3665).accept(true);
+    }
+  }
+
 }
 
 function log(...line) {
@@ -234,6 +269,10 @@ function isSamePosition(a, b) {
   const by = b.body ? b.body.y : b.y;
 
   return (Math.abs(a.x - bx) < 1) && (Math.abs(a.y - by) < 1);
+}
+
+function isClose(a, b, span) {
+  return (Math.abs(a.x - b.x) <= span) && (Math.abs(a.y - b.y) <= span);
 }
 
 function targetToString(target) {

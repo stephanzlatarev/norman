@@ -75,7 +75,7 @@ export default class Fight extends Job {
       this.isDeployed = true;
       this.details = this.summary + " escaping";
     } else {
-      orderMove(warrior, getRallyPoint(this.zone), 3);
+      Order.move(warrior, getRallyPoint(this.zone), Order.MOVE_CLOSE_TO);
       this.isDeployed = this.battle.zones.has(warrior.zone);
       this.details = this.summary + (this.isDeployed ? " deployed" : " deploying");
     }
@@ -106,13 +106,13 @@ export default class Fight extends Job {
       // TODO: Do for ground or air range depending on the type of the target
       if (target.type.rangeGround > warrior.type.rangeGround) {
         // When target has larger range step towards it
-        orderMove(warrior, target.body);
+        Order.move(warrior, target.body);
       } else if (this.station) {
         // Otherwise, step back to the assigned station
-        orderMove(warrior, this.station, 3);
+        Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
       } else {
         // Default to stepping back to the rally point
-        orderMove(warrior, getRallyPoint(this.zone));
+        Order.move(warrior, getRallyPoint(this.zone));
       }
     } else if (target.lastSeen < warrior.lastSeen) {
       if (isClose(warrior.body, target.body, 5)) {
@@ -120,10 +120,10 @@ export default class Fight extends Job {
         this.target.zone.threats.delete(target);
       } else {
         // Move closer to see the target so that warrior can attack it
-        orderMove(warrior, target.body);
+        Order.move(warrior, target.body);
       }
     } else {
-      orderAttack(warrior, target);
+      Order.attack(warrior, target);
     }
   }
 
@@ -151,7 +151,7 @@ export default class Fight extends Job {
         hop = getRallyPoint(rally);
       }
 
-      orderMove(warrior, hop, 3);
+      Order.move(warrior, hop, Order.MOVE_CLOSE_TO);
     }
   }
 
@@ -174,14 +174,14 @@ export default class Fight extends Job {
     }
 
     if (route && route.length) {
-      orderMove(warrior, route[0], 3);
+      Order.move(warrior, route[0], Order.MOVE_CLOSE_TO);
     } else {
       new Order(warrior, 23, warrior.body);
     }
   }
 
   close(outcome) {
-    orderStop(this.assignee);
+    Order.stop(this.assignee);
 
     const index = this.battle.fighters.indexOf(this);
     if (index >= 0) {
@@ -240,32 +240,6 @@ function findEscapeRoute(zone, skip, battle, warrior) {
     const route = findEscapeRoute(alternative.zone, skip, battle, warrior);
 
     if (route) return [alternative.corridor, alternative.zone, ...route];
-  }
-}
-
-function orderAttack(warrior, enemy) {
-  if (!warrior || !enemy) return;
-  if (!warrior.type.damageGround && !warrior.type.damageAir) return;
-
-  if ((warrior.order.abilityId !== 23) || (warrior.order.targetUnitTag !== enemy.tag)) {
-    new Order(warrior, 23, enemy);
-  }
-}
-
-function orderMove(warrior, pos, span) {
-  if (!warrior || !warrior.order || !pos) return;
-  if (isClose(warrior.body, pos, span || 1)) return; // Note that here it's OK if warrior has other orders as long as it's at the right position.
-
-  if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isClose(warrior.order.targetWorldSpacePos, pos, 1)) {
-    new Order(warrior, 16, pos);
-  }
-}
-
-function orderStop(warrior) {
-  if (!warrior) return;
-
-  if (warrior.order.abilityId) {
-    new Order(warrior, 3665).accept(true);
   }
 }
 

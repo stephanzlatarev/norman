@@ -35,7 +35,7 @@ export default class Detect extends Job {
     } else if (!this.battle.zones.has(observer.zone)) {
       // Rally to battle zone
       // TODO: Make sure rally move doesn't go through threat zones
-      orderMove(observer, this.zone);
+      Order.move(observer, this.zone);
     } else {
       this.observeZone();
     }
@@ -65,7 +65,7 @@ export default class Detect extends Job {
 
     if (closestEnemy) {
       // Move in the opposite direction
-      orderMove(observer, { x: observer.body.x + Math.sign(observer.body.x - closestEnemy.body.x), y: observer.body.y + Math.sign(observer.body.y - closestEnemy.body.y) });
+      Order.move(observer, { x: observer.body.x + Math.sign(observer.body.x - closestEnemy.body.x), y: observer.body.y + Math.sign(observer.body.y - closestEnemy.body.y) });
     }
   }
 
@@ -86,47 +86,26 @@ export default class Detect extends Job {
       const destinations = [...this.battle.zones, ...targets];
 
       if (!destinations.find(destination => isSamePosition(observer.body, destination))) {
-        orderMove(observer, targets.length ? targets[0] : this.battle.zone);
+        Order.move(observer, targets.length ? targets[0] : this.battle.zone);
       }
     } else if (isSamePosition(observer.body, this.zone)) {
-      orderMove(observer, selectRandomRallyZone(this.battle));
+      Order.move(observer, selectRandomRallyZone(this.battle));
     } else {
-      orderMove(observer, this.zone);
+      Order.move(observer, this.zone);
     }
   }
 
   close(outcome) {
     if (this.isDone || this.isFailed) return;
 
-    orderStop(this.assignee);
+    Order.stop(this.assignee);
 
     super.close(outcome);
   }
 }
 
-function orderMove(observer, pos) {
-  if (!observer || !observer.order || !pos) return;
-  if (!observer.order.abilityId && isCloseTo(observer.body, pos)) return;
-
-  if ((observer.order.abilityId !== 16) || !observer.order.targetWorldSpacePos || !isSamePosition(observer.order.targetWorldSpacePos, pos)) {
-    new Order(observer, 16, { x: pos.x, y: pos.y });
-  }
-}
-
-function orderStop(observer) {
-  if (!observer) return;
-
-  if (observer.order.abilityId) {
-    new Order(observer, 3665).accept(true);
-  }
-}
-
 function isSamePosition(a, b) {
   return (Math.abs(a.x - b.x) < 1) && (Math.abs(a.y - b.y) < 1);
-}
-
-function isCloseTo(a, b) {
-  return (Math.abs(a.x - b.x) <= 6) && (Math.abs(a.y - b.y) <= 6);
 }
 
 function isInSight(observer, body) {
