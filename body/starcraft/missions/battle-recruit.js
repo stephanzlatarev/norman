@@ -54,8 +54,8 @@ export default class BattleRecruitMission extends Mission {
 
 function isAirBattle(battle) {
   for (const threat of battle.zone.threats) {
-    if (threat.type.damageGround && threat.body.isGround) {
-      // At least one ground enemy unit can attack our ground warriors, so this is not an air battle
+    if (threat.body.isGround) {
+      // There's at least this one ground enemy unit, so the battle is not only in the air
       return false;
     }
   }
