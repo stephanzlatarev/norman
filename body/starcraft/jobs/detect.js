@@ -30,7 +30,10 @@ export default class Detect extends Job {
       }
     }
 
-    if ((observer.armor.shield < this.shield) || isInEnemyFireRange(this.battle, observer)) {
+    if ((observer.armor.shield === observer.armor.shieldMax) && this.zone.threats.size && !this.zone.enemies.size) {
+      // All threats may be outside sight range, so the observer may need to get into their fire range if necessary. That's why do it on full shield.
+      this.checkThreats();
+    } else if ((observer.armor.shield < this.shield) || isInEnemyFireRange(this.battle, observer)) {
       this.stayAlive();
     } else if (!this.battle.zones.has(observer.zone)) {
       // Rally to battle zone
@@ -42,6 +45,26 @@ export default class Detect extends Job {
 
     this.isCommitted = (mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH);
     this.shield = observer.armor.shield;
+  }
+
+  checkThreats() {
+    const observer = this.assignee;
+
+    let closestEnemy;
+    let closestDistance = Infinity;
+
+    for (const threat of this.zone.threats) {
+      const distance = calculateSquareDistance(observer.body, threat.body);
+
+      if (distance < closestDistance) {
+        closestEnemy = threat;
+        closestDistance = distance;
+      }
+    }
+
+    if (closestEnemy) {
+      Order.move(observer, closestEnemy.body);
+    }
   }
 
   stayAlive() {
