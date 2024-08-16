@@ -65,7 +65,10 @@ export default class Detect extends Job {
 
     if (closestEnemy) {
       // Move in the opposite direction
-      Order.move(observer, { x: observer.body.x + Math.sign(observer.body.x - closestEnemy.body.x), y: observer.body.y + Math.sign(observer.body.y - closestEnemy.body.y) });
+      const dx = Math.sign(observer.body.x - closestEnemy.body.x) * 2;
+      const dy = Math.sign(observer.body.y - closestEnemy.body.y) * 2;
+
+      Order.move(observer, { x: observer.body.x + dx, y: observer.body.y + dy });
     }
   }
 
