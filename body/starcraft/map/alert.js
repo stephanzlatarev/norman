@@ -20,7 +20,12 @@ export function syncAlerts() {
       zone.alertLevel = ALERT_RED;
     } else if (zone.warriors.size) {
       zone.alertLevel = ALERT_BLUE;
-      support.add(zone);
+
+      if (zone.isCorridor) {
+        for (const neighbor of zone.zones) support.add(neighbor);
+      } else {
+        support.add(zone);
+      }
     } else if (zone.buildings.size) {
       zone.alertLevel = ALERT_GREEN;
     } else {
