@@ -4,6 +4,7 @@ import { ALERT_WHITE } from "../map/alert.js";
 import Zone from "../map/zone.js";
 import { ActiveCount } from "../memo/count.js";
 
+const SURROUND_BALANCE = 1;
 const RECRUIT_BALANCE = 2;
 const DOWNSIZE_BALANCE = 4;
 
@@ -77,6 +78,19 @@ function getRallyZones(battle) {
 
       zones.push(neighbor);
     }
+  }
+
+  if ((zones.length > 1) && (battle.recruitedBalance < SURROUND_BALANCE)) {
+    // Focus army into the lowest tier rally point
+    let focus;
+
+    for (const zone of zones) {
+      if (!focus || (zone.tier.level < focus.tier.level)) {
+        focus = zone;
+      }
+    }
+
+    return [focus];
   }
 
   return zones;
