@@ -115,6 +115,7 @@ export default class Job extends Memory {
   // Closes the job and removes the link from the assigned unit.
   close(outcome) {
     this.product = outcome;
+    this.isCommitted = false;
     this.isDone = !!outcome;
     this.isFailed = !outcome;
 

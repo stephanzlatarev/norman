@@ -135,7 +135,8 @@ function findCandidate(job) {
     if (profile.type.name && (unit.type !== profile.type)) continue;
     if (!job.accepts(unit)) continue;
 
-    const distance = zone ? getHopDistance(unit.zone.cell, zone.cell) : 0;
+    // TODO: Use hop distance for air units after introducing air corridors
+    const distance = (zone && unit.body.isGround) ? getHopDistance(unit.cell, zone.cell) : 0;
 
     if (distance < bestDistance) {
       bestCandidate = unit;
