@@ -7,6 +7,7 @@ const Color = {
   Green: { r: 0, g: 200, b: 0 },
   White: { r: 200, g: 200, b: 200 },
   Yellow: { r: 200, g: 200, b: 0 },
+  Orange: { r: 200, g: 100, b: 0 },
   Red: { r: 200, g: 0, b: 0 },
   Purple: { r: 200, g: 0, b: 200 },
   Unknown: { r: 100, g: 100, b: 100 },
@@ -172,7 +173,7 @@ function traceThreats(texts, spheres) {
   } 
 }
 
-const ALERT_COLOR = [Color.Unknown, Color.Blue, Color.Green, Color.White, Color.Yellow, Color.Red];
+const ALERT_COLOR = [Color.Unknown, Color.Blue, Color.Green, Color.White, Color.Yellow, Color.Orange, Color.Red];
 let alertbox;
 function traceAlertLevels(texts) {
   texts.push({ text: "Alert levels:", virtualPos: { x: 0.8, y: 0.05 }, size: 16 });
