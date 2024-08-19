@@ -176,7 +176,7 @@ function traceThreats(texts, spheres) {
 const ALERT_COLOR = [Color.Unknown, Color.Blue, Color.Green, Color.White, Color.Yellow, Color.Orange, Color.Red];
 let alertbox;
 function traceAlertLevels(texts) {
-  texts.push({ text: "Alert levels:", virtualPos: { x: 0.8, y: 0.05 }, size: 16 });
+  texts.push({ text: "Alert levels:", virtualPos: { x: 0.55, y: 0.05 }, size: 16 });
 
   if (!alertbox) {
     let left = Infinity;
@@ -203,7 +203,7 @@ function traceAlertLevels(texts) {
     if (zone.isCorridor) {
       const text = zone.name[2];
       const color = Color.Unknown;
-      const x = 0.75 + ((zone.x - alertbox.left) / alertbox.width) * alertbox.scaleX * 0.2;
+      const x = 0.50 + ((zone.x - alertbox.left) / alertbox.width) * alertbox.scaleX * 0.2;
       const y = 0.07 + ((alertbox.bottom - zone.y) / alertbox.height) * alertbox.scaleY * 0.2;
 
       texts.push({ text: text, virtualPos: { x: x, y: y }, size: 16, color: color });
@@ -214,7 +214,7 @@ function traceAlertLevels(texts) {
     if (!zone.isCorridor) {
       const text = zone.name[0] + zone.name[1];
       const color = ALERT_COLOR[zone.alertLevel] || Color.Unknown;
-      const x = 0.75 + ((zone.x - alertbox.left) / alertbox.width) * alertbox.scaleX * 0.2;
+      const x = 0.50 + ((zone.x - alertbox.left) / alertbox.width) * alertbox.scaleX * 0.2;
       const y = 0.07 + ((alertbox.bottom - zone.y) / alertbox.height) * alertbox.scaleY * 0.2;
 
       texts.push({ text: text, virtualPos: { x: x, y: y }, size: 16, color: color });
