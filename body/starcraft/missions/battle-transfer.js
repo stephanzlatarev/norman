@@ -17,7 +17,7 @@ export default class BattleTransferMission extends Mission {
 
         // Transfer warriors that are in the zone of another battle
         if (warrior.zone === battle.zone) continue;
-        let closerBattle = battles.find(one => (warrior.zone === one.zone));
+        let closerBattle = battles.find(one => ((fighter.priority <= one.priority) && (warrior.zone === one.zone)));
         if (closerBattle) {
           transferWarrior(warrior, closerBattle);
           continue;
@@ -25,7 +25,7 @@ export default class BattleTransferMission extends Mission {
 
         // Transfer warriors that are in the zones of another battle and not in the zones of this battle
         if (battle.zones.has(warrior.zone)) continue;
-        closerBattle = battles.find(one => one.zones.has(warrior.zone));
+        closerBattle = battles.find(one => ((fighter.priority <= one.priority) && one.zones.has(warrior.zone)));
         if (closerBattle) {
           transferWarrior(warrior, closerBattle);
           continue;
