@@ -255,7 +255,7 @@ function findEscapeRoute(zone, skip, battle, warrior) {
       const fullRoute = [alternative.corridor, alternative.zone, ...nextRoute];
 
       // If warrior is already close to one of the points in the route, then return only the following points
-      for (let i = fullRoute.length - 1; i >= 0; i++) {
+      for (let i = fullRoute.length - 1; i >= 0; i--) {
         if (isClose(warrior.body, getRallyPoint(fullRoute[i]), 3)) {
           return fullRoute.slice(i + 1);
         }
