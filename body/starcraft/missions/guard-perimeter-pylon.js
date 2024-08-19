@@ -31,7 +31,7 @@ export default class GuardPerimeterPylonMission extends Mission {
           if (!Map.accepts(zone, station.x, station.y, 3)) continue;
 
           for (const warrior of zone.warriors) {
-            if (warrior.isAlive && isSamePosition(warrior.body, station)) {
+            if (warrior.isAlive && warrior.job && warrior.job.isGuard && warrior.job.isStationed) {
               pylonZone = zone;
               pylonJob = new Build("Pylon", { x: Math.floor(station.x), y: Math.floor(station.y) } );
               pylonJob.priority = 50;
@@ -44,8 +44,4 @@ export default class GuardPerimeterPylonMission extends Mission {
     }
   }
 
-}
-
-function isSamePosition(a, b) {
-  return (Math.abs(a.x - b.x) < 1) && (Math.abs(a.y - b.y) < 1);
 }

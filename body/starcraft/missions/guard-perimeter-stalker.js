@@ -82,6 +82,7 @@ class Guard extends Job {
     this.priority = priority;
     this.details = this.constructor.name + " " + zone.name;
     this.isCommitted = false;
+    this.isGuard = true;
   }
 
   execute() {
