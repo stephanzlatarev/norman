@@ -27,7 +27,7 @@ function setFightTargets(battle) {
     const warrior = fighter.assignee;
 
     if (warrior) {
-      fighter.direct(getClosestVisibleTarget(warrior, primaryTargets) || getClosestVisibleTarget(warrior, targets));
+      fighter.target = getClosestVisibleTarget(warrior, primaryTargets) || getClosestVisibleTarget(warrior, targets);
     }
   }
 }

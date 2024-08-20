@@ -1,9 +1,9 @@
 import Job from "../job.js";
 import Order from "../order.js";
 import Battle from "../battle/battle.js";
-import { ALERT_WHITE } from "../map/alert.js";
 
 const SAFETY_DISTANCE = 3;
+const LOOPS_LIMIT_DIRECTION = 10 * 22.4; // Limit of ten seconds to reach next target when observing the battle zone
 
 export default class Detect extends Job {
 
@@ -17,6 +17,7 @@ export default class Detect extends Job {
 
     this.battle = battle;
     this.shield = 0;
+    this.loopsInDirection = 0;
   }
 
   execute() {
@@ -30,9 +31,9 @@ export default class Detect extends Job {
       }
     }
 
-    if ((observer.armor.shield === observer.armor.shieldMax) && this.zone.threats.size && !this.zone.enemies.size) {
+    if ((observer.armor.shield >= observer.armor.shieldMax) && threats.size && !this.zone.enemies.size) {
       // All threats may be outside sight range, so the observer may need to get into their fire range if necessary. That's why do it on full shield.
-      this.checkThreats();
+      Order.move(observer, findClosestInvisibleThreat(observer, threats));
     } else if ((observer.armor.shield < this.shield) || isInEnemyFireRange(this.battle, observer)) {
       this.stayAlive();
     } else if (!this.battle.zones.has(observer.zone)) {
@@ -45,26 +46,7 @@ export default class Detect extends Job {
 
     this.isCommitted = (mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH);
     this.shield = observer.armor.shield;
-  }
-
-  checkThreats() {
-    const observer = this.assignee;
-
-    let closestEnemy;
-    let closestDistance = Infinity;
-
-    for (const threat of this.zone.threats) {
-      const distance = calculateSquareDistance(observer.body, threat.body);
-
-      if (distance < closestDistance) {
-        closestEnemy = threat;
-        closestDistance = distance;
-      }
-    }
-
-    if (closestEnemy) {
-      Order.move(observer, closestEnemy.body);
-    }
+    this.loopsInDirection++;
   }
 
   stayAlive() {
@@ -97,27 +79,24 @@ export default class Detect extends Job {
 
   observeZone() {
     const observer = this.assignee;
-    const order = observer.order;
 
-    const visible = new Set(this.battle.zone.enemies.values());
-    const targets = [];
-
-    for (const one of this.battle.zone.threats.values()) {
-      if (!visible.has(one)) {
-        targets.push(one.body);
+    // Check if direction should be changed
+    if (!this.target || (this.loopsInDirection > LOOPS_LIMIT_DIRECTION) || isSamePosition(observer.body, this.target) || !isTargetValid(this.battle, this.target)) {
+      if (!this.target) {
+        this.target = this.zone;
+      } else if ((this.loopsInDirection < LOOPS_LIMIT_DIRECTION) && (this.zone.threats.size > this.zone.enemies.size)) {
+        this.target = findClosestInvisibleThreat(observer, this.zone.threats, this.zone.enemies);
+      } else if (this.target === this.zone) {
+        this.target = this.battle.stations[Math.floor(this.battle.stations.length * Math.random())];
+      } else {
+        this.target = this.zone;
       }
+
+      this.loopsInDirection = 0;
     }
 
-    if (order.abilityId === 16) {
-      const destinations = [...this.battle.zones, ...targets];
-
-      if (!destinations.find(destination => isSamePosition(observer.body, destination))) {
-        Order.move(observer, targets.length ? targets[0] : this.battle.zone);
-      }
-    } else if (isSamePosition(observer.body, this.zone)) {
-      Order.move(observer, selectRandomRallyZone(this.battle));
-    } else {
-      Order.move(observer, this.zone);
+    if (this.target) {
+      Order.move(observer, this.target);
     }
   }
 
@@ -128,6 +107,24 @@ export default class Detect extends Job {
 
     super.close(outcome);
   }
+}
+
+function findClosestInvisibleThreat(observer, threats, visible) {
+  let closestThreat;
+  let closestDistance = Infinity;
+
+  for (const threat of threats) {
+    if (visible && visible.has(threat)) continue;
+
+    const distance = calculateSquareDistance(observer.body, threat.body);
+
+    if (distance < closestDistance) {
+      closestThreat = threat;
+      closestDistance = distance;
+    }
+  }
+
+  return closestThreat;
 }
 
 function isSamePosition(a, b) {
@@ -153,11 +150,14 @@ function isInEnemyFireRange(battle, observer) {
   }
 }
 
-function selectRandomRallyZone(battle) {
-  const zones = [...battle.zones].filter(zone => ((zone !== battle.zone) && (zone.alertLevel <= ALERT_WHITE)));
-  const selection = Math.floor(zones.length * Math.random());
-
-  return zones[selection];
+function isTargetValid(battle, target) {
+  if (target.tag) {
+    // Target is valid if it is a threat but is not visible
+    return battle.zone.threats.has(target) && battle.zone.enemies.has(target);
+  } else {
+    // Target is valid if it is either the battle zone or one of the stations
+    return (target === battle.zone) || !!battle.stations.find(station => (station === target));
+  }
 }
 
 function calculateSquareDistance(a, b) {

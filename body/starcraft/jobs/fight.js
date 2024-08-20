@@ -1,15 +1,18 @@
 import Job from "../job.js";
 import Order from "../order.js";
 import Battle from "../battle/battle.js";
-import { ALERT_WHITE } from "../map/alert.js";
 import { getHopRoute, getHopZone } from "../map/route.js";
+
+const HOP_CLOSE_DISTANCE = 6;
+const STATION_CLOSE_DISTANCE = 6;
 
 export default class Fight extends Job {
 
-  constructor(battle, warrior, rally) {
+  constructor(battle, warrior, station) {
     super(warrior);
 
-    this.zone = rally;
+    this.station = station;
+    this.zone = station.zone;
     this.battle = battle;
     this.priority = battle.priority;
     this.summary += " " + battle.zone.name;
@@ -20,33 +23,28 @@ export default class Fight extends Job {
     battle.fighters.push(this);
   }
 
-  direct(target, station) {
-    this.target = target;
-    this.station = station;
-  }
-
   accepts(unit) {
-    if (!unit.zone) {
+    if (!unit.zone || !this.battle.stations.length) {
       return false;
     } else if (this.battle.zones.has(unit.zone)) {
-      // When already in the battle zone, the warrior must be closest to the rally point rather than any other corridor to the battle zone
-      let rallyCorridor;
-      let rallyDistance = Infinity;
+      // When already in the battle zone, the warrior must be closest to this fight's station rather than any other station of the battle
+      let closestStation;
+      let closestDistance = Infinity;
 
-      for (const corridor of this.battle.zone.corridors) {
-        const distance = calculateSquareDistance(this.zone, corridor);
+      for (const station of this.battle.stations) {
+        const distance = calculateSquareDistance(this.station, station);
 
-        if (distance < rallyDistance) {
-          rallyCorridor = corridor;
-          rallyDistance = distance;
+        if (distance < closestDistance) {
+          closestStation = station;
+          closestDistance = distance;
         }
       }
 
-      rallyDistance = calculateSquareDistance(unit.body, rallyCorridor);
+      closestDistance = calculateSquareDistance(unit.body, closestStation);
 
-      for (const corridor of this.battle.zone.corridors) {
-        if (corridor === rallyCorridor) continue;
-        if (calculateSquareDistance(unit.body, corridor) < rallyDistance) return false;
+      for (const station of this.battle.stations) {
+        if (station === closestStation) continue;
+        if (calculateSquareDistance(unit.body, station) < closestDistance) return false;
       }
     }
 
@@ -55,47 +53,51 @@ export default class Fight extends Job {
 
   execute() {
     const warrior = this.assignee;
-    const isAttacking = this.shouldAttack();
+
+    if (this.zone !== this.station.zone) this.zone = this.station.zone;
+
+    this.isCommitted = false;
+    this.isDeployed = this.battle.zones.has(warrior.zone) || isClose(warrior.body, this.station, STATION_CLOSE_DISTANCE);
 
     if (!warrior.isAlive) {
       console.log("Warrior", warrior.type.name, warrior.nick, "died in", this.details);
+      this.details = getDetails(this, "dead");
       this.assignee = null;
       this.isDeployed = false;
-      this.details = this.summary + " dead";
-    } else if (isAttacking) {
+    } else if (this.shouldAttack()) {
+      this.details = getDetails(this, "attack");
+      this.isCommitted = true;
       this.goAttack();
-      this.isDeployed = true;
-      this.details = this.summary + " attacking";
-    } else if (this.shouldEscape()) {
-      this.goEscape();
-      this.isDeployed = true;
-      this.details = this.summary + " escaping";
-    } else if (this.shouldRally()) {
-      this.goRally();
-      this.isDeployed = false;
-      this.details = this.summary + " rallying";
+    } else if (!this.isDeployed) {
+      this.details = getDetails(this, "deploy");
+      this.goDeploy();
+    } else if (this.shouldKite()) {
+      this.details = getDetails(this, "kite");
+      this.goKite();
     } else {
-      Order.move(warrior, getRallyPoint(this.zone), Order.MOVE_CLOSE_TO);
-      this.isDeployed = this.battle.zones.has(warrior.zone);
-      this.details = this.summary + (this.isDeployed ? " deployed" : " deploying");
+      this.details = getDetails(this, "station");
+      Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
     }
-
-    this.isCommitted = isAttacking;
   }
 
   shouldAttack() {
     const warrior = this.assignee;
     const mode = this.battle.mode;
 
-    return warrior && warrior.isAlive && this.target && ((mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH)) && this.battle.zones.has(warrior.zone);
+    return warrior && this.target && ((mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH)) && this.isDeployed;
   }
 
-  shouldRally() {
-    return !this.battle.zones.has(this.assignee.zone);
-  }
+  shouldKite() {
+    const warrior = this.assignee;
+    const target = this.target;
 
-  shouldEscape() {
-    return isInThreatsRange(this.battle, this.assignee, this.assignee.body);
+    if (warrior && target && this.isDeployed) {
+      if (target.body.isGround && warrior.type.rangeGround) {
+        return isClose(warrior.body, target.body, warrior.type.rangeGround);
+      } else if (target.body.isFlying && warrior.type.rangeAir) {
+        return isClose(warrior.body, target.body, warrior.type.rangeAir);
+      }
+    }
   }
 
   goAttack() {
@@ -107,12 +109,9 @@ export default class Fight extends Job {
       if (target.type.rangeGround > warrior.type.rangeGround) {
         // When target has larger range step towards it
         Order.move(warrior, target.body);
-      } else if (this.station) {
+      } else {
         // Otherwise, step back to the assigned station
         Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
-      } else {
-        // Default to stepping back to the rally point
-        Order.move(warrior, getRallyPoint(this.zone));
       }
     } else if (target.lastSeen < warrior.lastSeen) {
       if (isClose(warrior.body, target.body, 5)) {
@@ -127,57 +126,42 @@ export default class Fight extends Job {
     }
   }
 
-  goRally() {
+  goKite() {
     const warrior = this.assignee;
-    const rally = this.zone;
+    const target = this.target;
 
-    let isMovingAlongRoute = false;
-    let hop;
-
-    if (warrior.order.abilityId === 16) {
-      const route = getHopRoute(warrior.cell, rally.cell);
-
-      if (isOrderAlongRoute(warrior.order, route)) {
-        isMovingAlongRoute = true;
-      } else {
-        hop = route[0];
-      }
+    if (warrior.weapon.cooldown || (target.lastSeen < warrior.lastSeen)) {
+      Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
     } else {
-      hop = getHopZone(warrior.cell, rally.cell);
-    }
-
-    if (!isMovingAlongRoute) {
-      if (!hop || isClose(warrior.body, hop, 3)) {
-        hop = getRallyPoint(rally);
-      }
-
-      Order.move(warrior, hop, Order.MOVE_CLOSE_TO);
+      Order.attack(warrior, target);
     }
   }
 
-  goEscape() {
-    const battle = this.battle;
+  goDeploy() {
     const warrior = this.assignee;
+    const station = this.station;
 
-    let route;
+    let hop;
 
-    if (warrior.zone === battle.zone) {
-      // Escape through the closest corridor
-      route = findEscapeRoute(battle.zone, new Set(), battle, warrior);
-    } else if (warrior.zone == this.zone) {
-      // Escape through any corridor to a safe neighbor
-      route = findEscapeRoute(this.zone, new Set(), battle, warrior);
+    if (warrior.order.abilityId === 16) {
+      const route = getHopRoute(warrior.cell, station);
+
+      if (isOrderAlongRoute(warrior.order, route)) {
+        // Warrior is already moving along the route
+        return;
+      } else {
+        // Warrior is moving but not along the route. Correct move to the next hop in the route.
+        hop = route[0];
+      }
     } else {
-      // Escape to any safe zone and change rally point if necessary
-      route = findEscapeRoute(warrior.zone, new Set(), battle, warrior);
-      // TODO: Change the zone of the fight if necessary
+      hop = getHopZone(warrior.cell, station);
     }
 
-    if (route && route.length) {
-      Order.move(warrior, getRallyPoint(route[0]), Order.MOVE_CLOSE_TO);
-    } else {
-      new Order(warrior, 23, warrior.body);
+    if (!hop || isClose(warrior.body, hop, HOP_CLOSE_DISTANCE)) {
+      hop = this.station;
     }
+
+    Order.move(warrior, hop, Order.MOVE_CLOSE_TO);
   }
 
   close(outcome) {
@@ -193,8 +177,17 @@ export default class Fight extends Job {
 
 }
 
-function getRallyPoint(zone) {
-  return zone.isDepot ? zone.exitRally : zone;
+function getDetails(fight, mode) {
+  const details = ["Fight", fight.zone.name, ">", fight.battle.zone.name];
+  const target = fight.target;
+
+  if (target) {
+    details.push(target.type.name + " " + target.nick);
+  }
+
+  details.push(mode);
+
+  return details.join(" ");
 }
 
 function isOrderAlongRoute(order, route) {
@@ -203,65 +196,6 @@ function isOrderAlongRoute(order, route) {
   if (pos) {
     for (const turn of route) {
       if (isClose(pos, turn, 1)) return true;
-    }
-  }
-}
-
-function isInThreatsRange(battle, warrior, pos) {
-  for (const zone of battle.zones) {
-    for (const threat of zone.threats) {
-      if (!threat.type.rangeGround) continue; // TODO: Add range for spell casters
-
-      const fireRange = threat.type.rangeGround + 2;
-      const runRange = (threat.type.movementSpeed > warrior.type.movementSpeed) ? warrior.type.sightRange - 1 : 0;
-      const escapeRange = Math.max(fireRange, runRange);
-
-      if (calculateSquareDistance(threat.body, pos) <= escapeRange * escapeRange) {
-        return threat;
-      }
-    }
-  }
-}
-
-function findEscapeRoute(zone, skip, battle, warrior) {
-  const alternatives = [];
-
-  skip.add(zone);
-
-  for (const corridor of zone.corridors) {
-    for (const neighbor of corridor.zones) {
-      if ((neighbor.alertLevel <= ALERT_WHITE) && !skip.has(neighbor)) {
-        const neighborRallyPoint = getRallyPoint(neighbor);
-
-        if (!isInThreatsRange(battle, warrior, neighborRallyPoint)) {
-          if (isClose(warrior.body, neighborRallyPoint, 3)) {
-            alternatives.push({ corridor: corridor, zone: neighbor });
-          } else if (isClose(warrior.body, corridor, 3)) {
-            return [neighbor];
-          } else {
-            return [corridor, neighbor];
-          }
-        } else {
-          alternatives.push({ corridor: corridor, zone: neighbor });
-        }
-      }
-    }
-  }
-
-  for (const alternative of alternatives) {
-    const nextRoute = findEscapeRoute(alternative.zone, skip, battle, warrior);
-
-    if (nextRoute) {
-      const fullRoute = [alternative.corridor, alternative.zone, ...nextRoute];
-
-      // If warrior is already close to one of the points in the route, then return only the following points
-      for (let i = fullRoute.length - 1; i >= 0; i--) {
-        if (isClose(warrior.body, getRallyPoint(fullRoute[i]), 3)) {
-          return fullRoute.slice(i + 1);
-        }
-      }
-
-      return fullRoute;
     }
   }
 }

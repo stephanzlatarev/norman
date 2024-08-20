@@ -221,8 +221,11 @@ export default class Order extends Memory {
 
   static MOVE_CLOSE_TO = 0b0001;
 
-  static move(unit, pos, options) {
-    if (!unit || !unit.order || !pos) return;
+  static move(unit, target, options) {
+    if (!unit || !unit.order || !target) return;
+
+    const pos = target.body ? target.body : target;
+
     if (unit.todo && (unit.todo.ability === 16) && isSamePosition(unit.todo.target, pos)) return unit.todo;
     if (isClose(unit.body, pos, (options & Order.MOVE_CLOSE_TO) ? 3 : 1)) return;
 
@@ -259,7 +262,7 @@ function checkIsAccepted(order) {
   if ((order.ability === 23) && !order.target.tag) return true;
 
   if (actual.targetUnitTag && (actual.targetUnitTag !== order.target.tag)) return false;
-  if (actual.targetWorldPos && !isSamePosition(actual.targetWorldPos, order.target)) return false;
+  if (actual.targetWorldSpacePos && !isSamePosition(actual.targetWorldSpacePos, order.target)) return false;
 
   return true;
 }

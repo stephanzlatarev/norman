@@ -16,6 +16,7 @@ export default class Battle {
   recruitedBalance = 0;
   deployedBalance = 0;
 
+  stations;
   detector;
   fighters;
 
@@ -27,6 +28,7 @@ export default class Battle {
     this.zone = zone;
     this.zones = getBattleZones(zone);
 
+    this.stations = [];
     this.detector = null;
     this.fighters = [];
     this.priority = 0;
@@ -35,7 +37,7 @@ export default class Battle {
   run() {
     const threats = [];
 
-    if (this.fighters.find(fighter => !! fighter.assignee)) {
+    if (this.stations.length && this.fighters.find(fighter => !! fighter.assignee)) {
       // At least one fighter is assigned. We need detection
       if (!this.detector || this.detector.isDone || this.detector.isFailed) {
         this.detector = new Detect(this);
@@ -135,7 +137,7 @@ function getBattleZones(zone) {
   return zones;
 }
 
-function calculateBalance(fighters, threats, isDeployed) {
+function calculateBalance(fighters, threats, countDeployedOnly) {
   let warriorDamage = 0;
   let warriorHealth = 0;
   let enemyDamage = 0;
@@ -145,7 +147,7 @@ function calculateBalance(fighters, threats, isDeployed) {
     const warrior = fighter.assignee;
 
     if (!warrior || !warrior.isAlive) continue;
-    if (isDeployed && fighter.isDeployed) continue;
+    if (countDeployedOnly && !fighter.isDeployed) continue;
 
     warriorDamage += warrior.type.damageGround;
     warriorHealth += warrior.armor.total;
