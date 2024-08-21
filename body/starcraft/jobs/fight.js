@@ -23,6 +23,13 @@ export default class Fight extends Job {
     battle.fighters.push(this);
   }
 
+  setStation(station) {
+    if (station && station.zone) {
+      this.zone = station.zone;
+      this.station = station;
+    }
+  }
+
   accepts(unit) {
     if (!unit.zone || !this.battle.stations.length) {
       return false;

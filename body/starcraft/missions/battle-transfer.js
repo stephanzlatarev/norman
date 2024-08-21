@@ -39,7 +39,7 @@ export default class BattleTransferMission extends Mission {
 function transferWarrior(warrior, battle) {
   for (const fighter of battle.fighters) {
     if (!fighter.assignee && (fighter.agent.type.name === warrior.type.name)) {
-      fighter.assign(warrior);
+      return fighter.assign(warrior);
     }
   }
 }

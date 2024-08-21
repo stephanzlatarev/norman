@@ -13,8 +13,10 @@ export default class BattleStation extends Mission {
         const stations = selectStations(battle);
 
         if (stations.length) {
+          const focus = getFocusStation(battle, stations);
+
           for (const fighter of battle.fighters) {
-            setStation(fighter, stations);
+            setStation(fighter, stations, focus);
           }
         } else {
           for (const fighter of battle.fighters) {
@@ -29,15 +31,19 @@ export default class BattleStation extends Mission {
 
 }
 
-function setStation(fighter, stations) {
+function setStation(fighter, stations, focus) {
+  // If fight job is still open, or warrior is not yet deployed, then switch it to the focus station
+  if (focus && !fighter.isDeployed) {
+    return fighter.setStation(focus);
+  }
+
   // If fighter is already assigned to a valid station then keep the assigned station
   if (stations.find(station => (fighter.station === station))) return;
 
   // If fighter is stationed in a zone with a valid station then re-assign the fighter to that station
   for (const station of stations) {
     if (fighter.station.zone === station.zone) {
-      fighter.station = station;
-      return;
+      return fighter.setStation(station);
     }
   }
 
@@ -50,15 +56,16 @@ function setStation(fighter, stations) {
     backAwayStation = station;
   }
   if (backAwayStation) {
-    fighter.station = backAwayStation;
-    return;
+    return fighter.setStation(backAwayStation);
   }
 
   // Otherwise, use the closest station
   if (fighter.assignee && fighter.isDeployed) {
-    fighter.station = getClosestStation(fighter.assignee, stations);
+    return fighter.setStation(getClosestStation(fighter.assignee, stations));
+  } else if (focus) {
+    return fighter.setStation(focus);
   } else {
-    fighter.station = stations[0];
+    return fighter.setStation(stations[0]);
   }
 }
 
@@ -116,20 +123,22 @@ function selectStations(battle) {
     wave = next;
   }
 
-  if ((zones.size > 1) && (battle.recruitedBalance < SURROUND_BALANCE)) {
+  return [...zones].map(getStation);
+}
+
+function getFocusStation(battle, stations) {
+  if ((stations.length > 1) && (battle.recruitedBalance < SURROUND_BALANCE)) {
     // We don't have enough army to surround enemy. Focus on the lowest tier station.
     let focus;
 
-    for (const zone of zones) {
-      if (!focus || (zone.tier.level < focus.tier.level)) {
-        focus = zone;
+    for (const station of stations) {
+      if (!focus || (station.zone.tier.level < focus.zone.tier.level)) {
+        focus = station;
       }
     }
 
-    return [getStation(focus)];
+    return focus;
   }
-
-  return [...zones].map(getStation);
 }
 
 function getStation(zone) {
