@@ -325,7 +325,7 @@ function orderHold(warrior, pos) {
 
 function orderMove(warrior, pos) {
   if (!warrior || !warrior.order || !warrior.body || !pos) return;
-  if (isSamePosition(warrior.body, pos)) return;
+  if (!warrior.order.abilityId && isNearPosition(warrior.body, pos)) return;
 
   if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isSamePosition(warrior.order.targetWorldSpacePos, pos)) {
     new Order(warrior, 16, pos);
@@ -352,6 +352,10 @@ function isExactPosition(a, b) {
 
 function isSamePosition(a, b) {
   return (Math.abs(a.x - b.x) <= 3) && (Math.abs(a.y - b.y) <= 3);
+}
+
+function isNearPosition(a, b) {
+  return (Math.abs(a.x - b.x) <= 6) && (Math.abs(a.y - b.y) <= 6);
 }
 
 function squareDistance(a, b) {
