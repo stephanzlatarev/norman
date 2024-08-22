@@ -1,7 +1,7 @@
 import Resources from "../memo/resources.js";
 import Detect from "../jobs/detect.js";
 
-const ATTACK_BALANCE = 2.0;
+const ATTACK_BALANCE = 1.6;
 const RALLY_BALANCE  = 1.0;
 const DEFEND_BALANCE = 0.7;
 
