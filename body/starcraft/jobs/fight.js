@@ -111,14 +111,22 @@ export default class Fight extends Job {
     const warrior = this.assignee;
     const target = this.target;
 
-    if (warrior.weapon.cooldown) {
+    if (warrior.weapon.cooldown > 1) {
       // TODO: Do for ground or air range depending on the type of the target
       if (target.type.rangeGround > warrior.type.rangeGround) {
         // When target has larger range step towards it
         Order.move(warrior, target.body);
       } else {
-        // Otherwise, step back to the assigned station
-        Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
+        const distance = Math.sqrt(calculateSquareDistance(warrior.body, target.body));
+        const range = target.body.isFlying ? warrior.type.rangeAir : warrior.type.rangeGround;
+
+        if (distance + (target.type.movementSpeed - warrior.type.movementSpeed) * warrior.weapon.cooldown >= range - 1) {
+          // Make sure warrior can walk to target and be within range at the moment the weapon is ready to fire
+          Order.move(warrior, target.body);
+        } else {
+          // Otherwise, step back to the assigned station
+          Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
+        }
       }
     } else if (target.lastSeen < warrior.lastSeen) {
       if (isClose(warrior.body, target.body, 5)) {
