@@ -3,7 +3,6 @@ import Mission from "../mission.js";
 import Order from "../order.js";
 import Types from "../types.js";
 import Units from "../units.js";
-import Attack from "../jobs/attack.js";
 import Wall from "../map/wall.js";
 import { ActiveCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
@@ -153,6 +152,41 @@ class WallDefender extends Job {
 
 }
 
+class BlockWall extends Job {
+
+  constructor() {
+    super("Probe");
+
+    this.zone = wall;
+    this.priority = 100;
+    this.isBlockWall = true;
+  }
+
+  accepts(unit) {
+    let thereAreWorkersNotFarFromWall = false;
+
+    for (const worker of Units.workers().values()) {
+      if (worker.job && worker.job.isBlockWall) continue;
+
+      if (isNotFarFromPosition(worker.body, wall)) {
+        thereAreWorkersNotFarFromWall = true;
+        break;
+      }
+    }
+
+    return thereAreWorkersNotFarFromWall ? isNotFarFromPosition(unit.body, wall) : true;
+  }
+
+  execute() {
+    const probe = this.assignee;
+
+    if (probe.order.abilityId !== 23) {
+      new Order(probe, 23, wall.blueprint.choke).accept(true);
+    }
+  }
+
+}
+
 function findWallAndField() {
   const walls = Wall.list();
 
@@ -215,7 +249,7 @@ function maintainPullProbeJobs() {
   }
 
   const defendersCount = ActiveCount.Zealot + ActiveCount.Stalker + ActiveCount.Immortal;
-  const attackersCount = countAttackers();
+  const attackersCount = countMeleeAttackers();
 
   let pullProbeCount = 0;
 
@@ -224,7 +258,7 @@ function maintainPullProbeJobs() {
 
     if ((pullProbeCount > 0) && (defendersCount < 2)) pullProbeCount += 2;
 
-    pullProbeCount = Math.min(pullProbeCount, ActiveCount.Probe - 11);
+    pullProbeCount = Math.min(pullProbeCount, ActiveCount.Probe - 11, 4);
     pullProbeCount = Math.max(pullProbeCount, 0);
   }
 
@@ -232,7 +266,7 @@ function maintainPullProbeJobs() {
     const jobsToOpen = pullProbeCount - pullProbeJobs.size;
 
     for (let i = 0; i < jobsToOpen; i++) {
-      pullProbeJobs.add(new Attack("Probe", wall, wall.blueprint.choke));
+      pullProbeJobs.add(new BlockWall());
     }
   } else if (pullProbeCount < pullProbeJobs.size) {
     const jobsToClose = pullProbeJobs.size - pullProbeCount;
@@ -248,12 +282,13 @@ function maintainPullProbeJobs() {
   }
 }
 
-function countAttackers() {
+function countMeleeAttackers() {
   if (!VisibleCount.Warrior) return 0;
 
   let count = 0;
 
   for (const enemy of Units.enemies().values()) {
+    if (enemy.type.rangeGround > 1) continue;
     if (Math.abs(enemy.body.x - wall.x) + Math.abs(enemy.body.y - wall.y) < 20) count++;
   }
 
@@ -356,6 +391,10 @@ function isSamePosition(a, b) {
 
 function isNearPosition(a, b) {
   return (Math.abs(a.x - b.x) <= 6) && (Math.abs(a.y - b.y) <= 6);
+}
+
+function isNotFarFromPosition(a, b) {
+  return (Math.abs(a.x - b.x) <= 30) && (Math.abs(a.y - b.y) <= 30);
 }
 
 function squareDistance(a, b) {

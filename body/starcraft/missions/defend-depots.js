@@ -1,6 +1,7 @@
+import Job from "../job.js";
 import Mission from "../mission.js";
+import Order from "../order.js";
 import Units from "../units.js";
-import Attack from "../jobs/attack.js";
 
 const MaxAttackers = 12;
 
@@ -34,6 +35,30 @@ export default class DefendDepotsMission extends Mission {
 
 }
 
+class Defend extends Job {
+
+  constructor(nexus) {
+    super("Probe");
+
+    this.zone = nexus.depot;
+    this.priority = 100;
+  }
+
+  accepts(unit) {
+    return (unit.zone === this.zone);
+  }
+
+  execute() {
+    const probe = this.assignee;
+    const targets = this.zone.enemies;
+
+    if (targets.size && (probe.order.abilityId !== 23)) {
+      new Order(probe, 23, [...targets][0].body).accept(true);
+    }
+  }
+
+}
+
 function removeCompletedJobs() {
   for (const [jobId, job] of jobs) {
     if (job.isDone || job.isFailed) {
@@ -46,7 +71,7 @@ function addJob(nexus, index) {
   const jobId = nexus.tag + ":" + index;
 
   if (!jobs.has(jobId)) {
-    jobs.set(jobId, new Attack("Probe", nexus.depot, nexus.depot.exitRally));
+    jobs.set(jobId, new Defend(nexus));
   }
 }
 
