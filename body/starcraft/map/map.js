@@ -90,7 +90,11 @@ class Map {
 function clearInitialPathing(board) {
   for (const building of Units.buildings().values()) {
     if (building.type.isBuilding) {
-      board.clear(building.body.x - 2.5, building.body.y - 2.5, 5, 5);
+      const x = building.body.x;
+      const y = building.body.y;
+      const r = building.body.r;
+
+      board.clear(Math.round(x - r), Math.round(y - r), Math.round(r + r), Math.round(r + r));
     }
   }
 

@@ -3,53 +3,57 @@ import fs from "fs";
 import readline from "readline";
 import Game from "./game.js";
 import Trace from "./trace.js";
-import Units from "./units.js";
 
 const SIMULATION_FILE = "./body/starcraft/simulation.js";
 const SIMULATION_CODE = `
-import Units from "./units.js";
-let loop = 0;
+let done = false;
 
 export default async function simulate(client) {
-  if (loop === 1) {
-    for (const unit of units) {
-      if (!has(Units.warriors(), unit) && !has(Units.buildings(), unit) && !has(Units.enemies(), unit)) {
-        await spawn(client, unit);
-      }
-    }
+  if (done) return;
+
+  const gameInfo = await client.gameInfo();
+  const observation = await client.observation();
+  const base = gameInfo.startRaw.startLocations[0];
+
+  if (meta.map !== gameInfo.mapName) {
+    console.log("The simulation must run on map ", meta.map);
+    process.exit();
+  }
+  if ((meta.x !== base.x) || (meta.x !== base.x)) {
+    console.log("The simulation must run with the other start location! Start location is random. Try it again.");
+    process.exit();
   }
 
-  loop++;
-}
-
-function has(collection, unit) {
-  for (const one of collection.values()) {
-    if (one.isOwn && (unit.owner === 2)) continue;
-    if (one.isEnemy && (unit.owner === 1)) continue;
-    if (unit.type !== one.type.id) continue;
-    if (Math.abs(one.body.x - unit.x) > 0.1) continue;
-    if (Math.abs(one.body.y - unit.y) > 0.1) continue;
-
-    return true;
-  }
-}
-
-async function spawn(client, unit) {
-  await client.debug({
-    debug: [{
-      createUnit: {
-        unitType: unit.type,
-        owner: unit.owner,
-        pos: { x: unit.x, y: unit.y },
-        quantity: 1,
-      }
-    }]
+  const extras = observation.observation.rawData.units.filter(function(unit) {
+    if ((unit.owner !== 1) && (unit.owner !== 2)) return false;
+    return !units.find(one => ((unit.pos.x === one.x) && (unit.pos.y === one.y)));
   });
+  await client.debug({ debug: [{ killUnit: { tag: extras.map(unit => Number(unit.tag)) } }] });
+
+  for (const unit of units) {
+    if (observation.observation.rawData.units.find(one => ((one.pos.x === unit.x) && (one.pos.y === unit.y)))) continue;
+
+    await client.debug({
+      debug: [{
+        createUnit: {
+          unitType: unit.type,
+          owner: unit.owner,
+          pos: { x: unit.x, y: unit.y },
+          quantity: 1,
+        }
+      }]
+    });
+  }
+
+  await client.step(1);
+
+  done = true;
 }
 `;
 
 let speed = 0;
 let paused = false;
+let takingSnapshot = false;
 
 export default class LocalGame extends Game {
 
@@ -61,11 +65,6 @@ export default class LocalGame extends Game {
   }
 
   async connect() {
-    if (fs.existsSync(SIMULATION_FILE)) {
-      const module = await import("./simulation.js");
-      this.simulation = module.default;
-    }
-
     console.log("Starting StarCraft II game...");
 
     spawn("..\\Versions\\" + this.config.version + "\\SC2_x64.exe", [
@@ -90,13 +89,27 @@ export default class LocalGame extends Game {
       race: this.config.playerSetup[0].race,
       options: { raw: true },
     });
+
+    if (fs.existsSync(SIMULATION_FILE)) {
+      const module = await import("./simulation.js");
+      this.simulation = module.default;
+
+      console.log("Creating simulation...");
+      await this.simulation(this.client);
+      console.log("Simulation ready.");
+
+      paused = true;
+      console.log("Game paused!");
+    }
   }
 
   async step() {
-    if (this.trace) {
-      await this.trace.step(this.client);
+    if (takingSnapshot) {
+      await save(this.client);
+      takingSnapshot = false;
     }
 
+    await this.trace.step(this.client);
     await super.step();
 
     if (paused) {
@@ -138,26 +151,46 @@ function slow(value) {
   }
 }
 
-function unit(unit) {
-  return { owner: unit.isOwn ? 1 : 2, type: unit.type.id, x: unit.body.x, y: unit.body.y };
-}
+async function save(client) {
+  const gameInfo = await client.gameInfo();
+  const base = gameInfo.startRaw.startLocations[0];
+  const meta = `const meta = { map: "${gameInfo.mapName}", x: ${base.x}, y: ${base.y} };`;
+  const existing = new Set();
 
-function save() {
-  const units = [];
-
-  for (const warrior of Units.warriors().values()) {
-    units.push(unit(warrior));
+  for (const unit of (await client.observation()).observation.rawData.units) {
+    existing.add(unit.tag);
   }
 
-  for (const building of Units.buildings().values()) {
-    units.push(unit(building));
+  for (let x = gameInfo.startRaw.playableArea.p0.x; x <= gameInfo.startRaw.playableArea.p1.x; x += 5) {
+    const addObservers = [];
+    for (let y = gameInfo.startRaw.playableArea.p0.y; y <= gameInfo.startRaw.playableArea.p1.y; y += 5) {
+      addObservers.push({ createUnit: { unitType: 82, owner: 1, pos: { x: x, y: y }, quantity: 1 } });
+    }
+    await client.debug({ debug: addObservers });
   }
 
-  for (const enemy of Units.enemies().values()) {
-    units.push(unit(enemy));
-  }
+  await client.step(1);
+  await client.step(1);
+  await client.step(1);
 
-  fs.writeFileSync(SIMULATION_FILE, "const units = " + JSON.stringify(units, null, 2) + ";" + SIMULATION_CODE);
+  const observation = await client.observation();
+  const units = ["const units = ["];
+  for (const unit of observation.observation.rawData.units) {
+    if (((unit.owner === 1) && existing.has(unit.tag)) || (unit.owner === 2)) {
+      units.push(`  { owner: ${unit.owner}, type: ${unit.unitType}, x: ${unit.pos.x}, y: ${unit.pos.y} },`);
+    }
+  }
+  units.push("];");
+
+  const removeObservers = [];
+  for (const unit of observation.observation.rawData.units) {
+    if ((unit.unitType === 82) && !existing.has(unit.tag)) {
+      removeObservers.push(Number(unit.tag));
+    }
+  }
+  await client.debug({ debug: [{ killUnit: { tag: removeObservers } }] });
+
+  fs.writeFileSync(SIMULATION_FILE, meta + "\r\n" + units.join("\r\n") + SIMULATION_CODE);
   console.log("Snapshot saved!");
 }
 
@@ -172,7 +205,7 @@ console.log("Press Escape to exit");
 process.stdin.on("keypress", (chunk, key) => {
   if (key.name === "escape") process.exit(0);
   if (key.ctrl && (key.name == "c" || key.name == "x" || key.name == "C" || key.name == "X")) process.exit(0);
-  if (chunk == "s" || chunk == "S") save();
+  if (chunk == "s" || chunk == "S") takingSnapshot = true;
   if (chunk == " ") pause();
   if (chunk >= "0" && chunk <= "9") slow(chunk);
 });
