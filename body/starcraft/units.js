@@ -46,8 +46,26 @@ class Units {
     return obstacles;
   }
 
-  sync(units, me, enemy) {
+  sync(units, events, me, enemy) {
     const alive = new Map();
+
+    if (events && events.deadUnits) {
+      for (const tag of events.deadUnits) {
+        let group = resources;
+        let image = resources.get(tag);
+        if (!image) { group = workers; image = workers.get(tag); }
+        if (!image) { group = buildings; image = buildings.get(tag); }
+        if (!image) { group = warriors; image = warriors.get(tag); }
+        if (!image) { group = enemies; image = enemies.get(tag); }
+        if (!image) { group = obstacles; image = obstacles.get(tag); }
+        if (!image) { group = hallucinations; image = hallucinations.get(tag); }
+
+        if (image) {
+          if (image.zone) image.zone.threats.delete(image);
+          removeImage(image, group, tag);
+        }
+      }
+    }
 
     for (const unit of units) {
       alive.set(unit.tag, true);
@@ -219,9 +237,14 @@ function addToZone(image) {
   }
 }
 
-function removeFromZone(image) {
-  if (image && image.zone) {
-    image.zone.removeUnit(image);
+function removeImage(image, group, tag) {
+  if (image) {
+    image.isAlive = false;
+    group.delete(tag);
+
+    if (image.zone) {
+      image.zone.removeUnit(image);
+    }
   }
 }
 
@@ -244,10 +267,7 @@ function removeDeadWorkers(alive) {
         worker.depot.releaseWorker(worker);
       }
 
-      worker.isAlive = false;
-      workers.delete(tag);
-
-      removeFromZone(worker);
+      removeImage(worker, workers, tag);
     }
   }
 }
@@ -255,10 +275,7 @@ function removeDeadWorkers(alive) {
 function removeDeadUnits(units, alive) {
   for (const [tag, unit] of units) {
     if (!alive.get(tag)) {
-      unit.isAlive = false;
-      units.delete(tag);
-
-      removeFromZone(unit);
+      removeImage(unit, units, tag);
     }
   }
 }
@@ -269,10 +286,7 @@ function removeZombieUnits(units, alive) {
   for (const [tag, unit] of units) {
     if (!alive.get(tag)) {
       list.push(unit);
-      unit.isAlive = false;
-      units.delete(tag);
-
-      removeFromZone(unit);
+      removeImage(unit, units, tag);
     }
   }
 

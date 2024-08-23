@@ -44,7 +44,7 @@ export default class Game {
     Enemy.id = this.enemy.id;
 
     Types.sync((await this.client.data({ unitTypeId: true, upgradeId: true })));
-    Units.sync(this.observation.rawData.units, this.me, this.enemy);
+    Units.sync(this.observation.rawData.units, null, this.me, this.enemy);
     Resources.sync(this.observation);
 
     createMap(gameInfo);
@@ -79,7 +79,7 @@ export default class Game {
         syncMap(gameInfo);
 
         Resources.sync(this.observation);
-        Units.sync(this.observation.rawData.units, this.me, this.enemy);
+        Units.sync(this.observation.rawData.units, this.observation.rawData.event, this.me, this.enemy);
 
         countUnits(this.observation, this.me.race);
         countEncounters();
