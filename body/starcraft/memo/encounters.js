@@ -9,6 +9,7 @@ export const VisibleCount = {
   Marine: 0,
   Queen: 0,
   SpawningPool: 0,
+  Zealot: 0,
   Zergling: 0,
 
   Warrior: 0,

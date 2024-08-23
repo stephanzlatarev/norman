@@ -8,13 +8,15 @@ import Priority from "../memo/priority.js";
 import Resources from "../memo/resources.js";
 
 let plan = doStartUp;
-let encounteredZerglingCount = 0;
 let encounteredMarineCount = 0;
+let encounteredZealotCount = 0;
+let encounteredZerglingCount = 0;
 
 export default class PlanInvestmentsMission extends Mission {
 
   run() {
     encounteredMarineCount = Math.max(VisibleCount.Marine, encounteredMarineCount);
+    encounteredZealotCount = Math.max(VisibleCount.Zealot, encounteredZealotCount);
     encounteredZerglingCount = Math.max(VisibleCount.Zergling, encounteredZerglingCount);
 
     plan();
@@ -119,7 +121,7 @@ function doGroundArmyMaxOut() {
   Limit.Gateway = calculateLimitGateway();
   Limit.RoboticsFacility = 1;
 
-  if (encounteredMarineCount >= 6) {
+  if ((encounteredMarineCount >= 6) || (encounteredZealotCount >= 3) || (encounteredZerglingCount >= 12)) {
     Priority.RoboticsBay = 100;
     Priority.ShieldBattery = 100;
     Limit.RoboticsBay = 1;
