@@ -140,7 +140,6 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
         },
         weapon: {
           cooldown: 0,
-          orbGround: type.rangeGround ? Math.ceil(type.rangeGround + unit.radius + 4) : 0,
         },
         armor: {
           healthMax: unit.healthMax,
