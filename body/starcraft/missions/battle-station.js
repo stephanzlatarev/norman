@@ -1,82 +1,162 @@
 import Mission from "../mission.js";
-import { ALERT_WHITE } from "../map/alert.js";
-import Zone from "../map/zone.js";
-
-const SURROUND_BALANCE = 1;
+import Battle from "../battle/battle.js";
 
 export default class BattleStation extends Mission {
 
   run() {
-    for (const zone of Zone.list()) {
-      if (zone.battle) {
-        const battle = zone.battle;
-        const stations = selectStations(battle);
+    for (const battle of Battle.list()) {
+      updateBattleStations(battle);
+    }
+  }
 
-        if (stations.length) {
-          const focus = getFocusStation(battle, stations);
+}
 
-          for (const fighter of battle.fighters) {
-            setStation(fighter, stations, focus);
-          }
-        } else {
-          for (const fighter of battle.fighters) {
-            fighter.close();
-          }
-        }
+function updateBattleStations(battle) {
+  const stations = selectBattleStations(battle);
+  const limit = (battle.range === Battle.RANGE_BACK) ? 1 : 3;
+  let active = [];
 
-        battle.stations = stations;
+  if (stations.size) {
+    // Select active stations by proximity to fighters, up to the limit
+    if (stations.size <= limit) {
+      active = [...stations];
+    } else if (limit === 1) {
+      active = [selectSingleStation(battle, stations)];
+    } else {
+      active = selectMultipleStations(battle, stations, limit);
+    }
+
+    // Assign the fighters to the active stations again by proximity
+    for (const fighter of battle.fighters) {
+      setStation(fighter, stations, active);
+    }
+  }
+
+  battle.setStations(active);
+}
+
+function selectBattleStations(battle) {
+  const stations = new Set();
+  const zones = (battle.range === Battle.RANGE_FRONT) ? selectStationZones(battle, battle.hotspot.front) : battle.hotspot.back;
+
+  for (const zone of zones) {
+    stations.add(getStation(zone));
+  }
+
+  return stations;
+}
+
+function selectStationZones(battle, zones) {
+  if (!zones.size) return new Set();
+
+  let stationZones = new Set();
+  let leastHops = Infinity;
+
+  for (const zone of zones) {
+    const zoneHops = zone.getHopsTo(battle.zone);
+
+    if (zoneHops < leastHops) {
+      stationZones = new Set([zone]);
+      leastHops = zoneHops;
+    } else if (zoneHops === leastHops) {
+      stationZones.add(zone);
+    }
+  }
+
+  return stationZones;
+}
+
+function getStation(zone) {
+  return zone.isDepot ? zone.exitRally : zone.cell;
+}
+
+function selectSingleStation(battle, stations) {
+  let selection = findExistingBattleStation(stations, battle.stations);
+  let selectionDeployments = -1;
+
+  for (const station of stations) {
+    if (!selection || (station.zone.tier.level < selection.zone.tier.level)) {
+      selection = station;
+      selectionDeployments = -1;
+    } else {
+      const deployments = countStationDeployments(battle, station);
+
+      if (selectionDeployments < 0) selectionDeployments = countStationDeployments(battle, selection);
+
+      if (deployments > selectionDeployments) {
+        selection = station;
+        selectionDeployments = deployments;
       }
     }
   }
 
+  return selection;
 }
 
-function setStation(fighter, stations, focus) {
-  // If fight job is still open, or warrior is not yet deployed, then switch it to the focus station
-  if (focus && !fighter.isDeployed) {
-    return fighter.setStation(focus);
+function findExistingBattleStation(stations, battleStations) {
+  for (const station of stations) {
+    for (const one of battleStations) {
+      if (station.zone === one.zone) return station;
+    }
+  }
+}
+
+function selectMultipleStations(battle, stations, limit) {
+  const list = [...stations].map(station => ({ station: station, deployments: countStationDeployments(battle, station) }));
+
+  list.sort((a, b) => (b.deployments - a.deployments));
+
+  if (list.length > limit) {
+    list.length = limit;
   }
 
-  // If fighter is already assigned to a valid station then keep the assigned station
-  if (stations.find(station => (fighter.station === station))) return;
+  return list.map(one => one.station);
+}
 
-  // If fighter is stationed in a zone with a valid station then re-assign the fighter to that station
-  for (const station of stations) {
-    if (fighter.station.zone === station.zone) {
-      return fighter.setStation(station);
+function countStationDeployments(battle, station) {
+  const zone = station.zone;
+  let count = 0;
+
+  for (const fighter of battle.fighters) {
+    const warrior = fighter.assignee;
+
+    if (warrior && warrior.isAlive) {
+      if (warrior.zone === zone) {
+        count += 4;
+      } else if (zone.range.fire.has(warrior.zone)) {
+        count += 3;
+      } else if (zone.range.front.has(warrior.zone)) {
+        count += 2;
+      } else if (zone.range.back.has(warrior.zone)) {
+        count += 1;
+      }
     }
   }
 
-  // If fighter station moved away from battle then re-assign the fighter to that station
-  let backAwayStation;
-  for (const station of stations) {
-    if (station.zone.tier.level >= fighter.zone.tier.level) continue;
-    if (!isNeighborZone(station.zone, fighter.zone)) continue;
+  return count;
+}
 
-    backAwayStation = station;
-  }
-  if (backAwayStation) {
-    return fighter.setStation(backAwayStation);
-  }
+function setStation(fighter, stations, active) {
+  const warrior = fighter.assignee;
 
-  // Otherwise, use the closest station
-  if (fighter.assignee && fighter.isDeployed) {
-    return fighter.setStation(getClosestStation(fighter.assignee, stations));
-  } else if (focus) {
-    return fighter.setStation(focus);
+  if (!warrior || !warrior.isAlive) return;
+
+  if (fighter.isDeployed) {
+
+    // If fighter is stationed in a zone with a valid station, then make sure the fighter is assigned to that station
+    for (const station of stations) {
+      if (fighter.zone === station.zone) {
+        return fighter.setStation(station);
+      }
+    }
+
+    // Otherwise, use the closest station
+    fighter.setStation(getClosestStation(warrior, stations));
+
   } else {
-    return fighter.setStation(stations[0]);
+    // If warrior is not yet deployed, then make sure it is assigned to the closest active station
+    if (active.length) fighter.setStation(getClosestStation(warrior, active));
   }
-}
-
-function isNeighborZone(a, b) {
-  for (const corridor of a.corridors) {
-    for (const neighbor of corridor.zones) {
-      if (b === neighbor) return true;
-    }
-  }
-
-  return false;
 }
 
 function getClosestStation(warrior, stations) {
@@ -93,70 +173,6 @@ function getClosestStation(warrior, stations) {
   }
 
   return closestStation;
-}
-
-function selectStations(battle) {
-  const zones = new Set();
-  const done = new Set();
-
-  let wave = new Set(battle.zones);
-
-  while (wave.size) {
-    const next = new Set();
-
-    for (const zone of wave) {
-      done.add(zone);
-
-      if (isCellInThreatsRange(battle, getStation(zone))) {
-        for (const corridor of zone.corridors) {
-          for (const neighbor of corridor.zones) {
-            if (!done.has(neighbor)) {
-              next.add(neighbor);
-            }
-          }
-        }
-      } else if (zone.alertLevel <= ALERT_WHITE) {
-        zones.add(zone);
-      }
-    }
-
-    wave = next;
-  }
-
-  return [...zones].map(getStation);
-}
-
-function getFocusStation(battle, stations) {
-  if ((stations.length > 1) && (battle.recruitedBalance < SURROUND_BALANCE)) {
-    // We don't have enough army to surround enemy. Focus on the lowest tier station.
-    let focus;
-
-    for (const station of stations) {
-      if (!focus || (station.zone.tier.level < focus.zone.tier.level)) {
-        focus = station;
-      }
-    }
-
-    return focus;
-  }
-}
-
-function getStation(zone) {
-  return zone.isDepot ? zone.exitRally : zone.cell;
-}
-
-function isCellInThreatsRange(battle, cell) {
-  for (const zone of battle.zones) {
-    for (const threat of zone.threats) {
-      if (!threat.type.rangeGround) continue; // TODO: Add range for spell casters
-
-      const range = Math.max(threat.type.rangeGround + 4, 8);
-
-      if (calculateSquareDistance(threat.body, cell) <= range * range) {
-        return true;
-      }
-    }
-  }
 }
 
 function calculateSquareDistance(a, b) {

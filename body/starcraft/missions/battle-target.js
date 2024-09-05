@@ -1,18 +1,17 @@
 import Mission from "../mission.js";
 import Battle from "../battle/battle.js";
-import Zone from "../map/zone.js";
 import Resources from "../memo/resources.js";
 
 export default class BattleTargetMission extends Mission {
 
   run() {
-    for (const zone of Zone.list()) {
-      if (!zone.battle) continue;
-
-      if (zone.battle.mode === Battle.MODE_FIGHT) {
-        setFightTargets(zone.battle);
-      } else if (zone.battle.mode === Battle.MODE_SMASH) {
-        setFightTargets(zone.battle);
+    for (const battle of Battle.list()) {
+      if (battle.mode === Battle.MODE_FIGHT) {
+        setFightTargets(battle);
+      } else if (battle.mode === Battle.MODE_SMASH) {
+        setFightTargets(battle);
+      } else {
+        setKiteTargets(battle);
       }
     }
   }
@@ -28,6 +27,16 @@ function setFightTargets(battle) {
 
     if (warrior) {
       fighter.target = getClosestVisibleTarget(warrior, primaryTargets) || getClosestVisibleTarget(warrior, targets);
+    }
+  }
+}
+
+function setKiteTargets(battle) {
+  for (const fighter of battle.fighters) {
+    const warrior = fighter.assignee;
+
+    if (warrior) {
+      fighter.target = getClosestVisibleTarget(warrior, warrior.zone.threats) || getClosestVisibleTarget(warrior, battle.zone.threats);
     }
   }
 }

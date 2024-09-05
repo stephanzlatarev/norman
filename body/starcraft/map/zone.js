@@ -1,9 +1,16 @@
 import Pin from "./pin.js";
 
+const FIRE_RANGE = 15;
+const FRONT_RANGE = 10;
+
 const zones = [];
 const knownThreats = new Map();
 
 export default class Zone extends Pin {
+
+  hops = new Map();
+  neighbors = new Set();
+  range = { zones: new Set(), fire: new Set(), front: new Set(), back: new Set() };
 
   buildings = new Set();
   warriors = new Set();
@@ -18,6 +25,22 @@ export default class Zone extends Pin {
     this.cells = new Set();
 
     zones.push(this);
+  }
+
+  getHopsTo(zone) {
+    if (zone === this) return 0;
+
+    let hops = this.hops.get(zone);
+
+    if (!hops) {
+      calculateAllHopsFromZone(this);
+
+      hops = this.hops.get(zone);
+    }
+
+    if (!hops) console.log("Ooops! No hops from", this.name, "to", zone.name);
+
+    return hops;
   }
 
   addUnit(unit) {
@@ -89,6 +112,15 @@ export default class Zone extends Pin {
         cell.zone = this;
       }
 
+      for (const zone of Zone.list()) {
+        if (zone.hops.has(old)) zone.hops.set(this, zone.hops.get(old));
+        replaceInSet(zone.neighbors, old, this);
+        replaceInSet(zone.range.zones, old, this);
+        replaceInSet(zone.range.fire, old, this);
+        replaceInSet(zone.range.front, old, this);
+        replaceInSet(zone.range.back, old, this);
+      }
+
       old.remove();
     } else {
       console.log("Only replacement of a corridor with another corridor is supported!");
@@ -158,6 +190,8 @@ export function createZones(board) {
   }
 
   labelZones(zones);
+  identifyNeighbors();
+  identifyRanges();
 }
 
 function calculateDistance(a, b) {
@@ -213,5 +247,92 @@ function labelZones(zones) {
         corridor.name = LETTERS[col] + row + "-";
       }
     }
+  }
+}
+
+function identifyNeighbors() {
+  for (const zone of zones) {
+    if (zone.corridors) {
+      for (const corridor of zone.corridors) {
+        zone.neighbors.add(corridor);
+
+        for (const neighbor of corridor.zones) {
+          if (neighbor !== zone) zone.neighbors.add(neighbor);
+        }
+      }
+    } else if (zone.zones) {
+      for (const neighbor of zone.zones) {
+        zone.neighbors.add(neighbor);
+      }
+    }
+  }
+}
+
+function identifyRanges() {
+  for (const zone of zones) {
+    identifyRangesInRay(zone, zone, true, new Set());
+  }
+}
+
+function identifyRangesInRay(zone, ray, isInFireRange, skip) {
+  const squareDistance = (zone.x - ray.x) * (zone.x - ray.x) + (zone.y - ray.y) * (zone.y - ray.y);
+  let nextIsInFireRange = isInFireRange;
+
+  zone.range.zones.add(ray);
+  skip.add(ray);
+
+  if (isInFireRange) {
+    const squareFireRange = (zone.r + FIRE_RANGE) * (zone.r + FIRE_RANGE);
+
+    if (squareDistance < squareFireRange) {
+      zone.range.fire.add(ray);
+    } else {
+      zone.range.front.add(ray);
+      nextIsInFireRange = false;
+    }
+  } else {
+    const squareFrontRange = (zone.r + FIRE_RANGE + FRONT_RANGE) * (zone.r + FIRE_RANGE + FRONT_RANGE);
+
+    if (squareDistance < squareFrontRange) {
+      zone.range.front.add(ray);
+    } else {
+      zone.range.back.add(ray);
+      return;
+    }
+  }
+
+  for (const next of ray.neighbors) {
+    if (next.cells.size && !skip.has(next)) {
+      identifyRangesInRay(zone, next, nextIsInFireRange, skip);
+    }
+  }
+}
+
+function calculateAllHopsFromZone(zone) {
+  let wave = new Set(zone.neighbors);
+  let traversed = new Set([zone]);
+  let distance = 1;
+
+  while (wave.size) {
+    const next = new Set();
+
+    for (const one of wave) {
+      zone.hops.set(one, distance);
+      traversed.add(one);
+
+      for (const neighbor of one.neighbors) {
+        if (!neighbor.isCorridor && !traversed.has(neighbor)) next.add(neighbor);
+      }
+    }
+
+    wave = next;
+    distance++;
+  }
+}
+
+function replaceInSet(set, previous, current) {
+  if (set.has(previous)) {
+    set.delete(previous);
+    set.add(current);
   }
 }

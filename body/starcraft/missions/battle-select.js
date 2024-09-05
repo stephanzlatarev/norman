@@ -1,23 +1,31 @@
 import Mission from "../mission.js";
 import Battle from "../battle/battle.js";
-import Zone from "../map/zone.js";
-
-const ALERT_YELLOW = 4;
+import { hotspots } from "../map/alert.js";
 
 export default class BattleSelectMission extends Mission {
 
   run() {
-    for (const zone of Zone.list()) {
-      if (zone.alertLevel === ALERT_YELLOW) {
-        if (!zone.battle) {
-          zone.battle = new Battle(zone);
-        }
+    const battles = new Set();
 
-        zone.battle.priority = 100 - zone.tier.level;
+    // Create or move battles
+    for (const hotspot of hotspots) {
+      let battle = Battle.list().find(battle => hotspot.zones.has(battle.zone));
 
-        zone.battle.run();
-      } else if (zone.battle) {
-        zone.battle.close();
+      if (battle) {
+        battle.setHotspot(hotspot);
+      } else {
+        battle = new Battle(hotspot);
+      }
+
+      battles.add(battle);
+    }
+
+    // Run all active battles. Close the inactive battles.
+    for (const battle of Battle.list()) {
+      if (battles.has(battle)) {
+        battle.run();
+      } else {
+        battle.close();
       }
     }
   }

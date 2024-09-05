@@ -10,14 +10,21 @@ export default class Detect extends Job {
   constructor(battle) {
     super("Observer");
 
-    this.priority = 0;
+    this.battle = battle;
     this.zone = battle.zone;
-    this.details = this.summary + " " + battle.zone.name;
+    this.details = "Detect " + battle.zone.name;
     this.isCommitted = false;
 
-    this.battle = battle;
     this.shield = 0;
     this.loopsInDirection = 0;
+  }
+
+  updateBattle(battle) {
+    this.battle = battle;
+    this.zone = battle.zone;
+
+    this.summary = "Detect " + battle.zone.name;
+    this.details = this.summary;
   }
 
   execute() {
@@ -36,7 +43,7 @@ export default class Detect extends Job {
       Order.move(observer, findClosestInvisibleThreat(observer, threats));
     } else if ((observer.armor.shield < this.shield) || isInEnemyFireRange(this.battle, observer)) {
       this.stayAlive();
-    } else if (!this.battle.zones.has(observer.zone)) {
+    } else if (!this.battle.hotspot.zones.has(observer.zone)) {
       // Rally to battle zone
       // TODO: Make sure rally move doesn't go through threat zones
       Order.move(observer, this.zone);
@@ -55,7 +62,7 @@ export default class Detect extends Job {
     let closestEnemy;
     let closestDistance = Infinity;
 
-    for (const zone of this.battle.zones) {
+    for (const zone of this.battle.hotspot.zones) {
       for (const threat of zone.threats) {
         if (threat.type.damageAir > 0) {
           const distance = calculateSquareDistance(observer.body, threat.body);
@@ -139,7 +146,7 @@ function isInSight(observer, body) {
 }
 
 function isInEnemyFireRange(battle, observer) {
-  for (const zone of battle.zones) {
+  for (const zone of battle.hotspot.zones) {
     for (const threat of zone.threats) {
       const fireRange = threat.type.rangeAir + SAFETY_DISTANCE;
 

@@ -2,8 +2,9 @@ import Resources from "../memo/resources.js";
 import Detect from "../jobs/detect.js";
 
 const ATTACK_BALANCE = 1.6;
-const RALLY_BALANCE  = 1.0;
 const DEFEND_BALANCE = 0.7;
+
+const battles = [];
 
 export default class Battle {
 
@@ -11,33 +12,76 @@ export default class Battle {
   static MODE_RALLY = "rally";
   static MODE_SMASH = "smash";
 
-  mode = Battle.MODE_RALLY;
+  static RANGE_FRONT = "front";
+  static RANGE_BACK = "back";
 
   recruitedBalance = 0;
   deployedBalance = 0;
 
-  stations;
+  mode = Battle.MODE_RALLY;
+  range = Battle.RANGE_BACK;
+  stations = [];
+
   detector;
   fighters;
 
-  constructor(zone) {
-    console.log("Battle", zone.name, "begins");
+  constructor(hotspot) {
+    console.log("Battle", hotspot.center.name, "begins");
 
-    zone.battle = this;
+    this.hotspot = hotspot;
+    this.zones = hotspot.center.range.zones;
 
-    this.zone = zone;
-    this.zones = getBattleZones(zone);
+    this.zone = hotspot.center;
+    this.priority = 100 - this.zone.tier.level;
 
-    this.stations = [];
     this.detector = null;
     this.fighters = [];
-    this.priority = 0;
+
+    battles.push(this);
+  }
+
+  setHotspot(hotspot) {
+    this.hotspot = hotspot;
+    this.zones = hotspot.center.range.zones;
+
+    if (this.zone !== hotspot.center) {
+      console.log("Battle", this.zone.name, "moves to", hotspot.center.name);
+
+      this.zone = hotspot.center;
+      this.priority = 100 - this.zone.tier.level;
+
+      if (this.detector) {
+        this.detector.updateBattle(this);
+      }
+
+      for (const fighter of this.fighters) {
+        fighter.updateBattle(this);
+      }
+    }
+  }
+
+  setStations(stations) {
+    this.stations = stations;
+  }
+
+  getClosestStation(pos) {
+    let closestStation;
+    let closestDistance = Infinity;
+
+    for (const station of this.stations) {
+      const distance = calculateSquareDistance(pos, station);
+
+      if (distance < closestDistance) {
+        closestStation = station;
+        closestDistance = distance;
+      }
+    }
+
+    return closestStation;
   }
 
   run() {
-    const threats = [];
-
-    if (this.stations.length && this.fighters.find(fighter => !! fighter.assignee)) {
+    if (this.stations.length && this.fighters.find(fighter => !!fighter.assignee)) {
       // At least one fighter is assigned. We need detection
       if (!this.detector || this.detector.isDone || this.detector.isFailed) {
         this.detector = new Detect(this);
@@ -50,127 +94,65 @@ export default class Battle {
       }
     }
 
-    for (const zone of this.zones) {
-      for (const threat of zone.threats) {
+    this.recruitedBalance = calculateBalance(this, false);
+    this.deployedBalance = calculateBalance(this, true);
 
-        // Don't count enemy workers as threats because they are not ranged and trading warriors for enemy workers is ok.
-        if (threat.type.isWorker) continue;
-
-        // TODO: Add spell casters and later air-hitters
-        if (threat.type.damageGround) {
-          threats.push(threat);
-        }
-      }
-    }
-
-    this.deployedBalance = calculateBalance(this.fighters, threats, true);
-    this.recruitedBalance = calculateBalance(this.fighters, threats, false);
-
-    if ((Resources.supplyUsed > 190) && ((this.deployedBalance >= ATTACK_BALANCE) || areEnoughFightersRallied(this.fighters, this.zones))) {
-      // Keep recruited balance low so that new warriors are recruited
-      this.recruitedBalance = 0;
-
-      // Keep attacking
-      this.deployedBalance = Infinity;
+    if ((Resources.supplyUsed > 190) && ((this.deployedBalance >= ATTACK_BALANCE) || areEnoughFightersRallied(this))) {
       this.mode = Battle.MODE_FIGHT;
-    } else if (threats.length) {
+      this.range = Battle.RANGE_FRONT;
+    } else if (this.deployedBalance === Infinity) {
+      this.mode = Battle.MODE_SMASH;
+      this.range = Battle.RANGE_FRONT;
+    } else {
+      let shouldFight;
 
       if (this.zone.tier.level === 1) {
-        if ((this.deployedBalance >= DEFEND_BALANCE) || areEnoughFightersRallied(this.fighters, this.zones)) {
-          this.mode = Battle.MODE_FIGHT;
-        } else {
-          this.mode = Battle.MODE_RALLY;
-        }
+        shouldFight = (this.deployedBalance >= DEFEND_BALANCE) || areEnoughFightersRallied(this);
       } else if (this.zone.tier.level === 2) {
-        if (this.deployedBalance >= DEFEND_BALANCE) {
-          this.mode = Battle.MODE_FIGHT;
-        } else {
-          this.mode = Battle.MODE_RALLY;
-        }
+        shouldFight = (this.deployedBalance >= DEFEND_BALANCE);
       } else {
-        if (this.deployedBalance >= ATTACK_BALANCE) {
-          this.mode = Battle.MODE_FIGHT;
-        } else if (this.deployedBalance < RALLY_BALANCE) {
-          this.mode = Battle.MODE_RALLY;
-        }
+        shouldFight = (this.deployedBalance >= ATTACK_BALANCE);
       }
 
-    } else {
-      // Keep recruited balance such that there are at least three fighters per target
-      this.recruitedBalance = this.fighters.length / (1 + this.zone.threats.size * 3);
-
-      // Keep attacking
-      this.deployedBalance = Infinity;
-      this.mode = Battle.MODE_SMASH;
+      if (shouldFight) {
+        this.mode = Battle.MODE_FIGHT;
+        this.range = Battle.RANGE_FRONT;
+      } else {
+        this.mode = Battle.MODE_RALLY;
+        this.range = Battle.RANGE_BACK;
+      }
     }
-
-    if (this.detector) this.detector.priority = this.priority;
-    for (const fighter of this.fighters) fighter.priority = this.priority;
   }
 
   close() {
-    console.log("Battle", this.zone.name, "ends");
+    const index = battles.indexOf(this);
 
-    this.zone.battle = null;
-    if (this.detector) this.detector.close(true);
+    if (index >= 0) {
+      console.log("Battle", this.zone.name, "ends");
 
-    for (const job of [...this.fighters]) {
-      job.close(true);
+      if (this.detector) this.detector.close(true);
+
+      for (const job of [...this.fighters]) {
+        job.close(true);
+      }
+
+      battles.splice(index, 1);
     }
+  }
+
+  static list() {
+    return [...battles];
   }
 
 }
 
-function getBattleZones(zone) {
-  const zones = new Set();
+function areEnoughFightersRallied(battle) {
+  const zones = battle.zone.range.zones;
 
-  zones.add(zone);
-
-  for (const corridor of zone.corridors) {
-    if (corridor.cells.size) zones.add(corridor);
-
-    for (const neighbor of corridor.zones) {
-      zones.add(neighbor);
-    }
-  }
-
-  return zones;
-}
-
-function calculateBalance(fighters, threats, countDeployedOnly) {
-  let warriorDamage = 0;
-  let warriorHealth = 0;
-  let enemyDamage = 0;
-  let enemyHealth = 0;
-
-  for (const fighter of fighters) {
-    const warrior = fighter.assignee;
-
-    if (!warrior || !warrior.isAlive) continue;
-    if (countDeployedOnly && !fighter.isDeployed) continue;
-
-    warriorDamage += warrior.type.damageGround;
-    warriorHealth += warrior.armor.total;
-  }
-
-  for (const enemy of threats) {
-    if (enemy.type.damageGround > 0) {
-      enemyDamage += enemy.type.damageGround;
-      enemyHealth += enemy.armor.total;
-    }
-  }
-
-  const warriorStrength = warriorHealth * warriorDamage;
-  const enemyStrength = enemyHealth * enemyDamage;
-
-  return (enemyStrength > 0) ? (warriorStrength / enemyStrength) : Infinity;
-}
-
-function areEnoughFightersRallied(fighters, zones) {
   let deployed = 0;
   let rallying = 0;
 
-  for (const fighter of fighters) {
+  for (const fighter of battle.fighters) {
     const warrior = fighter.assignee;
 
     if (warrior && warrior.isAlive) {
@@ -183,4 +165,43 @@ function areEnoughFightersRallied(fighters, zones) {
   }
 
   return (deployed > rallying * 4);
+}
+
+function calculateBalance(battle, isDeployed) {
+  let warriorDamage = 0;
+  let warriorHealth = 0;
+  let enemyDamage = 0;
+  let enemyHealth = 0;
+
+  for (const fighter of battle.fighters) {
+    const warrior = fighter.assignee;
+
+    if (!warrior || !warrior.isAlive) continue;
+    if (isDeployed && !battle.zone.range.zones.has(warrior.zone) && !isCloseTo(warrior.body, fighter.station)) continue;
+
+    warriorDamage += warrior.type.damageGround;
+    warriorHealth += warrior.armor.total;
+  }
+
+  for (const one of battle.zone.range.zones) {
+    for (const enemy of one.threats) {
+      if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
+        enemyDamage += enemy.type.damageGround;
+        enemyHealth += enemy.armor.total;
+      }
+    }
+  }
+
+  const warriorStrength = warriorHealth * warriorDamage;
+  const enemyStrength = enemyHealth * enemyDamage;
+
+  return (enemyStrength > 0) ? (warriorStrength / enemyStrength) : Infinity;
+}
+
+function calculateSquareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+}
+
+function isCloseTo(a, b) {
+  return (Math.abs(a.x - b.x) <= 6) && (Math.abs(a.y - b.y) <= 6);
 }

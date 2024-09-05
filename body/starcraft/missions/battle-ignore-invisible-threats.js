@@ -1,18 +1,16 @@
 import Mission from "../mission.js";
 import Battle from "../battle/battle.js";
-import Zone from "../map/zone.js";
 
 export default class BattleIgnoreInvisibleThreatsMission extends Mission {
 
   run() {
-    for (const zone of Zone.list()) {
-      if (!zone.battle) continue;
-      if (zone.battle.detector && zone.battle.detector.assignee) continue;
+    for (const battle of Battle.list()) {
+      if (battle.detector && battle.detector.assignee) continue;
 
-      if (zone.battle.mode === Battle.MODE_FIGHT) {
-        ignoreInvisibleThreats(zone);
-      } else if (zone.battle.mode === Battle.MODE_SMASH) {
-        ignoreInvisibleThreats(zone);
+      if (battle.mode === Battle.MODE_FIGHT) {
+        ignoreInvisibleThreats(battle.zone);
+      } else if (battle.mode === Battle.MODE_SMASH) {
+        ignoreInvisibleThreats(battle.zone);
       }
     }
   }

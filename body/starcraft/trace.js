@@ -1,5 +1,6 @@
 import Job from "./job.js";
 import Units from "./units.js";
+import Battle from "./battle/battle.js";
 import Zone from "./map/zone.js";
 
 const Color = {
@@ -9,6 +10,7 @@ const Color = {
   Yellow: { r: 200, g: 200, b: 0 },
   Orange: { r: 200, g: 100, b: 0 },
   Red: { r: 200, g: 0, b: 0 },
+  Pink: { r: 200, g: 100, b: 100 },
   Purple: { r: 200, g: 0, b: 200 },
   Unknown: { r: 100, g: 100, b: 100 },
 
@@ -19,6 +21,7 @@ const Color = {
   Corridor: { r: 0, g: 200, b: 200 },
   Enemy: { r: 200, g: 0, b: 0 },
 };
+const ALERT_COLOR = [Color.Unknown, Color.Blue, Color.Green, Color.White, Color.Yellow, Color.Orange, Color.Pink, Color.Red];
 
 export default class Trace {
 
@@ -44,7 +47,7 @@ function traceZones(texts, lines) {
   for (const zone of Zone.list()) {
     const point = { x: zone.x, y: zone.y, z: 15 };
 
-    texts.push({ text: zone.name, worldPos: { ...point, z: point.z + 1 }, size: 40 });
+    texts.push({ text: zone.name, worldPos: { ...point, z: point.z + 1 }, size: 40, color: ALERT_COLOR[zone.alertLevel] });
     lines.push({ line: { p0: point, p1: { ...point, z: 0 } }, color: Color.Corridor });
 
     for (const corridor of zone.corridors) {
@@ -173,7 +176,6 @@ function traceThreats(texts, spheres) {
   } 
 }
 
-const ALERT_COLOR = [Color.Unknown, Color.Blue, Color.Green, Color.White, Color.Yellow, Color.Orange, Color.Red];
 let alertbox;
 function traceAlertLevels(texts) {
   texts.push({ text: "Alert levels:", virtualPos: { x: 0.55, y: 0.05 }, size: 16 });
@@ -242,9 +244,9 @@ function traceBattles(texts, boxes, lines) {
   texts.push({ text: "Battles:", virtualPos: { x: 0.8, y: 0.3 }, size: 16 });
   texts.push({ text: "Tier Zone Recruit/Rallied Mode", virtualPos: { x: 0.8, y: 0.31 }, size: 16 });
 
-  for (const zone of Zone.list().filter(zone => !!zone.battle).sort((a, b) => (a.tier.level - b.tier.level))) {
+  for (const battle of Battle.list().sort((a, b) => (b.priority - a.priority))) {
+    const zone = battle.zone;
     const text = [threeletter(" ", zone.tier.level), threeletter(" ", zone.name)];
-    const battle = zone.battle;
 
     text.push(balanceText(battle.recruitedBalance));
     text.push(balanceText(battle.deployedBalance));
