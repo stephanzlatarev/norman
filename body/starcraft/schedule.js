@@ -117,10 +117,8 @@ function findCandidate(job) {
   const zone = job.zone;
 
   if (!profile) return;
-
-  if (profile.tag) {
-    return Units.get(profile.tag);
-  }
+  if (profile.tag) return Units.get(profile.tag);
+  if (profile.type.name && !ActiveCount[profile.type.name]) return;
 
   const candidates = profile.type.isWorker ? Units.workers() : Units.warriors();
 

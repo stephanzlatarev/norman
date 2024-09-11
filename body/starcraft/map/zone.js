@@ -189,6 +189,8 @@ export function createZones(board) {
     corridor.distance = calculateDistance(...corridor.zones);
   }
 
+  addRemainingCellsToZones(board, zones);
+
   labelZones(zones);
   identifyNeighbors();
   identifyRanges();
@@ -334,5 +336,36 @@ function replaceInSet(set, previous, current) {
   if (set.has(previous)) {
     set.delete(previous);
     set.add(current);
+  }
+}
+
+function addRemainingCellsToZones(board, zones) {
+  const expandingZones = [...zones].filter(zone => (zone.cells.size > 0));
+
+  for (const row of board.cells) {
+    for (const cell of row) {
+      if (!cell.zone) {
+        addCellToClosestZone(cell, expandingZones);
+      }
+    }
+  }
+}
+
+function addCellToClosestZone(cell, zones) {
+  let closestZone;
+  let closestDistance = Infinity;
+
+  for (const zone of zones) {
+    const distance = Math.abs(zone.x - cell.x) + Math.abs(zone.y - cell.y);
+
+    if (distance < closestDistance) {
+      closestZone = zone;
+      closestDistance = distance;
+    }
+  }
+
+  if (closestZone) {
+    cell.zone = closestZone;
+    closestZone.cells.add(cell);
   }
 }

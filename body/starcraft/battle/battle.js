@@ -103,6 +103,9 @@ export default class Battle {
     } else if (this.deployedBalance === Infinity) {
       this.mode = Battle.MODE_SMASH;
       this.range = Battle.RANGE_FRONT;
+    } else if (isSmallFight(this)) {
+      this.mode = Battle.MODE_SMASH;
+      this.range = Battle.RANGE_FRONT;
     } else {
       let shouldFight;
 
@@ -147,8 +150,6 @@ export default class Battle {
 }
 
 function areEnoughFightersRallied(battle) {
-  const zones = battle.zone.range.zones;
-
   let deployed = 0;
   let rallying = 0;
 
@@ -156,7 +157,7 @@ function areEnoughFightersRallied(battle) {
     const warrior = fighter.assignee;
 
     if (warrior && warrior.isAlive) {
-      if (zones.has(warrior.zone)) {
+      if (battle.zones.has(warrior.zone)) {
         deployed++;
       } else {
         rallying++;
@@ -167,9 +168,34 @@ function areEnoughFightersRallied(battle) {
   return (deployed > rallying * 4);
 }
 
+function isSmallFight(battle) {
+  let warriorCount = 0;
+  let enemyCount = 0;
+
+  for (const fighter of battle.fighters) {
+    const warrior = fighter.assignee;
+
+    if (warrior && warrior.isAlive && battle.zones.has(warrior.zone)) {
+      warriorCount++;
+    }
+  }
+
+  for (const one of battle.zones) {
+    for (const enemy of one.threats) {
+      if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
+        enemyCount++;
+      }
+    }
+  }
+
+  return (enemyCount <= 3) && (warriorCount >= enemyCount);
+}
+
 function calculateBalance(battle, isDeployed) {
+  let warriorCount = 0;
   let warriorDamage = 0;
   let warriorHealth = 0;
+  let enemyCount = 0;
   let enemyDamage = 0;
   let enemyHealth = 0;
 
@@ -177,14 +203,17 @@ function calculateBalance(battle, isDeployed) {
     const warrior = fighter.assignee;
 
     if (!warrior || !warrior.isAlive) continue;
-    if (isDeployed && !battle.zone.range.zones.has(warrior.zone) && !isCloseTo(warrior.body, fighter.station)) continue;
+    if (isDeployed && !battle.zones.has(warrior.zone) && !isCloseTo(warrior.body, fighter.station)) continue;
 
+    warriorCount++;
     warriorDamage += warrior.type.damageGround;
     warriorHealth += warrior.armor.total;
   }
 
-  for (const one of battle.zone.range.zones) {
+  for (const one of battle.zones) {
     for (const enemy of one.threats) {
+      enemyCount++;
+
       if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
         enemyDamage += enemy.type.damageGround;
         enemyHealth += enemy.armor.total;
@@ -195,7 +224,13 @@ function calculateBalance(battle, isDeployed) {
   const warriorStrength = warriorHealth * warriorDamage;
   const enemyStrength = enemyHealth * enemyDamage;
 
-  return (enemyStrength > 0) ? (warriorStrength / enemyStrength) : Infinity;
+  if (enemyStrength > 0) {
+    return (warriorStrength / enemyStrength);
+  } else if (warriorCount < enemyCount * 3) {
+    return 0;
+  } else {
+    return Infinity;
+  }
 }
 
 function calculateSquareDistance(a, b) {

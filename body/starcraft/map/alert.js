@@ -32,19 +32,9 @@ export function syncAlerts() {
     }
   }
 
-  increaseAlertLevelForZonesByRange(zones);
-  increaseAlertLevelForZonesWithoutSecureAccess(zones, bases, army);
-
   identifyHotspots(zones);
-}
-
-function increaseAlertLevelForZonesByRange(zones) {
-  for (const zone of zones) {
-    if (zone.alertLevel === ALERT_RED) {
-      for (const one of zone.range.fire) if (one.alertLevel < ALERT_ORANGE) one.alertLevel = ALERT_ORANGE;
-      for (const one of zone.range.front) if (one.alertLevel < ALERT_YELLOW) one.alertLevel = ALERT_YELLOW;
-    }
-  }
+  increaseAlertLevelForHotspotFronts();
+  increaseAlertLevelForZonesWithoutSecureAccess(zones, bases, army);
 }
 
 function increaseAlertLevelForZonesWithoutSecureAccess(zones, bases, army) {
@@ -93,19 +83,26 @@ class Hotspot {
     this.front = new Set();
     this.back = new Set();
 
-    for (const zone of center.range.fire) {
-      this.fire.add(zone);
-      this.zones.add(zone);
-    }
+    if (doesZoneThreatenNeighbors(center)) {
+      for (const zone of center.range.fire) {
+        this.fire.add(zone);
+        this.zones.add(zone);
+      }
 
-    for (const zone of center.range.front) {
-      this.front.add(zone);
-      this.zones.add(zone);
-    }
+      for (const zone of center.range.front) {
+        this.front.add(zone);
+        this.zones.add(zone);
+      }
 
-    for (const zone of center.range.back) {
-      this.back.add(zone);
-      this.zones.add(zone);
+      for (const zone of center.range.back) {
+        this.back.add(zone);
+        this.zones.add(zone);
+      }
+    } else {
+      this.fire.add(center);
+      this.front.add(center);
+      this.back.add(center);
+      this.zones.add(center);
     }
   }
 
@@ -156,5 +153,25 @@ function identifyHotspots(zones) {
         hotspots.delete(another);
       }
     }
+  }
+}
+
+function doesZoneThreatenNeighbors(zone) {
+  let count = 0;
+
+  for (const threat of zone.threats) {
+    // TODO: Add spell casters and later air-hitters
+    if (!threat.type.isWorker && threat.type.damageGround) {
+      count++;
+    }
+  }
+
+  return (count > 2);
+}
+
+function increaseAlertLevelForHotspotFronts() {
+  for (const hotspot of hotspots) {
+    for (const zone of hotspot.front) if (zone.alertLevel < ALERT_YELLOW) zone.alertLevel = ALERT_YELLOW;
+    for (const zone of hotspot.fire) if (zone.alertLevel < ALERT_ORANGE) zone.alertLevel = ALERT_ORANGE;
   }
 }

@@ -51,6 +51,7 @@ function hireIdleWarriorsInBattleZone(battle, isAirBattle) {
   for (const warrior of Units.warriors().values()) {
     if (warrior.isAlive && (!warrior.job || (warrior.job.priority < battle.priority)) && battle.hotspot.zones.has(warrior.zone)) {
       if (isAirBattle && (GROUND_HITTING_WARRIORS.indexOf(warrior.type.name) >= 0)) continue;
+      if (ALL_WARRIORS.indexOf(warrior.type.name) < 0) continue;
 
       const fighter = new Fight(battle, warrior.type.name, battle.getClosestStation(warrior.body));
       fighter.priority = battle.priority;
@@ -68,8 +69,10 @@ function maintainFilledFightJobs(battle) {
 }
 
 function maintainOpenFightJobs(battle, focus, isAirBattle) {
-  if ((battle.recruitedBalance < RECRUIT_BALANCE) || (battle === focus)) {
-    const priority = (battle.recruitedBalance < RECRUIT_BALANCE) ? battle.priority : 0;
+  const isRecruitBalanceLow = (battle.recruitedBalance < RECRUIT_BALANCE);
+
+  if (isRecruitBalanceLow || (battle === focus)) {
+    const priority = isRecruitBalanceLow ? battle.priority : 0;
 
     if (battle.zone.threats.size > 2) {
       openJobs(battle, priority, "Sentry", "Stalker");
@@ -82,9 +85,9 @@ function maintainOpenFightJobs(battle, focus, isAirBattle) {
       }
     } else {
       // Make sure we don't overreact to individual enemy units in our territory
-      if (battle.fighters.length < 3) openJobs(battle, priority, "Stalker");
+      if (battle.fighters.length < 3) openJobs(battle, priority, "Stalker", "Zealot");
 
-      closeOpenJobs(battle, "Colossus", "Immortal", "Sentry", "Zealot");
+      closeOpenJobs(battle, "Colossus", "Immortal", "Sentry");
     }
   } else {
     closeOpenJobs(battle, ...ALL_WARRIORS);
