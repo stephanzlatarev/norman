@@ -85,7 +85,7 @@ function maintainOpenFightJobs(battle, focus, isAirBattle) {
       }
     } else {
       // Make sure we don't overreact to individual enemy units in our territory
-      if (battle.fighters.length < 3) openJobs(battle, priority, "Stalker", "Zealot");
+      if ((battle === focus) || (battle.fighters.length < 3)) openJobs(battle, priority, "Stalker", "Zealot");
 
       closeOpenJobs(battle, "Colossus", "Immortal", "Sentry");
     }

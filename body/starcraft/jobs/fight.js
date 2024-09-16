@@ -120,30 +120,39 @@ export default class Fight extends Job {
     const warrior = this.assignee;
     const target = this.target;
 
-    if (warrior.weapon.cooldown > 1) {
-      // TODO: Do for ground or air range depending on the type of the target
-      if (target.type.rangeGround > warrior.type.rangeGround) {
-        // When target has larger range step towards it
-        Order.move(warrior, target.body);
-      } else {
-        const distance = Math.sqrt(calculateSquareDistance(warrior.body, target.body));
-        const range = target.body.isFlying ? warrior.type.rangeAir : warrior.type.rangeGround;
-
-        if (distance + (target.type.movementSpeed - warrior.type.movementSpeed) * warrior.weapon.cooldown >= range - 1) {
-          // Make sure warrior can walk to target and be within range at the moment the weapon is ready to fire
-          Order.move(warrior, target.body);
-        } else {
-          // Otherwise, step back to the assigned station
-          Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
-        }
-      }
-    } else if (target.lastSeen < warrior.lastSeen) {
+    if (target.lastSeen < warrior.lastSeen) {
       if (isClose(warrior.body, target.body, 5)) {
         // Cannot hit this target. Either it's hidden and we don't have detection, or it's gone
         this.target.zone.threats.delete(target);
       } else {
         // Move closer to see the target so that warrior can attack it
         Order.move(warrior, target.body);
+      }
+    } else if (warrior.weapon.cooldown > 3) {
+      const range = target.body.isFlying ? warrior.type.rangeAir : warrior.type.rangeGround;
+      const distance = Math.sqrt(calculateSquareDistance(warrior.body, target.body));
+      const closestDistanceOnReadyWeapon = distance + (target.type.movementSpeed - warrior.type.movementSpeed) * warrior.weapon.cooldown;
+      const stationRange = Math.max(range, 5);
+
+      if (closestDistanceOnReadyWeapon >= range - 1) {
+        // Make sure warrior can walk to target and be within range at the moment the weapon is ready to fire
+        Order.move(warrior, target.body);
+        this.attackMoveForward = true;
+      } else if (this.attackMoveForward && (closestDistanceOnReadyWeapon >= range - 2)) {
+        // If just crossed the distance to be within range, move towards the target for a bit more
+        Order.move(warrior, target.body);
+        this.attackMoveForward = true;
+      } else if (isClose(warrior.body, this.station, stationRange)) {
+        // Step away to free room for other fighters
+        const dx = (warrior.body.x > target.body.x) ? stationRange : -stationRange;
+        const dy = (warrior.body.y > target.body.y) ? stationRange : -stationRange;
+
+        Order.move(warrior, { x: warrior.body.x + dx, y: warrior.body.y + dy });
+        this.attackForth = false;
+      } else {
+        // Otherwise, step back to the assigned station
+        Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
+        this.attackMoveForward = false;
       }
     } else {
       Order.attack(warrior, target);

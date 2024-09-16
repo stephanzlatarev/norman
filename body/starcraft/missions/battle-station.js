@@ -46,19 +46,41 @@ function selectBattleStations(battle) {
   return stations;
 }
 
+// Selects the closest zones in each corridor direction from the battle zone
 function selectStationZones(battle, zones) {
-  if (!zones.size) return new Set();
+  const stationZones = new Set();
 
+  if (!zones.size) return stationZones;
+
+  if (zones.has(battle.zone)) {
+    stationZones.add(battle.zone);
+    return stationZones;
+  }
+
+  for (const corridor of battle.zone.corridors) {
+    const closestZones = getClosestZonesInDirection(zones, battle.zone, corridor);
+
+    for (const zone of closestZones) {
+      stationZones.add(zone);
+    }
+  }
+
+  return stationZones;
+}
+
+function getClosestZonesInDirection(zones, center, direction) {
   let stationZones = new Set();
-  let leastHops = Infinity;
+  let leastDistance = Infinity;
 
   for (const zone of zones) {
-    const zoneHops = zone.getHopsTo(battle.zone);
+    const hops = center.getHopsTo(zone);
 
-    if (zoneHops < leastHops) {
+    if (!hops || (hops.direction !== direction)) continue;
+
+    if (hops.distance < leastDistance) {
       stationZones = new Set([zone]);
-      leastHops = zoneHops;
-    } else if (zoneHops === leastHops) {
+      leastDistance = hops.distance;
+    } else if (hops.distance === leastDistance) {
       stationZones.add(zone);
     }
   }

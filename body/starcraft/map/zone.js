@@ -28,7 +28,7 @@ export default class Zone extends Pin {
   }
 
   getHopsTo(zone) {
-    if (zone === this) return 0;
+    if (zone === this) return { distance: 0 };
 
     let hops = this.hops.get(zone);
 
@@ -311,19 +311,35 @@ function identifyRangesInRay(zone, ray, isInFireRange, skip) {
 }
 
 function calculateAllHopsFromZone(zone) {
-  let wave = new Set(zone.neighbors);
+  const directions = new Map();
+  let wave = new Set();
   let traversed = new Set([zone]);
   let distance = 1;
+
+  for (const corridor of zone.corridors) {
+    for (const neighbor of corridor.zones) {
+      if (neighbor !== zone) {
+        wave.add(neighbor);
+        traversed.add(neighbor);
+        directions.set(neighbor, corridor);
+      }
+    }
+  }
 
   while (wave.size) {
     const next = new Set();
 
     for (const one of wave) {
-      zone.hops.set(one, distance);
-      traversed.add(one);
+      const direction = directions.get(one);
+
+      zone.hops.set(one, { direction: direction, distance: distance });
 
       for (const neighbor of one.neighbors) {
-        if (!neighbor.isCorridor && !traversed.has(neighbor)) next.add(neighbor);
+        if (!neighbor.isCorridor && !traversed.has(neighbor)) {
+          directions.set(neighbor, direction);
+          next.add(neighbor);
+          traversed.add(neighbor);
+        }
       }
     }
 
