@@ -9,7 +9,7 @@ let wallZones;
 export default class BattleStation extends Mission {
 
   run() {
-    if (!wallStation) findWallZones();
+    if (!wallZones) findWallZones();
 
     for (const battle of Battle.list()) {
       if (wallStation && wallZones.has(battle.zone)) {
