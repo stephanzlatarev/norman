@@ -1,14 +1,43 @@
 import Mission from "../mission.js";
 import Battle from "../battle/battle.js";
+import Map from "../map/map.js";
+import Wall from "../map/wall.js";
+
+let wallStation;
+let wallZones;
 
 export default class BattleStation extends Mission {
 
   run() {
+    if (!wallStation) findWallZones();
+
     for (const battle of Battle.list()) {
-      updateBattleStations(battle);
+      if (wallStation && wallZones.has(battle.zone)) {
+        battle.setStations([wallStation]);
+      } else {
+        updateBattleStations(battle);
+      }
     }
   }
 
+}
+
+function findWallZones() {
+  const walls = Wall.list();
+
+  wallZones = new Set();
+
+  if (walls.length) {
+    const wall = walls[0];
+
+    wallZones.add(wall.cell.zone);
+
+    for (const zone of wall.zones) {
+      wallZones.add(zone);
+    }
+
+    wallStation = Map.cell(wall.blueprint.rally.x, wall.blueprint.rally.y);
+  }
 }
 
 function updateBattleStations(battle) {
