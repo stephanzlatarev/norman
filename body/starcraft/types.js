@@ -147,12 +147,19 @@ function parseWeapons(unit) {
     }
   }
 
-  if (unit.name === "Sentry") {
+  if (unit.name === "Bunker") {
+    attackGround = 6 * 4;
+    damageGround = 10 * 4 / GAME_LOOPS_PER_SECOND;
+    rangeGround = 6;
+    attackAir = 6 * 4;
+    damageAir = 10 * 4 / GAME_LOOPS_PER_SECOND;
+    rangeAir = 6;
+  } else if (unit.name === "Sentry") {
     attackGround = 6;
     damageGround = 8.4 / GAME_LOOPS_PER_SECOND;
     rangeGround = 5;
     attackAir = 6;
-    damageAir = 8.4;
+    damageAir = 8.4 / GAME_LOOPS_PER_SECOND;
     rangeAir = 5;
   } else if (unit.name === "VoidRay") {
     attackGround = 6;
