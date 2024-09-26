@@ -68,7 +68,7 @@ export default class LocalGame extends Game {
     console.log("Starting StarCraft II game...");
 
     spawn("..\\Versions\\" + this.config.version + "\\SC2_x64.exe", [
-      "-displaymode", "0", "-windowx", "0", "-windowy", "0", "-windowwidth", "2500",
+      "-displaymode", "0", "-windowx", "0", "-windowy", "0", "-windowwidth", "2500", "-windowheight", "1875",
       "-listen", "127.0.0.1", "-port", "5000"
     ], {
       cwd: this.config.path + "\\Support64"
