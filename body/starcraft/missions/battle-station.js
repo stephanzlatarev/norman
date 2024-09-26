@@ -1,8 +1,10 @@
 import Mission from "../mission.js";
 import Battle from "../battle/battle.js";
-import Map from "../map/map.js";
+import GameMap from "../map/map.js";
+import { getHopDistance } from "../map/route.js";
 import Wall from "../map/wall.js";
 
+let wallBaseCell;
 let wallStation;
 let wallZones;
 
@@ -34,31 +36,22 @@ function findWallZones() {
 
     for (const zone of wall.zones) {
       wallZones.add(zone);
+
+      if (!wallBaseCell || (zone.tier.level < wallBaseCell.zone.tier.level)) wallBaseCell = zone.cell;
     }
 
-    wallStation = Map.cell(wall.blueprint.rally.x, wall.blueprint.rally.y);
+    wallStation = GameMap.cell(wall.blueprint.rally.x, wall.blueprint.rally.y);
   }
 }
 
 function updateBattleStations(battle) {
   const stations = selectBattleStations(battle);
-  const limit = (battle.range === Battle.RANGE_BACK) ? 1 : 3;
   let active = [];
 
   if (stations.size) {
-    // Select active stations by proximity to fighters, up to the limit
-    if (stations.size <= limit) {
-      active = [...stations];
-    } else if (limit === 1) {
-      active = [selectSingleStation(battle, stations)];
-    } else {
-      active = selectMultipleStations(battle, stations, limit);
-    }
+    active = selectActiveStations(battle, stations, (battle.range === Battle.RANGE_BACK) ? 1 : 3);
 
-    // Assign the fighters to the active stations again by proximity
-    for (const fighter of battle.fighters) {
-      setStation(fighter, stations, active);
-    }
+    assignAllFightersToStations(battle, stations, active);
   }
 
   battle.setStations(active);
@@ -121,47 +114,32 @@ function getStation(zone) {
   return zone.isDepot ? zone.exitRally : zone.cell;
 }
 
-function selectSingleStation(battle, stations) {
-  let selection = findExistingBattleStation(stations, battle.stations);
-  let selectionDeployments = -1;
+function selectActiveStations(battle, stations, limit) {
+  if (stations.size <= limit) return [...stations];
+
+  const distance = new Map();
+  const deployments = new Map();
 
   for (const station of stations) {
-    if (!selection || (station.zone.tier.level < selection.zone.tier.level)) {
-      selection = station;
-      selectionDeployments = -1;
-    } else {
-      const deployments = countStationDeployments(battle, station);
-
-      if (selectionDeployments < 0) selectionDeployments = countStationDeployments(battle, selection);
-
-      if (deployments > selectionDeployments) {
-        selection = station;
-        selectionDeployments = deployments;
-      }
-    }
+    distance.set(station, getHopDistance(station, wallBaseCell));
+    deployments.set(station, countStationDeployments(battle, station));
   }
 
-  return selection;
+  const active = [...stations].sort((a, b) => orderByDistanceAndDeployments(a, b, distance, deployments));
+  active.length = limit;
+
+  return active;
 }
 
-function findExistingBattleStation(stations, battleStations) {
-  for (const station of stations) {
-    for (const one of battleStations) {
-      if (station.zone === one.zone) return station;
-    }
-  }
-}
+function orderByDistanceAndDeployments(a, b, distance, deployments) {
+  const distanceA = distance.get(a);
+  const distanceB = distance.get(b);
 
-function selectMultipleStations(battle, stations, limit) {
-  const list = [...stations].map(station => ({ station: station, deployments: countStationDeployments(battle, station) }));
-
-  list.sort((a, b) => (b.deployments - a.deployments));
-
-  if (list.length > limit) {
-    list.length = limit;
+  if (distanceA === distanceB) {
+    return deployments.get(b) - deployments.get(a);
   }
 
-  return list.map(one => one.station);
+  return distanceA - distanceB;
 }
 
 function countStationDeployments(battle, station) {
@@ -187,27 +165,82 @@ function countStationDeployments(battle, station) {
   return count;
 }
 
-function setStation(fighter, stations, active) {
+function assignAllFightersToStations(battle, stations, active) {
+  const distances = new Map();
+
+  for (const fighter of battle.fighters) {
+    setStation(fighter, stations, active, distances);
+  }
+}
+
+function setStation(fighter, stations, active, distances) {
   const warrior = fighter.assignee;
 
   if (!warrior || !warrior.isAlive) return;
 
   if (fighter.isDeployed) {
 
-    // If fighter is stationed in a zone with a valid station, then make sure the fighter is assigned to that station
-    for (const station of stations) {
+    // If fighter is stationed in a zone of an active station, then make sure the fighter is assigned to that station
+    for (const station of active) {
       if (fighter.zone === station.zone) {
         return fighter.setStation(station);
       }
     }
 
-    // Otherwise, use the closest station
-    fighter.setStation(getClosestStation(warrior, stations));
+    // Otherwise, use the closest active station
+    fighter.setStation(getClosestUnobstructedStation(warrior, active, distances) || getClosestStation(warrior, stations));
 
   } else {
     // If warrior is not yet deployed, then make sure it is assigned to the closest active station
     if (active.length) fighter.setStation(getClosestStation(warrior, active));
   }
+}
+
+function getClosestUnobstructedStation(warrior, stations, distances) {
+  let bestStation;
+  let bestDistance = Infinity;
+
+  for (const station of stations) {
+    const warriorDistance = getDistance(distances, warrior, station);
+
+    if (bestDistance < warriorDistance) continue;
+
+    let isObstructed = false;
+
+    for (const threat of warrior.zone.threats) {
+      const threatDistance = getDistance(distances, threat, station);
+
+      if (threatDistance <= warriorDistance) {
+        isObstructed = true;
+        break;
+      }
+    }
+
+    if (!isObstructed) {
+      bestStation = station;
+      bestDistance = warriorDistance;
+    }
+  }
+
+  return bestStation;
+}
+
+function getDistance(distances, unit, station) {
+  let map = distances.get(station);
+
+  if (!map) {
+    map = new Map();
+    distances.set(station, map);
+  }
+
+  let distance = map.get(unit);
+
+  if (!distance) {
+    distance = calculateSquareDistance(unit.body, station);
+    map.set(unit, distance);
+  }
+
+  return distance;
 }
 
 function getClosestStation(warrior, stations) {
@@ -225,6 +258,8 @@ function getClosestStation(warrior, stations) {
 
   return closestStation;
 }
+
+
 
 function calculateSquareDistance(a, b) {
   return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
