@@ -6,6 +6,7 @@ import Units from "../units.js";
 import Wall from "../map/wall.js";
 import { ActiveCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
+import Resources from "../memo/resources.js";
 
 const MODE_DEFEND = 1;
 const MODE_READY = 2;
@@ -31,8 +32,9 @@ export default class WallNatural extends Mission {
 
     mode = field.enemies.size ? MODE_DEFEND : MODE_READY;
 
-    if ((mode === MODE_READY) && (ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 33) && (ActiveCount.Stalker > 4)) {
-      return this.close();
+    if ((ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 33) && (ActiveCount.Stalker > 4)) {
+      if (mode === MODE_READY) return this.close();
+      if (Resources.supplyUsed > 190) return this.close();
     }
 
     maintainWallKeeperJob();
