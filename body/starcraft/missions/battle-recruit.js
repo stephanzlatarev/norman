@@ -49,14 +49,17 @@ function isAirBattle(battle) {
 
 function hireIdleWarriorsInBattleZone(battle, isAirBattle) {
   for (const warrior of Units.warriors().values()) {
-    if (warrior.isAlive && (!warrior.job || (warrior.job.priority < battle.priority)) && battle.hotspot.zones.has(warrior.zone)) {
-      if (isAirBattle && (GROUND_HITTING_WARRIORS.indexOf(warrior.type.name) >= 0)) continue;
-      if (ALL_WARRIORS.indexOf(warrior.type.name) < 0) continue;
+    if (!warrior.isAlive) continue;
+    if (warrior.job && (warrior.job.battle === battle)) continue;
+    if (warrior.job && (warrior.job.priority >= battle.priority)) continue;
+    if (!battle.hotspot.zones.has(warrior.zone)) continue;
+    if (isAirBattle && (GROUND_HITTING_WARRIORS.indexOf(warrior.type.name) >= 0)) continue;
+    if (ALL_WARRIORS.indexOf(warrior.type.name) < 0) continue;
 
-      const fighter = new Fight(battle, warrior.type.name, battle.getClosestStation(warrior.body));
-      fighter.priority = battle.priority;
-      fighter.assign(warrior);
-    }
+    const fighter = new Fight(battle, warrior.type.name, battle.zone.cell);
+
+    fighter.priority = battle.priority;
+    fighter.assign(warrior);
   }
 }
 
@@ -88,6 +91,7 @@ function maintainOpenFightJobs(battle, focus, isAirBattle) {
       if ((battle === focus) || (battle.fighters.length < 3)) openJobs(battle, priority, "Stalker", "Zealot");
 
       closeOpenJobs(battle, "Colossus", "Immortal", "Sentry");
+      closeOpenJobsForOldStations(battle);
     }
   } else {
     closeOpenJobs(battle, ...ALL_WARRIORS);
@@ -117,6 +121,16 @@ function openJob(battle, warrior, station, priority) {
 function closeOpenJobs(battle, ...warriors) {
   for (const job of battle.fighters) {
     if (!job.assignee && job.agent && (warriors.indexOf(job.agent.type.name) >= 0)) {
+      job.close(true);
+    }
+  }
+}
+
+function closeOpenJobsForOldStations(battle) {
+  for (const job of battle.fighters) {
+    if (job.assignee) continue;
+
+    if (!battle.stations.find(station => (station.zone === job.station.zone))) {
       job.close(true);
     }
   }
