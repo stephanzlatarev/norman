@@ -1,3 +1,4 @@
+import traceBattle from "./trace.js";
 import Resources from "../memo/resources.js";
 import Detect from "../jobs/detect.js";
 
@@ -18,6 +19,7 @@ export default class Battle {
   recruitedBalance = 0;
   deployedBalance = 0;
 
+  pastmode = Battle.MODE_RALLY;
   mode = Battle.MODE_RALLY;
   range = Battle.RANGE_BACK;
   stations = [];
@@ -26,8 +28,6 @@ export default class Battle {
   fighters;
 
   constructor(hotspot) {
-    console.log("Battle", hotspot.center.name, "begins");
-
     this.hotspot = hotspot;
     this.zones = hotspot.center.range.zones;
 
@@ -38,6 +38,8 @@ export default class Battle {
     this.fighters = [];
 
     battles.push(this);
+
+    traceBattle(this, "begins");
   }
 
   setHotspot(hotspot) {
@@ -45,7 +47,7 @@ export default class Battle {
     this.zones = hotspot.center.range.zones;
 
     if (this.zone !== hotspot.center) {
-      console.log("Battle", this.zone.name, "moves to", hotspot.center.name);
+      traceBattle(this, "moves to " + hotspot.center.name);
 
       this.zone = hotspot.center;
       this.priority = 100 - this.zone.tier.level;
@@ -125,13 +127,18 @@ export default class Battle {
         this.range = Battle.RANGE_BACK;
       }
     }
+
+    if (this.mode !== this.pastmode) {
+      traceBattle(this, "mode: " + this.pastmode + " > " + this.mode);
+      this.pastmode = this.mode;
+    }
   }
 
   close() {
     const index = battles.indexOf(this);
 
     if (index >= 0) {
-      console.log("Battle", this.zone.name, "ends");
+      traceBattle(this, "ends");
 
       if (this.detector) this.detector.close(true);
 
