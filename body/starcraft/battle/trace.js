@@ -75,7 +75,7 @@ function traceFighters(trace, battle) {
     if (fighter.assignee) {
       increment(count, fighter.assignee.zone.name);
 
-      if (battle.zone.range.zones.has(fighter.assignee.zone)) {
+      if (battle.zones.has(fighter.assignee.zone)) {
         deploy.add(fighter.assignee.zone.name);
       } else {
         rally.add(fighter.assignee.zone.name);

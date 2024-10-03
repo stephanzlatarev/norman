@@ -4,6 +4,8 @@ import Battle from "../battle/battle.js";
 import { getHopRoute, getHopZone } from "../map/route.js";
 
 const HOP_CLOSE_DISTANCE = 6;
+const KITING_RANGE = 2;
+const KITING_WARRIORS = new Set(["Stalker"]);
 
 export default class Fight extends Job {
 
@@ -77,7 +79,7 @@ export default class Fight extends Job {
 
     const isAttacking = (warrior && target && warrior.order && (warrior.order.targetUnitTag === target.tag));
 
-    this.isDeployed = isAttacking || this.battle.zone.range.zones.has(warrior.zone);
+    this.isDeployed = isAttacking || this.battle.zones.has(warrior.zone);
     this.isCommitted = false;
 
     if (this.shouldAttack()) {
@@ -89,7 +91,7 @@ export default class Fight extends Job {
       this.goDeploy();
     } else if (this.shouldKite()) {
       this.details = getDetails(this, "kite");
-      this.goKite();
+      Order.attack(warrior, target);
     } else {
       this.details = getDetails(this, "station");
       Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
@@ -107,12 +109,23 @@ export default class Fight extends Job {
     const warrior = this.assignee;
     const target = this.target;
 
-    if (warrior && target && this.isDeployed) {
-      if (target.body.isGround && warrior.type.rangeGround) {
-        return isClose(warrior.body, target.body, warrior.type.rangeGround);
-      } else if (target.body.isFlying && warrior.type.rangeAir) {
-        return isClose(warrior.body, target.body, warrior.type.rangeAir);
-      }
+    if (!warrior || !target) return false;
+    if (target.lastSeen < warrior.lastSeen) return false;
+    if (warrior.weapon.cooldown) return false;
+    if (!KITING_WARRIORS.has(warrior.type.name)) return false;
+
+    const squareDistance = calculateSquareDistance(warrior.body, target.body);
+
+    if (target.body.isGround && warrior.type.rangeGround) {
+      const squareRangeMax = warrior.type.rangeGround * warrior.type.rangeGround;
+      const squareRangeMin = (warrior.type.rangeGround - KITING_RANGE) * (warrior.type.rangeGround - KITING_RANGE);
+
+      return (squareDistance >= squareRangeMin) && (squareDistance <= squareRangeMax);
+    } else if (target.body.isFlying && warrior.type.rangeAir) {
+      const squareRangeMax = warrior.type.rangeAir * warrior.type.rangeAir;
+      const squareRangeMin = (warrior.type.rangeAir - KITING_RANGE) * (warrior.type.rangeAir - KITING_RANGE);
+
+      return (squareDistance >= squareRangeMin) && (squareDistance <= squareRangeMax);
     }
   }
 
@@ -154,18 +167,6 @@ export default class Fight extends Job {
         Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
         this.attackMoveForward = false;
       }
-    } else {
-      Order.attack(warrior, target);
-    }
-  }
-
-  goKite() {
-    const warrior = this.assignee;
-    const isAttackingWhileMoving = (warrior.type.name === "Immortal") || (warrior.type.name === "Colossus");
-    const target = this.target;
-
-    if (isAttackingWhileMoving || warrior.weapon.cooldown || (target.lastSeen < warrior.lastSeen)) {
-      Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
     } else {
       Order.attack(warrior, target);
     }

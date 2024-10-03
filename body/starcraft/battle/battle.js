@@ -3,6 +3,7 @@ import Resources from "../memo/resources.js";
 import Detect from "../jobs/detect.js";
 
 const ATTACK_BALANCE = 1.6;
+const RETREAT_BALANCE = 1.0;
 const DEFEND_BALANCE = 0.7;
 
 const battles = [];
@@ -99,7 +100,7 @@ export default class Battle {
     this.recruitedBalance = calculateBalance(this, false);
     this.deployedBalance = calculateBalance(this, true);
 
-    if ((Resources.supplyUsed > 190) && ((this.deployedBalance >= ATTACK_BALANCE) || areEnoughFightersRallied(this))) {
+    if ((Resources.supplyUsed > 190) && ((this.deployedBalance >= ATTACK_BALANCE) || ((this.mode === Battle.MODE_FIGHT) && (this.deployedBalance >= RETREAT_BALANCE)) || areEnoughFightersRallied(this))) {
       this.mode = Battle.MODE_FIGHT;
       this.range = Battle.RANGE_FRONT;
     } else if (this.deployedBalance === Infinity) {
@@ -115,6 +116,8 @@ export default class Battle {
         shouldFight = (this.deployedBalance >= DEFEND_BALANCE) || areEnoughFightersRallied(this);
       } else if (this.zone.tier.level === 2) {
         shouldFight = (this.deployedBalance >= DEFEND_BALANCE);
+      } else if ((this.mode === Battle.MODE_FIGHT) && (this.deployedBalance >= RETREAT_BALANCE)) {
+        shouldFight = true;
       } else {
         shouldFight = (this.deployedBalance >= ATTACK_BALANCE);
       }
@@ -210,7 +213,7 @@ function calculateBalance(battle, isDeployed) {
     const warrior = fighter.assignee;
 
     if (!warrior || !warrior.isAlive) continue;
-    if (isDeployed && !battle.zones.has(warrior.zone) && !isCloseTo(warrior.body, fighter.station)) continue;
+    if (isDeployed && !battle.zones.has(warrior.zone)) continue;
 
     warriorCount++;
     warriorDamage += warrior.type.damageGround;
@@ -224,6 +227,10 @@ function calculateBalance(battle, isDeployed) {
       if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
         enemyDamage += enemy.type.damageGround;
         enemyHealth += enemy.armor.total;
+      }
+
+      if (enemy.type.name === "ShieldBattery") {
+        enemyHealth += 300;
       }
     }
   }
@@ -242,8 +249,4 @@ function calculateBalance(battle, isDeployed) {
 
 function calculateSquareDistance(a, b) {
   return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
-}
-
-function isCloseTo(a, b) {
-  return (Math.abs(a.x - b.x) <= 6) && (Math.abs(a.y - b.y) <= 6);
 }

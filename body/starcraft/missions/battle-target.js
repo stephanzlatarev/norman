@@ -50,7 +50,7 @@ class TargetMatrix {
 
     for (const threat of battle.zone.threats) {
       // TODO: Add spell casters and later air-hitters
-      if (threat.type.damageGround) {
+      if (threat.type.damageGround && isValidTarget(threat)) {
         this.primaryTargets.push(threat);
       }
     }
@@ -124,6 +124,12 @@ class TargetMatrix {
   }
 }
 
+function isValidTarget(target) {
+  if (target.type.name === "AdeptPhaseShift") return false;
+
+  return true;
+}
+
 function orderTargets(a, b) {
   return (b.type.damageGround / b.armor.total) - (a.type.damageGround / a.armor.total);
 }
@@ -183,6 +189,7 @@ function getClosestVisibleTarget(warrior, targets) {
     if (!target.isAlive || (target.lastSeen < Resources.loop)) continue;
     if (target.body.isGround && !warrior.type.damageGround) continue;
     if (target.body.isFlying && !warrior.type.damageAir) continue;
+    if (!isValidTarget(target)) continue;
 
     const distance = calculateSquareDistance(warrior.body, target.body);
 
