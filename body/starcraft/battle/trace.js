@@ -7,6 +7,7 @@ export default function(battle, event) {
   if (event) trace.push(event);
 
   trace.push("tier:", battle.zone.tier.level);
+  trace.push("zones:", [...battle.zones].map(zone => zone.name).join());
   trace.push("balance:", battle.deployedBalance.toFixed(2), "/", battle.recruitedBalance.toFixed(2));
   trace.push("mode:", battle.mode);
   trace.push("range:", battle.range);

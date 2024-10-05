@@ -152,6 +152,21 @@ function setBlueprintToCorridor(board, corridor, center, blueprint) {
 
   wall.replace(corridor);
 
+  wall.range.zones.add(wall);
+  wall.range.front.add(wall);
+  for (const zone of wall.zones) {
+    wall.neighbors.add(zone);
+    wall.range.zones.add(zone);
+    zone.range.zones.add(wall);
+    zone.range.fire.add(wall);
+
+    if (zone.tier.level > wall.tier.level) {
+      wall.range.fire.add(zone);
+    } else {
+      wall.range.back.add(zone);
+    }
+  }
+
   // Set the wall as the zone to all cells near the wall
   for (const one of [blueprint.left, blueprint.center, blueprint.right]) {
     assignCellsToWall(board, wall, one.x - 1.5, one.x + 0.5, one.y - 1.5, one.y + 0.5);
