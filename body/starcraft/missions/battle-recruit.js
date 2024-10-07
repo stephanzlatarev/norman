@@ -1,5 +1,4 @@
 import Mission from "../mission.js";
-import Units from "../units.js";
 import Battle from "../battle/battle.js";
 import Fight from "../jobs/fight.js";
 import { ActiveCount } from "../memo/count.js";
@@ -22,12 +21,11 @@ export default class BattleRecruitMission extends Mission {
     for (const battle of Battle.list()) {
       if (battle.stations.length) {
         const isAir = isAirBattle(battle);
+        const isSmall = isSmallBattle(battle);
 
+        maintainOpenFightJobs(battle, focus, isAir, isSmall);
         hireIdleWarriorsInBattleZone(battle, isAir);
-        if (isAir) closeJobs(battle, ...GROUND_HITTING_WARRIORS);
-
-        maintainFilledFightJobs(battle);
-        maintainOpenFightJobs(battle, focus, isAir);
+        maintainPriorityOfFightJobs(battle);
       } else {
         closeJobs(battle, ...ALL_WARRIORS);
       }
@@ -37,47 +35,69 @@ export default class BattleRecruitMission extends Mission {
 }
 
 function isAirBattle(battle) {
-  for (const threat of battle.zone.threats) {
-    if (threat.body.isGround) {
-      // There's at least this one ground enemy unit, so the battle is not only in the air
-      return false;
+  for (const zone of battle.zones) {
+    for (const threat of zone.threats) {
+      if (threat.body.isGround) {
+        // There's at least this one ground enemy unit, so the battle is not only in the air
+        return false;
+      }
     }
   }
 
   return true;
 }
 
-function hireIdleWarriorsInBattleZone(battle, isAirBattle) {
-  for (const warrior of Units.warriors().values()) {
-    if (!warrior.isAlive) continue;
-    if (warrior.job && (warrior.job.battle === battle)) continue;
-    if (warrior.job && (warrior.job.priority >= battle.priority)) continue;
-    if (!battle.hotspot.zones.has(warrior.zone)) continue;
-    if (isAirBattle && (GROUND_HITTING_WARRIORS.indexOf(warrior.type.name) >= 0)) continue;
-    if (ALL_WARRIORS.indexOf(warrior.type.name) < 0) continue;
+function isSmallBattle(battle) {
+  let count = 0;
 
-    const fighter = new Fight(battle, warrior.type.name, battle.zone.cell);
-
-    fighter.priority = battle.priority;
-    fighter.assign(warrior);
+  for (const zone of battle.zones) {
+    for (const threat of zone.threats) {
+      if (threat.type.damageGround) count++;
+      if (count > 2) return true;
+    }
   }
+
+  return false;
 }
 
-function maintainFilledFightJobs(battle) {
-  for (const fighter of battle.fighters) {
-    if (fighter.assignee) {
-      fighter.priority = battle.priority;
+function hireIdleWarriorsInBattleZone(battle, isAirBattle) {
+  for (const zone of battle.hotspot.zones) {
+    for (const warrior of zone.warriors) {
+      if (!warrior.isAlive) continue;
+      if (warrior.job && (warrior.job.battle === battle)) continue;
+      if (warrior.job && (warrior.job.priority >= battle.priority)) continue;
+      if (isAirBattle && (GROUND_HITTING_WARRIORS.indexOf(warrior.type.name) >= 0)) continue;
+      if (ALL_WARRIORS.indexOf(warrior.type.name) < 0) continue;
+
+      const fighter = battle.fighters.find(job => (!job.assignee && job.agent && (job.agent.type.name === warrior.type.name)));
+
+      if (fighter) {
+        fighter.assign(warrior);
+      }
     }
   }
 }
 
-function maintainOpenFightJobs(battle, focus, isAirBattle) {
+function maintainPriorityOfFightJobs(battle) {
+  for (const fighter of battle.fighters) {
+    fighter.priority = battle.priority;
+  }
+}
+
+function maintainOpenFightJobs(battle, focus, isAirBattle, isSmallBattle) {
   const isRecruitBalanceLow = (battle.recruitedBalance < RECRUIT_BALANCE);
 
   if (isRecruitBalanceLow || (battle === focus)) {
     const priority = isRecruitBalanceLow ? battle.priority : 0;
 
-    if (battle.zone.threats.size > 2) {
+    closeOpenJobsForOldStations(battle);
+
+    if (isSmallBattle) {
+      // Make sure we don't overreact to individual enemy units in our territory
+      if ((battle === focus) || (battle.fighters.length < 3)) openJobs(battle, priority, "Stalker", "Zealot");
+
+      closeOpenJobs(battle, "Colossus", "Immortal", "Sentry");
+    } else {
       openJobs(battle, priority, "Sentry", "Stalker");
 
       // Make sure ground-hitting units are included only when there are ground enemy units
@@ -86,12 +106,6 @@ function maintainOpenFightJobs(battle, focus, isAirBattle) {
       } else {
         openJobs(battle, priority, ...GROUND_HITTING_WARRIORS);
       }
-    } else {
-      // Make sure we don't overreact to individual enemy units in our territory
-      if ((battle === focus) || (battle.fighters.length < 3)) openJobs(battle, priority, "Stalker", "Zealot");
-
-      closeOpenJobs(battle, "Colossus", "Immortal", "Sentry");
-      closeOpenJobsForOldStations(battle);
     }
   } else {
     closeOpenJobs(battle, ...ALL_WARRIORS);
@@ -114,8 +128,6 @@ function openJob(battle, warrior, station, priority) {
   if (!fighter) {
     fighter = new Fight(battle, warrior, station);
   }
-
-  fighter.priority = priority;
 }
 
 function closeOpenJobs(battle, ...warriors) {
