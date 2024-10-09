@@ -141,17 +141,17 @@ export default class Fight extends Job {
         // Move closer to see the target so that warrior can attack it
         Order.move(warrior, target.body);
       }
-    } else if (warrior.weapon.cooldown > 3) {
+    } else if (shouldMoveToCoolDown(warrior)) { 
       const range = target.body.isFlying ? warrior.type.rangeAir : warrior.type.rangeGround;
-      const distance = Math.sqrt(calculateSquareDistance(warrior.body, target.body));
-      const closestDistanceOnReadyWeapon = distance + (target.type.movementSpeed - warrior.type.movementSpeed) * warrior.weapon.cooldown;
+      const distance = Math.sqrt(calculateSquareDistance(warrior.body, target.body)) - warrior.body.r - target.body.r;
+      const closestDistanceOnReadyWeapon = distance + (target.type.movementSpeed - warrior.type.movementSpeed) * (warrior.weapon.cooldown - 3);
       const stationRange = Math.max(range, 5);
 
-      if (closestDistanceOnReadyWeapon >= range - 1) {
+      if ((closestDistanceOnReadyWeapon > 0) && (closestDistanceOnReadyWeapon >= range - 1)) {
         // Make sure warrior can walk to target and be within range at the moment the weapon is ready to fire
         Order.move(warrior, target.body);
         this.attackMoveForward = true;
-      } else if (this.attackMoveForward && (closestDistanceOnReadyWeapon >= range - 2)) {
+      } else if (this.attackMoveForward && (closestDistanceOnReadyWeapon > 0) && (closestDistanceOnReadyWeapon >= range - 2)) {
         // If just crossed the distance to be within range, move towards the target for a bit more
         Order.move(warrior, target.body);
         this.attackMoveForward = true;
@@ -161,7 +161,7 @@ export default class Fight extends Job {
         const dy = (warrior.body.y > target.body.y) ? stationRange : -stationRange;
 
         Order.move(warrior, { x: warrior.body.x + dx, y: warrior.body.y + dy });
-        this.attackForth = false;
+        this.attackMoveForward = false;
       } else {
         // Otherwise, step back to the assigned station
         Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
@@ -169,6 +169,7 @@ export default class Fight extends Job {
       }
     } else {
       Order.attack(warrior, target);
+      this.attackMoveForward = false;
     }
   }
 
@@ -233,6 +234,10 @@ function isOrderAlongRoute(order, route) {
       if (isClose(pos, turn, 1)) return true;
     }
   }
+}
+
+function shouldMoveToCoolDown(warrior) {
+  return (warrior.weapon.cooldown > 3) && (warrior.weapon.cooldown < warrior.type.weaponCooldown - 3);
 }
 
 function isClose(a, b, distance) {
