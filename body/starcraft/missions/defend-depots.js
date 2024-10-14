@@ -1,9 +1,9 @@
 import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
-import Units from "../units.js";
+import Depot from "../map/depot.js";
 
-const MaxAttackers = 12;
+const MAX_ATTACKERS = 12;
 
 const jobs = new Map();
 
@@ -12,23 +12,22 @@ export default class DefendDepotsMission extends Mission {
   run() {
     removeCompletedJobs();
 
-    for (const nexus of Units.buildings().values()) {
-      if (!nexus.depot) continue;
-      if (!nexus.depot.workers.size) continue;
+    for (const zone of Depot.list()) {
+      if (!zone.workers.size) continue;
 
-      const enemies = nexus.depot.enemies.size;
+      const enemies = zone.enemies.size;
       let defenders = 0;
 
       if (enemies > 0) {
-        defenders = Math.min(enemies * 3, nexus.depot.workers.size, MaxAttackers);
+        defenders = Math.min(enemies * 3, zone.workers.size, MAX_ATTACKERS);
 
         for (let i = 0; i < defenders; i++) {
-          addJob(nexus, i);
+          addJob(zone, i);
         }
       }
   
-      for (let i = defenders; i < MaxAttackers; i++) {
-        closeJob(nexus, i);
+      for (let i = defenders; i < MAX_ATTACKERS; i++) {
+        closeJob(zone, i);
       }
     }
   }
@@ -37,15 +36,15 @@ export default class DefendDepotsMission extends Mission {
 
 class Defend extends Job {
 
-  constructor(nexus) {
+  constructor(zone) {
     super("Probe");
 
-    this.zone = nexus.depot;
+    this.zone = zone;
     this.priority = 100;
   }
 
   accepts(unit) {
-    return (unit.zone === this.zone);
+    return (unit.zone === this.zone) && (!unit.job || unit.isHarvestMineralsJob);
   }
 
   execute() {
@@ -67,16 +66,16 @@ function removeCompletedJobs() {
   }
 }
 
-function addJob(nexus, index) {
-  const jobId = nexus.tag + ":" + index;
+function addJob(zone, index) {
+  const jobId = zone.cell.id + ":" + index;
 
   if (!jobs.has(jobId)) {
-    jobs.set(jobId, new Defend(nexus));
+    jobs.set(jobId, new Defend(zone));
   }
 }
 
-function closeJob(nexus, index) {
-  const jobId = nexus.tag + ":" + index;
+function closeJob(zone, index) {
+  const jobId = zone.cell.id + ":" + index;
   const job = jobs.get(jobId);
 
   if (job) {

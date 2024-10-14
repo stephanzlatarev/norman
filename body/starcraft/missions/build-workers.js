@@ -1,60 +1,60 @@
 import Mission from "../mission.js";
 import Order from "../order.js";
 import Types from "../types.js";
-import Units from "../units.js";
 import Produce from "../jobs/produce.js";
+import Depot from "../map/depot.js";
 import { TotalCount } from "../memo/count.js";
 import Limit from "../memo/limit.js";
 
-// TODO: When mission is converted to skill, there will be one instance per active nexus and just one job at a time
 const jobs = new Map();
 
 export default class BuildWorkersMission extends Mission {
 
   run() {
-    removeCompletedJobs();
+    for (const [nexus, job] of jobs) {
+      if (job.isDone || job.isFailed) {
+        jobs.delete(nexus);
+      }
+    }
 
-    const limit = Math.min(Limit.Probe, TotalCount.Nexus * 16 + TotalCount.Assimilator * 3 + TotalCount.Nexus);
+    if (TotalCount.Probe >= Limit.Probe) return;
 
-    if (TotalCount.Probe >= limit) return;
+    for (const zone of Depot.list()) {
+      const nexus = zone.depot;
 
-    for (const nexus of Units.buildings().values()) {
-      if (nexus.job) continue;
-      if (!nexus.depot) continue;
+      if (!nexus) continue;
       if (!nexus.isActive) continue;
+      if (jobs.has(nexus)) continue;
+      if (nexus.job && !nexus.job.isDone && !nexus.job.isFailed) continue;
       if (setRallyPoint(nexus)) continue;
 
-      createBuildWorkerJob(nexus);
+      jobs.set(nexus, new Produce(nexus, Types.unit("Probe")));
 
-      if (TotalCount.Probe >= limit) return;
+      TotalCount.Probe++;
+      if (TotalCount.Probe >= Limit.Probe) return;
     }
   }
 
 }
 
 function setRallyPoint(nexus) {
-  const rally = nexus.depot.isSaturated ? nexus.depot.exitRally : nexus.depot.harvestRally;
+  const depot = nexus.zone;
+  const isSaturated = (depot.workers.size >= getMaxWorkerCount(depot));
+  const rally = isSaturated ? depot.exitRally : depot.harvestRally;
 
   if (rally && (!nexus.rally || (nexus.rally.x !== rally.x) || (nexus.rally.y !== rally.y))) {
     return new Order(nexus, 3690, rally).accept(true);
   }
 }
 
-function removeCompletedJobs() {
-  for (const [tag, job] of jobs) {
-    if (job.isDone || job.isFailed) {
-      jobs.delete(tag);
-    }
+function getMaxWorkerCount(depot) {
+  let count = depot.minerals.size * 2 + depot.extractors.size * 3;
+
+  if (depot.minerals.size >= 8) {
+    count += 4;
+  } else if (depot.minerals.size >= 4) {
+    count += 2;
   }
-}
 
-function createBuildWorkerJob(nexus) {
-  let job = jobs.get(nexus);
-
-  if (!job) {
-    job = new Produce(nexus, Types.unit("Probe"));
-
-    jobs.set(nexus, job);
-    TotalCount.Probe++;
-  }
+  return count;
 }

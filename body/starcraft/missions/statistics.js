@@ -9,8 +9,8 @@ const LOOPS_PER_MINUTE = Math.round(LOOPS_PER_SECOND * 60);
 let timeTotal = 0;
 let timeSupplyBlocked = 0;
 
-const harvestersMinerals = new Map();
-const harvestersVespene = new Map();
+const harvestersMinerals = new Set();
+const harvestersVespene = new Set();
 
 let minerals = 0;
 let vespene = 0;
@@ -71,19 +71,20 @@ function trackSupply() {
 function trackHarvest() {
   for (const worker of Units.workers().values()) {
     if (!worker.isCarryingHarvest) {
-      if (harvestersMinerals.get(worker)) {
+      if (harvestersMinerals.has(worker)) {
         minerals += 5;
-      } else if (harvestersVespene.get(worker)) {
-        vespene += 4;
-      }
 
-      harvestersMinerals.set(worker, false);
-      harvestersVespene.set(worker, false);
+        harvestersMinerals.delete(worker);
+      } else if (harvestersVespene.has(worker)) {
+        vespene += 4;
+
+        harvestersVespene.delete(worker);
+      }
     } else if (worker.job && worker.job.target && worker.job.target.type) {
       if (worker.job.target.type.isMinerals) {
-        harvestersMinerals.set(worker, true);
+        harvestersMinerals.add(worker);
       } else if (worker.job.target.type.isExtractor) {
-        harvestersVespene.set(worker, true);
+        harvestersVespene.add(worker);
       }
     }
   }

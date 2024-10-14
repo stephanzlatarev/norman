@@ -12,19 +12,31 @@ const MODE_PACKING = "packing";
 const MODE_REAPING = "reaping";
 const MODE_STORING = "storing";
 
-export default class Harvest extends Job {
+export default class HarvestMinerals extends Job {
+
+  isHarvestMineralsJob = true;
 
   mode = MODE_IDLE;
 
-  constructor(resource, nexus) {
-    super("Probe", null, resource);
+  constructor(line, resource) {
+    super("Probe");
 
-    this.nexus = nexus;
-    this.zone = nexus.depot;
+    this.zone = line.zone;
+    this.isCommitted = false;
 
-    const distance = resource.d;
+    this.setResource(line, resource);
+  }
 
-    if (resource.type.isMinerals && (distance < 10)) {
+  setResource(line, resource) {
+    this.line = line;
+    this.zone = line.zone;
+    this.priority = line.priority;
+    this.target = resource;
+    this.details = line.details;
+
+    if (resource.d < 10) {
+      const nexus = this.zone.depot;
+      const distance = resource.d;
       const boost = (distance - OFFSET_MINERAL - OFFSET_DEPOT) / 2 + OFFSET_MINERAL;
 
       this.boostDistance = boost * boost;
@@ -32,14 +44,13 @@ export default class Harvest extends Job {
       this.storePoint = calculatePathEnd(resource.body, nexus.body, distance, OFFSET_DEPOT);
 
       this.isSpeedMining = true;
-      this.priority = Math.round(10 - distance);
     } else {
       this.isSpeedMining = false;
-      this.priority = resource.type.isExtractor ? 50 : 0;
     }
+  }
 
-    this.summary = this.constructor.name + " " + (resource.type.isMinerals ? "minerals" : "vespene");
-    this.isCommitted = false;
+  accepts(unit) {
+    return (unit.zone === this.zone);
   }
 
   assign(unit) {
@@ -50,41 +61,50 @@ export default class Harvest extends Job {
   }
 
   execute() {
+    if (!this.target) return;
+
     if (!this.target.isAlive || !this.target.isActive) {
       return this.close(true);
     }
+
+    const worker = this.assignee;
+
+    if (this.wasCarryingHarvest && !worker.isCarryingHarvest) {
+      this.setResource(this.line, this.line.sequence.get(this.target));
+    }
+    this.wasCarryingHarvest = worker.isCarryingHarvest;
 
     if (this.isSpeedMining) {
       this.isCommitted = true;
 
       // Don't disturb the worker while packing the harvest
-      if ((this.assignee.order.abilityId === 299) && !this.assignee.order.targetUnitTag) {
+      if ((worker.order.abilityId === 299) && !worker.order.targetUnitTag) {
         this.mode = MODE_PACKING;
         return;
       }
 
-      const sd = squareDistance(this.assignee.body, this.target.body);
+      const sd = squareDistance(worker.body, this.target.body);
 
-      if (this.assignee.isCarryingHarvest) {
-        if ((sd > this.boostDistance) && isInHarvestLane(this.assignee, this.storePoint, this.harvestPoint)) {
-          this.mode = pushToDepot(this.assignee, this.mode, this.storePoint, this.target, this.nexus);
+      if (worker.isCarryingHarvest) {
+        if ((sd > this.boostDistance) && isInHarvestLane(worker, this.storePoint, this.harvestPoint)) {
+          this.mode = pushToDepot(worker, this.mode, this.storePoint, this.target, this.zone.depot);
         } else {
-          this.mode = returnHarvest(this.assignee);
+          this.mode = returnHarvest(worker);
         }
       } else {
-        if ((sd < this.boostDistance) && isInHarvestLane(this.assignee, this.storePoint, this.harvestPoint)) {
-          this.mode = pushToResource(this.assignee, this.mode, this.harvestPoint, this.target);
+        if ((sd < this.boostDistance) && isInHarvestLane(worker, this.storePoint, this.harvestPoint)) {
+          this.mode = pushToResource(worker, this.mode, this.harvestPoint, this.target);
         } else {
-          this.mode = harvestResource(this.assignee, this.target);
+          this.mode = harvestResource(worker, this.target);
 
-          // While moving to the resource, the worker is available to take hiher priority jobs
+          // While moving to the resource, the worker is available to take higher priority jobs
           this.isCommitted = false;
         }
       }
-    } else if (!this.order) {
-      this.order = order(this.assignee, 298, this.target);
+    } else if (!this.order || (this.order.target !== this.target)) {
+      this.order = order(worker, 298, this.target);
     } else {
-      this.isCommitted = (this.assignee.order.abilityId !== 298) || (this.assignee.lastSeen < Resources.loop);
+      this.isCommitted = (worker.order.abilityId !== 298) || (worker.lastSeen < Resources.loop);
     }
   }
 

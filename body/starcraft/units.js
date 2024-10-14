@@ -1,7 +1,5 @@
 import Types from "./types.js";
-import Harvest from "./jobs/harvest.js";
 import Resources from "./memo/resources.js";
-import Depot from "./map/depot.js";
 import GameMap from "./map/map.js";
 
 const resources = new Map();
@@ -184,23 +182,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   }
 
   if (image.isOwn) {
-    if (image.type.isWorker) {
-      if (!image.depot && !image.job) {
-        const depot = findDepot(image.body, 10);
-
-        if (depot) {
-          depot.assignWorker(image);
-        }
-      }
-    } else if (image.type.isDepot) {
-      if (!image.depot) {
-        image.depot = findDepot(image.body);
-      }
-
-      if (image.depot) {
-        image.depot.isActive = image.isActive;
-      }
-    } else if (image.type.isExtractor) {
+    if (image.type.isExtractor) {
       if (!unit.vespeneContents) {
         image.isActive = false;
       }
@@ -248,7 +230,7 @@ function removeImage(image, group, tag) {
 }
 
 function isWorkerInExtractor(worker) {
-  return (worker.job instanceof Harvest) && worker.job.target && worker.job.target.type.isExtractor && (Resources.loop - worker.lastSeen < 35);
+  return worker.job && worker.job.isHarvestVespeneJob && (Resources.loop - worker.lastSeen < 35);
 }
 
 function getBoostPercentage(unit) {
@@ -262,10 +244,6 @@ function getBoostPercentage(unit) {
 function removeDeadWorkers(alive) {
   for (const [tag, worker] of workers) {
     if (!alive.get(tag) && !isWorkerInExtractor(worker)) {
-      if (worker.depot) {
-        worker.depot.releaseWorker(worker);
-      }
-
       removeImage(worker, workers, tag);
     }
   }
@@ -319,22 +297,6 @@ function isCarryingVespene(unit) {
   }
 
   return false;
-}
-
-function findDepot(pos, distance) {
-  for (const depot of Depot.list()) {
-    if (isAt(depot, pos, distance)) {
-      return depot;
-    }
-  }
-}
-
-function isAt(object, pos, distance) {
-  if (distance > 0) {
-    return (Math.abs(object.x - pos.x) < distance) && (Math.abs(object.y - pos.y) < distance);
-  }
-
-  return (object.x === pos.x) && (object.y === pos.y);
 }
 
 export default new Units();

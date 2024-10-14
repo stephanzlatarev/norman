@@ -12,6 +12,7 @@ export default class Zone extends Pin {
   neighbors = new Set();
   range = { zones: new Set(), fire: new Set(), front: new Set(), back: new Set() };
 
+  workers = new Set();
   buildings = new Set();
   warriors = new Set();
   enemies = new Set();
@@ -65,7 +66,11 @@ export default class Zone extends Pin {
       this.threats.add(unit);
 
       knownThreats.set(unit.tag, unit);
-    } else if (unit.type.isWarrior && !unit.type.isWorker) {
+    } else if (unit.type.isWorker) {
+      if (unit.zone) unit.zone.workers.delete(unit);
+
+      this.workers.add(unit);
+    } else if (unit.type.isWarrior) {
       if (unit.zone) unit.zone.warriors.delete(unit);
 
       this.warriors.add(unit);
@@ -85,6 +90,8 @@ export default class Zone extends Pin {
       // Ignore the unit
     } else if (unit.isEnemy) {
       this.enemies.delete(unit);
+    } else if (unit.type.isWorker) {
+      this.workers.delete(unit);
     } else if (unit.type.isWarrior && !unit.type.isWorker) {
       this.warriors.delete(unit);
     } else if (unit.type.isBuilding) {

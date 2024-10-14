@@ -1,6 +1,6 @@
 import Mission from "../mission.js";
-import Units from "../units.js";
 import Build from "../jobs/build.js";
+import Depot from "../map/depot.js";
 
 export default class BuildExtractorsMission extends Mission {
 
@@ -21,11 +21,11 @@ export default class BuildExtractorsMission extends Mission {
       }
     }
 
-    for (const nexus of Units.buildings().values()) {
-      if (!nexus.depot) continue;
-      if (!nexus.depot.vespene.length) continue;
+    for (const zone of Depot.list()) {
+      if (!zone.depot || !zone.depot.isActive) continue;
+      if (zone.extractors.size >= 2) continue;
 
-      for (const vespene of nexus.depot.vespene) {
+      for (const vespene of zone.vespene) {
         if (vespene.extractor && vespene.extractor.isAlive) continue;
 
         this.vespene = vespene;

@@ -16,7 +16,7 @@ export default class DelayFirstEnemyExpansionMission extends Mission {
   run() {
     if (this.job || !Enemy.base) return;
 
-    const home = Depot.list().find(depot => depot.isActive);
+    const home = Depot.list().find(zone => zone.depot);
     const agent = selectAgent(home);
     const homePylonJob = [...Job.list()].find(job => job.output && job.output.isPylon);
     const { expansion, corridor } = findEnemyExpansion();
@@ -514,7 +514,7 @@ function orderSlip(agent, depot) {
   if (!agent || !agent.order || !agent.body || !depot) return;
 
   if (agent.order.abilityId !== 298) {
-    new Order(agent, 298, depot.minerals[0]).accept(true);
+    new Order(agent, 298, [...depot.minerals][0]).accept(true);
   }
 }
 

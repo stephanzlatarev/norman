@@ -107,12 +107,13 @@ function findPylonPlotOnMap(home) {
 
 // These pylons add build area next to the Nexus
 function findPylonPlotByDepot() {
-  for (const depot of Depot.list()) {
-    if (!depot.isActive) continue;
+  for (const zone of Depot.list()) {
+    if (!zone.depot) continue;
+    if (!zone.depot.isActive) continue;
 
-    const plot = getAnchor(depot);
+    const plot = getAnchor(zone);
 
-    if (Map.accepts(depot, plot.x, plot.y, 2)) {
+    if (Map.accepts(zone, plot.x, plot.y, 2)) {
       return plot;
     }
   }

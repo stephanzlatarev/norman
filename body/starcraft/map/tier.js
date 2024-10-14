@@ -15,7 +15,7 @@ class Tier {
 }
 
 export function syncTiers() {
-  const depots = [...Depot.list()].filter(depot => !!depot.isActive);
+  const depots = [...Depot.list()].filter(zone => !!zone.depot);
 
   // Check if active depot changed, assuming only one depot changes state in a single game loop
   if (tiers.length && (depots.length === tiers[0].zones.size)) return tiers;

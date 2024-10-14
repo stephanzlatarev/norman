@@ -1,4 +1,5 @@
 import Mission from "../mission.js";
+import Job from "../job.js";
 import Types from "../types.js";
 import Depot from "../map/depot.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
@@ -186,18 +187,47 @@ function counterMassLightZerg() {
 // Time to reach harvester capacity = time to build probe * Math.floor( free capacity / number of active nexuses)
 // TODO: Improve precision by calculating the remaining time of all building probes, and by calculating the time for a probe to move to the next expansion site
 function calculateLimitNexus() {
-  if (TotalCount.HarvesterCapacity >= Limit.Probe) return TotalCount.Nexus;
   if (TotalCount.Nexus >= ActiveCount.Gateway) return TotalCount.Nexus;
+
+  const mineralHarvesterCapacity = calculateMineralHarvesterCapacity();
+  const vespeneHarvesterCapacity = calculateLimitAssimilator() * 3;
+  if (mineralHarvesterCapacity + vespeneHarvesterCapacity >= Limit.Probe) return TotalCount.Nexus;
 
   const timeForProbeToReachConstructionSite = 5 * 22.4; // Assume 5 seconds
   const timeToBuildNexus = Types.unit("Nexus").buildTime;
   const timeToIncreaseHarvesterCapacity = timeForProbeToReachConstructionSite + timeToBuildNexus;
 
   const timeToBuildProbe = Types.unit("Probe").buildTime;
-  const freeCapacity = TotalCount.HarvesterCapacity - TotalCount.Probe;
+  const freeCapacity = mineralHarvesterCapacity - countMineralHarvesters();
   const timeToReachHarvesterCapacity = ActiveCount.Nexus ? timeToBuildProbe * Math.floor(freeCapacity / ActiveCount.Nexus) : Infinity;
 
   return (timeToReachHarvesterCapacity <= timeToIncreaseHarvesterCapacity) ? TotalCount.Nexus + 1 : TotalCount.Nexus;
+}
+
+function calculateMineralHarvesterCapacity() {
+  let capacity = 0;
+
+  for (const zone of Depot.list()) {
+    if (!zone.depot) continue;
+
+    if (zone.minerals.size === 8) {
+      capacity += 20;
+    } else {
+      capacity += zone.minerals.size * 2;
+    }
+  }
+
+  return capacity;
+}
+
+function countMineralHarvesters() {
+  let count = 0;
+
+  for (const job of Job.list()) {
+    if (job.assignee && job.isHarvestMineralsJob) count++;
+  }
+
+  return count;
 }
 
 function calculateLimitAssimilator() {
@@ -205,17 +235,19 @@ function calculateLimitAssimilator() {
 
   let limit = 0;
 
-  for (const depot of Depot.list()) {
-    if (!depot.isActive) continue;
+  for (const zone of Depot.list()) {
+    if (!zone.depot || !zone.depot.isActive) continue;
 
-    for (const vespene of depot.vespene) {
-      if (vespene.extractor) {
-        // Assimilator is already built
-        limit++;
-      } else if (depot.isSaturated) {
-        // New assimilator can be already built
-        limit++;
-      }
+    if (zone.extractors.size === 2) {
+      limit += 2; // Count the existing two assimilators
+    } else if (zone.extractors.size === 1) {
+      limit++; // Count the existing one assimilator
+
+      // Allow one more assimilator if minerals are saturated
+      if (zone.workers.size >= zone.minerals.size * 2) limit++;
+    } else {
+      // Allow one more assimilator if minerals are saturated
+      if (zone.workers.size >= zone.minerals.size * 2) limit++;
     }
   }
 

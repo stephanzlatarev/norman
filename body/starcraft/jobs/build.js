@@ -20,8 +20,8 @@ export default class Build extends Job {
 
   execute() {
     if (!this.order) {
-      if (this.target.isDepot && this.target.minerals.length) {
-        this.order = new Order(this.assignee, 298, this.target.minerals[0]).expect(this.output);
+      if ((this.assignee.zone !== this.target) && this.target.isDepot && this.target.minerals.size) {
+        this.order = new Order(this.assignee, 298, [...this.target.minerals][0]).expect(this.output);
         this.order.isCompound = true;
         this.isAproaching = true;
       } else {

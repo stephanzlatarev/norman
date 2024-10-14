@@ -23,8 +23,6 @@ export const ActiveCount = {
   Stalker: 0,
   TwilightCouncil: 0,
   Zealot: 0,
-
-  HarvesterCapacity: 0,
 };
 
 export const TotalCount = { ...ActiveCount };
@@ -56,17 +54,6 @@ export default function(observation, race) {
 
     ActiveCount[upgradeName] = 1;
     TotalCount[upgradeName] = 1;
-  }
-
-  // Count capacity
-  TotalCount.HarvesterCapacity = 0;
-  ActiveCount.HarvesterCapacity = 0;
-  for (const depot of Depot.list()) {
-    TotalCount.HarvesterCapacity += depot.capacity;
-
-    if (depot.isActive) {
-      ActiveCount.HarvesterCapacity += depot.capacity;
-    }
   }
 }
 
