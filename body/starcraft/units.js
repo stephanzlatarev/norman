@@ -154,6 +154,8 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
     image.type = Types.unit(unit.unitType);
   }
 
+  const previousArmorTotal = image.armor.total;
+
   image.isAlive = true;
   image.isHallucination = unit.isHallucination;
   image.lastSeen = Resources.loop;
@@ -172,6 +174,8 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   image.armor.health = unit.health;
   image.armor.shield = unit.shield;
   image.armor.total = unit.health + unit.shield;
+  image.armor.previous = previousArmorTotal;
+  image.isHit = (image.armor.total < image.armor.previous);
 
   image.isSelected = unit.isSelected;
 

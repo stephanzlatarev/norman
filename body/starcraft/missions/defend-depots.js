@@ -13,17 +13,21 @@ export default class DefendDepotsMission extends Mission {
     removeCompletedJobs();
 
     for (const zone of Depot.list()) {
-      if (!zone.workers.size) continue;
+      if (!zone.depot) continue;
 
-      const enemies = zone.enemies.size;
       let defenders = 0;
 
-      if (enemies > 0) {
-        defenders = Math.min(enemies * 3, zone.workers.size, MAX_ATTACKERS);
+      const targets = zone.enemies.size ? countTargets(zone.depot, zone.enemies) : 0;
+
+      if ((targets > 0) && (zone.depot.isUnderAttack || isUnderAttack(zone))) {
+        zone.depot.isUnderAttack = true;
+        defenders = Math.min(targets * 3, zone.workers.size, MAX_ATTACKERS);
 
         for (let i = 0; i < defenders; i++) {
           addJob(zone, i);
         }
+      } else {
+        zone.depot.isUnderAttack = false;
       }
   
       for (let i = defenders; i < MAX_ATTACKERS; i++) {
@@ -44,18 +48,42 @@ class Defend extends Job {
   }
 
   accepts(unit) {
-    return (unit.zone === this.zone) && (!unit.job || unit.isHarvestMineralsJob);
+    return (unit.zone === this.zone) && (!unit.job || unit.job.isHarvestMineralsJob);
   }
 
   execute() {
     const probe = this.assignee;
     const targets = this.zone.enemies;
 
-    if (targets.size && (probe.order.abilityId !== 23)) {
-      new Order(probe, 23, [...targets][0].body).accept(true);
+    if (targets.size && ((probe.order.abilityId !== 23) || !probe.order.targetUnitTag || (probe.zone !== this.zone))) {
+      for (const target of targets) {
+        if (target.isAlive && target.body.isGround && (target.lastSeen === probe.lastSeen)) {
+          new Order(probe, 23, target.body).accept(true);
+          break;
+        }
+      }
     }
   }
 
+}
+
+function countTargets(depot, enemies) {
+  let count = 0;
+
+  for (const enemy of enemies) {
+    if (enemy.isAlive && enemy.body.isGround && (enemy.lastSeen === depot.lastSeen)) count++;
+  }
+
+  return count;
+}
+
+function isUnderAttack(zone) {
+  for (const worker of zone.workers) {
+    if (worker.isHit) return true;
+  }
+  for (const building of zone.buildings) {
+    if (building.isHit) return true;
+  }
 }
 
 function removeCompletedJobs() {
