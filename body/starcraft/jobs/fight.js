@@ -106,6 +106,8 @@ export default class Fight extends Job {
   }
 
   shouldKite() {
+    if (this.isKitingSuppressed) return false;
+
     const warrior = this.assignee;
     const target = this.target;
 
@@ -120,10 +122,16 @@ export default class Fight extends Job {
       const squareRangeMax = warrior.type.rangeGround * warrior.type.rangeGround;
       const squareRangeMin = (warrior.type.rangeGround - KITING_RANGE) * (warrior.type.rangeGround - KITING_RANGE);
 
+      if (squareDistance < squareRangeMin) this.isKitingSuppressed = true;
+      if (squareDistance > squareRangeMax) this.isKitingSuppressed = false;
+
       return (squareDistance >= squareRangeMin) && (squareDistance <= squareRangeMax);
     } else if (target.body.isFlying && warrior.type.rangeAir) {
       const squareRangeMax = warrior.type.rangeAir * warrior.type.rangeAir;
       const squareRangeMin = (warrior.type.rangeAir - KITING_RANGE) * (warrior.type.rangeAir - KITING_RANGE);
+
+      if (squareDistance < squareRangeMin) this.isKitingSuppressed = true;
+      if (squareDistance > squareRangeMax) this.isKitingSuppressed = false;
 
       return (squareDistance >= squareRangeMin) && (squareDistance <= squareRangeMax);
     }

@@ -101,8 +101,14 @@ class Hotspot {
     } else {
       this.fire.add(center);
       this.front.add(center);
-      this.back.add(center);
       this.zones.add(center);
+
+      for (const zone of center.neighbors) {
+        if (zone.cells.size && !this.zones.has(zone)) {
+          this.back.add(zone);
+          this.zones.add(zone);
+        }
+      }
     }
   }
 

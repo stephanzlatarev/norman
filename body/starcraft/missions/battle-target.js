@@ -37,6 +37,7 @@ class TargetMatrix {
   assignedWarriors = new Set();
 
   constructor(battle) {
+    const groundWarriors = new Set();
     const airRangeWarriors = new Set();
     const groundRangeWarriors = new Set();
 
@@ -45,13 +46,19 @@ class TargetMatrix {
       if (!warrior || !warrior.isAlive) continue;
       if (warrior.type.rangeAir > 1) airRangeWarriors.add(warrior);
       if (warrior.type.rangeGround > 1) groundRangeWarriors.add(warrior);
+      groundWarriors.add(warrior);
       this.warriorToFightJob.set(warrior, fighter);
     }
 
-    for (const threat of battle.zone.threats) {
-      // TODO: Add spell casters and later air-hitters
-      if (threat.type.damageGround && isValidTarget(threat)) {
-        this.primaryTargets.push(threat);
+    for (const zone of battle.zones) {
+      for (const threat of zone.threats) {
+        if (!threat.type.isWarrior) continue;
+        if (!isValidTarget(threat)) continue;
+
+        // Treat the enemy warriors that are in the battle zone and those that have range over my warriors as primary targets
+        if ((zone === battle.zone) || isEnemyWarriorAbleToAttack(threat, groundWarriors)) {
+          this.primaryTargets.push(threat);
+        }
       }
     }
 
@@ -128,6 +135,17 @@ function isValidTarget(target) {
   if (target.type.name === "AdeptPhaseShift") return false;
 
   return true;
+}
+
+function isEnemyWarriorAbleToAttack(enemy, groundWarriors) {
+  if (enemy.type.rangeGround < 1) return false;
+
+  const groundRange = enemy.type.rangeGround + enemy.body.r + 1; // Use 1 for body radius of my warriors to reduce calculations
+  const squareGroundRange = groundRange * groundRange;
+
+  for (const warrior of groundWarriors) {
+    if (calculateSquareDistance(enemy.body, warrior.body) <= squareGroundRange) return true;
+  }
 }
 
 function orderTargets(a, b) {

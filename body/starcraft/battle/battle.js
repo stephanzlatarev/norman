@@ -198,7 +198,7 @@ function isSmallFight(battle) {
     }
   }
 
-  return (enemyCount <= 3) && (warriorCount >= enemyCount);
+  return (enemyCount <= 3) && (warriorCount > enemyCount);
 }
 
 function calculateBalance(battle, isDeployed) {
