@@ -25,7 +25,6 @@ export default class Game {
     this.client = starcraft();
 
     await this.connect();
-    await this.say("Good luck!");
 
     const gameInfo = await this.client.gameInfo();
     const observation = await this.client.observation();
@@ -42,6 +41,8 @@ export default class Game {
     };
 
     Enemy.id = this.enemy.id;
+
+    await greet(this, gameInfo, Enemy.id);
 
     Types.sync((await this.client.data({ unitTypeId: true, upgradeId: true })));
     Units.sync(this.observation.rawData.units, null, this.me, this.enemy);
@@ -175,6 +176,16 @@ export default class Game {
     }
   }
 
+}
+
+async function greet(game, gameInfo, enemyId) {
+  for (const playerInfo of gameInfo.playerInfo) {
+    if (playerInfo.playerName && playerInfo.playerName.length && (playerInfo.playerId === enemyId)) {
+      return await game.say("Good luck, " + playerInfo.playerName + "! Have fun.");
+    }
+  }
+
+  await game.say("Good luck, stranger! Have fun.");
 }
 
 function getRace(gameInfo, playerId) {
