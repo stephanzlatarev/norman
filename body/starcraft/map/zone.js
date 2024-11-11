@@ -128,6 +128,16 @@ export default class Zone extends Pin {
         replaceInSet(zone.range.back, old, this);
       }
 
+      const updatedTiers = new Set();
+      for (const zone of this.zones) {
+        if (!updatedTiers.has(zone.tier)) {
+          replaceInSet(zone.tier.fore, old, this);
+          replaceInSet(zone.tier.zones, old, this);
+          replaceInSet(zone.tier.back, old, this);
+          updatedTiers.add(zone.tier);
+        }
+      }
+
       old.remove();
     } else {
       console.log("Only replacement of a corridor with another corridor is supported!");

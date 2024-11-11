@@ -20,6 +20,7 @@ const WARRIOR_FACTORY = {
 let mode;
 let wall;
 let field;
+let home;
 let wallKeeperJob;
 const defenderJobs = new Set();
 const pullProbeJobs = new Set();
@@ -30,7 +31,7 @@ export default class WallNatural extends Mission {
     if (mode === MODE_OFF) return;
     if (!wall && !findWallAndField()) return this.close();
 
-    mode = field.enemies.size ? MODE_DEFEND : MODE_READY;
+    mode = (home.enemies.size || wall.enemies.size || field.enemies.size) ? MODE_DEFEND : MODE_READY;
 
     if ((ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 33) && (ActiveCount.Stalker > 4)) {
       if (mode === MODE_READY) return this.close();
@@ -99,11 +100,13 @@ function isEnemyMostlyMelee() {
   let melee = 0;
   let ranged = 0;
 
-  for (const enemy of field.enemies) {
-    if (enemy.type.rangeGround > 1) {
-      ranged++;
-    } else {
-      melee++;
+  for (const zone of [home, wall, field]) {
+    for (const enemy of zone.enemies) {
+      if (enemy.type.rangeGround > 1) {
+        ranged++;
+      } else {
+        melee++;
+      }
     }
   }
 
@@ -132,13 +135,15 @@ class WallDefender extends Job {
     }
 
     let target;
-    for (const enemy of field.enemies) {
-      if (!enemy.body.isGround) continue;
-      if (enemy.armor.total < 0) continue;
-      if (squareDistance(defender.body, enemy.body) > squareRange) continue;
-
-      if (!target || (enemy.armor.total < target.armor.total)) {
-        target = enemy;
+    for (const zone of [home, wall, field]) {
+      for (const enemy of zone.enemies) {
+        if (!enemy.body.isGround) continue;
+        if (enemy.armor.total < 0) continue;
+        if (squareDistance(defender.body, enemy.body) > squareRange) continue;
+  
+        if (!target || (enemy.armor.total < target.armor.total)) {
+          target = enemy;
+        }
       }
     }
     if (target) {
@@ -198,10 +203,12 @@ function findWallAndField() {
     for (const zone of wall.zones) {
       if (zone.tier.level > wall.tier.level) {
         field = zone;
-
-        return true;
+      } else {
+        home = zone;
       }
     }
+
+    return home && field;
   }
 }
 
@@ -355,7 +362,9 @@ function orderHold(warrior, pos) {
   if ((warrior.order.abilityId === 18) && isExactPosition(warrior.body, pos)) return;
   if ((warrior.order.abilityId === 23) && isSamePosition(warrior.body, pos)) return;
 
-  if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isSamePosition(warrior.order.targetWorldSpacePos, pos)) {
+  if (!warrior.weapon.cooldown && isAttacked(warrior)) {
+    new Order(warrior, 23, pos).accept(true);
+  } else if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isSamePosition(warrior.order.targetWorldSpacePos, pos)) {
     new Order(warrior, 16, pos).queue(18);
   }
 }
@@ -380,6 +389,14 @@ function orderAttack(warrior, target) {
 function setRallyPoint(facility, rally) {
   if (!facility.rally || (facility.rally.x !== rally.x) || (facility.rally.y !== rally.y)) {
     return new Order(facility, 195, rally).accept(true);
+  }
+}
+
+function isAttacked(warrior) {
+  for (const zone of [home, wall, field]) {
+    for (const enemy of zone.enemies) {
+      if (isSamePosition(warrior.body, enemy.body)) return true;
+    }
   }
 }
 
