@@ -42,8 +42,6 @@ export default class Game {
 
     Enemy.id = this.enemy.id;
 
-    await greet(this, gameInfo, Enemy.id);
-
     Types.sync((await this.client.data({ unitTypeId: true, upgradeId: true })));
     Units.sync(this.observation.rawData.units, null, this.me, this.enemy);
     Resources.sync(this.observation);
@@ -109,6 +107,11 @@ export default class Game {
             console.log("WARNING! Unit", job.assignee.type.name, job.assignee.nick, "idle on job", job.details);
             job.close(false);
           }
+        }
+
+        if ((Resources.loop > 2) && !this.hasGreetedOpponent) {
+          await greet(this, gameInfo, Enemy.id);
+          this.hasGreetedOpponent = true;
         }
 
         if (Units.buildings().size) {
