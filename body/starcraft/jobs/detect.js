@@ -94,7 +94,7 @@ export default class Detect extends Job {
       } else if ((this.loopsInDirection < LOOPS_LIMIT_DIRECTION) && (this.zone.threats.size > this.zone.enemies.size)) {
         this.target = findClosestInvisibleThreat(observer, this.zone.threats, this.zone.enemies);
       } else if (this.target === this.zone) {
-        this.target = this.battle.stations[Math.floor(this.battle.stations.length * Math.random())];
+        this.target = this.battle.lines[Math.floor(this.battle.lines.length * Math.random())].zone;
       } else {
         this.target = this.zone;
       }
@@ -162,8 +162,8 @@ function isTargetValid(battle, target) {
     // Target is valid if it is a threat but is not visible
     return battle.zone.threats.has(target) && battle.zone.enemies.has(target);
   } else {
-    // Target is valid if it is either the battle zone or one of the stations
-    return (target === battle.zone) || !!battle.stations.find(station => (station === target));
+    // Target is valid if it is either the battle zone or one of the battle line zones
+    return (target === battle.zone) || !!battle.lines.find(line => (target === line.zone));
   }
 }
 

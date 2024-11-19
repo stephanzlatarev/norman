@@ -1,5 +1,34 @@
+import Job from "../job.js";
+import Battle from "./battle.js";
 
-export default function(battle, event) {
+const INTERVAL = 224;
+let loop = 0;
+
+export default function() {
+  if (loop-- > 0) return;
+
+  const battles = new Set();
+  const orphans = new Set();
+
+  for (const battle of Battle.list()) {
+    traceBattle(battle);
+    battles.add(battle);
+  }
+
+  for (const job of Job.list()) {
+    if (job.battle && !battles.has(job.battle)) {
+      orphans.add(job.battle);
+    }
+  }
+
+  for (const battle of orphans) {
+    traceBattle(battle, "orphan");
+  }
+
+  loop = INTERVAL;
+}
+
+function traceBattle(battle, event) {
   const trace = [];
 
   trace.push("[battle]", battle.zone.name);
@@ -12,8 +41,8 @@ export default function(battle, event) {
   trace.push("mode:", battle.mode);
   trace.push("range:", battle.range);
 
-  trace.push("stations:");
-  traceStations(trace, battle);
+  trace.push("lines:");
+  traceLines(trace, battle);
 
   trace.push("detector:");
   traceDetector(trace, battle.detector);
@@ -27,26 +56,26 @@ export default function(battle, event) {
   console.log(trace.join(" "));
 }
 
-function traceStations(trace, battle) {
-  const stations = new Set();
+function traceLines(trace, battle) {
+  const lines = new Set();
 
-  for (const station of battle.stations) {
+  for (const line of battle.lines) {
     let count = 0;
 
     for (const fighter of battle.fighters) {
-      if (fighter.zone === station.zone) {
+      if (fighter.zone === line.zone) {
         count++;
       }
     }
 
-    trace.push(station.zone.name, count);
-    stations.add(station.zone);
+    trace.push(line.zone.name, count, "/", line.fighters.length);
+    lines.add(line.zone);
   }
 
   const inactive = new Map();
 
   for (const fighter of battle.fighters) {
-    if (!stations.has(fighter.zone)) {
+    if (!lines.has(fighter.zone)) {
       increment(inactive, fighter.zone.name);
     }
   }

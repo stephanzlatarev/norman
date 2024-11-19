@@ -18,7 +18,6 @@ export default class Fight extends Job {
     this.summary = "Fight " + battle.zone.name;
     this.details = this.summary;
     this.isCommitted = false;
-    this.isDeployed = false;
 
     battle.fighters.push(this);
   }
@@ -37,27 +36,15 @@ export default class Fight extends Job {
   }
 
   accepts(unit) {
-    if (!unit.zone || !this.battle.stations.length) {
+    if (!unit.zone || !this.battle.lines.length) {
       return false;
     } else if (this.battle.zones.has(unit.zone)) {
-      // If already in the battle zone, the warrior must be closest to this fight's station rather than any other station of the battle
-      let closestStation;
-      let closestDistance = Infinity;
+      // If already in the battle zone, the warrior must be closest to this fight's station's battle line rather than any other battle line
+      const closestDistance = calculateSquareDistance(unit.body, this.zone);
 
-      for (const station of this.battle.stations) {
-        const distance = calculateSquareDistance(this.station, station);
-
-        if (distance < closestDistance) {
-          closestStation = station;
-          closestDistance = distance;
-        }
-      }
-
-      closestDistance = calculateSquareDistance(unit.body, closestStation);
-
-      for (const station of this.battle.stations) {
-        if (station === closestStation) continue;
-        if (calculateSquareDistance(unit.body, station) < closestDistance) return false;
+      for (const line of this.battle.lines) {
+        if (this.zone === line.zone) continue;
+        if (calculateSquareDistance(unit.body, line.zone) < closestDistance) return false;
       }
     }
 
@@ -73,20 +60,19 @@ export default class Fight extends Job {
       this.details = getDetails(this, "dead");
       this.assignee = null;
       this.isCommitted = false;
-      this.isDeployed = false;
       return;
     }
 
     const isAttacking = (warrior && target && warrior.order && (warrior.order.targetUnitTag === target.tag));
+    const isDeployed = this.battle.zones.has(warrior.zone);
 
-    this.isDeployed = isAttacking || this.battle.zones.has(warrior.zone);
     this.isCommitted = false;
 
-    if (this.shouldAttack()) {
+    if ((isDeployed || isAttacking) && this.shouldAttack()) {
       this.details = getDetails(this, "attack");
       this.isCommitted = true;
       this.goAttack();
-    } else if (!this.isDeployed) {
+    } else if (!isDeployed && !isAttacking) {
       this.details = getDetails(this, "deploy");
       this.goDeploy();
     } else if (this.shouldKite()) {
@@ -102,7 +88,7 @@ export default class Fight extends Job {
     const warrior = this.assignee;
     const mode = this.battle.mode;
 
-    return warrior && this.target && ((mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH)) && this.isDeployed;
+    return warrior && this.target && ((mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH));
   }
 
   shouldKite() {
@@ -202,7 +188,7 @@ export default class Fight extends Job {
     }
 
     if (!hop || isClose(warrior.body, hop, HOP_CLOSE_DISTANCE)) {
-      hop = this.station;
+      hop = station;
     }
 
     Order.move(warrior, hop, Order.MOVE_CLOSE_TO);

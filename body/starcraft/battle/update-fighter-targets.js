@@ -1,21 +1,14 @@
-import Mission from "../mission.js";
 import Battle from "../battle/battle.js";
 import Resources from "../memo/resources.js";
 
-export default class BattleTargetMission extends Mission {
-
-  run() {
-    for (const battle of Battle.list()) {
-      if (battle.mode === Battle.MODE_FIGHT) {
-        setFightTargets(battle);
-      } else if (battle.mode === Battle.MODE_SMASH) {
-        setFightTargets(battle);
-      } else {
-        setKiteTargets(battle);
-      }
-    }
+export default function(battle) {
+  if (battle.mode === Battle.MODE_FIGHT) {
+    setFightTargets(battle);
+  } else if (battle.mode === Battle.MODE_SMASH) {
+    setFightTargets(battle);
+  } else {
+    setKiteTargets(battle);
   }
-
 }
 
 /**
