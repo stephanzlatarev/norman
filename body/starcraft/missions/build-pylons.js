@@ -100,6 +100,10 @@ function countSupplyConsumptionRate() {
   return consumption;
 }
 
+function isBlockingWall(pos) {
+  return (wallPylon && (Math.abs(pos.x - wallPylon.body.x) <= 10) && (Math.abs(pos.y - wallPylon.body.y) <= 10));
+}
+
 // TODO: Optimize by remembering found plots and re-using them when pylons are destroyed but otherwise continue the search from where last plot was found
 function findPylonPlotOnMap(home) {
   return findPylonPlotByDepot() || findPlotInFrontier() || findPylonPlotByZone(home);
@@ -113,7 +117,7 @@ function findPylonPlotByDepot() {
 
     const plot = getAnchor(zone);
 
-    if (Map.accepts(zone, plot.x, plot.y, 2)) {
+    if (Map.accepts(zone, plot.x, plot.y, 2) && !isBlockingWall(plot)) {
       return plot;
     }
   }
@@ -125,7 +129,7 @@ function findPlotInFrontier() {
     const frontier = Tiers[1].zones;
 
     for (const zone of frontier) {
-      if (!zone.isDepot && Map.accepts(zone, zone.x, zone.y, 2)) {
+      if (!zone.isDepot && Map.accepts(zone, zone.x, zone.y, 2) && !isBlockingWall(zone)) {
         return { x: zone.x, y: zone.y };
       }
     }
@@ -141,7 +145,7 @@ function findPylonPlotByZone(home) {
   for (const zone of next) {
     const plot = findPylonPlotInZone(zone);
 
-    if (plot) return plot;
+    if (plot && !isBlockingWall(plot)) return plot;
 
     checked.add(zone);
 
