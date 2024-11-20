@@ -96,12 +96,15 @@ function traceDetector(trace, detector) {
 }
 
 function traceFighters(trace, battle) {
+  const types = new Set();
   const count = new Map();
   const hire = new Map();
   const deploy = new Set();
   const rally = new Set();
 
   for (const fighter of battle.fighters) {
+    types.add(fighter.agent.type.name);
+
     if (fighter.assignee) {
       increment(count, fighter.assignee.zone.name);
 
@@ -115,7 +118,13 @@ function traceFighters(trace, battle) {
     }
   }
 
+  for (const type of types) {
+    trace.push(type);
+  }
+
   if (deploy.size) {
+    trace.push("|");
+
     for (const zone of deploy) {
       trace.push(zone, count.get(zone));
     }

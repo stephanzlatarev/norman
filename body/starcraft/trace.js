@@ -241,8 +241,8 @@ function balanceText(balance) {
 function traceBattles(texts, boxes, lines) {
   let y = 0.32;
 
-  texts.push({ text: "Battles:", virtualPos: { x: 0.8, y: 0.3 }, size: 16 });
-  texts.push({ text: "Tier Zone Recruit/Rallied Mode", virtualPos: { x: 0.8, y: 0.31 }, size: 16 });
+  texts.push({ text: "Battles:", virtualPos: { x: 0.79, y: 0.3 }, size: 16 });
+  texts.push({ text: "Tier Zone Recruit/Rallied Mode  Frontline", virtualPos: { x: 0.79, y: 0.31 }, size: 16 });
 
   for (const battle of Battle.list().sort((a, b) => (b.priority - a.priority))) {
     const zone = battle.zone;
@@ -251,6 +251,7 @@ function traceBattles(texts, boxes, lines) {
     text.push(balanceText(battle.recruitedBalance));
     text.push(balanceText(battle.deployedBalance));
     text.push(battle.mode);
+    text.push(battle.lines.map(line => line.zone.name).join(" "));
 
     for (const fighter of battle.fighters) {
       if (!fighter.assignee) continue;
@@ -273,7 +274,7 @@ function traceBattles(texts, boxes, lines) {
       }
     }
 
-    texts.push({ text: text.join(" "), virtualPos: { x: 0.8, y: y }, size: 16 });
+    texts.push({ text: text.join(" "), virtualPos: { x: 0.79, y: y }, size: 16 });
     y += 0.01;
   }
 }
