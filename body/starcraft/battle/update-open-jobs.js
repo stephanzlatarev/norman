@@ -55,11 +55,11 @@ function isSmallBattle(battle) {
   for (const zone of battle.zones) {
     for (const threat of zone.threats) {
       if (threat.type.damageGround) count++;
-      if (count > 2) return true;
+      if (count > 2) return false;
     }
   }
 
-  return false;
+  return true;
 }
 
 function isJobOpen(job) {
