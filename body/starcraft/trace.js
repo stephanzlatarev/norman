@@ -4,7 +4,7 @@ import Battle from "./battle/battle.js";
 import Zone from "./map/zone.js";
 
 const Color = {
-  Blue: { r: 0, g: 150, b: 250 },
+  Blue: { r: 100, g: 100, b: 200 },
   Green: { r: 0, g: 200, b: 0 },
   White: { r: 200, g: 200, b: 200 },
   Yellow: { r: 200, g: 200, b: 0 },
@@ -253,6 +253,12 @@ function traceBattles(texts, boxes, lines) {
     text.push(battle.mode);
     text.push(battle.lines.map(line => line.zone.name).join(" "));
 
+    for (const line of battle.lines) {
+      for (const station of line.stations) {
+        boxes.push({ min: { x: station.x - 0.3, y: station.y - 0.3, z: 0 }, max: { x: station.x + 0.3, y: station.y + 0.3, z: 15 }, color: Color.Blue });
+      }
+    }
+
     for (const fighter of battle.fighters) {
       if (!fighter.assignee) continue;
 
@@ -267,6 +273,7 @@ function traceBattles(texts, boxes, lines) {
         const station = { x: fighter.station.x, y: fighter.station.y, z: 15 };
         lines.push({ line: { p0: warrior, p1: station }, color: Color.Blue });
         boxes.push({ min: { x: station.x - 0.4, y: station.y - 0.4, z: 0 }, max: { x: station.x + 0.4, y: station.y + 0.4, z: 15 }, color: Color.Blue });
+        texts.push({ text: fighter.agent.type.name, worldPos: { x: station.x - 0.4, y: station.y, z: 15 }, size: 20, color: Color.Blue });
       } else {
         const rally = { x: fighter.zone.x, y: fighter.zone.y, z: 15 };
         lines.push({ line: { p0: warrior, p1: rally }, color: Color.White });

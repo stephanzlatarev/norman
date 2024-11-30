@@ -6,18 +6,15 @@ export default class Battle {
 
   static MODE_FIGHT = "fight";
   static MODE_RALLY = "rally";
+  static MODE_MARCH = "march";
   static MODE_SMASH = "smash";
   static MODE_WATCH = "watch";
-
-  static RANGE_FRONT = "front";
-  static RANGE_BACK = "back";
 
   recruitedBalance = 0;
   deployedBalance = 0;
 
   pastmode = Battle.MODE_WATCH;
   mode = Battle.MODE_WATCH;
-  range = Battle.RANGE_BACK;
 
   lines = [];
 
@@ -56,6 +53,15 @@ export default class Battle {
       for (const fighter of this.fighters) {
         fighter.updateBattle(this);
       }
+    }
+  }
+
+  go(mode) {
+    this.mode = mode;
+
+    if (this.mode !== this.pastmode) {
+      traceBattle(this, "mode: " + this.pastmode + " > " + this.mode);
+      this.pastmode = this.mode;
     }
   }
 

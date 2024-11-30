@@ -1,7 +1,9 @@
-import Battle from "../battle/battle.js";
 import Line from "../battle/line.js";
+import { ALERT_YELLOW } from "../map/alert.js";
 import { getHopDistance } from "../map/route.js";
 import Wall from "../map/wall.js";
+
+const SURROUND_BALANCE = 1.1;
 
 const wall = { zone: null, zones: new Set(), base: null };
 
@@ -12,7 +14,7 @@ export default function(battle) {
     setBattleLines(battle, [wall.base]);
   } else {
     const approaches = selectBattleLineApproaches(battle);
-    const limit = (battle.range === Battle.RANGE_BACK) ? 1 : 3;
+    const limit = (battle.deployedBalance > SURROUND_BALANCE) ? 3 : 1;
     const active = selectActiveApproaches(battle, approaches, limit);
 
     setBattleLines(battle, active);
@@ -56,47 +58,32 @@ function setBattleLines(battle, zones) {
 }
 
 function selectBattleLineApproaches(battle) {
-  if (battle.range === Battle.RANGE_FRONT) {
-    // Selects the closest zones in each corridor direction from the battle zone
-    const battleFrontZones = battle.hotspot.front;
+  const battleBorderZones = battle.hotspot.back;
 
-    if (!battleFrontZones.size) return new Set();
-    if (battleFrontZones.has(battle.zone)) return new Set([battle.zone]);
+  if (!battleBorderZones.size) return new Set();
+  if (battleBorderZones.has(battle.zone)) return new Set([battle.zone]);
 
-    const approaches = new Set();
+  const approaches = new Set();
+  let distance = Infinity;
 
-    for (const corridor of battle.zone.corridors) {
-      const closestZones = getClosestZonesInDirection(battleFrontZones, battle.zone, corridor);
+  for (const zone of battleBorderZones) {
+    if (zone.alertLevel > ALERT_YELLOW) continue;
 
-      for (const zone of closestZones) {
-        approaches.add(zone);
-      }
-    }
+    const hops = battle.zone.getHopsTo(zone);
 
-    return approaches;
-  } else {
-    return new Set([...battle.hotspot.back]);
-  }
-}
+    if (!hops) continue;
 
-function getClosestZonesInDirection(zones, center, direction) {
-  let closestZones = new Set();
-  let leastDistance = Infinity;
+    if (hops.distance < distance) {
+      distance = hops.distance;
 
-  for (const zone of zones) {
-    const hops = center.getHopsTo(zone);
-
-    if (!hops || (hops.direction !== direction)) continue;
-
-    if (hops.distance < leastDistance) {
-      closestZones = new Set([zone]);
-      leastDistance = hops.distance;
-    } else if (hops.distance === leastDistance) {
-      closestZones.add(zone);
+      approaches.clear();
+      approaches.add(zone);
+    } else if (hops.distance === distance) {
+      approaches.add(zone);
     }
   }
 
-  return closestZones;
+  return approaches;
 }
 
 function selectActiveApproaches(battle, approaches, limit) {

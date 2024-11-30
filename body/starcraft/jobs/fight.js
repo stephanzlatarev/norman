@@ -2,6 +2,7 @@ import Job from "../job.js";
 import Order from "../order.js";
 import Battle from "../battle/battle.js";
 import { getHopRoute, getHopZone } from "../map/route.js";
+import Resources from "../memo/resources.js";
 
 const HOP_CLOSE_DISTANCE = 6;
 const KITING_RANGE = 2;
@@ -78,6 +79,9 @@ export default class Fight extends Job {
     } else if (this.shouldKite()) {
       this.details = getDetails(this, "kite");
       Order.attack(warrior, target);
+    } else if (isDeployed && this.shouldMarch()) {
+      this.details = getDetails(this, "march");
+      this.goMarch();
     } else {
       this.details = getDetails(this, "station");
       Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
@@ -121,6 +125,10 @@ export default class Fight extends Job {
 
       return (squareDistance >= squareRangeMin) && (squareDistance <= squareRangeMax);
     }
+  }
+
+  shouldMarch() {
+    return this.assignee && (this.battle.mode === Battle.MODE_MARCH);
   }
 
   goAttack() {
@@ -192,6 +200,41 @@ export default class Fight extends Job {
     }
 
     Order.move(warrior, hop, Order.MOVE_CLOSE_TO);
+  }
+
+  goMarch() {
+    const warrior = this.assignee;
+    let marching = this.marching;
+
+    if (marching && (Resources.loop - marching.loop < 4)) {
+      const dx = (warrior.body.x - marching.lastx);
+      const dy = (warrior.body.y - marching.lasty);
+
+      marching.loop = Resources.loop;
+      marching.lastx = warrior.body.x;
+      marching.lasty = warrior.body.y;
+
+      if (marching.isMarching) {
+        marching.distance += Math.sqrt(dx * dx + dy * dy);
+      }
+    } else {
+      marching = { loop: Resources.loop, isLeader: false, isMarching: true, distance: 0, lastx: warrior.body.x, lasty: warrior.body.y };
+      this.marching = marching;
+    }
+
+    if (marching.distance > this.battle.marchingDistance) {
+      this.details = getDetails(this, "spread");
+
+      // Make sure the spread movement is not counted as marching
+      marching.isMarching = false;
+
+      Order.stop(warrior);
+    } else {
+      // Make sure the spread movement is counted as marching
+      marching.isMarching = true;
+
+      Order.move(warrior, this.target || this.battle.zone);
+    }
   }
 
   close(outcome) {

@@ -3,6 +3,7 @@ import updateBattleBalance from "./update-battle-balance.js";
 import updateBattleDetection from "./update-battle-detection.js";
 import updateBattleLines from "./update-battle-lines.js";
 import updateBattleList from "./update-battle-list.js";
+import updateBattleMarching from "./update-battle-marching.js";
 import updateBattleMode from "./update-battle-mode.js";
 import updateFighterPrio from "./update-fighter-prio.js";
 import updateFighterStations from "./update-fighter-stations.js";
@@ -26,6 +27,7 @@ const ops = [
   updateJobsToLines,     // Distribute all fighter jobs to active battle lines
   updateBattleBalance,   // Update the balance scores for each battle
   updateBattleMode,      // Update the mode for each battle
+  updateBattleMarching,  // Update the progress data on battle marching
   updateLineStations,    // Assign stations to battle lines based on the fighter jobs
   updateFighterStations, // Assign the fighter jobs of each battle line to the stations in the battle line
   updateFighterTargets,  // Focus fire in each battle
