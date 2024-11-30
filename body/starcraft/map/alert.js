@@ -162,17 +162,17 @@ function identifyHotspots(zones) {
   }
 }
 
+// TODO: Add spell casters and later air-hitters
 function doesZoneThreatenNeighbors(zone) {
-  let count = 0;
-
   for (const threat of zone.threats) {
-    // TODO: Add spell casters and later air-hitters
-    if (!threat.type.isWorker && threat.type.damageGround) {
-      count++;
+    if (threat.type.isWorker) continue;
+
+    if (threat.type.damageGround && (threat.type.rangeGround > 4)) {
+      return true;
     }
   }
 
-  return (count > 2);
+  return false;
 }
 
 function increaseAlertLevelForHotspotFronts() {
