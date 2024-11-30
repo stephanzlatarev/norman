@@ -46,6 +46,7 @@ export default class Zone extends Pin {
 
   addUnit(unit) {
     if (this === unit.zone) return;
+    if (unit.isEnemy && !unit.isVisible) return;
 
     if (unit.isHallucination) {
       // Ignore the unit

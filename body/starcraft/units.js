@@ -157,6 +157,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
   const previousArmorTotal = image.armor.total;
 
   image.isAlive = true;
+  image.isVisible = (unit.displayType === 1);
   image.isHallucination = unit.isHallucination;
   image.lastSeen = Resources.loop;
   image.buildProgress = unit.buildProgress;
