@@ -10,8 +10,9 @@ jobs:
       - uses: actions/setup-node@v4
       - run: npm install --omit=dev
 
-      - name: Add LadderBots.json
+      - name: Add bot descriptors
         run: |
+          mv ${GITHUB_WORKSPACE}/norman.js ${GITHUB_WORKSPACE}/nida.js
           echo '{ "Bots": { "nida": { "Race": "Protoss", "Type": "NodeJS", "RootPath": "./", "FileName": "nida.js", "Debug": true } } }' > ${GITHUB_WORKSPACE}/LadderBots.json
 
       - name: Create bot zip
