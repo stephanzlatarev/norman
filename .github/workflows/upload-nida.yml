@@ -25,4 +25,4 @@ jobs:
         env:
           API_TOKEN: ${{ secrets.AI_ARENA_API_TOKEN }}
         run: |
-          curl -H "Authorization: Token ${API_TOKEN}" -F "bot_zip=@${GITHUB_WORKSPACE}/nida.zip" https://aiarena.net/api/bots/605/
+          curl -X PATCH -H "Authorization: Token ${API_TOKEN}" -F "bot_zip=@${GITHUB_WORKSPACE}/nida.zip" https://aiarena.net/api/bots/605/
