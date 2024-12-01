@@ -11,7 +11,8 @@ jobs:
       - run: npm install --production
 
       - name: Add LadderBots.json
-        run: echo '{ "Bots": { "nida": { "Race": "Protoss", "Type": "NodeJS", "RootPath": "./", "FileName": "nida.js", "Debug": true } } }' > ${GITHUB_WORKSPACE}/LadderBots.json
+        run: |
+          echo '{ "Bots": { "nida": { "Race": "Protoss", "Type": "NodeJS", "RootPath": "./", "FileName": "nida.js", "Debug": true } } }' > ${GITHUB_WORKSPACE}/LadderBots.json
 
       - name: Create bot zip
         run: |
@@ -24,4 +25,5 @@ jobs:
       - name: Upload to AI Arena
         env:
           API_TOKEN: ${{ secrets.AI_ARENA_API_TOKEN }}
-        run: curl -H 'Authorization: Token ${API_TOKEN}' -F 'bot_zip=@${GITHUB_WORKSPACE}/nida.zip' https://aiarena.net/api/bots/605/
+        run: |
+          curl -H 'Authorization: Token ${API_TOKEN}' -F 'bot_zip=@${GITHUB_WORKSPACE}/nida.zip' https://aiarena.net/api/bots/605/
