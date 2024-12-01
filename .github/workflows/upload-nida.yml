@@ -1,0 +1,27 @@
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm install --production
+
+      - name: Add LadderBots.json
+        run: echo '{ "Bots": { "nida": { "Race": "Protoss", "Type": "NodeJS", "RootPath": "./", "FileName": "nida.js", "Debug": true } } }' > ${GITHUB_WORKSPACE}/LadderBots.json
+
+      - name: Create bot zip
+        run: |
+          pwd
+          cat ${GITHUB_WORKSPACE}
+          ls -l ${GITHUB_WORKSPACE}
+          rm -rf ${GITHUB_WORKSPACE}/nida.zip
+          zip -r ${GITHUB_WORKSPACE}/nida.zip . -x '.github/*'
+
+      - name: Upload to AI Arena
+        env:
+          API_TOKEN: ${{ secrets.AI_ARENA_API_TOKEN }}
+        run: curl -H 'Authorization: Token ${API_TOKEN}' -F 'bot_zip=@${GITHUB_WORKSPACE}/nida.zip' https://aiarena.net/api/bots/605/

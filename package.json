@@ -3,14 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node ./norman.js",
-    "test": "mocha"
+    "start": "node ./norman.js"
   },
   "dependencies": {
-    "@node-sc2/proto": "^0.6.0-alpha.0",
-    "@tensorflow/tfjs-node-gpu": "^4.6.0"
-  },
-  "devDependencies": {
-    "mocha": "^10.2.0"
+    "@node-sc2/proto": "^0.6.0-alpha.0"
   }
 }
