@@ -1,4 +1,8 @@
+import fs from "fs";
 import Game from "./game.js";
+import Resources from "./memo/resources.js";
+
+const FILE_VERSION = "./version";
 
 export default class LadderGame extends Game {
 
@@ -24,6 +28,14 @@ export default class LadderGame extends Game {
     ];
 
     await this.client.joinGame(player);
+  }
+
+  async step() {
+    await super.step();
+
+    if ((Resources.loop === 10) && fs.existsSync(FILE_VERSION)) {
+      this.say("tag: V" + fs.readFileSync(FILE_VERSION, "utf8"));
+    }
   }
 
 }
