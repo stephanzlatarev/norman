@@ -14,6 +14,7 @@ jobs:
         run: |
           mv ${GITHUB_WORKSPACE}/norman.js ${GITHUB_WORKSPACE}/nida.js
           echo '{ "Bots": { "nida": { "Race": "Protoss", "Type": "NodeJS", "RootPath": "./", "FileName": "nida.js", "Debug": true } } }' > ${GITHUB_WORKSPACE}/LadderBots.json
+          echo '{ "body": [ { "label": "StarCraft II", "code": "body/starcraft/game-ladder" } ] }' > ${GITHUB_WORKSPACE}/norman.env
 
       - name: Create bot zip
         run: |
