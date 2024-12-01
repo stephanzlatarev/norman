@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-      - run: npm install --production
+      - run: npm install --omit=dev
 
       - name: Add LadderBots.json
         run: |
@@ -17,10 +17,10 @@ jobs:
       - name: Create bot zip
         run: |
           pwd
-          cat ${GITHUB_WORKSPACE}
           ls -l ${GITHUB_WORKSPACE}
           rm -rf ${GITHUB_WORKSPACE}/nida.zip
           zip -r ${GITHUB_WORKSPACE}/nida.zip . -x '.github/*'
+          ls -l ${GITHUB_WORKSPACE}
 
       - name: Upload to AI Arena
         env:
