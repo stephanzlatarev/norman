@@ -34,7 +34,7 @@ export default class LadderGame extends Game {
     await super.step();
 
     if ((Resources.loop === 10) && fs.existsSync(FILE_VERSION)) {
-      this.say("tag: V" + fs.readFileSync(FILE_VERSION, "utf8"));
+      this.say("Tag:" + fs.readFileSync(FILE_VERSION, "utf8"));
     }
   }
 
