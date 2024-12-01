@@ -17,9 +17,8 @@ jobs:
       - name: Create bot zip
         run: |
           pwd
-          ls -l ${GITHUB_WORKSPACE}
           rm -rf ${GITHUB_WORKSPACE}/nida.zip
-          zip -r ${GITHUB_WORKSPACE}/nida.zip . -x '.github/*'
+          zip -r ${GITHUB_WORKSPACE}/nida.zip . -x '.git/*' '.github/*'
           ls -l ${GITHUB_WORKSPACE}
 
       - name: Upload to AI Arena
