@@ -7,6 +7,7 @@ const Worker = "Worker";
 
 export const VisibleCount = {
   Marine: 0,
+  NydusCanal: 0,
   Queen: 0,
   SpawningPool: 0,
   Zealot: 0,

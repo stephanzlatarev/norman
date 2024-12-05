@@ -162,7 +162,7 @@ function areMarchingFightersInFireRange(battle) {
 
     const warrior = fighter.assignee;
 
-    if (!enemies) enemies = getGroundHittingEnemies(battle);
+    if (!enemies) enemies = getGroundHittingEnemiesOrDummies(battle);
 
     for (const enemy of enemies) {
       if (isInFireRange(warrior, enemy)) {
@@ -174,25 +174,34 @@ function areMarchingFightersInFireRange(battle) {
   return false;
 }
 
-function getGroundHittingEnemies(battle) {
-  const enemies = new Set();
+function getGroundHittingEnemiesOrDummies(battle) {
+  const hitters = new Set();
+  const dummies = new Set();
 
   for (const zone of battle.zones) {
     for (const threat of zone.threats) {
       if (threat.type.damageGround) {
-        enemies.add(threat);
+        hitters.add(threat);
+      } else {
+        dummies.add(threat);
       }
     }
   }
 
-  return enemies;
+  return hitters.size ? hitters : dummies;
 }
 
 function isInFireRange(warrior, enemy) {
   const squareDistance = calculateSquareDistance(warrior.body, enemy.body);
 
-  if (warrior.type.rangeGround * warrior.type.rangeGround >= squareDistance) return true;
-  if (enemy.type.rangeGround * enemy.type.rangeGround >= squareDistance) return true;
+  if (getSquareGroundRange(warrior) >= squareDistance) return true;
+  if (getSquareGroundRange(enemy) * enemy.type.rangeGround >= squareDistance) return true;
+}
+
+function getSquareGroundRange(unit) {
+  if (unit.type.rangeGround >= 3) return unit.type.rangeGround * unit.type.rangeGround;
+  if (unit.type.rangeGround < 3) return 9;
+  return -Infinity;
 }
 
 function calculateSquareDistance(a, b) {
