@@ -1,7 +1,6 @@
 import Types from "../types.js";
 import Order from "../order.js";
 import Units from "../units.js";
-import Depot from "../map/depot.js";
 
 const active = new Map();
 const total = new Map();

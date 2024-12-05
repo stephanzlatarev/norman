@@ -5,6 +5,7 @@ import Depot from "../map/depot.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
 import Limit from "../memo/limit.js";
+import Plan from "../memo/plan.js";
 import Priority from "../memo/priority.js";
 import Resources from "../memo/resources.js";
 
@@ -39,6 +40,7 @@ function doStartUp() {
   Limit.Zealot = 0;
 
   if (VisibleCount.SpawningPool || encounteredZerglingCount) {
+    Plan.WallNatural = Plan.WALL_NATURAL_READY;
     plan = doEnforceWallNatural;
     console.log("Transition to enforcing wall to natural expansion.");
   }
@@ -50,18 +52,18 @@ function doStartUp() {
 }
 
 function doEnforceWallNatural() {
-  const twoBases = (ActiveCount.Immortal + ActiveCount.Stalker >= 6);
+  const twoBases = (ActiveCount.Immortal + ActiveCount.Stalker >= 4);
 
   Limit.Immortal = Infinity;
   Limit.Stalker = Infinity;
-  Limit.Probe = twoBases ? 33 : 22;
+  Limit.Probe = twoBases ? 46 : 26;
   Limit.Zealot = ActiveCount.Immortal ? 0 : 1;
   Limit.Observer = twoBases ? 1 : 0;
   Limit.Colossus = 0;
   Limit.Sentry = 0;
 
   Limit.Nexus = twoBases ? 2 : 1;
-  Limit.Assimilator = (ActiveCount.Probe >= 18) ? 2 : 1;
+  Limit.Assimilator = TotalCount.CyberneticsCore ? 2 : 1;
   Limit.Gateway = 2;
   Limit.CyberneticsCore = 1;
   Limit.ShieldBattery = ((TotalCount.Gateway >= 2) && ((TotalCount.Stalker >= 1) || (TotalCount.Zealot >= 1))) ? 1 : 0;
@@ -76,15 +78,11 @@ function doEnforceWallNatural() {
   Priority.Immortal = 95;
   Priority.Gateway = (TotalCount.Gateway < 2) ? 90 : 60;
   Priority.Stalker = 80;
+  Priority.Probe = 75;
   Priority.RoboticsFacility = 70;
-  Priority.Probe = 40;
-
-  if ((Resources.loop > 3000) && !encounteredZerglingCount) {
-    plan = doGroundArmyMaxOut;
-    console.log("Transition to maxing out with ground army.");
-  }
 
   if (twoBases && (ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 33) && (ActiveCount.Stalker > 4)) {
+    Plan.WallNatural = Plan.WALL_NATURAL_OFF;
     plan = doGroundArmyMaxOut;
     console.log("Transition to maxing out with ground army.");
   }
@@ -138,6 +136,7 @@ function doGroundArmyMaxOut() {
   Limit.CyberneticsCore = 1;
 
   if ((Resources.loop < 3000) && encounteredZerglingCount) {
+    Plan.WallNatural = Plan.WALL_NATURAL_READY;
     plan = doEnforceWallNatural;
     console.log("Transition to enforcing wall to natural expansion.");
   }

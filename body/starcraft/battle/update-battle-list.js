@@ -1,4 +1,5 @@
 import Battle from "./battle.js";
+import Plan from "../memo/plan.js";
 import { hotspots } from "../map/alert.js";
 
 export default function() {
@@ -25,6 +26,8 @@ export default function() {
 
   // Create or move battles
   for (const [hotspot, battle] of hotspotToBattle) {
+    if (Plan.WallNatural && (hotspot.center.tier.level > 2)) continue;
+
     if (battle) {
       battle.setHotspot(hotspot);
       battles.add(battle);

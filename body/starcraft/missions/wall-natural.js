@@ -6,18 +6,13 @@ import Units from "../units.js";
 import Wall from "../map/wall.js";
 import { ActiveCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
-import Resources from "../memo/resources.js";
-
-const MODE_DEFEND = 1;
-const MODE_READY = 2;
-const MODE_OFF = 3;
+import Plan from "../memo/plan.js";
 
 const WARRIOR_FACTORY = {
   Gateway: true,
   RoboticsFacility: true,
 };
 
-let mode;
 let wall;
 let field;
 let home;
@@ -28,14 +23,13 @@ const pullProbeJobs = new Set();
 export default class WallNatural extends Mission {
 
   run() {
-    if (mode === MODE_OFF) return;
+    if (Plan.WallNatural === Plan.WALL_NATURAL_OFF) return this.close();
     if (!wall && !findWallAndField()) return this.close();
 
-    mode = (home.enemies.size || wall.enemies.size || field.enemies.size) ? MODE_DEFEND : MODE_READY;
-
-    if ((ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 33) && (ActiveCount.Stalker > 4)) {
-      if (mode === MODE_READY) return this.close();
-      if (Resources.supplyUsed > 190) return this.close();
+    if (home.enemies.size || wall.enemies.size || field.enemies.size) {
+      Plan.WallNatural = Plan.WALL_NATURAL_DEFEND;
+    } else {
+      Plan.WallNatural = Plan.WALL_NATURAL_READY;
     }
 
     maintainWallKeeperJob();
@@ -46,27 +40,27 @@ export default class WallNatural extends Mission {
   }
 
   close() {
-    console.log("Mission 'Wall natural' is over.");
-    mode = MODE_OFF;
-
     if (wallKeeperJob) {
+      console.log("Mission 'Wall natural' is over.");
+
       wallKeeperJob.close(true);
-    }
+      wallKeeperJob = null;
 
-    for (const defenderJob of defenderJobs) {
-      defenderJob.close(true);
-    }
-
-    for (const job of Job.list()) {
-      if (job.target && job.target.type && job.target.type.isExtractor) {
-        job.priority = 50;
+      for (const defenderJob of defenderJobs) {
+        defenderJob.close(true);
       }
+  
+      for (const job of Job.list()) {
+        if (job.target && job.target.type && job.target.type.isExtractor) {
+          job.priority = 50;
+        }
+      }
+  
+      for (const pullProbeJob of pullProbeJobs) {
+        pullProbeJob.close(true);
+      }
+      pullProbeJobs.clear();
     }
-
-    for (const pullProbeJob of pullProbeJobs) {
-      pullProbeJob.close(true);
-    }
-    pullProbeJobs.clear();
   }
 
 }
@@ -84,7 +78,7 @@ class WallKeeper extends Job {
 
     if (!warrior.isAlive) {
       this.close(false);
-    } else if (mode === MODE_DEFEND) {
+    } else if (Plan.WallNatural === Plan.WALL_NATURAL_DEFEND) {
       if (isEnemyMostlyMelee()) {
         orderHold(warrior, wall.blueprint.choke);
       } else if (warrior.order.abilityId !== 23) {
@@ -94,6 +88,17 @@ class WallKeeper extends Job {
       orderMove(warrior, wall.blueprint.rally);
     }
   }
+
+  close(outcome) {
+    const warrior = this.assignee;
+
+    if (warrior && warrior.isAlive) {
+      orderMove(warrior, wall.blueprint.rally);
+    }
+
+    super.close(outcome);
+  }
+
 }
 
 function isEnemyMostlyMelee() {
@@ -221,12 +226,12 @@ function maintainWallKeeperJob() {
 }
 
 function maintainDefenderJobs() {
-  if (mode === MODE_READY) {
+  if (Plan.WallNatural === Plan.WALL_NATURAL_READY) {
     for (const job of defenderJobs) {
       job.close(true);
       defenderJobs.delete(job);
     }
-  } else if (mode === MODE_DEFEND) {
+  } else if (Plan.WallNatural === Plan.WALL_NATURAL_DEFEND) {
     for (const warrior of Units.warriors().values()) {
       if ((warrior.type.damageGround > 0) && (warrior.type.rangeGround > 3)) {
         if (warrior.job) {
