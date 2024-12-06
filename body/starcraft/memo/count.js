@@ -9,6 +9,7 @@ export const ActiveCount = {
   Assimilator: 0,
   CyberneticsCore: 0,
   Colossus: 0,
+  Forge: 0,
   Gateway: 0,
   Immortal: 0,
   Nexus: 0,

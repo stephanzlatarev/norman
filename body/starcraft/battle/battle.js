@@ -1,4 +1,4 @@
-import traceBattle from "./trace.js";
+import { traceBattle } from "./trace.js";
 
 const battles = [];
 
@@ -23,7 +23,7 @@ export default class Battle {
 
   constructor(hotspot) {
     this.hotspot = hotspot;
-    this.zones = hotspot.center.range.zones;
+    this.zones = hotspot.zones;
 
     this.zone = hotspot.center;
     this.priority = 100 - this.zone.tier.level;
@@ -38,7 +38,7 @@ export default class Battle {
 
   setHotspot(hotspot) {
     this.hotspot = hotspot;
-    this.zones = hotspot.center.range.zones;
+    this.zones = hotspot.zones;
 
     if (this.zone !== hotspot.center) {
       traceBattle(this, "moves to " + hotspot.center.name);

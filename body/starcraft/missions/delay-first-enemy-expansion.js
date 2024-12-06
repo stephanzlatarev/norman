@@ -182,7 +182,7 @@ class AnnoyEnemy extends Job {
     } else if (!isAttacked(this.assignee)) {
       // The agent is now healthy and no enemy worker tries to expand, so attack again
       this.transition(this.goAttackEnemyWorker);
-    } else {
+    } else if (this.assignee.zone === this.enemyLocations.expansion) {
       // The agent just entered the expansion zone, so stop to keep close to the corridor
       orderStop(this.assignee);
     }

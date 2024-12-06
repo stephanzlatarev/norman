@@ -60,8 +60,11 @@ function setBattleLines(battle, zones) {
 function selectBattleLineApproaches(battle) {
   const battleBorderZones = battle.hotspot.back;
 
-  if (!battleBorderZones.size) return new Set();
-  if (battleBorderZones.has(battle.zone)) return new Set([battle.zone]);
+  if (!battleBorderZones.size) {
+    return (battle.zone.tier.level <= 2) ? new Set([battle.zone]) : new Set();
+  } else if (battleBorderZones.has(battle.zone)) {
+    return new Set([battle.zone]);
+  }
 
   const approaches = new Set();
   let distance = Infinity;
@@ -81,6 +84,10 @@ function selectBattleLineApproaches(battle) {
     } else if (hops.distance === distance) {
       approaches.add(zone);
     }
+  }
+
+  if (!approaches.size) {
+    return new Set([battle.zone]);
   }
 
   return approaches;

@@ -83,7 +83,40 @@ class Hotspot {
     this.front = new Set();
     this.back = new Set();
 
-    if (doesZoneThreatenNeighbors(center)) {
+    if (center.tier.level === 1) {
+      this.fire.add(center);
+      this.front.add(center);
+      this.zones.add(center);
+
+      for (const zone of center.neighbors) {
+        if (zone.cells.size && !this.zones.has(zone)) {
+          this.back.add(zone);
+          this.zones.add(zone);
+        }
+      }
+      if (!this.back.size) {
+        this.back.add(center);
+      }
+    } else if (center.tier.level === 2) {
+      const base = [...center.neighbors].find(zone => (zone.cells.size && (zone.tier.level === 1)));
+
+      this.fire.add(center);
+      this.front.add(base);
+      this.back.add(base);
+
+      this.zones.add(center);
+      for (const zone of center.neighbors) {
+        if (zone.cells.size) {
+          this.zones.add(zone);
+        }
+      }
+      this.zones.add(base);
+      for (const zone of base.neighbors) {
+        if (zone.cells.size) {
+          this.zones.add(zone);
+        }
+      }
+    } else if (doesZoneThreatenNeighbors(center)) {
       for (const zone of center.range.fire) {
         this.fire.add(zone);
         this.zones.add(zone);
@@ -152,7 +185,8 @@ function identifyHotspots(zones) {
   for (const one of hotspots) {
     for (const another of hotspots) {
       if (one === another) continue;
-      if (one.tierLevel > another.tierLevel) continue;
+      if (one.tierLevel === 1) continue;               // Don't merge tier 1 hotspots
+      if (one.tierLevel > another.tierLevel) continue; // Only higher tier hotspots can merge into lower tier hotspots 
 
       if (one.isOverlappingWith(another)) {
         one.addHotspot(another);

@@ -70,13 +70,17 @@ function monitorPlot(plot) {
     return;
   }
 
-  if (Map.accepts(plot.zone, plot.body.x, plot.body.y, 2)) {
+  if (isPlotClear(plot.body.x, plot.body.y, 2)) {
     const job = new Build("PhotonCannon", plot.body);
     job.priority = 100;
-  
+
     jobs.add(job);
     plots.delete(plot);
   }
+}
+
+function isPlotClear(x, y) {
+  return !Map.cell(x, y).isObstacle && !Map.cell(x + 1, y).isObstacle && !Map.cell(x, y + 1).isObstacle && !Map.cell(x + 1, y + 1).isObstacle;
 }
 
 function monitorJob(job) {

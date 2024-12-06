@@ -28,7 +28,7 @@ export default function() {
   loop = INTERVAL;
 }
 
-function traceBattle(battle, event) {
+export function traceBattle(battle, event) {
   const trace = [];
 
   trace.push("[battle]", battle.zone.name);
@@ -39,6 +39,8 @@ function traceBattle(battle, event) {
   trace.push("zones:", [...battle.zones].map(zone => zone.name).join());
   trace.push("balance:", battle.deployedBalance.toFixed(2), "/", battle.recruitedBalance.toFixed(2));
   trace.push("mode:", battle.mode);
+
+  trace.push("back:", [...battle.hotspot.back].map(zone => zone.name).join());
 
   trace.push("lines:");
   traceLines(trace, battle);

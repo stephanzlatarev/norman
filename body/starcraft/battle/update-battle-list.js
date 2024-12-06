@@ -44,7 +44,7 @@ function getLowestsTierBattle(hotspot) {
   let bestTierLevel = Infinity;
 
   for (const battle of Battle.list()) {
-    if (!areOverlapping(hotspot.center.range.zones, battle.zones)) continue;
+    if (!battle.zones.has(hotspot.center)) continue;
 
     if (!bestBattle || (battle.zone.tier.level < bestTierLevel)) {
       bestBattle = battle;
@@ -53,14 +53,4 @@ function getLowestsTierBattle(hotspot) {
   }
 
   return bestBattle;
-}
-
-function areOverlapping(a, b) {
-  for (const one of a) {
-    if (b.has(one)) return true;
-  }
-
-  for (const one of b) {
-    if (a.has(one)) return true;
-  }
 }
