@@ -272,7 +272,7 @@ function labelZones(zones) {
 
 function identifyNeighbors() {
   for (const zone of zones) {
-    if (zone.corridors) {
+    if (zone.corridors.length) {
       for (const corridor of zone.corridors) {
         zone.neighbors.add(corridor);
 

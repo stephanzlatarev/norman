@@ -101,19 +101,35 @@ class Hotspot {
       const base = [...center.neighbors].find(zone => (zone.cells.size && (zone.tier.level === 1)));
 
       this.fire.add(center);
-      this.front.add(base);
-      this.back.add(base);
-
       this.zones.add(center);
+
       for (const zone of center.neighbors) {
         if (zone.cells.size) {
           this.zones.add(zone);
         }
       }
-      this.zones.add(base);
-      for (const zone of base.neighbors) {
-        if (zone.cells.size) {
-          this.zones.add(zone);
+
+      if (base) {
+        this.front.add(base);
+        this.back.add(base);
+        this.zones.add(base);
+
+        for (const zone of base.neighbors) {
+          if (zone.cells.size) {
+            this.zones.add(zone);
+          }
+        }
+      } else {
+        this.front.add(center);
+
+        for (const zone of center.neighbors) {
+          if (zone.cells.size && !this.zones.has(zone)) {
+            this.back.add(zone);
+            this.zones.add(zone);
+          }
+        }
+        if (!this.back.size) {
+          this.back.add(center);
         }
       }
     } else if (doesZoneThreatenNeighbors(center)) {
@@ -177,7 +193,7 @@ function identifyHotspots(zones) {
   hotspots.clear();
 
   for (const zone of zones) {
-    if (zone.alertLevel === ALERT_RED) {
+    if (zone.cells.size && (zone.alertLevel === ALERT_RED)) {
       hotspots.add(new Hotspot(zone));
     }
   }
