@@ -1,6 +1,8 @@
 import Build from "../jobs/build.js";
-import Map from "../map/map.js";
+import GameMap from "../map/map.js";
+import Job from "../job.js";
 import Mission from "../mission.js";
+import Order from "../order.js";
 import Resources from "../memo/resources.js";
 import Units from "../units.js";
 import { ActiveCount } from "../memo/count.js";
@@ -12,6 +14,7 @@ const WORM_FORGET_LOOPS = 1500;
 const canals = new Set();
 const plots = new Set();
 const jobs = new Set();
+const army = new Map();
 
 let lastNydusCanalVisibleCount;
 
@@ -47,10 +50,37 @@ export default class NeutralizeNydusMission extends Mission {
 
 }
 
+class NeutralizeWorm extends Job {
+
+  constructor(type, plot) {
+    super(type);
+
+    this.zone = plot.zone;
+    this.priority = 100;
+    this.isCommitted = true;
+    this.location = plot.body;
+  }
+
+  execute() {
+    const warrior = this.assignee;
+
+    if (!warrior || !warrior.isAlive) return;
+    if (isClose(warrior.body, this.location, 6)) return;
+    
+    Order.move(warrior, this.location);
+  }
+
+}
+
 function updateCanalsList() {
   for (const unit of Units.enemies().values()) {
     if (unit.type.name === "NydusCanal") {
       canals.add(unit);
+      army.set(unit, [
+        new NeutralizeWorm("Observer", unit),
+        new NeutralizeWorm("Stalker", unit), new NeutralizeWorm("Stalker", unit),
+        new NeutralizeWorm("Zealot", unit), new NeutralizeWorm("Zealot", unit),
+      ]);
     }
   }
 }
@@ -75,16 +105,31 @@ function monitorPlot(plot) {
     job.priority = 100;
 
     jobs.add(job);
+    army.set(job, army.get(plot));
     plots.delete(plot);
+    army.delete(plot);
   }
 }
 
 function isPlotClear(x, y) {
-  return !Map.cell(x, y).isObstacle && !Map.cell(x + 1, y).isObstacle && !Map.cell(x, y + 1).isObstacle && !Map.cell(x + 1, y + 1).isObstacle;
+  return !GameMap.cell(x, y).isObstacle && !GameMap.cell(x + 1, y).isObstacle && !GameMap.cell(x, y + 1).isObstacle && !GameMap.cell(x + 1, y + 1).isObstacle;
 }
 
 function monitorJob(job) {
   if (job.isDone || job.isFailed) {
+    const warriors = army.get(job);
+
+    if (warriors) {
+      for (const warrior of warriors) {
+        warrior.close(true);
+      }
+    }
+
     jobs.delete(job);
+    army.delete(job);
   }
+}
+
+function isClose(a, b, span) {
+  return (Math.abs(a.x - b.x) <= span) && (Math.abs(a.y - b.y) <= span);
 }
