@@ -22,7 +22,7 @@ function isAirBattle(battle) {
 }
 
 function hireIdleWarriorsInBattleZone(battle, isAirBattle) {
-  for (const zone of battle.hotspot.zones) {
+  for (const zone of battle.zones) {
     for (const warrior of zone.warriors) {
       if (!warrior.isAlive) continue;
       if (warrior.job && (warrior.job.battle === battle)) continue;

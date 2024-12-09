@@ -14,11 +14,11 @@ class Tier {
 
 }
 
-export function syncTiers() {
+export function syncTiers(force) {
   const depots = [...Depot.list()].filter(zone => !!zone.depot);
 
   // Check if active depot changed, assuming only one depot changes state in a single game loop
-  if (tiers.length && (depots.length === tiers[0].zones.size)) return tiers;
+  if (!force && tiers.length && (depots.length === tiers[0].zones.size)) return tiers;
 
   if (!depots.length) {
     const zones = Zone.list();
@@ -62,9 +62,13 @@ export function syncTiers() {
       const corridor = zone;
 
       for (const neighbor of corridor.zones) {
-        if (!corridor.tier || (neighbor.tier.level < corridor.tier.level)) {
+        if (!corridor.tier || (neighbor.tier.level <= corridor.tier.level)) {
           corridor.tier = neighbor.tier;
         }
+      }
+
+      if (corridor.cells.size) {
+        corridor.tier.zones.add(corridor);
       }
     }
   }

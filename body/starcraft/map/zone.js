@@ -1,7 +1,6 @@
 import Pin from "./pin.js";
 
 const FIRE_RANGE = 15;
-const FRONT_RANGE = 10;
 
 const zones = [];
 const knownThreats = new Map();
@@ -10,7 +9,7 @@ export default class Zone extends Pin {
 
   hops = new Map();
   neighbors = new Set();
-  range = { zones: new Set(), fire: new Set(), front: new Set(), back: new Set() };
+  range = { zones: new Set(), fire: new Set(), front: new Set() };
 
   workers = new Set();
   buildings = new Set();
@@ -112,6 +111,7 @@ export default class Zone extends Pin {
 
       this.name = old.name;
       this.tier = old.tier;
+      this.neighbors = new Set(old.neighbors);
       this.zones = [...old.zones];
       this.distance = old.distance;
 
@@ -126,7 +126,6 @@ export default class Zone extends Pin {
         replaceInSet(zone.range.zones, old, this);
         replaceInSet(zone.range.fire, old, this);
         replaceInSet(zone.range.front, old, this);
-        replaceInSet(zone.range.back, old, this);
       }
 
       const updatedTiers = new Set();
@@ -134,7 +133,6 @@ export default class Zone extends Pin {
         if (!updatedTiers.has(zone.tier)) {
           replaceInSet(zone.tier.fore, old, this);
           replaceInSet(zone.tier.zones, old, this);
-          replaceInSet(zone.tier.back, old, this);
           updatedTiers.add(zone.tier);
         }
       }
@@ -290,41 +288,28 @@ function identifyNeighbors() {
 
 function identifyRanges() {
   for (const zone of zones) {
-    identifyRangesInRay(zone, zone, true, new Set());
+    if (zone.cells.size) {
+      identifyRangesInRay(zone, zone, (zone.r + FIRE_RANGE) * (zone.r + FIRE_RANGE), new Set());
+    }
   }
 }
 
-function identifyRangesInRay(zone, ray, isInFireRange, skip) {
+function identifyRangesInRay(zone, ray, squareFireRange, skip) {
   const squareDistance = (zone.x - ray.x) * (zone.x - ray.x) + (zone.y - ray.y) * (zone.y - ray.y);
-  let nextIsInFireRange = isInFireRange;
 
   zone.range.zones.add(ray);
   skip.add(ray);
 
-  if (isInFireRange) {
-    const squareFireRange = (zone.r + FIRE_RANGE) * (zone.r + FIRE_RANGE);
+  if (squareDistance < squareFireRange) {
+    zone.range.fire.add(ray);
 
-    if (squareDistance < squareFireRange) {
-      zone.range.fire.add(ray);
-    } else {
-      zone.range.front.add(ray);
-      nextIsInFireRange = false;
+    for (const next of ray.neighbors) {
+      if (next.cells.size && !skip.has(next)) {
+        identifyRangesInRay(zone, next, squareFireRange, skip);
+      }
     }
   } else {
-    const squareFrontRange = (zone.r + FIRE_RANGE + FRONT_RANGE) * (zone.r + FIRE_RANGE + FRONT_RANGE);
-
-    if (squareDistance < squareFrontRange) {
-      zone.range.front.add(ray);
-    } else {
-      zone.range.back.add(ray);
-      return;
-    }
-  }
-
-  for (const next of ray.neighbors) {
-    if (next.cells.size && !skip.has(next)) {
-      identifyRangesInRay(zone, next, nextIsInFireRange, skip);
-    }
+    zone.range.front.add(ray);
   }
 }
 

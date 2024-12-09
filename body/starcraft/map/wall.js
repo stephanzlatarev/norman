@@ -1,6 +1,7 @@
 import Map from "./map.js";
 import { Corridor } from "./zone.js";
 import Tiers from "./tier.js";
+import { syncTiers } from "./tier.js";
 
 const TRACE = false;
 const SPAN = 8;
@@ -78,6 +79,7 @@ export function createWalls(board) {
 
   if (blueprint) {
     setBlueprintToCorridor(board, corridorToWall, center, blueprint);
+    syncTiers(true);
   } else {
     console.log("WARNING! Unable to create wall blueprint!");
   }
@@ -152,20 +154,18 @@ function setBlueprintToCorridor(board, corridor, center, blueprint) {
 
   wall.replace(corridor);
 
+  // Set the wall as in fire range in neighbor zones
+  const { base, field } = getBaseAndField(wall);
+  wall.range.zones.add(base);
   wall.range.zones.add(wall);
-  wall.range.front.add(wall);
-  for (const zone of wall.zones) {
-    wall.neighbors.add(zone);
-    wall.range.zones.add(zone);
-    zone.range.zones.add(wall);
-    zone.range.fire.add(wall);
-
-    if (zone.tier.level > wall.tier.level) {
-      wall.range.fire.add(zone);
-    } else {
-      wall.range.back.add(zone);
-    }
-  }
+  wall.range.zones.add(field);
+  wall.range.fire.add(wall);
+  wall.range.fire.add(field);
+  wall.range.front.add(base);
+  base.range.zones.add(wall);
+  base.range.fire.add(wall);
+  field.range.zones.add(wall);
+  field.range.fire.add(wall);
 
   // Set the wall as the zone to all cells near the wall
   for (const one of [blueprint.left, blueprint.center, blueprint.right]) {
@@ -177,6 +177,21 @@ function setBlueprintToCorridor(board, corridor, center, blueprint) {
   for (const one of [blueprint.choke, blueprint.rally]) {
     assignCellsToWall(board, wall, one.x - 0.5, one.x - 0.5, one.y - 0.5, one.y - 0.5);
   }
+}
+
+function getBaseAndField(wall) {
+  let base;
+  let field;
+
+  for (const zone of wall.zones) {
+    if (zone.tier.level > wall.tier.level) {
+      field = zone;
+    } else {
+      base = zone;
+    }
+  }
+
+  return { base, field };
 }
 
 function assignCellsToWall(board, wall, minx, maxx, miny, maxy) {

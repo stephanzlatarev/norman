@@ -1,56 +1,48 @@
 import Battle from "./battle.js";
 import Plan from "../memo/plan.js";
-import { hotspots } from "../map/alert.js";
+import Tiers from "../map/tier.js";
+import { ALERT_RED } from "../map/alert.js";
 
 export default function() {
   const battles = new Set();
-  const battleToHotspot = new Map();
-  const hotspotToBattle = new Map();
+  let tierLimit = Infinity;
 
-  // Map hotspots to existing battles
-  for (const hotspot of hotspots) {
-    const battle = getLowestsTierBattle(hotspot);
-    const otherHotspot = battleToHotspot.get(battle);
+  for (const tier of Tiers) {
+    if (tier.level > tierLimit) break;
 
-    if (otherHotspot) {
-      if (hotspot.center.tier.level < otherHotspot.center.tier.level) {
-        battleToHotspot.set(battle, hotspot);
-        hotspotToBattle.set(hotspot, battle);
-        hotspotToBattle.delete(otherHotspot);
+    const zones = orderBattleZones(tier.zones);
+
+    for (const zone of zones) {
+      if (zone.cells.size && (zone.alertLevel === ALERT_RED) && !isOverlapping(zone.range.zones, battles)) {
+        const battle = findBattle(zone) || new Battle(zone);
+
+        battle.move(zone);
+        battles.add(findBattle(zone) || new Battle(zone));
       }
-    } else {
-      battleToHotspot.set(battle, hotspot);
-      hotspotToBattle.set(hotspot, battle);
-    }
-  }
 
-  // Create or move battles
-  for (const [hotspot, battle] of hotspotToBattle) {
-    if (Plan.WallNatural && (hotspot.center.tier.level > 2)) continue;
-
-    if (battle) {
-      battle.setHotspot(hotspot);
-      battles.add(battle);
-    } else {
-      battles.add(new Battle(hotspot));
+      if (zone.isWall && Plan.WallNatural) {
+        tierLimit = zone.tier.level + 1;
+      }
     }
   }
 
   return battles;
 }
 
-function getLowestsTierBattle(hotspot) {
-  let bestBattle;
-  let bestTierLevel = Infinity;
+function orderBattleZones(zones) {
+  return [...zones].sort((a, b) => ((a.workers.size !== b.workers.size) ? b.workers.size - a.workers.size : b.buildings.size - a.buildings.size));
+}
 
-  for (const battle of Battle.list()) {
-    if (!battle.zones.has(hotspot.center)) continue;
+function findBattle(zone) {
+  return Battle.list().find(battle => battle.zones.has(zone));
+}
 
-    if (!bestBattle || (battle.zone.tier.level < bestTierLevel)) {
-      bestBattle = battle;
-      bestTierLevel = battle.zone.tier.level;
+function isOverlapping(zones, battles) {
+  for (const battle of battles) {
+    for (const zone of zones) {
+      if (battle.zones.has(zone)) {
+        return true;
+      }
     }
   }
-
-  return bestBattle;
 }

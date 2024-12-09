@@ -21,12 +21,11 @@ export default class Battle {
   detector;
   fighters;
 
-  constructor(hotspot) {
-    this.hotspot = hotspot;
-    this.zones = hotspot.zones;
-
-    this.zone = hotspot.center;
-    this.priority = 100 - this.zone.tier.level;
+  constructor(zone) {
+    this.zone = zone;
+    this.front = getBattleFront(zone);
+    this.zones = zone.range.zones;
+    this.priority = 100 - zone.tier.level;
 
     this.detector = null;
     this.fighters = [];
@@ -36,15 +35,14 @@ export default class Battle {
     traceBattle(this, "begins");
   }
 
-  setHotspot(hotspot) {
-    this.hotspot = hotspot;
-    this.zones = hotspot.zones;
+  move(zone) {
+    if (this.zone !== zone) {
+      traceBattle(this, "moves to " + zone.name);
 
-    if (this.zone !== hotspot.center) {
-      traceBattle(this, "moves to " + hotspot.center.name);
-
-      this.zone = hotspot.center;
-      this.priority = 100 - this.zone.tier.level;
+      this.zone = zone;
+      this.front = getBattleFront(zone);
+      this.zones = zone.range.zones;
+      this.priority = 100 - zone.tier.level;
 
       if (this.detector) {
         this.detector.updateBattle(this);
@@ -85,4 +83,16 @@ export default class Battle {
     return [...battles];
   }
 
+}
+
+function getBattleFront(zone) {
+  for (const one of zone.range.zones) {
+    for (const threat of one.threats) {
+      if (threat.type.rangeGround > 3) {
+        return zone.range.front;
+      }
+    }
+  }
+
+  return new Set([...zone.neighbors].filter(zone => !!zone.cells.size));
 }

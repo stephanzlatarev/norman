@@ -58,36 +58,27 @@ function setBattleLines(battle, zones) {
 }
 
 function selectBattleLineApproaches(battle) {
-  const battleBorderZones = battle.hotspot.back;
-
-  if (!battleBorderZones.size) {
-    return (battle.zone.tier.level <= 2) ? new Set([battle.zone]) : new Set();
-  } else if (battleBorderZones.has(battle.zone)) {
-    return new Set([battle.zone]);
-  }
-
   const approaches = new Set();
-  let distance = Infinity;
 
-  for (const zone of battleBorderZones) {
-    if (zone.alertLevel > ALERT_YELLOW) continue;
-
-    const hops = battle.zone.getHopsTo(zone);
-
-    if (!hops) continue;
-
-    if (hops.distance < distance) {
-      distance = hops.distance;
-
-      approaches.clear();
-      approaches.add(zone);
-    } else if (hops.distance === distance) {
+  for (const zone of battle.front) {
+    if (zone.alertLevel <= ALERT_YELLOW) {
       approaches.add(zone);
     }
   }
 
   if (!approaches.size) {
-    return new Set([battle.zone]);
+    let tierLevel = Infinity;
+
+    for (const zone of battle.front) {
+      if (zone.tier.level < tierLevel) {
+        tierLevel = zone.tier.level;
+        approaches.clear();
+      }
+
+      if (zone.tier.level === tierLevel) {
+        approaches.add(battle.zone);
+      }
+    }
   }
 
   return approaches;
@@ -130,12 +121,10 @@ function countDeploymentsInZone(battle, zone) {
 
     if (warrior && warrior.isAlive) {
       if (warrior.zone === zone) {
-        count += 4;
-      } else if (zone.range.fire.has(warrior.zone)) {
         count += 3;
-      } else if (zone.range.front.has(warrior.zone)) {
+      } else if (zone.range.fire.has(warrior.zone)) {
         count += 2;
-      } else if (zone.range.back.has(warrior.zone)) {
+      } else if (zone.range.front.has(warrior.zone)) {
         count += 1;
       }
     }
