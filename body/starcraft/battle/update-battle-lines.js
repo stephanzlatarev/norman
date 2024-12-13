@@ -1,6 +1,5 @@
 import Line from "../battle/line.js";
 import { ALERT_YELLOW } from "../map/alert.js";
-import { getHopDistance } from "../map/route.js";
 import Wall from "../map/wall.js";
 
 const SURROUND_BALANCE = 1.1;
@@ -88,29 +87,27 @@ function selectActiveApproaches(battle, approaches, limit) {
   if (!approaches.size) return [];
   if (approaches.size <= limit) return [...approaches];
 
-  const distance = new Map();
   const deployments = new Map();
 
   for (const approach of approaches) {
-    distance.set(approach, getHopDistance(approach.cell, wall.base.cell) || Infinity);
     deployments.set(approach, countDeploymentsInZone(battle, approach));
   }
 
-  const active = [...approaches].sort((a, b) => orderByDistanceAndDeployments(a, b, distance, deployments));
+  const active = [...approaches].sort((a, b) => orderByTierAndDeployments(a, b, deployments));
   if (active.length > limit) active.length = limit;
 
   return active;
 }
 
-function orderByDistanceAndDeployments(a, b, distance, deployments) {
-  const distanceA = distance.get(a);
-  const distanceB = distance.get(b);
+function orderByTierAndDeployments(a, b, deployments) {
+  const tierA = a.tier.level;
+  const tierB = b.tier.level;
 
-  if (distanceA === distanceB) {
+  if (tierA === tierB) {
     return deployments.get(b) - deployments.get(a);
   }
 
-  return distanceA - distanceB;
+  return tierA - tierB;
 }
 
 function countDeploymentsInZone(battle, zone) {
