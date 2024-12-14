@@ -36,7 +36,7 @@ class Map {
   accepts(zone, x, y, size) {
     zone = (zone instanceof Zone) ? zone : this.zone(x, y);
     if (!zone) {
-      console.log("Cannot accept a unit outside map zones!");
+      console.log("ERROR: Cannot accept a unit outside map zones at coordinates", x, ":", y);
       return false;
     }
 
@@ -54,8 +54,18 @@ class Map {
     for (let row = miny; row <= maxy; row++) {
       const line = cells[row];
 
+      if (!line) {
+        console.log("ERROR: Cannot accept a unit in row", row, "around coordinates", x, ":", y);
+        return false;
+      }
+
       for (let col = minx; col <= maxx; col++) {
         const cell = line[col];
+
+        if (!cell) {
+          console.log("ERROR: Cannot accept a unit in col", col, "of row", row, "around coordinates", x, ":", y);
+          return false;
+        }
 
         if ((cell.zone !== zone) || !cell.isPlot || !cell.isPath || cell.isObstacle) {
           return false;
