@@ -40,7 +40,7 @@ export default class Depot extends Zone {
     }
 
     this.harvestRally = findRally(cell, this.minerals);
-    this.exitRally = GameMap.cell(this.x + this.x - this.harvestRally.x, this.y + this.y - this.harvestRally.y);
+    this.exitRally = GameMap.cell(this.x + this.x - this.harvestRally.x - 1, this.y + this.y - this.harvestRally.y - 1);
 
     depots.push(this);
   }
@@ -116,29 +116,21 @@ function findRally(cell, resources) {
 
 export function createDepots(board, resources, base) {
   const coordinates = new Map();
-  const covered = new Set();
 
   for (const resource of resources) {
     populateDepotCoordinates(coordinates, resource);
   }
 
-  const candidates = [...coordinates.keys()].filter(a => (coordinates.get(a).length > 5)).sort((a, b) => (coordinates.get(b).length - coordinates.get(a).length));
+  const candidates = selectDepotCoordinates(coordinates);
 
   for (const one of candidates) {
+    const cell = getCellAtCoordinatesKey(board, one);
     const resources = coordinates.get(one);
 
-    if (resources.find(resource => !!covered.has(resource))) continue;
-
-    const cell = getCellAtCoordinatesKey(board, one);
-
     if (cell.margin >= 3) {
-      const depot = new Depot(cell, resources);
+      const depot = new Depot(cell, [...resources.normalMinerals, ...resources.normalVespene, ...resources.richMinerals, ...resources.richVespene]);
 
       cell.area.zone = depot;
-
-      for (const resource of resources) {
-        covered.add(resource);
-      }
 
       if ((base.body.x === depot.x) && (base.body.y === depot.y)) {
         depot.depot = base;
@@ -161,46 +153,72 @@ export function createDepots(board, resources, base) {
 }
 
 function populateDepotCoordinates(coordinates, resource) {
-  const list = [];
+  const normalMinerals = [];
+  const normalVespene = [];
+  const richMinerals = [];
+  const richVespene = [];
 
   if (resource.type.isMinerals) {
+    const minerals = normalMinerals;
+
     for (let x = resource.body.x - 6; x <= resource.body.x + 4; x++) {
-      list.push(getCoordinatesKey(x, resource.body.y - 7));
-      list.push(getCoordinatesKey(x, resource.body.y - 6));
-      list.push(getCoordinatesKey(x, resource.body.y + 6));
-      list.push(getCoordinatesKey(x, resource.body.y + 7));
+      minerals.push(getCoordinatesKey(x, resource.body.y - 7));
+      minerals.push(getCoordinatesKey(x, resource.body.y - 6));
+      minerals.push(getCoordinatesKey(x, resource.body.y + 6));
+      minerals.push(getCoordinatesKey(x, resource.body.y + 7));
     }
     for (let y = resource.body.y - 5; y <= resource.body.y + 5; y++) {
-      list.push(getCoordinatesKey(resource.body.x - 8, y));
-      list.push(getCoordinatesKey(resource.body.x - 7, y));
-      list.push(getCoordinatesKey(resource.body.x + 6, y));
-      list.push(getCoordinatesKey(resource.body.x + 7, y));
+      minerals.push(getCoordinatesKey(resource.body.x - 8, y));
+      minerals.push(getCoordinatesKey(resource.body.x - 7, y));
+      minerals.push(getCoordinatesKey(resource.body.x + 6, y));
+      minerals.push(getCoordinatesKey(resource.body.x + 7, y));
     }
-    list.push(getCoordinatesKey(resource.body.x - 6, resource.body.y - 5));
-    list.push(getCoordinatesKey(resource.body.x - 6, resource.body.y + 5));
-    list.push(getCoordinatesKey(resource.body.x + 5, resource.body.y - 5));
-    list.push(getCoordinatesKey(resource.body.x + 5, resource.body.y + 5));
+    minerals.push(getCoordinatesKey(resource.body.x - 6, resource.body.y - 5));
+    minerals.push(getCoordinatesKey(resource.body.x - 6, resource.body.y + 5));
+    minerals.push(getCoordinatesKey(resource.body.x + 5, resource.body.y - 5));
+    minerals.push(getCoordinatesKey(resource.body.x + 5, resource.body.y + 5));
   } else {
+    const vespene = normalVespene;
+
     for (let x = resource.body.x - 7; x <= resource.body.x + 7; x++) {
-      list.push(getCoordinatesKey(x, resource.body.y - 7));
-      list.push(getCoordinatesKey(x, resource.body.y + 7));
+      vespene.push(getCoordinatesKey(x, resource.body.y - 7));
+      vespene.push(getCoordinatesKey(x, resource.body.y + 7));
     }
     for (let y = resource.body.y - 6; y <= resource.body.y + 6; y++) {
-      list.push(getCoordinatesKey(resource.body.x - 7, y));
-      list.push(getCoordinatesKey(resource.body.x + 7, y));
+      vespene.push(getCoordinatesKey(resource.body.x - 7, y));
+      vespene.push(getCoordinatesKey(resource.body.x + 7, y));
     }
   }
 
+  addToDepotCoordinates(resource, coordinates, "normalMinerals", normalMinerals);
+  addToDepotCoordinates(resource, coordinates, "normalVespene", normalVespene);
+  addToDepotCoordinates(resource, coordinates, "richMinerals", richMinerals);
+  addToDepotCoordinates(resource, coordinates, "richVespene", richVespene);
+}
+
+function addToDepotCoordinates(resource, coordinates, type, list) {
   for (const one of list) {
     let resources = coordinates.get(one);
 
     if (!resources) {
-      resources = [];
+      resources = { normalMinerals: [], normalVespene: [], richMinerals: [], richVespene: [] };
       coordinates.set(one, resources);
     }
 
-    resources.push(resource);
+    resources[type].push(resource);
   }
+}
+
+function selectDepotCoordinates(coordinates) {
+  const depots = [];
+
+  for (const [depot, resources] of coordinates) {
+    if ((resources.normalMinerals.length === 8) && (resources.normalVespene.length === 2)) {
+      depots.push(depot);
+    }
+  }
+
+  return depots;
 }
 
 function getCoordinatesKey(x, y) {

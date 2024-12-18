@@ -52,12 +52,14 @@ export function createWalls(board) {
   if (TRACE) console.log("natural:", natural ? natural.name : "not found!");
   if (!natural) return;
 
-  const corridorToWall = findCorridorToWall(natural);
+  const corridorZones = findCorridorZones(natural);
 
-  if (TRACE) console.log("corridor to wall:", corridorToWall ? corridorToWall.name : "not found!");
-  if (!corridorToWall) return;
+  if (TRACE && !corridorZones) console.log("corridor not found");
+  if (!corridorZones) return;
 
-  const center = { x: Math.floor(corridorToWall.x), y: Math.floor(corridorToWall.y) };
+  if (TRACE) console.log("corridor:", corridorZones.corridor.name);
+
+  const center = { x: Math.floor(corridorZones.corridor.x), y: Math.floor(corridorZones.corridor.y) };
   const grid = createGrid(board, center);
   const direction = calculateDirection(natural, center);
 
@@ -78,7 +80,7 @@ export function createWalls(board) {
   const blueprint = createBlueprint(grid, split.left, split.right, direction);
 
   if (blueprint) {
-    setBlueprintToCorridor(board, corridorToWall, center, blueprint);
+    setBlueprintToCorridor(board, corridorZones, center, blueprint);
     syncTiers(true);
   } else {
     console.log("WARNING! Unable to create wall blueprint!");
@@ -107,32 +109,79 @@ function findNaturalExpansion() {
   }
 }
 
-function findCorridorToWall(natural) {
-  const level = natural.tier.level + 1;
+function findCorridorZones(natural) {
+  const exits = [];
 
-  let exit;
+  for (const neighbor of natural.neighbors) {
+    if (neighbor.isCorridor || (neighbor.tier.level < natural.tier.level)) continue;
 
-  for (const corridor of natural.tier.fore) {
-    for (const closeZone of corridor.zones) {
-      for (const farCorridor of closeZone.corridors) {
-        for (const zone of farCorridor.zones) {
-          if (zone.tier.level <= level) continue;
-
-          if (!exit || (exit === corridor)) {
-            exit = corridor;
-          } else {
-            // At least two corridors lead to the next tier zones. There's no single corridor to wall
-            return;
-          }
-        }
-      }
+    if (zoneLeadsToHigherTiers(neighbor)) {
+      exits.push(findCorridorBetweenZones(natural, neighbor));
     }
   }
 
-  return exit;
+  const corridor = findMidCorridor(exits);
+  if (!corridor) return;
+
+  const field = findZoneAfterCorridor(natural, corridor);
+
+  return { base: natural, corridor, field };
 }
 
-function setBlueprintToCorridor(board, corridor, center, blueprint) {
+function zoneLeadsToHigherTiers(zone) {
+  for (const neighbor of zone.neighbors) {
+    if (!neighbor.isCorridor && (neighbor.tier.level > zone.tier.level)) return true;
+  }
+}
+
+function findCorridorBetweenZones(a, b) {
+  for (const corridor of a.corridors) {
+    for (const zone of corridor.zones) {
+      if (zone === b) {
+        return corridor;
+      }
+    }
+  }
+}
+
+function findZoneAfterCorridor(zone, corridor) {
+  for (const neighbor of corridor.zones) {
+    if (neighbor !== zone) {
+      return neighbor;
+    }
+  }
+}
+
+function findMidCorridor(list) {
+  if (!list.length) return;
+
+  let minx = Infinity;
+  let maxx = 0;
+  let miny = Infinity;
+  let maxy = 0;
+
+  for (const one of list) {
+    if (!one) continue;
+
+    minx = Math.min(minx, one.x);
+    maxx = Math.max(maxx, one.x);
+    miny = Math.min(miny, one.y);
+    maxy = Math.max(maxy, one.y);
+  }
+
+  if (!maxx || !maxy) return;
+
+  const midx = (minx + maxx) / 2;
+  const midy = (miny + maxy) / 2;
+
+  list.sort((a, b) => (Math.abs(a.x - midx) + Math.abs(a.y - midy) - Math.abs(b.x - midx) - Math.abs(b.y - midy) ));
+
+  return list[0];
+}
+
+function setBlueprintToCorridor(board, corridorZones, center, blueprint) {
+  const { corridor, base, field } = corridorZones;
+
   blueprint.left.x += center.x - SPAN + 0.5;
   blueprint.left.y += center.y - SPAN + 0.5;
   blueprint.center.x += center.x - SPAN + 0.5;
@@ -155,7 +204,6 @@ function setBlueprintToCorridor(board, corridor, center, blueprint) {
   wall.replace(corridor);
 
   // Set the wall as in fire range in neighbor zones
-  const { base, field } = getBaseAndField(wall);
   wall.range.zones.add(base);
   wall.range.zones.add(wall);
   wall.range.zones.add(field);
@@ -177,21 +225,6 @@ function setBlueprintToCorridor(board, corridor, center, blueprint) {
   for (const one of [blueprint.choke, blueprint.rally]) {
     assignCellsToWall(board, wall, one.x - 0.5, one.x - 0.5, one.y - 0.5, one.y - 0.5);
   }
-}
-
-function getBaseAndField(wall) {
-  let base;
-  let field;
-
-  for (const zone of wall.zones) {
-    if (zone.tier.level > wall.tier.level) {
-      field = zone;
-    } else {
-      base = zone;
-    }
-  }
-
-  return { base, field };
 }
 
 function assignCellsToWall(board, wall, minx, maxx, miny, maxy) {
