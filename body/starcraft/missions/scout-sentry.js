@@ -6,6 +6,9 @@ import { ActiveCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
 import Resources from "../memo/resources.js";
 
+const COST_GUARDIAN_SHIELD = 75;
+const COST_HALLUCINATION = 75;
+
 // TODO: Maintain up to 2 hallucinated phoenixes at a time for better map coverage
 // TODO: Create scouts when visible enemies are only at tier 2 or higher
 // TODO: Maneuver the scout in zones where there are enemies that can shoot air
@@ -34,7 +37,6 @@ export default class ScoutSentry extends Mission {
   }
 
   createScout() {
-    if (VisibleCount.Warrior) return;
     if (!ActiveCount.Sentry) return;
 
     for (const unit of Units.hallucinations().values()) {
@@ -66,9 +68,11 @@ export default class ScoutSentry extends Mission {
 }
 
 function selectSentry() {
+  const energyThreshold = COST_HALLUCINATION + (VisibleCount.Warrior ? COST_GUARDIAN_SHIELD : 0);
+
   for (const unit of Units.warriors().values()) {
     if (unit.type.name !== "Sentry") continue;
-    if (unit.energy < 75) continue;
+    if (unit.energy < energyThreshold) continue;
 
     return unit;
   }
