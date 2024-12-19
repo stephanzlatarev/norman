@@ -10,7 +10,6 @@ jobs:
 
       - name: Add bot descriptors
         run: |
-          mv ${GITHUB_WORKSPACE}/norman.js ${GITHUB_WORKSPACE}/norman.js
           echo '{ "Bots": { "norman": { "Race": "Protoss", "Type": "NodeJS", "RootPath": "./", "FileName": "norman.js", "Debug": true } } }' > ${GITHUB_WORKSPACE}/LadderBots.json
           echo '{ "body": [ { "label": "StarCraft II", "code": "body/starcraft/game-ladder" } ] }' > ${GITHUB_WORKSPACE}/norman.env
           date "+%Y-%m-%d %H:%M" > ${GITHUB_WORKSPACE}/version
