@@ -121,13 +121,11 @@ export default class Game {
           break;
         }
       }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      console.log = print;
-    }
 
-    this.endCallback();
+      this.endCallback();
+    } catch (error) {
+      this.endCallback(error);
+    }
   }
 
   async step() {

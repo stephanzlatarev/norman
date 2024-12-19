@@ -37,13 +37,13 @@ export default class Body {
     console.log("Successfully attached body:", this.code);
   }
 
-  async detach() {
+  async detach(error) {
     if (!this.isAttached) return;
 
     this.progress = new Date().getTime();
 
     if (this.body && this.body.detach) {
-      await this.body.detach();
+      await this.body.detach(error);
     }
 
     this.isAttached = false;
