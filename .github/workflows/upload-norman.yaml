@@ -1,0 +1,29 @@
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm install --omit=dev
+
+      - name: Add bot descriptors
+        run: |
+          mv ${GITHUB_WORKSPACE}/norman.js ${GITHUB_WORKSPACE}/norman.js
+          echo '{ "Bots": { "norman": { "Race": "Protoss", "Type": "NodeJS", "RootPath": "./", "FileName": "norman.js", "Debug": true } } }' > ${GITHUB_WORKSPACE}/LadderBots.json
+          echo '{ "body": [ { "label": "StarCraft II", "code": "body/starcraft/game-ladder" } ] }' > ${GITHUB_WORKSPACE}/norman.env
+          date "+%Y-%m-%d %H:%M" > ${GITHUB_WORKSPACE}/version
+
+      - name: Create bot zip
+        run: |
+          pwd
+          rm -rf ${GITHUB_WORKSPACE}/norman.zip
+          zip -r ${GITHUB_WORKSPACE}/norman.zip . -x '.git/*' '.github/*'
+          ls -l ${GITHUB_WORKSPACE}
+
+      - name: Upload to AI Arena
+        env:
+          API_TOKEN: ${{ secrets.AI_ARENA_API_TOKEN }}
+        run: |
+          curl -X PATCH -H "Authorization: Token ${API_TOKEN}" -F "bot_zip=@${GITHUB_WORKSPACE}/norman.zip" https://aiarena.net/api/bots/518/
