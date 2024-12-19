@@ -12,9 +12,11 @@ export default class Wall extends Corridor {
 
   isWall = true;
 
-  constructor(cell, r, blueprint) {
+  constructor(cell, r, base, field, blueprint) {
     super(cell, r);
 
+    this.base = base;
+    this.field = field;
     this.blueprint = blueprint;
 
     walls.push(this);
@@ -199,7 +201,7 @@ function setBlueprintToCorridor(board, corridorZones, center, blueprint) {
   blueprint.rally.x += center.x - SPAN + 0.5;
   blueprint.rally.y += center.y - SPAN + 0.5;
 
-  const wall = new Wall(board.cells[Math.floor(blueprint.rally.y)][Math.floor(blueprint.rally.x)], SPAN, blueprint);
+  const wall = new Wall(board.cells[Math.floor(blueprint.rally.y)][Math.floor(blueprint.rally.x)], SPAN, base, field, blueprint);
 
   wall.replace(corridor);
 

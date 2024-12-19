@@ -14,8 +14,6 @@ const WARRIOR_FACTORY = {
 };
 
 let wall;
-let field;
-let home;
 let wallKeeperJob;
 const defenderJobs = new Set();
 const pullProbeJobs = new Set();
@@ -24,9 +22,9 @@ export default class WallNatural extends Mission {
 
   run() {
     if (Plan.WallNatural === Plan.WALL_NATURAL_OFF) return this.close();
-    if (!wall && !findWallAndField()) return this.close();
+    if (!wall && !findWall()) return this.close();
 
-    if (home.enemies.size || wall.enemies.size || field.enemies.size) {
+    if (wall.enemies.size || wall.base.enemies.size || wall.field.enemies.size) {
       Plan.WallNatural = Plan.WALL_NATURAL_DEFEND;
     } else {
       Plan.WallNatural = Plan.WALL_NATURAL_READY;
@@ -105,7 +103,7 @@ function isEnemyMostlyMelee() {
   let melee = 0;
   let ranged = 0;
 
-  for (const zone of [home, wall, field]) {
+  for (const zone of [wall, wall.base, wall.field]) {
     for (const enemy of zone.enemies) {
       if (enemy.type.rangeGround > 1) {
         ranged++;
@@ -140,7 +138,7 @@ class WallDefender extends Job {
     }
 
     let target;
-    for (const zone of [home, wall, field]) {
+    for (const zone of [wall, wall.base, wall.field]) {
       for (const enemy of zone.enemies) {
         if (!enemy.body.isGround) continue;
         if (enemy.armor.total < 0) continue;
@@ -199,21 +197,13 @@ class BlockWall extends Job {
 
 }
 
-function findWallAndField() {
+function findWall() {
   const walls = Wall.list();
 
   if (walls.length) {
     wall = walls[0];
 
-    for (const zone of wall.zones) {
-      if (zone.tier.level > wall.tier.level) {
-        field = zone;
-      } else {
-        home = zone;
-      }
-    }
-
-    return home && field;
+    return wall;
   }
 }
 
@@ -398,7 +388,7 @@ function setRallyPoint(facility, rally) {
 }
 
 function isAttacked(warrior) {
-  for (const zone of [home, wall, field]) {
+  for (const zone of [wall, wall.base, wall.field]) {
     for (const enemy of zone.enemies) {
       if (isSamePosition(warrior.body, enemy.body)) return true;
     }
