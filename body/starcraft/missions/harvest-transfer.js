@@ -50,7 +50,13 @@ class Transfer extends Job {
     if (!this.assignee.isAlive) return this.close(false);
 
     if (!this.order) {
-      this.order = new Order(this.assignee, 298, [...this.zone.minerals][0]).accept(true);
+      if (this.zone.minerals.size) {
+        // If there are minerals in the zone then mineral walk to it
+        this.order = new Order(this.assignee, 298, [...this.zone.minerals][0]).accept(true);
+      } else {
+        // Otherwise, move to it
+        this.order = new Order(this.assignee, 16, this.zone).accept(true);
+      }
     } else if (this.order.isRejected) {
       this.close(false);
     } else if ((this.assignee.zone === this.zone) && this.zone.depot && this.zone.depot.isActive) {
