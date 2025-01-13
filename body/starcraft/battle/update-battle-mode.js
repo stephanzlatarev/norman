@@ -126,7 +126,9 @@ function areEnoughFightersRallied(battle) {
     }
   }
 
-  return (deployed > rallying * 4);
+  // TODO: Check for capacity of zone (now hardcoded to 20).
+  // If deployed fighters are more than that count units rallied to neighbor zones as deployed
+  return (deployed > 20) || (deployed > rallying * 4);
 }
 
 function isSmallFight(battle) {
