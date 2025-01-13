@@ -270,6 +270,8 @@ class AnnoyEnemy extends Job {
     }
 
     if (this.pylon) {
+      this.pylon.isDecoy = true;
+
       if (this.assignee.zone === this.enemyLocations.expansion) {
         orderSlip(this.assignee, this.home);
       }

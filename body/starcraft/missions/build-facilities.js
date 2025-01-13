@@ -99,7 +99,7 @@ function findBuildingPlot(facility) {
   }
 
   for (const building of Units.buildings().values()) {
-    if (!building.type.isPylon || !building.isActive || building.isWall) continue;
+    if (!building.type.isPylon || !building.isActive || building.isWall || building.isDecoy) continue;
 
     const pos = building.body;
 
