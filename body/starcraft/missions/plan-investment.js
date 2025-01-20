@@ -51,6 +51,40 @@ function doStartUp() {
   }
 }
 
+function doOneBaseDefense() {
+  Limit.Immortal = Infinity;
+  Limit.Stalker = Infinity;
+  Limit.Probe = 26;
+  Limit.Zealot = 0;
+  Limit.Observer = 1;
+  Limit.Colossus = 0;
+  Limit.Sentry = 0;
+
+  Limit.Nexus = 1;
+  Limit.Assimilator = TotalCount.CyberneticsCore ? 2 : 1;
+  Limit.Gateway = 3;
+  Limit.CyberneticsCore = 1;
+  Limit.ShieldBattery = 0;
+  Limit.RoboticsFacility = (ActiveCount.Stalker >= 3) ? 1 : 0;
+  Limit.Forge = 0;
+
+  Priority.CyberneticsCore = 100;
+  Priority.Observer = 100;
+  Priority.Immortal = 95;
+  Priority.Gateway = 90;
+  Priority.Stalker = 80;
+  Priority.Probe = 75;
+  Priority.RoboticsFacility = 70;
+  Priority.Nexus = 0;
+  Priority.Zealot = 0;
+  Priority.ShieldBattery = 0;
+
+  if (Plan.BaseLimit === Plan.MULTI_BASE) {
+    plan = doGroundArmyMaxOut;
+    console.log("Transition to maxing out with ground army.");
+  }
+}
+
 function doEnforceWallNatural() {
   const twoBases = (ActiveCount.Immortal + ActiveCount.Stalker >= 4);
 
@@ -80,6 +114,12 @@ function doEnforceWallNatural() {
   Priority.Stalker = 80;
   Priority.Probe = 75;
   Priority.RoboticsFacility = 70;
+
+  if (Plan.BaseLimit === Plan.ONE_BASE) {
+    Plan.WallNatural = Plan.WALL_NATURAL_OFF;
+    plan = doOneBaseDefense;
+    console.log("Transition to one base defense.");
+  }
 
   if (twoBases && (ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 33) && (ActiveCount.Stalker > 4)) {
     Plan.WallNatural = Plan.WALL_NATURAL_OFF;
@@ -134,6 +174,11 @@ function doGroundArmyMaxOut() {
 
   Limit.Forge = (TotalCount.Gateway >= 3) ? 1 : 0;
   Limit.CyberneticsCore = 1;
+
+  if (Plan.BaseLimit === Plan.ONE_BASE) {
+    plan = doOneBaseDefense;
+    console.log("Transition to one base defense.");
+  }
 
   if ((Resources.loop < 3000) && encounteredZerglingCount) {
     Plan.WallNatural = Plan.WALL_NATURAL_READY;

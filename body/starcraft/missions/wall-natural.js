@@ -22,6 +22,7 @@ export default class WallNatural extends Mission {
 
   run() {
     if (Plan.WallNatural === Plan.WALL_NATURAL_OFF) return this.close();
+    if (Plan.BaseLimit === Plan.ONE_BASE) return this.close();
     if (!wall && !findWall()) return this.close();
 
     if (wall.enemies.size || wall.base.enemies.size || wall.field.enemies.size) {

@@ -2,6 +2,8 @@ import Mission from "../mission.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
 import Map from "../map/map.js";
+import { TotalCount } from "../memo/count.js";
+import Plan from "../memo/plan.js";
 import Priority from "../memo/priority.js";
 
 export default class BuildExpansionsMission extends Mission {
@@ -11,6 +13,8 @@ export default class BuildExpansionsMission extends Mission {
 
   run() {
     if (this.job) {
+      if (shouldNotBuildNexus()) return this.job.close(true);
+
       if (this.job.priority !== Priority.Nexus) this.job.priority = Priority.Nexus;
 
       if (this.job.isFailed) {
@@ -19,6 +23,8 @@ export default class BuildExpansionsMission extends Mission {
         return;
       }
     }
+
+    if (shouldNotBuildNexus()) return;
 
     if (!this.home) {
       this.home = locateHomeZone();
@@ -31,6 +37,10 @@ export default class BuildExpansionsMission extends Mission {
     }
   }
 
+}
+
+function shouldNotBuildNexus() {
+  return (Plan.BaseLimit && (TotalCount.Nexus >= Plan.BaseLimit));
 }
 
 function locateHomeZone() {

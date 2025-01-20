@@ -7,6 +7,7 @@ import Map from "../map/map.js";
 import Tiers from "../map/tier.js";
 import Wall from "../map/wall.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
+import Plan from "../memo/plan.js";
 import Resources from "../memo/resources.js";
 
 // TODO: Calculate time to new supply from nexuses and pylons in progress of building. Calculate time to supply cap looking at production facilities and ordered units. Build pylons just in time.
@@ -49,6 +50,7 @@ let wallPlot;
 let wallPylon;
 
 function findWallPylon() {
+  if (Plan.BaseLimit) return;
   if (wallPylon && wallPylon.isAlive) return; // Wall pylon is already built
 
   if (wallPlot) {
@@ -125,6 +127,8 @@ function findPylonPlotByDepot() {
 
 // These pylons add vision too
 function findPlotInFrontier() {
+  if (Plan.BaseLimit) return;
+
   if (Tiers.length >= 2) {
     const frontier = Tiers[1].zones;
 
@@ -150,6 +154,8 @@ function findPylonPlotByZone(home) {
     checked.add(zone);
 
     for (const one of getNeighborZones(zone)) {
+      if (Plan.BaseLimit && (one.tier.level > 2)) continue;
+
       if (!checked.has(one)) {
         next.add(one);
       }

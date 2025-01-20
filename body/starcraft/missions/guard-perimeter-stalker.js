@@ -14,6 +14,7 @@ let perimeter;
 export default class GuardPerimeterStalkerMission extends Mission {
 
   run() {
+    if (Plan.BaseLimit) return;
     if (Plan.WallNatural) return;
     if (!Tiers.length) return;
     if (!frontier) frontier = Tiers[0];
