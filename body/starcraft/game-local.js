@@ -65,33 +65,39 @@ export default class LocalGame extends Game {
   }
 
   async connect() {
-    console.log("Starting StarCraft II game...");
-
-    spawn("..\\Versions\\" + this.config.version + "\\SC2_x64.exe", [
-      "-displaymode", "0", "-windowx", "0", "-windowy", "0", "-windowwidth", "2500", "-windowheight", "1875",
-      "-listen", "127.0.0.1", "-port", "5000"
-    ], {
-      cwd: this.config.path + "\\Support64"
-    });
+    console.log("Connecting to StarCraft II game...");
 
     for (let i = 0; i < 12; i++) {
       try {
         await this.client.connect({ host: "127.0.0.1", port: 5000 });
         break;
       } catch (_) {
-        await new Promise(r => setTimeout(r, 5000));
+        if (!i && this.config.version && this.config.path) {
+          console.log("Starting StarCraft II...");
+
+          spawn("..\\Versions\\" + this.config.version + "\\SC2_x64.exe", [
+            "-displaymode", "0", "-windowx", "0", "-windowy", "0", "-windowwidth", "2500", "-windowheight", "1875",
+            "-listen", "127.0.0.1", "-port", "5000"
+          ], {
+            cwd: this.config.path + "\\Support64"
+          });
+        } else {
+          await new Promise(r => setTimeout(r, 5000));
+        }
       }
     }
 
+    console.log("Creating game...");
     await this.client.createGame(this.config);
 
+    console.log("Joining game...");
     await this.client.joinGame({
       race: this.config.playerSetup[0].race,
       options: { raw: true },
     });
 
     if (fs.existsSync(SIMULATION_FILE)) {
-      const module = await import("./simulation.js");
+      const module = await import("../../code/simulation.js");
       this.simulation = module.default;
 
       console.log("Creating simulation...");
@@ -101,6 +107,8 @@ export default class LocalGame extends Game {
       paused = true;
       console.log("Game paused!");
     }
+
+    console.log("Ready to play.");
   }
 
   async step() {

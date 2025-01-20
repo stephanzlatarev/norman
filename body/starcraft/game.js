@@ -124,6 +124,7 @@ export default class Game {
 
       this.endCallback();
     } catch (error) {
+      console.log(error);
       this.endCallback(error);
     }
   }
