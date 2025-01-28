@@ -39,13 +39,15 @@ function doStartUp() {
   Limit.ShieldBattery = 0;
   Limit.Zealot = 0;
 
-  if (VisibleCount.SpawningPool || encounteredZerglingCount) {
+  if (Plan.BaseLimit === Plan.ONE_BASE) {
+    Plan.WallNatural = Plan.WALL_NATURAL_OFF;
+    plan = doOneBaseDefense;
+    console.log("Transition to one base defense.");
+  } else if (VisibleCount.SpawningPool || encounteredZerglingCount) {
     Plan.WallNatural = Plan.WALL_NATURAL_READY;
     plan = doEnforceWallNatural;
     console.log("Transition to enforcing wall to natural expansion.");
-  }
-
-  if (TotalCount.Nexus > 1) {
+  } else if (TotalCount.Nexus > 1) {
     plan = doGroundArmyMaxOut;
     console.log("Transition to maxing out with ground army.");
   }
@@ -119,9 +121,7 @@ function doEnforceWallNatural() {
     Plan.WallNatural = Plan.WALL_NATURAL_OFF;
     plan = doOneBaseDefense;
     console.log("Transition to one base defense.");
-  }
-
-  if (twoBases && (ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 33) && (ActiveCount.Stalker > 4)) {
+  } else if (twoBases && (ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 33) && (ActiveCount.Stalker > 4)) {
     Plan.WallNatural = Plan.WALL_NATURAL_OFF;
     plan = doGroundArmyMaxOut;
     console.log("Transition to maxing out with ground army.");
@@ -176,17 +176,14 @@ function doGroundArmyMaxOut() {
   Limit.CyberneticsCore = 1;
 
   if (Plan.BaseLimit === Plan.ONE_BASE) {
+    Plan.WallNatural = Plan.WALL_NATURAL_OFF;
     plan = doOneBaseDefense;
     console.log("Transition to one base defense.");
-  }
-
-  if ((Resources.loop < 3000) && encounteredZerglingCount) {
+  } else if ((Resources.loop < 3000) && encounteredZerglingCount) {
     Plan.WallNatural = Plan.WALL_NATURAL_READY;
     plan = doEnforceWallNatural;
     console.log("Transition to enforcing wall to natural expansion.");
-  }
-
-  if ((VisibleCount.Queen >= 5) && (VisibleCount.Warrior <= 5)) {
+  } else if ((VisibleCount.Queen >= 5) && (VisibleCount.Warrior <= 5)) {
     plan = counterMassLightZerg;
     console.log("Transition to countering mass light zerg.");
   }
