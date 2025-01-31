@@ -1,5 +1,7 @@
 import Game from "./game.js";
 import Battle from "./battle/battle.js";
+import { ALERT_WHITE } from "./map/alert.js";
+import Zone from "./map/zone.js";
 
 export default class VscodeGame extends Game {
 
@@ -28,13 +30,36 @@ export default class VscodeGame extends Game {
 
 }
 
+const Color = {
+  Blue: { r: 100, g: 100, b: 200 },
+  Green: { r: 0, g: 200, b: 0 },
+  White: { r: 200, g: 200, b: 200 },
+  Yellow: { r: 200, g: 200, b: 0 },
+  Orange: { r: 200, g: 100, b: 0 },
+  Pink: { r: 200, g: 100, b: 100 },
+  Red: { r: 200, g: 0, b: 0 },
+  Purple: { r: 200, g: 0, b: 200 },
+  Unknown: { r: 100, g: 100, b: 100 },
+};
+const ALERT_COLOR = [Color.Unknown, Color.Blue, Color.Green, Color.White, Color.Yellow, Color.Orange, Color.Pink, Color.Red];
+
 async function trace(client) {
   const texts = [];
+  const spheres = [];
 
+  traceAlertLevels(spheres);
   traceBattles(texts);
 
-  await client.debug({ debug: [{ draw: { text: texts } }] });
+  await client.debug({ debug: [{ draw: { text: texts, spheres: spheres } }] });
+}
 
+function traceAlertLevels(spheres) {
+  for (const zone of Zone.list()) {
+    if (zone.isCorridor) continue;
+    if (zone.alertLevel === ALERT_WHITE) continue;
+
+    spheres.push({ p: { x: zone.x, y: zone.y, z: 0 }, r: zone.r, color: ALERT_COLOR[zone.alertLevel] });
+  }
 }
 
 function traceBattles(texts) {
