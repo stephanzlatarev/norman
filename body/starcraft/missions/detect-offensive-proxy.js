@@ -97,7 +97,10 @@ function isOffensiveProxyStart(zones) {
 
   for (const zone of zones) {
     for (const threat of zone.threats) {
-      if (!threat.type.isWorker) return true;
+      if (!threat.type.isWorker) {
+        console.log("Offensive proxy", threat.type.name, threat.nick, "in zones", zones.map(zone => zone.name).join(" "));
+        return true;
+      }
     }
   }
 }
@@ -109,6 +112,7 @@ function isOffensiveProxyEnd(zones) {
     }
   }
 
+  console.log("Offensive proxy cleared in zones", zones.map(zone => zone.name).join(" "));
   return true;
 }
 
