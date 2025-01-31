@@ -57,10 +57,10 @@ function doOneBaseDefense() {
   Limit.Immortal = Infinity;
   Limit.Stalker = Infinity;
   Limit.Probe = 26;
-  Limit.Zealot = 0;
   Limit.Observer = 1;
+  Limit.Sentry = 1;
+  Limit.Zealot = 0;
   Limit.Colossus = 0;
-  Limit.Sentry = 0;
 
   Limit.Nexus = 1;
   Limit.Assimilator = TotalCount.CyberneticsCore ? 2 : 1;
@@ -74,6 +74,7 @@ function doOneBaseDefense() {
   Priority.Observer = 100;
   Priority.Immortal = 95;
   Priority.Gateway = 90;
+  Priority.Sentry = (ActiveCount.Stalker > 2) ? 90 : 50;
   Priority.Stalker = 80;
   Priority.Probe = 75;
   Priority.RoboticsFacility = 70;
