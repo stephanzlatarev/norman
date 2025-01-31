@@ -6,6 +6,7 @@ import Map from "../map/map.js";
 import Wall from "../map/wall.js";
 import { TotalCount } from "../memo/count.js";
 import Limit from "../memo/limit.js";
+import Plan from "../memo/plan.js";
 import Priority from "../memo/priority.js";
 
 const DEFAULT_FACILITIES = ["ShieldBattery", "Gateway"];
@@ -84,16 +85,18 @@ function selectDefaultFacilityType() {
 
 //TODO: Optimize by remembering found plots and re-using them when pylons are destroyed but otherwise continue the search from where last plot was found
 function findBuildingPlot(facility) {
-  for (const wall of Wall.list()) {
-    if (!wallPylon || !wallPylon.isAlive) {
-      wallPylon = findPylon(wall);
-    }
+  if (!Plan.BaseLimit) {
+    for (const wall of Wall.list()) {
+      if (!wallPylon || !wallPylon.isAlive) {
+        wallPylon = findPylon(wall);
+      }
 
-    if (wallPylon && wallPylon.isActive) {
-      const plot = wall.getPlot(facility);
+      if (wallPylon && wallPylon.isActive) {
+        const plot = wall.getPlot(facility);
 
-      if (plot) {
-        return plot;
+        if (plot) {
+          return plot;
+        }
       }
     }
   }
