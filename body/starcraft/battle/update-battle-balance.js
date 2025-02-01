@@ -36,7 +36,9 @@ function calculateBalance(battle, isDeployed) {
   const warriorStrength = warriorHealth * warriorDamage;
   const enemyStrength = enemyHealth * enemyDamage;
 
-  if (enemyStrength > 0) {
+  if (warriorStrength <= 0) {
+    return 0;
+  } else if (enemyStrength > 0) {
     return (warriorStrength / enemyStrength);
   } else {
     return Infinity;

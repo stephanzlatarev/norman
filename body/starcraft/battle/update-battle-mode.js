@@ -37,6 +37,11 @@ export default function(battle) {
 }
 
 function normalTransition(battle) {
+  // Check if there are fighters
+  if (battle.deployedBalance <= 0) {
+    return Battle.MODE_RALLY;
+  }
+
   // Check if there's no resistence.
   if (battle.deployedBalance === Infinity) {
     return Battle.MODE_SMASH;
@@ -79,6 +84,11 @@ function normalTransition(battle) {
 }
 
 function maxoutTransition(battle) {
+  // Check if there are fighters
+  if (battle.deployedBalance <= 0) {
+    return Battle.MODE_RALLY;
+  }
+
   // Check if there's no resistence.
   if (battle.deployedBalance === Infinity) {
     return Battle.MODE_SMASH;
