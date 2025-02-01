@@ -49,6 +49,7 @@ async function trace(client) {
 
   traceAlertLevels(spheres);
   traceBattles(texts);
+  traceThreats(spheres);
 
   await client.debug({ debug: [{ draw: { text: texts, spheres: spheres } }] });
 }
@@ -78,6 +79,16 @@ function traceBattles(texts) {
     text.push(battle.lines.map(line => line.zone.name).join(" "));
 
     texts.push({ text: text.join(" "), virtualPos: { x: 0, y: y++ } });
+  }
+}
+
+function traceThreats(spheres) {
+  for (const zone of Zone.list()) {
+    for (const threat of zone.threats) {
+      if (!zone.enemies.has(threat)) {
+        spheres.push({ p: { x: threat.body.x, y: threat.body.y, z: 0 }, r: threat.body.r + 0.3, color: Color.Red });
+      }
+    }
   }
 }
 
