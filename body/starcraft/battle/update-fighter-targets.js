@@ -187,7 +187,9 @@ function setKiteTargets(battle) {
     const warrior = fighter.assignee;
 
     if (warrior) {
-      fighter.target = getClosestVisibleTarget(warrior, warrior.zone.threats) || getClosestVisibleTarget(warrior, battle.zone.threats);
+      fighter.target = getPrimaryThreat(warrior, battle.zone.threats) ||
+        getClosestVisibleTarget(warrior, warrior.zone.threats) ||
+        getClosestVisibleTarget(warrior, battle.zone.threats);
     }
   }
 }
@@ -207,6 +209,29 @@ function getClosestVisibleTarget(warrior, targets) {
     if (distance < closestDistance) {
       closestTarget = target;
       closestDistance = distance;
+    }
+  }
+
+  return closestTarget;
+}
+
+function getPrimaryThreat(warrior, targets) {
+  let closestTarget;
+  let closestDistance = Infinity;
+
+  for (const target of targets) {
+    if (warrior.body.isGround && !target.type.damageGround) continue;
+    if (warrior.body.isFlying && !target.type.damageAir) continue;
+
+    const range = warrior.body.isGround ? target.type.rangeGround : target.type.rangeAir;
+    const squareRange = range * range;
+    const squareDistance = calculateSquareDistance(warrior.body, target.body);
+
+    if (squareDistance >= squareRange) continue;
+
+    if (squareDistance < closestDistance) {
+      closestTarget = target;
+      closestDistance = squareDistance;
     }
   }
 

@@ -82,6 +82,9 @@ export default class Fight extends Job {
     } else if (isDeployed && this.shouldMarch()) {
       this.details = getDetails(this, "march");
       this.goMarch();
+    } else if (isDeployed && this.shouldStalk()) {
+      this.details = getDetails(this, "stalk");
+      this.goStalk();
     } else {
       this.details = getDetails(this, "station");
       Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
@@ -129,6 +132,31 @@ export default class Fight extends Job {
 
   shouldMarch() {
     return this.assignee && (this.battle.mode === Battle.MODE_MARCH);
+  }
+
+  // Warrior should keep distance if it entered the fire range of the enemy or its shields are not full
+  shouldStalk() {
+    const warrior = this.assignee;
+    const target = this.target;
+
+    if (!warrior || !target) return false;
+
+    // Check if the warrior is not at full shield.
+    // It doesn't matter if it hasn't recovered from a previous fight or if it has been hit by an invisible enemy.
+    // In both cases, the warrior should step back and recover
+    if (warrior.armor.shield < warrior.armor.shieldMax) return true;
+
+    // Check if the warrior is in the fire range of the target.
+    const squareDistance = calculateSquareDistance(warrior.body, target.body);
+    if (warrior.body.isGround && target.type.rangeGround) {
+      const squareFireRange = target.type.rangeGround * target.type.rangeGround;
+
+      return (squareDistance <= squareFireRange);
+    } else if (warrior.body.isFlying && warrior.type.rangeAir) {
+      const squareFireRange = target.type.rangeAir * target.type.rangeAir;
+
+      return (squareDistance <= squareFireRange);
+    }
   }
 
   goAttack() {
@@ -234,6 +262,35 @@ export default class Fight extends Job {
       marching.isMarching = true;
 
       Order.move(warrior, this.target || this.battle.zone);
+    }
+  }
+
+  // The warrior should go outside of fire range and stay there.
+  // The logic here assumes the closest neighbor is outside fire range or at least
+  goStalk() {
+    const warrior = this.assignee;
+    const target = this.target;
+    const zone = warrior.zone;
+    const wt = Math.sqrt(calculateSquareDistance(warrior.body, target.body));
+
+    let safestNeighbor;
+    let safestRatio = Infinity;
+
+    for (const neighbor of zone.range.front) {
+      const nt = Math.sqrt(calculateSquareDistance(target.body, neighbor));
+      if (nt < 6) continue; // Avoid division by zero but also don't consider neighbors within fire range of enemy 
+
+      const nw = Math.sqrt(calculateSquareDistance(warrior.body, neighbor));
+      const ratio = (nw + wt) / nt;
+
+      if (ratio < safestRatio) {
+        safestNeighbor = neighbor;
+        safestRatio = ratio;
+      }
+    }
+
+    if (safestNeighbor) {
+      Order.move(warrior, safestNeighbor);
     }
   }
 
