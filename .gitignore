@@ -9,3 +9,4 @@ secrets.json
 samples*
 tool/train/skill/
 train/**/*.tf
+*.SC2Replay
