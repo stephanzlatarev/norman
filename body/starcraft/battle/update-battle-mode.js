@@ -1,5 +1,6 @@
-import Battle from "../battle/battle.js";
+import Battle from "./battle.js";
 import Resources from "../memo/resources.js";
+import Plan from "../memo/plan.js";
 
 const ATTACK_BALANCE = 1.6;
 const RETREAT_BALANCE = 1.0;
@@ -68,7 +69,9 @@ function normalTransition(battle) {
 
   // Check if we are defending the approaches to our bases
   if (battle.zone.tier.level === 2) {
-    if (battle.deployedBalance >= DEFEND_BALANCE) {
+    const defendBalance = Plan.BaseLimit ? ATTACK_BALANCE : DEFEND_BALANCE;
+
+    if (battle.deployedBalance >= defendBalance) {
       return Battle.MODE_FIGHT;
     } else {
       return Battle.MODE_RALLY;
