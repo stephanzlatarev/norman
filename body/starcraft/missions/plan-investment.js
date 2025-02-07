@@ -27,17 +27,21 @@ export default class PlanInvestmentsMission extends Mission {
 }
 
 function doStartUp() {
-  Priority.Gateway = 70;
-  Limit.Gateway = 1;
-
-  Priority.Nexus = 50;
-  Limit.Nexus = !TotalCount.Gateway ? 1 : 2;
-
-  Limit.Assimilator = 0;
-  Limit.CyberneticsCore = 0;
+  Limit.Assimilator = ActiveCount.CyberneticsCore ? 2 : TotalCount.Gateway ? 1 : 0;
+  Limit.CyberneticsCore = 1;
   Limit.Forge = 0;
+  Limit.Gateway = 2;
+  Limit.Nexus = !TotalCount.Gateway ? 1 : 2;
   Limit.ShieldBattery = 0;
-  Limit.Zealot = 0;
+  Limit.RoboticsFacility = 0;
+  Limit.Forge = 0;
+  Limit.Zealot = TotalCount.CyberneticsCore ? 1 : 0;
+
+  Priority.Assimilator = 90;
+  Priority.CyberneticsCore = 80;
+  Priority.Gateway = 70;
+  Priority.Nexus = 50;
+  Priority.Zealot = 50;
 
   if (Plan.BaseLimit === Plan.ONE_BASE) {
     Plan.WallNatural = Plan.WALL_NATURAL_OFF;
@@ -159,7 +163,7 @@ function doGroundArmyMaxOut() {
 
   Priority.Gateway = 50;
   Limit.Gateway = calculateLimitGateway();
-  Limit.RoboticsFacility = 1;
+  Limit.RoboticsFacility = (TotalCount.Nexus > 1) ? 1 : 0;
 
   if ((encounteredMarineCount >= 6) || (encounteredZealotCount >= 3) || (encounteredZerglingCount >= 12)) {
     Priority.RoboticsBay = 100;
