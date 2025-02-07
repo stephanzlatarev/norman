@@ -27,20 +27,23 @@ export default class PlanInvestmentsMission extends Mission {
 }
 
 function doStartUp() {
-  Limit.Assimilator = ActiveCount.CyberneticsCore ? 2 : TotalCount.Gateway ? 1 : 0;
+  Limit.Assimilator = TotalCount.Gateway ? 1 : 0;
   Limit.CyberneticsCore = 1;
   Limit.Forge = 0;
   Limit.Gateway = 2;
-  Limit.Nexus = !TotalCount.Gateway ? 1 : 2;
+  Limit.Nexus = TotalCount.CyberneticsCore ? 2 : 1;
   Limit.ShieldBattery = 0;
   Limit.RoboticsFacility = 0;
   Limit.Forge = 0;
+  Limit.Sentry = 0;
+  Limit.Stalker = (TotalCount.Nexus > 1) ? 1 : 0;
   Limit.Zealot = TotalCount.CyberneticsCore ? 1 : 0;
 
   Priority.Assimilator = 90;
   Priority.CyberneticsCore = 80;
   Priority.Gateway = 70;
   Priority.Nexus = 50;
+  Priority.Stalker = 50;
   Priority.Zealot = 50;
 
   if (Plan.BaseLimit === Plan.ONE_BASE) {
@@ -51,7 +54,7 @@ function doStartUp() {
     Plan.WallNatural = Plan.WALL_NATURAL_READY;
     plan = doEnforceWallNatural;
     console.log("Transition to enforcing wall to natural expansion.");
-  } else if (TotalCount.Nexus > 1) {
+  } else if (TotalCount.Stalker) {
     plan = doGroundArmyMaxOut;
     console.log("Transition to maxing out with ground army.");
   }
