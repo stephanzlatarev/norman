@@ -1,10 +1,31 @@
+import { ActiveCount } from "../memo/count.js";
 
 export default function(battle) {
-  for (const line of battle.lines) {
-    if (line.fighters.length > line.stations.length) {
-      addStations(getStation(line), line.stations, line.fighters);
-    } else if (line.fighters.length < line.stations.length) {
-      removeStations(line.stations, line.fighters);
+  const battery = getShieldBattery(battle);
+
+  if (battery) {
+    for (const line of battle.lines) {
+      line.stations = [battery.zone.cell];
+    }
+  } else {
+    for (const line of battle.lines) {
+      if (line.fighters.length > line.stations.length) {
+        addStations(getStation(line), line.stations, line.fighters);
+      } else if (line.fighters.length < line.stations.length) {
+        removeStations(line.stations, line.fighters);
+      }
+    }
+  }
+}
+
+function getShieldBattery(battle) {
+  if (!ActiveCount.ShieldBattery) return;
+
+  for (const zone of battle.zones) {
+    for (const building of zone.buildings) {
+      if (building.type.name === "ShieldBattery") {
+        return building;
+      }
     }
   }
 }

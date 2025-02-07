@@ -3,6 +3,17 @@ export default function(battle) {
   for (const line of battle.lines) {
     if (!line.stations.length) continue;
 
+    // If there's only one station, e.g. around shield battery, then assign all to it.
+    if (line.stations.length === 1) {
+      const station = line.stations[0];
+
+      for (const fighter of line.fighters) {
+        fighter.setStation(station);
+      }
+
+      continue;
+    }
+
     const stations = new Set(line.stations);
     const takenStations = new Set();
     const remainingStations = [];
