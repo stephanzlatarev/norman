@@ -5,7 +5,7 @@ export default function(battle) {
 
   if (battery) {
     for (const line of battle.lines) {
-      line.stations = [battery.zone.cell];
+      line.stations = [battery.cell];
     }
   } else {
     for (const line of battle.lines) {

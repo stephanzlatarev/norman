@@ -190,7 +190,7 @@ export default class Fight extends Job {
       const range = target.body.isFlying ? warrior.type.rangeAir : warrior.type.rangeGround;
       const distance = Math.sqrt(calculateSquareDistance(warrior.body, target.body)) - warrior.body.r - target.body.r;
       const closestDistanceOnReadyWeapon = distance + (target.type.movementSpeed - warrior.type.movementSpeed) * (warrior.weapon.cooldown - 3);
-      const stationRange = Math.max(range, 5);
+      const fireRangeDistance = Math.max(range, 5);
 
       if ((closestDistanceOnReadyWeapon > 0) && (closestDistanceOnReadyWeapon >= range - 1)) {
         // Make sure warrior can walk to target and be within range at the moment the weapon is ready to fire
@@ -200,12 +200,12 @@ export default class Fight extends Job {
         // If just crossed the distance to be within range, move towards the target for a bit more
         Order.move(warrior, target.body);
         this.attackMoveForward = true;
-      } else if (isClose(warrior.body, this.station, stationRange)) {
+      } else if (isClose(warrior.body, this.station, 3)) {
         // Step away to free room for other fighters
-        const dx = (warrior.body.x > target.body.x) ? stationRange : -stationRange;
-        const dy = (warrior.body.y > target.body.y) ? stationRange : -stationRange;
+        const dx = (warrior.body.x > target.body.x) ? fireRangeDistance : -fireRangeDistance;
+        const dy = (warrior.body.y > target.body.y) ? fireRangeDistance : -fireRangeDistance;
 
-        Order.move(warrior, { x: warrior.body.x + dx, y: warrior.body.y + dy });
+        Order.move(warrior, { x: target.body.x + dx, y: target.body.y + dy });
         this.attackMoveForward = false;
       } else {
         // Otherwise, step back to the assigned station
