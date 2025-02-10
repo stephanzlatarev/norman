@@ -17,14 +17,15 @@ export default class Battle {
   mode = Battle.MODE_WATCH;
 
   lines = [];
+  front = new Set();
+  zones = new Set();
 
   detector;
   fighters;
 
   constructor(zone) {
     this.zone = zone;
-    this.front = getBattleFront(zone);
-    this.zones = zone.range.zones;
+    this.zones.add(zone);
     this.priority = 100 - zone.tier.level;
 
     this.detector = null;
@@ -35,13 +36,16 @@ export default class Battle {
     traceBattle(this, "begins");
   }
 
+  hasRallyPoints() {
+    return !this.lines || (this.lines.length !== 1) || (this.lines[0] !== this.zone);
+  }
+
   move(zone) {
     if (this.zone !== zone) {
       traceBattle(this, "moves to " + zone.name);
 
       this.zone = zone;
-      this.front = getBattleFront(zone);
-      this.zones = zone.range.zones;
+      this.zones.add(zone);
       this.priority = 100 - zone.tier.level;
 
       if (this.detector) {
@@ -83,16 +87,4 @@ export default class Battle {
     return [...battles];
   }
 
-}
-
-function getBattleFront(zone) {
-  for (const one of zone.range.zones) {
-    for (const threat of one.threats) {
-      if (threat.type.rangeGround > 3) {
-        return zone.range.front;
-      }
-    }
-  }
-
-  return new Set([...zone.neighbors].filter(zone => !!zone.cells.size));
 }

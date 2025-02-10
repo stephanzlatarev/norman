@@ -10,8 +10,7 @@ export const ALERT_RED = 7;     // There are enemy threats in the zone
 
 export function syncAlerts() {
   const zones = Zone.list();
-  const bases = new Set();
-  const army = new Set();
+  const accessible = new Set();
   const enemy = new Set();
 
   for (const zone of zones) {
@@ -20,35 +19,52 @@ export function syncAlerts() {
       enemy.add(zone);
     } else if (zone.warriors.size) {
       zone.alertLevel = ALERT_BLUE;
-      army.add(zone);
     } else if (zone.buildings.size) {
       zone.alertLevel = ALERT_GREEN;
     } else {
       zone.alertLevel = ALERT_WHITE;
     }
 
-    if (zone.tier && (zone.tier.level === 1) && zone.cells.size) {
-      bases.add(zone);
+    if (zone.warriors.size || (zone.tier && (zone.tier.level === 1) && zone.cells.size)) {
+      accessible.add(zone);
     }
   }
 
   increaseAlertLevelForFireRange(enemy);
-  increaseAlertLevelForZonesWithoutSecureAccess(zones, bases, army);
+
+  traverseAccessibleZones(accessible);
+  increaseAlertLevelForZonesWithoutSecureAccess(zones, accessible);
 }
 
 function increaseAlertLevelForFireRange(zones) {
   for (const zone of zones) {
-    for (const one of zone.range.front) if (one.alertLevel < ALERT_YELLOW) one.alertLevel = ALERT_YELLOW;
-    for (const one of zone.range.fire) if (one.alertLevel < ALERT_ORANGE) one.alertLevel = ALERT_ORANGE;
+    if (hasLongRangeThreats(zone)) {
+      for (const one of zone.range.front) if (one.alertLevel < ALERT_YELLOW) one.alertLevel = ALERT_YELLOW;
+      for (const one of zone.range.fire) if (one.alertLevel < ALERT_ORANGE) one.alertLevel = ALERT_ORANGE;
+    } else {
+      for (const one of zone.neighbors) if (one.alertLevel < ALERT_YELLOW) one.alertLevel = ALERT_YELLOW;
+    }
   }
 }
 
-function increaseAlertLevelForZonesWithoutSecureAccess(zones, bases, army) {
-  const presence = [...bases, ...army];
-  const traversed = new Set(presence);
-  const accessible = new Set(presence);
+function increaseAlertLevelForZonesWithoutSecureAccess(zones, accessible) {
+  for (const zone of zones) {
+    if (zone.cells.size && (zone.alertLevel <= ALERT_YELLOW) && !accessible.has(zone)) zone.alertLevel = ALERT_PINK;
+  }
+}
 
-  let wave = new Set(presence);
+function hasLongRangeThreats(zone) {
+  for (const threat of zone.threats) {
+    if (threat.type.rangeGround > 3) {
+      return true;
+    }
+  }
+}
+
+function traverseAccessibleZones(accessible) {
+  const traversed = new Set(accessible);
+
+  let wave = new Set(accessible);
 
   while (wave.size) {
     const next = new Set();
@@ -71,10 +87,5 @@ function increaseAlertLevelForZonesWithoutSecureAccess(zones, bases, army) {
     }
 
     wave = next;
-  }
-
-  for (const zone of zones) {
-    if (!zone.cells.size) continue;
-    if ((zone.alertLevel <= ALERT_YELLOW) && !accessible.has(zone)) zone.alertLevel = ALERT_PINK;
   }
 }

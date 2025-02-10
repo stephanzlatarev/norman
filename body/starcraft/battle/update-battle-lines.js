@@ -1,100 +1,48 @@
 import Line from "../battle/line.js";
-import { ALERT_YELLOW } from "../map/alert.js";
-import Wall from "../map/wall.js";
 
 const SURROUND_BALANCE = 1.1;
 
-const wall = { zone: null, zones: new Set(), base: null };
-
 export default function(battle) {
-  if (!wall.base) findWall();
+  const limit = (battle.deployedBalance > SURROUND_BALANCE) ? 3 : 1;
+  const approaches = selectApproaches(battle, limit);
 
-  if (wall.zones.has(battle.zone)) {
-    setBattleLines(battle, [wall.base]);
-  } else {
-    const approaches = selectBattleLineApproaches(battle);
-    const limit = (battle.deployedBalance > SURROUND_BALANCE) ? 3 : 1;
-    const active = selectActiveApproaches(battle, approaches, limit);
-
-    setBattleLines(battle, active);
-  }
+  setBattleLines(battle, approaches);
 }
 
-function findWall() {
-  const walls = Wall.list();
-
-  if (walls.length) {
-    wall.zone = walls[0];
-    wall.zones.add(wall.zone);
-
-    for (const zone of wall.zone.zones) {
-      wall.zones.add(zone);
-
-      if (!wall.base || (zone.tier.level < wall.base.tier.level)) wall.base = zone;
-    }
-  }
-}
-
-function setBattleLines(battle, zones) {
+function setBattleLines(battle, approaches) {
   const lines = [];
-  const addZones = new Set();
+  const zones = new Set();
 
-  for (const zone of zones) {
+  for (const zone of approaches) {
     const line = battle.lines.find(one => (one.zone === zone));
 
     if (line) {
       lines.push(line);
     } else {
-      addZones.add(zone);
+      zones.add(zone);
     }
   }
 
-  for (const zone of addZones) {
+  for (const zone of zones) {
     lines.push(new Line(battle, zone));
   }
 
   battle.lines = lines;
 }
 
-function selectBattleLineApproaches(battle) {
-  const approaches = new Set();
+function selectApproaches(battle, limit) {
+  if (!battle.front.size) return [];
+  if (battle.front.size <= limit) return battle.front;
 
-  for (const zone of battle.front) {
-    if (zone.alertLevel <= ALERT_YELLOW) {
-      approaches.add(zone);
-    }
-  }
-
-  if (!approaches.size) {
-    let tierLevel = Infinity;
-
-    for (const zone of battle.front) {
-      if (zone.tier.level < tierLevel) {
-        tierLevel = zone.tier.level;
-        approaches.clear();
-      }
-
-      if (zone.tier.level === tierLevel) {
-        approaches.add(battle.zone);
-      }
-    }
-  }
-
-  return approaches;
-}
-
-function selectActiveApproaches(battle, approaches, limit) {
-  if (!approaches.size) return [];
-  if (approaches.size <= limit) return [...approaches];
-
+  const active = [...battle.front];
   const deployments = new Map();
 
-  for (const approach of approaches) {
+  for (const approach of active) {
     deployments.set(approach, countDeploymentsInZone(battle, approach));
   }
 
-  const active = [...approaches].sort((a, b) => orderByTierAndDeployments(a, b, deployments));
-  if (active.length > limit) active.length = limit;
+  active.sort((a, b) => orderByTierAndDeployments(a, b, deployments));
+  active.length = limit;
 
   return active;
 }

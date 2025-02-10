@@ -1,5 +1,6 @@
 import Memory from "../../code/memory.js";
 import Types from "./types.js";
+import { getHopDistance } from "./map/route.js";
 import Priority from "./memo/priority.js";
 
 const jobs = new Set();
@@ -97,6 +98,15 @@ export default class Job extends Memory {
       this.assignee.job = null;
       this.assignee = null;
     }
+  }
+
+  distance(unit) {
+    if (!unit) return Infinity;
+    if (!this.zone) return 0;
+
+    if (unit.body.isGround) return getHopDistance(unit.cell, this.zone.cell);
+
+    return 0;
   }
 
   // Executes one step of the job.

@@ -1,4 +1,5 @@
 import Job from "../job.js";
+import Units from "../units.js";
 import Battle from "./battle.js";
 
 const INTERVAL = 224;
@@ -24,6 +25,8 @@ export default function() {
   for (const battle of orphans) {
     traceBattle(battle, "orphan");
   }
+
+  traceWarriorAssignments();
 
   loop = INTERVAL;
 }
@@ -169,4 +172,14 @@ function increment(map, key) {
   const value = map.get(key);
 
   map.set(key, value ? value + 1 : 1);
+}
+
+function traceWarriorAssignments() {
+  console.log("Warrior assignments:");
+  for (const warrior of Units.warriors().values()) {
+    console.log("-", warrior.type.name, warrior.nick,
+      "job:", warrior.job ? warrior.job.details : "-",
+      "order:", warrior.order ? JSON.stringify(warrior.order) : "-",
+    );
+  }
 }

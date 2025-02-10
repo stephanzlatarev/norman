@@ -15,13 +15,9 @@ import updateOpenJobs from "./update-open-jobs.js";
 import updateThreats from "./update-threats.js";
 import trace from "./trace.js";
 
-// TODO: First iteration, there's one station at the center of the battle line
-// TODO: Second iteration, there are as many stations as fighter jobs
-// TODO: Third iteration, the battle line moves
-
 const ops = [
   updateThreats,         // Ignore invisible threats for assaults without detector
-  updateBattleLines,     // Mark the active battle lines
+  updateBattleLines,     // Select the active battle lines from the front zones of the battle
   updateOpenJobs,        // Open fighter jobs for the active battles. Close obsolete jobs
   updateIdleWarriors,    // Assign idle warriors in battle zones to open fighter jobs
   updateJobsToLines,     // Distribute all fighter jobs to active battle lines

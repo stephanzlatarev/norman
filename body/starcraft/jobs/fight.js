@@ -51,6 +51,14 @@ export default class Fight extends Job {
 
     return true;
   }
+  
+  distance(unit) {
+    if (this.zone && unit && this.battle && !this.battle.hasRallyPoints()) {
+      return calculateSquareDistance(unit.body, this.zone);
+    }
+
+    return super.distance(unit);
+  }
 
   execute() {
     const warrior = this.assignee;
@@ -73,21 +81,28 @@ export default class Fight extends Job {
       this.details = getDetails(this, "attack");
       this.isCommitted = true;
       this.goAttack();
-    } else if (!isDeployed && !isAttacking) {
+    } else if (isDeployed) {
+      // Deployed but shouldn't attack yet
+
+      if (this.shouldStalk()) {
+        if (this.shouldKite()) {
+          this.details = getDetails(this, "kite");
+          Order.attack(warrior, target);
+        } else {
+          this.details = getDetails(this, "stalk");
+          this.goStalk();
+        }
+      } else if (this.shouldMarch()) {
+        this.details = getDetails(this, "march");
+        this.goMarch();
+      } else {
+        this.details = getDetails(this, "station");
+        Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
+      }
+
+    } else {
       this.details = getDetails(this, "deploy");
       this.goDeploy();
-    } else if (this.shouldKite()) {
-      this.details = getDetails(this, "kite");
-      Order.attack(warrior, target);
-    } else if (isDeployed && this.shouldMarch()) {
-      this.details = getDetails(this, "march");
-      this.goMarch();
-    } else if (isDeployed && this.shouldStalk()) {
-      this.details = getDetails(this, "stalk");
-      this.goStalk();
-    } else {
-      this.details = getDetails(this, "station");
-      Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
     }
   }
 

@@ -2,7 +2,6 @@ import Job from "./job.js";
 import Order from "./order.js";
 import Types from "./types.js";
 import Units from "./units.js";
-import { getHopDistance } from "./map/route.js";
 import { ActiveCount, TotalCount } from "./memo/count.js";
 import Limit from "./memo/limit.js";
 import Resources from "./memo/resources.js";
@@ -114,7 +113,6 @@ function prioritizeJobs(a, b) {
 function findCandidate(job) {
   const profile = job.agent;
   const priority = job.priority;
-  const zone = job.zone;
 
   if (!profile) return;
   if (profile.tag) return Units.get(profile.tag);
@@ -127,14 +125,13 @@ function findCandidate(job) {
 
   for (const unit of candidates.values()) {
     if (!unit.cell) continue;
-    if (zone && !unit.zone) continue;
+    if (job.zone && !unit.zone) continue;
     if (unit.job && (unit.job.isCommitted || (unit.job.priority >= priority))) continue;
     if (unit.job && bestCandidate && !bestCandidate.job) continue;
     if (profile.type.name && (unit.type !== profile.type)) continue;
     if (!job.accepts(unit)) continue;
 
-    // TODO: Use hop distance for air units after introducing air corridors
-    const distance = (zone && unit.body.isGround) ? getHopDistance(unit.cell, zone.cell) : 0;
+    const distance = job.distance(unit);
 
     if (distance < bestDistance) {
       bestCandidate = unit;

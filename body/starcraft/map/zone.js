@@ -1,6 +1,7 @@
 import Pin from "./pin.js";
 
 const FIRE_RANGE = 15;
+const RALLY_MIN_RADIUS = 4;
 
 const zones = [];
 const knownThreats = new Map();
@@ -300,7 +301,7 @@ function identifyRangesInRay(zone, ray, squareFireRange, skip) {
   zone.range.zones.add(ray);
   skip.add(ray);
 
-  if (squareDistance < squareFireRange) {
+  if ((squareDistance < squareFireRange) || (ray.r < RALLY_MIN_RADIUS)) {
     zone.range.fire.add(ray);
 
     for (const next of ray.neighbors) {
