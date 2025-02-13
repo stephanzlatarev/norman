@@ -57,17 +57,18 @@ export default class DetectOffensiveProxyMission extends Mission {
 function getPerimeterZones() {
   const zones = [];
   const walls = Wall.list();
+  let level = 5;
 
   if (walls.length) {
-    const wall = walls[0];
+    level = walls[0].tier.level + 1
+  }
 
-    for (let level = wall.tier.level + 1; level >= 0; level--) {
-      const tier = Tiers[level];
+  for (; level >= 0; level--) {
+    const tier = Tiers[level];
 
-      for (const zone of tier.zones) {
-        if (zone.cells.size) {
-          zones.push(zone);
-        }
+    for (const zone of tier.zones) {
+      if (zone.cells.size) {
+        zones.push(zone);
       }
     }
   }
