@@ -237,6 +237,7 @@ export default class Order extends Memory {
 
   static stop(unit) {
     if (!unit) return;
+    if (!unit.isAlive) return;
     if (unit.todo && (unit.todo.ability === 3665)) return unit.todo;
 
     if (unit.order.abilityId) {

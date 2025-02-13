@@ -1,4 +1,5 @@
 import Memory from "../../code/memory.js";
+import Order from "./order.js";
 import Types from "./types.js";
 import { getHopDistance } from "./map/route.js";
 import Priority from "./memo/priority.js";
@@ -120,6 +121,20 @@ export default class Job extends Memory {
     }
 
     this.mode = mode;
+  }
+
+  abort() {
+    if (this.assignee && this.assignee.todo && (this.assignee.todo !== this.order)) {
+      this.assignee.todo.abort();
+    }
+
+    if (this.order) {
+      this.order.abort();
+    }
+
+    Order.stop(this.assignee);
+
+    this.close(false);
   }
 
   // Closes the job and removes the link from the assigned unit.

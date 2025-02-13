@@ -23,6 +23,7 @@ export default class BuildWorkersMission extends Mission {
       const nexus = zone.depot;
 
       if (!nexus) continue;
+      if (!nexus.zone) continue;
       if (!nexus.isActive) continue;
       if (jobs.has(nexus)) continue;
       if (nexus.job && !nexus.job.isDone && !nexus.job.isFailed) continue;

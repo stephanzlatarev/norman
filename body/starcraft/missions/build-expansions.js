@@ -1,25 +1,41 @@
 import Mission from "../mission.js";
+import Order from "../order.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
-import Map from "../map/map.js";
+import { ALERT_WHITE } from "../map/alert.js";
+import GameMap from "../map/map.js";
 import { TotalCount } from "../memo/count.js";
 import Plan from "../memo/plan.js";
 import Priority from "../memo/priority.js";
+import Resources from "../memo/resources.js";
+
+const COOLDOWN_LOOPS = 500;
+
+const cooldown = new Map();
 
 export default class BuildExpansionsMission extends Mission {
 
   home;
   job;
+  retreat;
 
   run() {
     if (this.job) {
-      if (shouldNotBuildNexus()) return this.job.close(true);
-
-      if (this.job.priority !== Priority.Nexus) this.job.priority = Priority.Nexus;
-
-      if (this.job.isFailed) {
-        this.job = null;
+      if (shouldNotBuildNexus()) {
+        return this.job.close(true);
+      } else if (this.job.target.alertLevel > ALERT_WHITE) {
+        this.job = abortBuildJob(this.job, this.retreat);
+      } else if (this.job.isFailed) {
+        this.job = abortBuildJob(this.job, this.retreat);
       } else if (!this.job.isDone) {
+        // Make sure the job is of the right priority
+        this.job.priority = Priority.Nexus;
+
+        if (this.job.assignee && !this.retreat) {
+          this.retreat = selectRetreat(this.job.assignee);
+        }
+
+        // Continue with the same job
         return;
       }
     }
@@ -34,9 +50,33 @@ export default class BuildExpansionsMission extends Mission {
 
     if (depot) {
       this.job = new Build("Nexus", depot);
+      this.retreat = null;
     }
   }
 
+}
+
+function selectRetreat(probe) {
+  if (!probe || !probe.zone) return;
+
+  if (probe.zone.isDepot) {
+    return [...probe.zone.minerals][0];
+  } else {
+    return { x: probe.x, y: probe.y };
+  }
+}
+
+function abortBuildJob(job, retreat) {
+  const probe = job.assignee;
+
+  cooldown.set(job.target, Resources.loop);
+
+  console.log("Job", job.details, "aborted. Target zone alert level:", job.target.alertLevel);
+  job.abort(false);
+
+  if (probe && retreat) {
+    new Order(probe, (retreat.type && retreat.type.isMinerals) ? 298 : 16, retreat);
+  }
 }
 
 function shouldNotBuildNexus() {
@@ -54,13 +94,17 @@ function findDepot(home) {
   next.add(home);
 
   for (const zone of next) {
-    if (zone.isDepot && Map.accepts(zone, zone.x, zone.y, 5)) {
+    if (zone.isDepot && (zone.alertLevel <= ALERT_WHITE) && GameMap.accepts(zone, zone.x, zone.y, 5)) {
       if (zone === home) {
         // Map is not analyzed yet
         return;
       }
 
-      return zone;
+      const lastAttempt = cooldown.get(zone);
+
+      if (!lastAttempt || (Resources.loop - lastAttempt >= COOLDOWN_LOOPS)) {
+        return zone;
+      }
     }
 
     checked.add(zone);

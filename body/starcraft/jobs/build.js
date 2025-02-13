@@ -18,8 +18,19 @@ export default class Build extends Job {
     this.summary = this.constructor.name + " " + (building.name ? building.name : building);
   }
 
+  accepts(unit) {
+    // Damaged probes don't take build jobs
+    if (unit.armor.total < unit.armor.totalMax) return false;
+
+    return true;
+  }
+
   execute() {
-    if (!this.order) {
+    if (!this.assignee.isAlive || this.assignee.isHit) {
+      // The probe is under attack. Abort.
+      console.log("Job", this.details, "aborted after worker was hit");
+      this.abort();
+    } else if (!this.order) {
       if ((this.assignee.zone !== this.target) && this.target.isDepot && this.target.minerals.size) {
         this.order = new Order(this.assignee, 298, [...this.target.minerals][0]).expect(this.output);
         this.order.isCompound = true;
