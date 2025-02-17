@@ -184,6 +184,11 @@ export function createZones(board) {
       cell.zone = zone;
     }
 
+    if (zone.cells.size) {
+      zone.cells.add(area.cell);
+      area.cell.zone = zone;
+    }
+
     zones.push(zone);
     mapping.set(area, zone);
   }
@@ -194,6 +199,11 @@ export function createZones(board) {
     for (const cell of join.cells) {
       corridor.cells.add(cell);
       cell.zone = corridor;
+    }
+
+    if (corridor.cells.size) {
+      corridor.cells.add(join.cell);
+      join.cell.zone = corridor;
     }
 
     for (const area of join.areas) {
