@@ -1,6 +1,7 @@
 import Game from "./game.js";
 import Battle from "./battle/battle.js";
 import { ALERT_WHITE } from "./map/alert.js";
+import GameMap from "./map/map.js";
 import Zone from "./map/zone.js";
 
 export default class VscodeGame extends Game {
@@ -42,24 +43,28 @@ const Color = {
   Unknown: { r: 100, g: 100, b: 100 },
 };
 const ALERT_COLOR = [Color.Unknown, Color.Blue, Color.Green, Color.White, Color.Yellow, Color.Orange, Color.Pink, Color.Red];
+const zoneShapes = new Map();
 
 async function trace(client) {
   const texts = [];
   const spheres = [];
 
-  traceAlertLevels(spheres);
+  traceAlertLevels(texts);
   traceBattles(texts);
   traceThreats(spheres);
+  traceZones(texts);
 
   await client.debug({ debug: [{ draw: { text: texts, spheres: spheres } }] });
 }
 
-function traceAlertLevels(spheres) {
+function traceAlertLevels(texts) {
   for (const zone of Zone.list()) {
-    if (zone.isCorridor) continue;
+    if (!zone.cells.size) continue;
     if (zone.alertLevel === ALERT_WHITE) continue;
+    if (!ALERT_COLOR[zone.alertLevel]) continue;
 
-    spheres.push({ p: { x: zone.x, y: zone.y, z: 0 }, r: zone.r, color: ALERT_COLOR[zone.alertLevel] });
+    const color = ALERT_COLOR[zone.alertLevel];
+    texts.push({ text: JSON.stringify({ shape: "polygon", points: getZoneShape(zone), color: `rgb(${color.r}, ${color.g}, ${color.b})` }) });
   }
 }
 
@@ -89,6 +94,27 @@ function traceThreats(spheres) {
         spheres.push({ p: { x: threat.body.x, y: threat.body.y, z: 0 }, r: threat.body.r + 0.3, color: Color.Red });
       }
     }
+  }
+}
+
+function traceZones(texts) {
+  const shapes = [];
+  const color = "black";
+
+  for (const zone of Zone.list()) {
+    if (zone.isDepot) {
+      shapes.push({ shape: "circle", x: zone.x, y: zone.y, r: 3.5, color });
+    } else {
+      shapes.push({ shape: "circle", x: zone.x, y: zone.y, r: zone.isCorridor ? 0.75 : 1.5, color });
+    }
+
+    for (const corridor of zone.corridors) {
+      shapes.push({ shape: "line", x1: zone.x, y1: zone.y, x2: corridor.x, y2: corridor.y, color });
+    }
+  }
+
+  for (const shape of shapes) {
+    texts.push({ text: JSON.stringify(shape) });
   }
 }
 
@@ -122,4 +148,84 @@ function balanceText(balance) {
   }
 
   return balance.toFixed(5);
+}
+
+function getZoneShape(zone) {
+  let shape = zoneShapes.get(zone);
+
+  if (!shape) {
+    shape = createZoneShape(zone);
+    zoneShapes.set(zone, shape);
+  }
+
+if (!shape.length) console.log(zone.name, shape);
+  return shape;
+}
+
+function createZoneShape(zone) {
+  const shape = [];
+
+  let start = zone.cell;
+  let next = start;
+  let ahead;
+  let left;
+  let direction = { x: 0, y: 1 };
+  let leftside = { x: -1, y: 0 };
+
+  // Find starting edge cell
+  while (next && (next.zone === zone)) {
+    start = next;
+    next = cell(next.x + direction.x, next.y + direction.y);
+  }
+
+  // Orient around the starting edge cell
+  next = start;
+  ahead = cell(start.x + direction.x, start.y + direction.y);
+  left = cell(start.x + leftside.x, start.y + leftside.y);
+  while ((left && (left.zone === zone)) || !ahead || (ahead.zone !== zone)) {
+    turn(direction, +1);
+    turn(leftside, +1);
+
+    ahead = cell(start.x + direction.x, start.y + direction.y);
+    left = cell(start.x + leftside.x, start.y + leftside.y);
+  }
+
+  // Follow left edge of zone
+  do {
+    ahead = cell(next.x + direction.x, next.y + direction.y);
+
+    if (ahead && (ahead.zone === zone)) {
+      // The cell ahead is still in the zone so it's part of the contour
+      next = ahead;
+      left = cell(next.x + leftside.x, next.y + leftside.y);
+
+      if (left && (left.zone === zone)) {
+        // Left of new next cell is in the zone so let's turn left
+        turn(direction, -1);
+        turn(leftside, -1);
+      }
+
+      shape.push(next.x, next.y);
+    } else {
+      // The cell ahead is outside the zone so let's not step ahead but turn right
+      turn(direction, +1);
+      turn(leftside, +1);
+    }
+  } while (next !== start);
+
+  return shape;
+}
+
+function cell(x, y) {
+  const row = GameMap.board.cells[y];
+
+  return row ? row[x] : null;
+}
+
+function turn(direction, angle) {
+  const x = direction.x;
+  const y = direction.y;
+
+  direction.x = y ? y * +angle : 0;
+  direction.y = x ? x * -angle : 0;
 }
