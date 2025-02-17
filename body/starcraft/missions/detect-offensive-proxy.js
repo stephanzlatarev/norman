@@ -57,7 +57,7 @@ export default class DetectOffensiveProxyMission extends Mission {
 function getPerimeterZones() {
   const zones = [];
   const walls = Wall.list();
-  let level = 5;
+  let level = Math.min(5, Tiers.length - 1);
 
   if (walls.length) {
     level = walls[0].tier.level + 1
