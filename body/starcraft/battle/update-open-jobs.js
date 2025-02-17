@@ -5,16 +5,19 @@ const RECRUIT_BALANCE = 2;
 const ALL_WARRIORS = ["Colossus", "Immortal", "Sentry", "Stalker", "Zealot"];
 const GROUND_HITTING_WARRIORS = ["Colossus", "Immortal", "Zealot"];
 
-export default function(battle, isFocusBattle) {
+export default function(battle, isFocusBattle, isOnlyBattle) {
   if (battle.lines.length) {
+    const isBalanceInsufficient = (battle.recruitedBalance < RECRUIT_BALANCE);
 
-    if (isFocusBattle || (battle.recruitedBalance < RECRUIT_BALANCE)) {
+    if (isFocusBattle || isBalanceInsufficient) {
 
       closeOpenJobsOutsideBattleLines(battle);
 
       if (isSmallBattle(battle)) {
         // Make sure we don't overreact to individual enemy units in our territory
-        if (isFocusBattle || (battle.fighters.length < 3)) openJobs(battle, "Stalker", "Zealot");
+        if (isOnlyBattle || isBalanceInsufficient || (battle.fighters.length < 3)) {
+          openJobs(battle, "Stalker", "Zealot");
+        }
 
         closeOpenJobs(battle, "Colossus", "Immortal", "Sentry");
       } else {

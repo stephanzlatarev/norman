@@ -36,10 +36,12 @@ export default function() {
   const focusBattle = selectFocusBattle(battles);
 
   for (const op of ops) {
+    const isOnlyBattle = (battles.size === 1);
+
     for (const battle of battles) {
       const isFocusBattle = (battle === focusBattle);
 
-      op(battle, isFocusBattle);
+      op(battle, isFocusBattle, isOnlyBattle);
     }
   }
 
