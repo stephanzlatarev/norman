@@ -155,10 +155,16 @@ export default class Game {
     }
 
     if (actions.length) {
-      const response = await this.client.action({ actions: actions });
+      try {
+        const response = await this.client.action({ actions: actions });
 
-      for (let i = 0; i < response.result.length; i++) {
-        orders[i].result(response.result[i]);
+        for (let i = 0; i < response.result.length; i++) {
+          orders[i].result(response.result[i]);
+        }
+      } catch (error) {
+        console.log("ERROR: Failed to execute", actions.length, "orders");
+        console.log(JSON.stringify(actions));
+        console.log(error);
       }
     }
   }
