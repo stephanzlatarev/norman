@@ -26,7 +26,9 @@ export default class Build extends Job {
   }
 
   execute() {
-    if (!this.assignee.isAlive || this.assignee.isHit) {
+    if (this.assignee === PROGRESS) {
+      // We're just tracking progress. Do nothing.
+    } else if (!this.assignee.isAlive || this.assignee.isHit) {
       // The probe is under attack. Abort.
       console.log("Job", this.details, "aborted after worker was hit");
       this.abort();
