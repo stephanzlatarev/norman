@@ -531,7 +531,7 @@ function findEnemyWorkerToKill(agent) {
 function findPylonPlot(base) {
   for (let x = base.x - 2.5; x < base.x + 2.5; x++) {
     for (let y = base.y - 2.5; y < base.y + 2.5; y++) {
-      if (Map.accepts(base, x, y, 2)) {
+      if (Map.accepts(x, y, 2)) {
         return { x, y };
       }
     }

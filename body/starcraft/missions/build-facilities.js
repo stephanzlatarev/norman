@@ -106,10 +106,10 @@ function findBuildingPlot(facility) {
 
     const pos = building.body;
 
-    if (Map.accepts(pos, pos.x + 2.5, pos.y + 1.5, 3)) return { x: pos.x + 2.5, y: pos.y + 1.5 };
-    if (Map.accepts(pos, pos.x + 2.5, pos.y - 1.5, 3)) return { x: pos.x + 2.5, y: pos.y - 1.5 };
-    if (Map.accepts(pos, pos.x - 2.5, pos.y + 1.5, 3)) return { x: pos.x - 2.5, y: pos.y + 1.5 };
-    if (Map.accepts(pos, pos.x - 2.5, pos.y - 1.5, 3)) return { x: pos.x - 2.5, y: pos.y - 1.5 };
+    if (Map.accepts(pos.x + 2.5, pos.y + 1.5, 3)) return { x: pos.x + 2.5, y: pos.y + 1.5 };
+    if (Map.accepts(pos.x + 2.5, pos.y - 1.5, 3)) return { x: pos.x + 2.5, y: pos.y - 1.5 };
+    if (Map.accepts(pos.x - 2.5, pos.y + 1.5, 3)) return { x: pos.x - 2.5, y: pos.y + 1.5 };
+    if (Map.accepts(pos.x - 2.5, pos.y - 1.5, 3)) return { x: pos.x - 2.5, y: pos.y - 1.5 };
   }
 }
 

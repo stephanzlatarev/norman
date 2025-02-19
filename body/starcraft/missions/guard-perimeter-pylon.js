@@ -28,7 +28,7 @@ export default class GuardPerimeterPylonMission extends Mission {
 
           const station = zone.isDepot ? zone.exitRally : zone;
 
-          if (!Map.accepts(zone, station.x, station.y, 3)) continue;
+          if (!Map.accepts(station.x, station.y, 3)) continue;
 
           for (const warrior of zone.warriors) {
             if (warrior.isAlive && warrior.job && warrior.job.isGuard && warrior.job.isStationed) {

@@ -94,7 +94,7 @@ function findDepot(home) {
   next.add(home);
 
   for (const zone of next) {
-    if (zone.isDepot && (zone.alertLevel <= ALERT_WHITE) && GameMap.accepts(zone, zone.x, zone.y, 5)) {
+    if (zone.isDepot && (zone.alertLevel <= ALERT_WHITE) && GameMap.accepts(zone.x, zone.y, 5)) {
       if (zone === home) {
         // Map is not analyzed yet
         return;

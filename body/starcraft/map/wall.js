@@ -28,12 +28,12 @@ export default class Wall extends Corridor {
     if ((type === "Pylon") || (type.name === "Pylon")) {
       return blueprint.pylon;
     } else if ((type === "ShieldBattery") || (type.name === "ShieldBattery")) {
-      return Map.accepts(blueprint.battery, blueprint.battery.x, blueprint.battery.y, 2) ? blueprint.battery : null;
-    } else if (Map.accepts(blueprint.left, blueprint.left.x, blueprint.left.y, 3)) {
+      return Map.accepts(blueprint.battery.x, blueprint.battery.y, 2) ? blueprint.battery : null;
+    } else if (Map.accepts(blueprint.left.x, blueprint.left.y, 3)) {
       return blueprint.left;
-    } else if (Map.accepts(blueprint.center, blueprint.center.x, blueprint.center.y, 3)) {
+    } else if (Map.accepts(blueprint.center.x, blueprint.center.y, 3)) {
       return blueprint.center;
-    } else if (Map.accepts(blueprint.right, blueprint.right.x, blueprint.right.y, 3)) {
+    } else if (Map.accepts(blueprint.right.x, blueprint.right.y, 3)) {
       return blueprint.right;
     }
   }

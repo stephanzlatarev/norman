@@ -119,7 +119,7 @@ function findPylonPlotByDepot() {
 
     const plot = getAnchor(zone);
 
-    if (Map.accepts(zone, plot.x, plot.y, 2) && !isBlockingWall(plot)) {
+    if (Map.accepts(plot.x, plot.y, 2) && !isBlockingWall(plot)) {
       return plot;
     }
   }
@@ -133,7 +133,7 @@ function findPlotInFrontier() {
     const frontier = Tiers[1].zones;
 
     for (const zone of frontier) {
-      if (!zone.isDepot && Map.accepts(zone, zone.x, zone.y, 2) && !isBlockingWall(zone)) {
+      if (!zone.isDepot && Map.accepts(zone.x, zone.y, 2) && !isBlockingWall(zone)) {
         return { x: zone.x, y: zone.y };
       }
     }
@@ -195,7 +195,7 @@ function findPylonPlotInZone(zone) {
 
     if (zone.isDepot && isHarvestArea(zone, xx, yy)) continue;
 
-    if (Map.accepts(zone, xx, yy, 2)) {
+    if (Map.accepts(xx, yy, 2)) {
       return { x: xx, y: yy };
     }
   }

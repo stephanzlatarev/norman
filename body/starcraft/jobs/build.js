@@ -10,7 +10,7 @@ export default class Build extends Job {
 
   isAproaching = false;
 
-  progress = 0;
+  progress;
 
   constructor(building, target) {
     super("Probe", building.name ? building : Types.unit(building), target);
@@ -26,8 +26,18 @@ export default class Build extends Job {
   }
 
   execute() {
-    if (this.assignee === PROGRESS) {
-      // We're just tracking progress. Do nothing.
+    if (this.progress) {
+      // Close the job when the building appears
+      const building = findBuilding(this.target.body || this.target);
+
+      if (building) {
+        this.close(building);
+      } else if (this.progress > ACKNOWLEDGE_TIME) {
+        // Although the worker is got to the right position and no longer has the command to build, the building hasn't appeared for this long
+        this.close(false);
+      }
+
+      this.progress++;
     } else if (!this.assignee.isAlive || this.assignee.isHit) {
       // The probe is under attack. Abort.
       console.log("Job", this.details, "aborted after worker was hit");
@@ -52,23 +62,9 @@ export default class Build extends Job {
       const pos = this.target.body || this.target;
 
       // Make sure the worker is at the right position and no longer has the command to build
-      if (!this.progress && (this.assignee.order.abilityId !== this.output.abilityId) && isWorkerAtPosition(this.assignee, pos)) {
+      if ((this.assignee.order.abilityId !== this.output.abilityId) && isWorkerAtPosition(this.assignee, pos)) {
         this.assign(PROGRESS);
         this.progress = 1;
-      }
-
-      // Close the job when the building appears
-      if (this.progress) {
-        const building = findBuilding(pos);
-
-        if (building) {
-          this.close(building);
-        } else if (this.progress > ACKNOWLEDGE_TIME) {
-          // Although the worker is at the right position and no longer has the command to build, the building hasn't appeared for this long
-          this.close(false);
-        }
-
-        this.progress++;
       }
     }
   }

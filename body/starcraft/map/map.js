@@ -33,13 +33,7 @@ class Map {
   }
 
   // Check if a unit of the given size can be placed in the given coordinates entirely within this zone
-  accepts(zone, x, y, size) {
-    zone = (zone instanceof Zone) ? zone : this.zone(x, y);
-    if (!zone) {
-      console.log("ERROR: Cannot accept a unit outside map zones at coordinates", x, ":", y);
-      return false;
-    }
-
+  accepts(x, y, size) {
     x = Math.floor(x);
     y = Math.floor(y);
 
@@ -67,7 +61,7 @@ class Map {
           return false;
         }
 
-        if ((cell.zone !== zone) || !cell.isPlot || !cell.isPath || cell.isObstacle) {
+        if (!cell.isPlot || !cell.isPath || cell.isObstacle) {
           return false;
         }
       }
