@@ -50,8 +50,8 @@ function traceZones(texts, lines) {
     texts.push({ text: zone.name, worldPos: { ...point, z: point.z + 1 }, size: 40, color: ALERT_COLOR[zone.alertLevel] });
     lines.push({ line: { p0: point, p1: { ...point, z: 0 } }, color: Color.Corridor });
 
-    for (const corridor of zone.corridors) {
-      lines.push({ line: { p0: point, p1: { x: corridor.x, y: corridor.y, z: 15 } }, color: Color.Corridor });
+    for (const neighbor of zone.neighbors) {
+      lines.push({ line: { p0: point, p1: { x: neighbor.x, y: neighbor.y, z: 15 } }, color: Color.Corridor });
     }
   }
 }
@@ -202,25 +202,12 @@ function traceAlertLevels(texts) {
   }
 
   for (const zone of Zone.list()) {
-    if (zone.isCorridor) {
-      const text = zone.name[2];
-      const color = Color.Unknown;
-      const x = 0.50 + ((zone.x - alertbox.left) / alertbox.width) * alertbox.scaleX * 0.2;
-      const y = 0.07 + ((alertbox.bottom - zone.y) / alertbox.height) * alertbox.scaleY * 0.2;
+    const text = zone.name[0] + zone.name[1];
+    const color = ALERT_COLOR[zone.alertLevel] || Color.Unknown;
+    const x = 0.50 + ((zone.x - alertbox.left) / alertbox.width) * alertbox.scaleX * 0.2;
+    const y = 0.07 + ((alertbox.bottom - zone.y) / alertbox.height) * alertbox.scaleY * 0.2;
 
-      texts.push({ text: text, virtualPos: { x: x, y: y }, size: 16, color: color });
-    }
-  }
-
-  for (const zone of Zone.list()) {
-    if (!zone.isCorridor) {
-      const text = zone.name[0] + zone.name[1];
-      const color = ALERT_COLOR[zone.alertLevel] || Color.Unknown;
-      const x = 0.50 + ((zone.x - alertbox.left) / alertbox.width) * alertbox.scaleX * 0.2;
-      const y = 0.07 + ((alertbox.bottom - zone.y) / alertbox.height) * alertbox.scaleY * 0.2;
-
-      texts.push({ text: text, virtualPos: { x: x, y: y }, size: 16, color: color });
-    }
+    texts.push({ text: text, virtualPos: { x: x, y: y }, size: 16, color: color });
   }
 }
 

@@ -86,8 +86,6 @@ function getTarget(scout) {
   let bestTierLevel = scout.zone.tier.level;
 
   for (const zone of Zone.list()) {
-    if (zone.isCorridor) continue;
-
     if ((zone.lastScoutTime < bestScoutTime) || ((zone.lastScoutTime === bestScoutTime) && (zone.tier.level > bestTierLevel))) {
       best = zone;
       bestScoutTime = zone.lastScoutTime;

@@ -17,7 +17,7 @@ export default function() {
     const zones = orderBattleZones(tier.zones);
 
     for (const zone of zones) {
-      if (!zone.cells.size || traversed.has(zone)) continue;
+      if (traversed.has(zone)) continue;
 
       if (zone.alertLevel === ALERT_RED) {
         const battle = findBattle(zone) || new Battle(zone);
@@ -73,7 +73,7 @@ function findBattleZones(zone) {
 
     for (const zone of wave) {
       for (const neighbor of zone.neighbors) {
-        if (!neighbor.cells.size || traversed.has(neighbor)) continue;
+        if (traversed.has(neighbor)) continue;
 
         if ((neighbor.alertLevel === ALERT_YELLOW) && (neighbor.r >= RALLY_MIN_RADIUS)) {
           zones.add(neighbor);
@@ -100,7 +100,7 @@ function findBattleZones(zone) {
     let approach = zone;
 
     for (const neighbor of zone.neighbors) {
-      if (neighbor.cells.size && (neighbor.tier.level < zone.tier.level)) {
+      if (neighbor.tier.level < zone.tier.level) {
         approach = neighbor;
       }
     }

@@ -1,8 +1,8 @@
 import Mission from "../mission.js";
 import Order from "../order.js";
-import Units from "../units.js";
 import Build from "../jobs/build.js";
 import { ALERT_WHITE } from "../map/alert.js";
+import Depot from "../map/depot.js";
 import GameMap from "../map/map.js";
 import { TotalCount } from "../memo/count.js";
 import Plan from "../memo/plan.js";
@@ -15,7 +15,6 @@ const cooldown = new Map();
 
 export default class BuildExpansionsMission extends Mission {
 
-  home;
   job;
   retreat;
 
@@ -40,13 +39,10 @@ export default class BuildExpansionsMission extends Mission {
       }
     }
 
+    if (!Depot.home) return;
     if (shouldNotBuildNexus()) return;
 
-    if (!this.home) {
-      this.home = locateHomeZone();
-    }
-
-    const depot = findDepot(this.home);
+    const depot = findDepot();
 
     if (depot) {
       this.job = new Build("Nexus", depot);
@@ -83,52 +79,41 @@ function shouldNotBuildNexus() {
   return (Plan.BaseLimit && (TotalCount.Nexus >= Plan.BaseLimit));
 }
 
-function locateHomeZone() {
-  return Units.buildings().values().next().value.zone;
-}
+function findDepot() {
+  const traversed = new Set();
+  let wave = new Set();
 
-function findDepot(home) {
-  const checked = new Set();
-  const next = new Set();
+  wave.add(Depot.home);
+  traversed.add(Depot.home);
 
-  next.add(home);
+  while (wave.size) {
+    const next = new Set();
 
-  for (const zone of next) {
-    if (zone.isDepot && (zone.alertLevel <= ALERT_WHITE) && GameMap.accepts(zone.x, zone.y, 5)) {
-      if (zone === home) {
-        // Map is not analyzed yet
-        return;
+    for (const zone of wave) {
+      if (zone.isDepot && !isZoneThreatened(zone) && GameMap.accepts(zone.x, zone.y, 5)) {
+        const lastAttempt = cooldown.get(zone);
+
+        if (!lastAttempt || (Resources.loop - lastAttempt >= COOLDOWN_LOOPS)) {
+          return zone;
+        }
       }
 
-      const lastAttempt = cooldown.get(zone);
-
-      if (!lastAttempt || (Resources.loop - lastAttempt >= COOLDOWN_LOOPS)) {
-        return zone;
-      }
-    }
-
-    checked.add(zone);
-
-    for (const one of getNeighborZones(zone)) {
-      if (!checked.has(one)) {
-        next.add(one);
+      for (const neighbor of zone.neighbors) {
+        if (!traversed.has(neighbor)) {
+          next.add(neighbor);
+          traversed.add(neighbor);
+        }
       }
     }
 
-    next.delete(zone);
+    wave = next;
   }
 }
 
-function getNeighborZones(zone) {
-  const zones = new Set();
+function isZoneThreatened(zone) {
+  if (zone.alertLevel <= ALERT_WHITE) return false;
 
-  for (const corridor of zone.corridors) {
-    for (const one of corridor.zones) {
-      if (one !== zone) {
-        zones.add(one);
-      }
-    }
+  for (const enemy of zone.enemies) {
+    if (enemy.type.isWarrior && !enemy.type.isWorker) return true;
   }
-
-  return zones;
 }

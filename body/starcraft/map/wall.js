@@ -1,5 +1,4 @@
 import Map from "./map.js";
-import { Corridor } from "./zone.js";
 import Tiers from "./tier.js";
 import { syncTiers } from "./tier.js";
 
@@ -8,13 +7,11 @@ const SPAN = 8;
 
 const walls = [];
 
-export default class Wall extends Corridor {
+export default class Wall {
 
   isWall = true;
 
   constructor(cell, r, base, field, blueprint) {
-    super(cell, r);
-
     this.base = base;
     this.field = field;
     this.blueprint = blueprint;
@@ -45,7 +42,10 @@ export default class Wall extends Corridor {
 }
 
 // TODO: Move this function to Corridor to wall the given corridor
-export function createWalls(board) {
+export function createWalls() {
+  // Temporarily disabled
+  return;
+
   if (TRACE) console.log("tiers:", Tiers ? Tiers.length : "not found!");
   if (!Tiers || !Tiers.length) return;
 

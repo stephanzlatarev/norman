@@ -92,11 +92,6 @@ function findProxyZonesAndNexus() {
     for (const zone of Tiers[i].zones) {
       zones.add(zone);
     }
-    for (const zone of Tiers[i].fore) {
-      if (zone.cells.size) {
-        zones.add(zone);
-      }
-    }
   }
 }
 

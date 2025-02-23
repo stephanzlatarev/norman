@@ -117,7 +117,9 @@ export default class Order extends Memory {
     }
 
     if (this.unit && this.unit.isAlive && this.ability) {
-      if (this.target) {
+      if (!this.unit.tag) {
+        log("ERROR: Unit", this.unit.type ? this.unit.type.name : "-", this.unit.nick, "has no tag");
+      } else if (this.target) {
         if (this.target.tag) {
           return { unitTags: [this.unit.tag], abilityId: this.ability, targetUnitTag: this.target.tag };
         } else if (this.target.x && this.target.y) {

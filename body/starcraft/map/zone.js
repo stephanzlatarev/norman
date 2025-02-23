@@ -1,47 +1,121 @@
+import GameMap from "./map.js";
 import Pin from "./pin.js";
 
-const FIRE_RANGE = 15;
-const RALLY_MIN_RADIUS = 4;
+const ZONE_NAME_COLS = "ABCDEFGHIJ";
+const ZONE_NAME_ROWS = "0123456789";
+const ZONE_NAME_SUFFIX = "αβγδ";
+
+const RANGE_FIRE = 15;
+const RADIUS_MIN_RALLY = 4;
 
 const zones = [];
 const knownThreats = new Map();
 
 export default class Zone extends Pin {
 
-  hops = new Map();
-  neighbors = new Set();
-  range = { zones: new Set(), fire: new Set(), front: new Set() };
+  static STANDARD_VISION_RANGE = 10;
 
+  // Cells
+  cells = new Set();
+  ground = new Set();
+  border = new Set();
+
+  // Units
   workers = new Set();
   buildings = new Set();
   warriors = new Set();
   enemies = new Set();
   threats = new Set();
 
-  constructor(cell, r) {
+  // Navigation
+  neighbors = new Set();
+  range = { zones: new Set(), fire: new Set(), front: new Set() };
+
+  constructor(cell) {
     super(cell);
 
-    this.r = (r > 0) ? r : 1;
-    this.corridors = [];
-    this.cells = new Set();
+    this.r = 1;
+    this.powerPlot = cell;
+
+    this.cells.add(cell);
+    this.ground.add(cell);
+    this.border.add(cell);
+
+    cell.zone = this;
 
     zones.push(this);
   }
 
-  getHopsTo(zone) {
-    if (zone === this) return { distance: 0 };
+  expand(radius, shouldTakeOver) {
+    const traversed = new Set();
+    const centerx = Math.floor(this.cell.x);
+    const centery = Math.floor(this.cell.y);
+    let squareRadius = radius * radius;
+    let wave = new Set();
+    let last = new Set();
 
-    let hops = this.hops.get(zone);
+    traversed.add(this.cell);
+    wave.add(this.cell);
 
-    if (!hops) {
-      calculateAllHopsFromZone(this);
+    // Give it a chance to take over the cell
+    this.cell.zone = null;
 
-      hops = this.hops.get(zone);
+    while (wave.size) {
+      const next = new Set();
+
+      for (const cell of wave) {
+        if (!cell.zone || shouldTakeOver) {
+          if (cell.zone !== this) {
+            if (cell.zone) cell.zone.cells.delete(cell);
+
+            if (cell.isPlot) {
+              this.ground.add(cell);
+              this.border.add(cell);
+            }
+
+            this.cells.add(cell);
+            cell.zone = this;
+          }
+
+          for (const neighbor of cell.neighbors) {
+            if (traversed.has(neighbor)) continue;
+
+            traversed.add(neighbor);
+
+            if (!neighbor.isPath) continue;
+
+            const squareDistance = (centerx - neighbor.x) * (centerx - neighbor.x) + (centery - neighbor.y) * (centery - neighbor.y);
+
+            if (squareDistance < squareRadius) {
+              next.add(neighbor);
+            }
+          }
+        }
+      }
+
+      for (const cell of last) {
+        if (isSurroundedBySameZoneGround(this.ground, cell)) {
+          this.border.delete(cell);
+        }
+      }
+
+      last = wave;
+      wave = next;
     }
 
-    if (!hops) console.log("Ooops! No hops from", this.name, "to", zone.name);
+    for (const cell of this.border) {
+      if (isSurroundedBySameZoneGround(this.ground, cell)) {
+        this.border.delete(cell);
+      } else {
+        const squareDistance = (centerx - cell.x) * (centerx - cell.x) + (centery - cell.y) * (centery - cell.y);
 
-    return hops;
+        if (squareDistance > squareRadius) {
+          squareRadius = squareDistance;
+        }
+      }
+    }
+
+    this.r = Math.floor(Math.sqrt(squareRadius));
   }
 
   addUnit(unit) {
@@ -100,56 +174,15 @@ export default class Zone extends Pin {
     }
   }
 
-  replace(old) {
-    if (this.isCorridor && old.isCorridor) {
-      for (const zone of old.zones) {
-        for (let i = 0; i < zone.corridors.length; i++) {
-          if (zone.corridors[i] === old) {
-            zone.corridors[i] = this;
-          }
-        }
-      }
-
-      this.name = old.name;
-      this.tier = old.tier;
-      this.neighbors = new Set(old.neighbors);
-      this.zones = [...old.zones];
-      this.distance = old.distance;
-
-      for (const cell of old.cells) {
-        this.cells.add(cell);
-        cell.zone = this;
-      }
-
-      for (const zone of Zone.list()) {
-        if (zone.hops.has(old)) zone.hops.set(this, zone.hops.get(old));
-        replaceInSet(zone.neighbors, old, this);
-        replaceInSet(zone.range.zones, old, this);
-        replaceInSet(zone.range.fire, old, this);
-        replaceInSet(zone.range.front, old, this);
-      }
-
-      const updatedTiers = new Set();
-      for (const zone of this.zones) {
-        if (!updatedTiers.has(zone.tier)) {
-          replaceInSet(zone.tier.fore, old, this);
-          replaceInSet(zone.tier.zones, old, this);
-          updatedTiers.add(zone.tier);
-        }
-      }
-
-      old.remove();
-    } else {
-      console.log("Only replacement of a corridor with another corridor is supported!");
-      console.log(this, "vs", old);
-    }
-  }
-
   remove() {
     const index = zones.indexOf(this);
 
     if (index >= 0) {
       zones.splice(index, 1);
+    }
+
+    for (const cell of this.cells) {
+      cell.zone = null;
     }
   }
 
@@ -159,243 +192,320 @@ export default class Zone extends Pin {
 
 }
 
-export class Corridor extends Zone {
+function isSurroundedBySameZoneGround(ground, cell) {
+  if (cell.neighbors.length < 8) return false;
 
-  isCorridor = true;
-  distance = 0;
-
-  constructor(cell, r) {
-    super(cell, r);
-
-    this.zones = [];
+  for (const neighbor of cell.neighbors) {
+    if (!ground.has(neighbor)) return false;
   }
 
+  return true;
 }
 
-export function createZones(board) {
-  const mapping = new Map();
-  const zones = [];
+export function createZones() {
+  const free = new Set([...GameMap.board.ground].filter(cell => (!cell.zone && cell.isPlot)));
+  let margins = calculateMargins(free);
+  let count = -1;
 
-  for (const area of board.areas) {
-    const zone = area.zone ? area.zone : new Zone(area.cell, area.level);
+  while ((margins.length > 1) && (zones.length > count)) {
+    count = zones.length;
 
-    for (const cell of area.cells) {
-      zone.cells.add(cell);
-      cell.zone = zone;
-    }
+    convertMarginPeaksToZones(margins, free);
 
-    if (zone.cells.size) {
-      zone.cells.add(area.cell);
-      area.cell.zone = zone;
-    }
-
-    zones.push(zone);
-    mapping.set(area, zone);
+    margins = calculateMargins(free);
   }
 
-  for (const join of board.joins) {
-    const corridor = new Corridor(join.cell, join.level);
+  zones.sort((a, b) => (b.r - a.r));
 
-    for (const cell of join.cells) {
-      corridor.cells.add(cell);
-      cell.zone = corridor;
-    }
-
-    if (corridor.cells.size) {
-      corridor.cells.add(join.cell);
-      join.cell.zone = corridor;
-    }
-
-    for (const area of join.areas) {
-      const zone = mapping.get(area);
-
-      zone.corridors.push(corridor);
-      corridor.zones.push(zone);
-    }
-
-    corridor.distance = calculateDistance(...corridor.zones);
-  }
-
-  addRemainingCellsToZones(board, zones);
-
-  labelZones(zones);
-  identifyNeighbors();
+  expandZonesWithUnclaimedGroundCells();
+  expandZonesWithNonGroundCells();
+  nameZones();
+  identifyNeighboringZones();
   identifyRanges();
 }
 
-function calculateDistance(a, b) {
-  return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
-}
+function calculateMargins(cells) {
+  const space = new Set(cells);
+  const margins = [];
 
-const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+  let wave = new Set();
 
-function labelZones(zones) {
-  let left = Infinity;
-  let right = 0;
-  let top = Infinity;
-  let bottom = 0;
-
-  for (const zone of zones) {
-    left = Math.min(left, zone.x);
-    right = Math.max(right, zone.x);
-    top = Math.min(top, zone.y);
-    bottom = Math.max(bottom, zone.y);
-  }
-  right++;
-  bottom++;
-
-  const colspan = (right - left) / 10;
-  const rowspan = (bottom - top) / 10;
-
-  for (const zone of zones) {
-    if (zone.isCorridor) continue;
-
-    const col = Math.floor((zone.x - left) / colspan);
-    const row = Math.floor((zone.y - top) / rowspan);
-    const type = zone.isDepot ? "#" : "*"
-
-    zone.name = LETTERS[col] + row + type;
-
-    for (const corridor of zone.corridors) {
-      if (corridor.name) continue;
-
-      const neighbor = (corridor.zones[0] === zone) ? corridor.zones[1] : corridor.zones[0];
-      const neighborCol = Math.floor((neighbor.x - left) / colspan);
-      const neighborRow = Math.floor((neighbor.y - top) / rowspan);
-
-      if (neighborCol < col) continue;
-      if ((neighborCol === col) && (neighborRow < row)) continue;
-
-      if (neighborCol === col) {
-        corridor.name = LETTERS[col] + row + "|";
-      } else if (neighborRow < row) {
-        corridor.name = LETTERS[col] + row + "\\";
-      } else if (neighborRow > row) {
-        corridor.name = LETTERS[col] + row + "/";
-      } else {
-        corridor.name = LETTERS[col] + row + "-";
-      }
+  // The first wave consist of all cells in the space that border with cells outside the space
+  for (const cell of space) {
+    if ((cell.neighbors.length < 8) || cell.neighbors.find(neighbor => !space.has(neighbor))) {
+      wave.add(cell);
     }
   }
-}
 
-function identifyNeighbors() {
-  for (const zone of zones) {
-    if (zone.corridors.length) {
-      for (const corridor of zone.corridors) {
-        zone.neighbors.add(corridor);
+  // Get wave by wave of cells that border the previous wave
+  while (wave.size) {
+    margins.push(wave);
 
-        for (const neighbor of corridor.zones) {
-          if (neighbor !== zone) zone.neighbors.add(neighbor);
+    for (const cell of wave) {
+      space.delete(cell);
+    }
+
+    const next = new Set();
+
+    for (const cell of wave) {
+      for (const neighbor of cell.edges) {
+        if (space.has(neighbor)) {
+          next.add(neighbor);
         }
       }
-    } else if (zone.zones) {
-      for (const neighbor of zone.zones) {
-        zone.neighbors.add(neighbor);
+    }
+
+    wave = next;
+  }
+
+  return margins;
+}
+
+function convertMarginPeaksToZones(margins, free) {
+  for (let i = margins.length - 1; i >= 1; i--) {
+    const cells = margins[i];
+
+    for (const cell of cells) {
+      if (free.has(cell)) {
+        const proximity = findProximityCells(free, cells, cell.x, cell.y, Zone.STANDARD_VISION_RANGE);
+        const zone = new Zone(findCenter(proximity));
+
+        zone.expand(Zone.STANDARD_VISION_RANGE);
+
+        if (zone.ground.size > zone.border.size) {
+          const center = findCenter(zone.ground, zone.border);
+  
+          zone.cell = center;
+          zone.powerPlot = center;
+          zone.x = center.x;
+          zone.y = center.y;
+        } else {
+          zone.remove();
+        }
+
+        for (const one of zone.cells) {
+          free.delete(one);
+        }
       }
     }
   }
 }
 
-function identifyRanges() {
-  for (const zone of zones) {
-    if (zone.cells.size) {
-      identifyRangesInRay(zone, zone, (zone.r + FIRE_RANGE) * (zone.r + FIRE_RANGE), new Set());
-    }
+function findProximityCells(space, cells, x, y, span) {
+  const proximity = [];
+
+  for (const cell of cells) {
+    if (!space.has(cell)) continue;
+    if (cell.x < x - span) continue;
+    if (cell.x > x + span) continue;
+    if (cell.y < y - span) continue;
+    if (cell.y > y + span) continue;
+
+    proximity.push(cell);
   }
+
+  return proximity;
 }
 
-function identifyRangesInRay(zone, ray, squareFireRange, skip) {
-  const squareDistance = (zone.x - ray.x) * (zone.x - ray.x) + (zone.y - ray.y) * (zone.y - ray.y);
+function findCenter(cells, exclude) {
+  let sumx = 0;
+  let sumy = 0;
+  let count = 0;
 
-  zone.range.zones.add(ray);
-  skip.add(ray);
+  for (const cell of cells) {
+    if (exclude && exclude.has(cell)) continue;
 
-  if ((squareDistance < squareFireRange) || (ray.r < RALLY_MIN_RADIUS)) {
-    zone.range.fire.add(ray);
-
-    for (const next of ray.neighbors) {
-      if (next.cells.size && !skip.has(next)) {
-        identifyRangesInRay(zone, next, squareFireRange, skip);
-      }
-    }
-  } else {
-    zone.range.front.add(ray);
+    sumx += cell.x;
+    sumy += cell.y;
+    count++;
   }
+
+  const midx = sumx / count;
+  const midy = sumy / count;
+
+  let bestCenter;
+  let bestDistance = Infinity;
+
+  for (const cell of cells) {
+    const distance = (cell.x - midx) * (cell.x - midx) + (cell.y - midy) * (cell.y - midy);
+
+    if (distance < bestDistance) {
+      bestCenter = cell;
+      bestDistance = distance;
+    }
+  }
+
+  return bestCenter;
 }
 
-function calculateAllHopsFromZone(zone) {
-  const directions = new Map();
+function expandZonesWithUnclaimedGroundCells() {
   let wave = new Set();
-  let traversed = new Set([zone]);
-  let distance = 1;
 
-  for (const corridor of zone.corridors) {
-    for (const neighbor of corridor.zones) {
-      if (neighbor !== zone) {
-        wave.add(neighbor);
-        traversed.add(neighbor);
-        directions.set(neighbor, corridor);
-      }
+  for (const zone of zones) {
+    for (const cell of zone.border) {
+      wave.add(cell);
     }
   }
 
   while (wave.size) {
     const next = new Set();
 
-    for (const one of wave) {
-      const direction = directions.get(one);
+    for (const cell of wave) {
+      for (const neighbor of cell.neighbors) {
+        if (!neighbor.zone && neighbor.isPlot) {
+          neighbor.zone = cell.zone;
 
-      zone.hops.set(one, { direction: direction, distance: distance });
+          // Expand the ground and border of the zone
+          neighbor.zone.ground.add(neighbor);
+          neighbor.zone.border.add(neighbor);
 
-      for (const neighbor of one.neighbors) {
-        if (!neighbor.isCorridor && !traversed.has(neighbor)) {
-          directions.set(neighbor, direction);
           next.add(neighbor);
-          traversed.add(neighbor);
         }
       }
     }
 
     wave = next;
-    distance++;
   }
-}
 
-function replaceInSet(set, previous, current) {
-  if (set.has(previous)) {
-    set.delete(previous);
-    set.add(current);
-  }
-}
-
-function addRemainingCellsToZones(board, zones) {
-  const expandingZones = [...zones].filter(zone => (zone.cells.size > 0));
-
-  for (const row of board.cells) {
-    for (const cell of row) {
-      if (!cell.zone) {
-        addCellToClosestZone(cell, expandingZones);
+  // Slim down the borders
+  for (const zone of zones) {
+    for (const cell of zone.border) {
+      if (isSurroundedBySameZoneGround(zone.ground, cell)) {
+        zone.border.delete(cell);
       }
     }
   }
 }
 
-function addCellToClosestZone(cell, zones) {
-  let closestZone;
-  let closestDistance = Infinity;
+function expandZonesWithNonGroundCells() {
+  let wave = new Set();
 
   for (const zone of zones) {
-    const distance = Math.abs(zone.x - cell.x) + Math.abs(zone.y - cell.y);
-
-    if (distance < closestDistance) {
-      closestZone = zone;
-      closestDistance = distance;
+    for (const cell of zone.border) {
+      wave.add(cell);
     }
   }
 
-  if (closestZone) {
-    cell.zone = closestZone;
-    closestZone.cells.add(cell);
+  while (wave.size) {
+    const next = new Set();
+
+    for (const cell of wave) {
+      for (const neighbor of cell.neighbors) {
+        if (!neighbor.zone) {
+          neighbor.zone = cell.zone;
+
+          next.add(neighbor);
+        }
+      }
+    }
+
+    wave = next;
+  }
+}
+
+function nameZones() {
+  const table = [];
+  const box = GameMap.board.box;
+  const boxx = 10 / (box.right - box.left);
+  const boxy = 10 / (box.bottom - box.top);
+
+  for (let row = 0; row < 10; row++) {
+    const list = [];
+
+    for (let col = 0; col < 10; col++) {
+      list.push([]);
+    }
+
+    table.push(list);
+  }
+
+  for (const zone of zones) {
+    const row = Math.floor((zone.y - box.top) * boxy);
+    const col = Math.floor((zone.x - box.left) * boxx);
+    table[row][col].push(zone);
+  }
+
+  for (let row = 0; row < 10; row++) {
+    for (let col = 0; col < 10; col++) {
+      const list = table[row][col];
+
+      if (list.length === 1) {
+        list[0].name = ZONE_NAME_COLS[col] + ZONE_NAME_ROWS[row];
+      } else if (list.length) {
+        const prefix = ZONE_NAME_COLS[col] + ZONE_NAME_ROWS[row];
+
+        list.sort(orderZonesBySizeAndPosition);
+
+        for (let i = 0; i < list.length; i++) {
+          list[i].name = prefix + (ZONE_NAME_SUFFIX[i] || "x");
+        }
+      }
+    }
+  }
+}
+
+function orderZonesBySizeAndPosition(a, b) {
+  if (b.r !== a.r) return b.r - a.r;
+  if (b.y !== a.y) return a.y - b.y;
+  return a.x - b.x;
+}
+
+function identifyNeighboringZones() {
+  for (const zone of zones) {
+    identifyNeighborsOfZone(zone);
+  }
+}
+
+function identifyNeighborsOfZone(zone) {
+  const traversed = new Set();
+  let wave = new Set(zone.border);
+
+  zone.neighbors.clear();
+
+  while (wave.size) {
+    const next = new Set();
+
+    for (const cell of wave) {
+      for (const neighbor of cell.neighbors) {
+        if (!neighbor.isPath) continue;
+        if (traversed.has(neighbor)) continue;
+
+        if (neighbor.zone === zone) {
+          next.add(neighbor);
+        } else {
+          zone.neighbors.add(neighbor.zone);
+          neighbor.zone.neighbors.add(zone);
+        }
+
+        traversed.add(neighbor);
+      }
+    }
+
+    wave = next;
+  }
+}
+
+function identifyRanges() {
+  for (const zone of zones) {
+    identifyRangesInRay(zone, zone, (zone.r + RANGE_FIRE) * (zone.r + RANGE_FIRE), new Set());
+  }
+}
+
+function identifyRangesInRay(zone, ray, squareFireRange, exclude) {
+  const squareDistance = (zone.x - ray.x) * (zone.x - ray.x) + (zone.y - ray.y) * (zone.y - ray.y);
+
+  zone.range.zones.add(ray);
+  exclude.add(ray);
+
+  if ((squareDistance < squareFireRange) || (ray.r < RADIUS_MIN_RALLY)) {
+    zone.range.fire.add(ray);
+
+    for (const next of ray.neighbors) {
+      if (!exclude.has(next)) {
+        identifyRangesInRay(zone, next, squareFireRange, exclude);
+      }
+    }
+  } else {
+    zone.range.front.add(ray);
   }
 }

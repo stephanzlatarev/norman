@@ -59,7 +59,6 @@ async function trace(client) {
 
 function traceAlertLevels(texts) {
   for (const zone of Zone.list()) {
-    if (!zone.cells.size) continue;
     if (zone.alertLevel === ALERT_WHITE) continue;
     if (!ALERT_COLOR[zone.alertLevel]) continue;
 
@@ -102,14 +101,22 @@ function traceZones(texts) {
   const color = "black";
 
   for (const zone of Zone.list()) {
-    if (zone.isDepot) {
-      shapes.push({ shape: "circle", x: zone.x, y: zone.y, r: 3.5, color });
-    } else {
-      shapes.push({ shape: "circle", x: zone.x, y: zone.y, r: zone.isCorridor ? 0.75 : 1.5, color });
+    const centerx = Math.floor(zone.x) + 0.5;
+    const centery = Math.floor(zone.y) + 0.5;
+    const radius = zone.isDepot ? 3.5 : 1.5;
+
+    shapes.push({ shape: "circle", x: centerx, y: centery, r: radius, color });
+
+    for (const neighbor of zone.neighbors) {
+      const neighborx = Math.floor(neighbor.x) + 0.5;
+      const neighbory = Math.floor(neighbor.y) + 0.5;
+
+      shapes.push({ shape: "line", x1: centerx, y1: centery, x2: neighborx, y2: neighbory, color });
     }
 
-    for (const corridor of zone.corridors) {
-      shapes.push({ shape: "line", x1: zone.x, y1: zone.y, x2: corridor.x, y2: corridor.y, color });
+    if (zone.isDepot) {
+      shapes.push({ shape: "circle", x: zone.harvestRally.x + 0.5, y: zone.harvestRally.y + 0.5, r: 0.5, color });
+      shapes.push({ shape: "circle", x: zone.exitRally.x + 0.5, y: zone.exitRally.y + 0.5, r: 0.5, color });
     }
   }
 
@@ -158,7 +165,6 @@ function getZoneShape(zone) {
     zoneShapes.set(zone, shape);
   }
 
-if (!shape.length) console.log(zone.name, shape);
   return shape;
 }
 

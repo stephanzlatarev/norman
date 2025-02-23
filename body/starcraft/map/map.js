@@ -1,6 +1,4 @@
 import Board from "./board.js";
-import Units from "../units.js";
-import Zone from "./zone.js";
 
 class Map {
 
@@ -14,10 +12,6 @@ class Map {
     this.height = this.bottom - this.top;
 
     this.board = new Board(this, gameInfo.startRaw.placementGrid, gameInfo.startRaw.pathingGrid);
-
-    clearInitialPathing(this.board);
-
-    this.board.path();
   }
 
   sync(gameInfo) {
@@ -70,48 +64,6 @@ class Map {
     return true;
   }
 
-  show() {
-    for (const line of this.board.cells) {
-      const text = [];
-
-      for (const cell of line) {
-        if (!cell.isPath) {
-          text.push("#");
-        } else if (cell.isObstacle) {
-          text.push("X");
-        } else if (!cell.isPlot) {
-          text.push("/");
-        } else {
-          text.push(" ");
-        }
-      }
-
-      console.log(text.join(""));
-    }
-  }
-}
-
-function clearInitialPathing(board) {
-  for (const building of Units.buildings().values()) {
-    if (building.type.isBuilding) {
-      const x = building.body.x;
-      const y = building.body.y;
-      const r = building.body.r;
-
-      board.clear(Math.round(x - r), Math.round(y - r), Math.round(r + r), Math.round(r + r));
-    }
-  }
-
-  for (const unit of Units.resources().values()) {
-    const x = Math.floor(unit.body.x);
-    const y = Math.floor(unit.body.y);
-
-    if (unit.type.isMinerals) {
-      board.block(x - 1, y, 2, 1);
-    } else if (unit.type.isVespene) {
-      board.block(x - 1, y - 1, 3, 3);
-    }
-  }
 }
 
 export default new Map();

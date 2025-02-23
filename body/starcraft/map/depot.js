@@ -1,9 +1,15 @@
-import Zone from "./zone.js";
 import GameMap from "./map.js";
+import Units from "../units.js";
+import Zone from "./zone.js";
 
 const depots = [];
 
 export default class Depot extends Zone {
+
+  static DEPOT_VISION_RANGE = 12;
+
+  // Home base is the first zone with depot building
+  static home = null;
 
   isDepot = true;
 
@@ -14,8 +20,8 @@ export default class Depot extends Zone {
   vespene = new Set();
   extractors = new Set();
 
-  constructor(cell, resources) {
-    super(cell, cell.margin);
+  constructor(cell, resources, depot) {
+    super(cell);
 
     this.x = cell.x + 0.5;
     this.y = cell.y + 0.5;
@@ -40,7 +46,19 @@ export default class Depot extends Zone {
     }
 
     this.harvestRally = findRally(cell, this.minerals);
-    this.exitRally = GameMap.cell(this.x + this.x - this.harvestRally.x - 1, this.y + this.y - this.harvestRally.y - 1);
+    this.exitRally = GameMap.cell(
+      this.x + this.x - this.harvestRally.x - 1,
+      this.y + this.y - this.harvestRally.y - 1
+    );
+    this.powerPlot = GameMap.cell(
+      this.exitRally.x + (cell.x > this.harvestRally.x ? 1 : 0),
+      this.exitRally.y + (cell.y > this.harvestRally.y ? 1 : 0),
+    );
+
+    if (depot && !Depot.home) {
+      this.depot = depot;
+      Depot.home = this;
+    }
 
     depots.push(this);
   }
@@ -114,42 +132,42 @@ function findRally(cell, resources) {
   return GameMap.cell(cell.x + dx * 3 + 0.5, cell.y + dy * 3 + 0.5);
 }
 
-export function createDepots(board, resources, base) {
+export function createDepots() {
   const coordinates = new Map();
 
-  for (const resource of resources) {
+  for (const resource of Units.resources().values()) {
     populateDepotCoordinates(coordinates, resource);
   }
 
   const candidates = selectDepotCoordinates(coordinates);
 
-  for (const one of candidates) {
-    const cell = getCellAtCoordinatesKey(board, one);
-    const resources = coordinates.get(one);
+  for (const candidate of candidates) {
+    new Depot(candidate.cell, candidate.resources, findDepotBuilding(candidate.cell)).expand(Depot.DEPOT_VISION_RANGE, true);
+  }
 
-    if (cell.margin >= 3) {
-      const depot = new Depot(cell, [...resources.normalMinerals, ...resources.normalVespene, ...resources.richMinerals, ...resources.richVespene]);
+}
 
-      cell.area.zone = depot;
+function canBuildDepotBuilding(cell) {
+  return findDepotBuilding(cell) || isDepotBuildingPlot(cell);
+}
 
-      if ((base.body.x === depot.x) && (base.body.y === depot.y)) {
-        depot.depot = base;
-      }
-
-      for (let x = cell.x - 5; x <= cell.x + 5; x++) {
-        for (let y = cell.y - 5; y <= cell.y + 5; y++) {
-          const plot = board.cells[y][x];
-
-          if (plot.isPath && (plot.area !== cell.area)) {
-            if (plot.area) plot.area.cells.delete(plot);
-            cell.area.cells.add(plot);
-            plot.area = cell.area;
-          }
-        }
+function findDepotBuilding(cell) {
+  for (const building of Units.buildings().values()) {
+    if (building.type.isDepot && (Math.floor(building.body.x) === cell.x) && (Math.floor(building.body.y) === cell.y)) {
+      return building;
+    }
+  }
+}
+function isDepotBuildingPlot(cell) {
+  for (let x = cell.x - 1; x <= cell.x + 1; x++) {
+    for (let y = cell.y - 1; y <= cell.y + 1; y++) {
+      if (!GameMap.cell(x, y).isPlot) {
+        return false;
       }
     }
   }
 
+  return true;
 }
 
 function populateDepotCoordinates(coordinates, resource) {
@@ -197,12 +215,12 @@ function populateDepotCoordinates(coordinates, resource) {
 }
 
 function addToDepotCoordinates(resource, coordinates, type, list) {
-  for (const one of list) {
-    let resources = coordinates.get(one);
+  for (const key of list) {
+    let resources = coordinates.get(key);
 
     if (!resources) {
       resources = { normalMinerals: [], normalVespene: [], richMinerals: [], richVespene: [] };
-      coordinates.set(one, resources);
+      coordinates.set(key, resources);
     }
 
     resources[type].push(resource);
@@ -212,9 +230,14 @@ function addToDepotCoordinates(resource, coordinates, type, list) {
 function selectDepotCoordinates(coordinates) {
   const depots = [];
 
-  for (const [depot, resources] of coordinates) {
-    if ((resources.normalMinerals.length === 8) && (resources.normalVespene.length === 2)) {
-      depots.push(depot);
+  for (const [key, resources] of coordinates) {
+    const cell = getCellAtCoordinatesKey(key);
+
+    if ((resources.normalMinerals.length === 8) && (resources.normalVespene.length === 2) && canBuildDepotBuilding(cell)) {
+      depots.push({
+        cell,
+        resources: [...resources.normalMinerals, ...resources.normalVespene, ...resources.richMinerals, ...resources.richVespene],
+      });
     }
   }
 
@@ -225,9 +248,9 @@ function getCoordinatesKey(x, y) {
   return Math.floor(x) * 1000 + Math.floor(y);
 }
 
-function getCellAtCoordinatesKey(board, key) {
+function getCellAtCoordinatesKey(key) {
   const x = Math.floor(key / 1000);
   const y = Math.floor(key - x * 1000);
 
-  return board.cells[y][x];
+  return GameMap.board.cells[y][x];
 }

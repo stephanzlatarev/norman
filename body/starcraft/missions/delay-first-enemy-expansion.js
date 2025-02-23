@@ -14,19 +14,19 @@ export default class DelayFirstEnemyExpansionMission extends Mission {
   job = null;
 
   run() {
-    if (this.job || !Enemy.base) return;
+    if (this.job || !Depot.home || !Enemy.base) return;
 
-    const home = Depot.list().find(zone => zone.depot);
-    const agent = selectAgent(home);
+    const agent = selectAgent();
     const homePylonJob = [...Job.list()].find(job => job.output && job.output.isPylon);
-    const enemyLocations = findEnemyLocations();
+    const enemyExpansionZone = getEnemyExpansionZone();
 
-    if (home && agent && homePylonJob && homePylonJob.target && !homePylonJob.assignee && enemyLocations) {
+    if (agent && homePylonJob && homePylonJob.target && !homePylonJob.assignee && enemyExpansionZone) {
       console.log("Mission 'Delay first enemy expansion' starts");
 
-      this.job = new AnnoyEnemy(home, homePylonJob, enemyLocations);
+      this.job = new AnnoyEnemy(homePylonJob, enemyExpansionZone);
       this.job.assign(agent);
     } else {
+      console.log("Mission 'Delay first enemy expansion' will not start");
       this.job = "skip";
     }
   }
@@ -38,18 +38,18 @@ const MODE_DAMAGE = 2;
 
 class AnnoyEnemy extends Job {
 
-  home = null;
   homePylonJob = null;
-  enemyLocations = null;
+  enemyExpansionZone = null;
+  enemyHarvestLine = null;
   mode = null;
   pylon = null;
 
-  constructor(home, homePylonJob, enemyLocations) {
+  constructor(homePylonJob, enemyExpansionZone) {
     super("Probe");
 
-    this.home = home;
     this.homePylonJob = homePylonJob;
-    this.enemyLocations = enemyLocations;
+    this.enemyExpansionZone = enemyExpansionZone;
+    this.enemyHarvestLine = new HarvestLine(enemyExpansionZone);
     this.priority = 100;
 
     this.transition(this.goBuildHomePylon);
@@ -88,7 +88,7 @@ class AnnoyEnemy extends Job {
   goHome() {
     console.log("Mission 'Delay first enemy expansion' is over.");
 
-    orderSlip(this.assignee, this.home);
+    orderSlip(this.assignee);
 
     this.close(true);
   }
@@ -117,15 +117,15 @@ class AnnoyEnemy extends Job {
   }
 
   goScoutExpansion() {
-    if (isInSightRange(this.assignee.body, this.enemyLocations.expansion)) {
+    if (isInSightRange(this.assignee.body, this.enemyExpansionZone)) {
       this.transition(this.goApproachEnemyBase);
     } else {
-      orderMove(this.assignee, this.enemyLocations.expansion);
+      orderMove(this.assignee, this.enemyExpansionZone);
     }
   }
 
   goApproachEnemyBase() {
-    if (findEnemyWorkerClosestToCorridor(this.enemyLocations)) {
+    if (findEnemyWorkerClosestToEnemyExpansion(this.enemyExpansionZone)) {
       this.transition(this.goAttackEnemyWorker);
     } else {
       orderMove(this.assignee, Enemy.base.harvestRally);
@@ -136,7 +136,7 @@ class AnnoyEnemy extends Job {
     if (isAttacked(this.assignee)) {
       // Enemy worker fights back
       this.mode = MODE_DAMAGE;
-      return this.transition(this.goGuardCorridor);
+      return this.transition(this.goGuardExpansion);
     }
 
     if (this.mode === MODE_KILL) {
@@ -150,12 +150,12 @@ class AnnoyEnemy extends Job {
       }
     } else {
       // Make sure the agent is always between the enemy workers and the expansion. Poke enemy workers to provoke them and if possible damage them
-      const target = findEnemyWorkerClosestToCorridor(this.enemyLocations);
+      const target = findEnemyWorkerClosestToEnemyExpansion(this.enemyExpansionZone);
 
       if (target) {
-        if ((this.enemyLocations.harvest.distance(target.body) > 0.5) && !isEnemyWorkerBuildingStructures(target)) {
+        if ((this.enemyHarvestLine.distance(target.body) > 0.5) && !isEnemyWorkerBuildingStructures(target)) {
           // The enemy worker is outside the harvest zone, presumably going to build an expansion
-          return this.transition(this.goGuardCorridor);
+          return this.transition(this.goGuardExpansion);
         } else if (!this.mode && isDamaged(target)) {
           this.mode = MODE_KILL;
         }
@@ -167,41 +167,41 @@ class AnnoyEnemy extends Job {
     orderMove(this.assignee, Enemy.base.harvestRally);
   }
 
-  goGuardCorridor() {
-    if (isEnemyExpansionStarted(this.enemyLocations.expansion)) return this.transition(this.goHome);
+  goGuardExpansion() {
+    if (isEnemyExpansionStarted(this.enemyExpansionZone)) return this.transition(this.goHome);
 
-    if (areEnemiesInZones(this.enemyLocations.expansionZones)) {
-      // An enemy worker entered the corridor and is probably building an expansion
+    if (areEnemyWorkersInZone(this.enemyExpansionZone)) {
+      // An enemy worker entered the expansion zone and is probably building an expansion
       this.transition(this.goBlockExpansion);
     } else if (this.assignee.zone === Enemy.base) {
       // The agent is still in the enemy base, so mineral walk to the expansion to avoid being blocked by enemy units
-      orderSlip(this.assignee, this.home);
+      orderSlip(this.assignee);
     } else if (isSlipping(this.assignee) || isEnemyWorkerClose(this.assignee)) {
       // An enemy worker is following the agent, so move to the expansion
-      orderMove(this.assignee, this.enemyLocations.expansion);
+      orderMove(this.assignee, this.enemyExpansionZone);
     } else if (!isAttacked(this.assignee)) {
       // The agent is now healthy and no enemy worker tries to expand, so attack again
       this.transition(this.goAttackEnemyWorker);
-    } else if (this.assignee.zone === this.enemyLocations.expansion) {
-      // The agent just entered the expansion zone, so stop to keep close to the corridor
+    } else if (this.assignee.zone === this.enemyExpansionZone) {
+      // The agent just entered the expansion zone, so stop to keep close to it
       orderStop(this.assignee);
     }
   }
 
   goBlockExpansion() {
-    if (isEnemyExpansionStarted(this.enemyLocations.expansion)) return this.transition(this.goHome);
+    if (isEnemyExpansionStarted(this.enemyExpansionZone)) return this.transition(this.goHome);
 
-    if (isWithinBlock(this.assignee.body, this.enemyLocations.expansion, 6) && !areEnemiesInZones(this.enemyLocations.expansionZones)) {
-      return this.transition(this.goGuardCorridor);
+    if (isWithinBlock(this.assignee.body, this.enemyExpansionZone, 6) && !areEnemyWorkersInZone(this.enemyExpansionZone)) {
+      return this.transition(this.goGuardExpansion);
     } else if (isInjured(this.assignee)) {
       // Block the expansion with a pylon
-      if (this.enemyLocations.expansion.buildings.size) {
+      if (this.enemyExpansionZone.buildings.size) {
         // The agent already built a pylon
         return this.transition(this.goCancelPylon);
       } else if (isAlmostDead(this.assignee)) {
         return this.transition(this.goHome);
       } else if (Resources.minerals >= 100) {
-        const plot = findPylonPlot(this.enemyLocations.expansion);
+        const plot = findPylonPlot(this.enemyExpansionZone);
 
         if (!plot) {
           return this.transition(this.goHome);
@@ -213,8 +213,8 @@ class AnnoyEnemy extends Job {
       }
     }
 
-    const bx = this.enemyLocations.expansion.x;
-    const by = this.enemyLocations.expansion.y;
+    const bx = this.enemyExpansionZone.x;
+    const by = this.enemyExpansionZone.y;
     const ax = this.assignee.body.x;
     const ay = this.assignee.body.y;
 
@@ -262,8 +262,8 @@ class AnnoyEnemy extends Job {
   }
 
   goCancelPylon() {
-    if (!this.pylon && this.enemyLocations.expansion.buildings.size) {
-      for (const one of this.enemyLocations.expansion.buildings) {
+    if (!this.pylon && this.enemyExpansionZone.buildings.size) {
+      for (const one of this.enemyExpansionZone.buildings) {
         this.pylon = one;
         break;
       }
@@ -272,8 +272,8 @@ class AnnoyEnemy extends Job {
     if (this.pylon) {
       this.pylon.isDecoy = true;
 
-      if (this.assignee.zone === this.enemyLocations.expansion) {
-        orderSlip(this.assignee, this.home);
+      if (this.assignee.zone === this.enemyExpansionZone) {
+        orderSlip(this.assignee);
       }
 
       if ((this.pylon.buildProgress >= 0.99) || (this.pylon.armor.health < 20)) {
@@ -288,8 +288,8 @@ class AnnoyEnemy extends Job {
 
 class HarvestLine {
 
-  constructor(corridor) {
-    const minerals = findClosestUnitToPos([...Enemy.base.minerals, ...Enemy.base.vespene], corridor);
+  constructor(expansionZone) {
+    const minerals = findClosestUnitToPos([...Enemy.base.minerals, ...Enemy.base.vespene], expansionZone);
 
     this.ax = Enemy.base.x;
     this.ay = Enemy.base.y;
@@ -298,7 +298,7 @@ class HarvestLine {
     this.ab = Math.sqrt(this.bx * this.bx + this.by * this.by);
     this.dc = 1;
 
-    this.dc = Math.sign(this.distance(corridor));
+    this.dc = Math.sign(this.distance(expansionZone));
   }
 
   distance(pos) {
@@ -310,11 +310,11 @@ class HarvestLine {
 
 }
 
-function selectAgent(home) {
-  const selectUp = (home.exitRally.y > home.y);
+function selectAgent() {
+  const selectUp = (Depot.home.exitRally.y > Depot.home.y);
   let agent;
 
-  for (const worker of home.workers) {
+  for (const worker of Depot.home.workers) {
     if (!agent) {
       agent = worker;
     } else if (selectUp && (worker.body.y > agent.body.y)) {
@@ -349,102 +349,46 @@ function findClosestUnitToPos(units, pos) {
   return closestUnit;
 }
 
-function findEnemyLocations() {
-  const passed = new Set();
+function getEnemyExpansionZone() {
+  const traversed = new Set();
   let wave = new Set();
+  let expansion = null;
 
   wave.add(Enemy.base);
 
   while (wave.size) {
     const next = new Set();
-    let expansion;
-    let corridor;
 
     for (const zone of wave) {
-      passed.add(zone);
+      traversed.add(zone);
 
-      for (const path of zone.corridors) {
-        for (const neighbor of path.zones) {
-          if (passed.has(neighbor)) continue;
+      for (const neighbor of zone.neighbors) {
+        if (traversed.has(neighbor)) continue;
 
-          if (neighbor.isDepot) {
-            if (!expansion || (expansion === neighbor)) {
-              expansion = neighbor;
-              corridor = path;
-            } else {
-              // At least two depots are found at this distance. There's no single expansion
-              return;
-            }
+        if (neighbor.isDepot) {
+          if (!expansion || (expansion === neighbor)) {
+            expansion = neighbor;
+          } else {
+            // At least two depots are found at this distance. There's no single expansion
+            return;
           }
-
-          next.add(neighbor);
         }
+
+        next.add(neighbor);
       }
     }
 
     if (expansion) {
-      return {
-        baseZones: getNeighborhoodZones(Enemy.base, corridor, 5),
-        harvest: new HarvestLine(corridor),
-        expansion: expansion,
-        expansionZones: getNeighborhoodZones(expansion, corridor, 1),
-        corridor: corridor,
-      };
+      return expansion;
     }
 
     wave = next;
   }
 }
 
-function getNeighborhoodZones(zone, block, limit) {
-  const neighborhood = new Set();
-  let wave = new Set();
-
-  neighborhood.add(zone);
-  wave.add(zone);
-
-  while (wave.size && limit) {
-    const next = new Set();
-
-    for (const zone of wave) {
-      for (const corridor of zone.corridors) {
-        if (corridor === block) continue;
-
-        if (corridor.cells.size) {
-          neighborhood.add(corridor);
-        }
-
-        for (const neighbor of corridor.zones) {
-          if (neighbor === block) continue;
-
-          if (!neighborhood.has(neighbor)) {
-            neighborhood.add(neighbor);
-            next.add(neighbor);
-          }
-        }
-      }
-    }
-
-    wave = next;
-    limit--;
-  }
-
-  for (const corridor of zone.corridors) {
-    if (corridor === block) continue;
-
-    for (const neighbor of corridor.zones) {
-      if (neighbor === block) continue;
-
-      neighborhood.add(neighbor);
-    }
-  }
-
-  return neighborhood;
-}
-
-function areEnemiesInZones(zones) {
-  for (const zone of zones) {
-    if (zone.enemies.size) {
+function areEnemyWorkersInZone(zone) {
+  for (const enemy of zone.enemies) {
+    if (enemy.type.isWorker) {
       return true;
     }
   }
@@ -475,35 +419,22 @@ function isEnemyWorkerClose(agent) {
   }
 }
 
-function findEnemyWorkerClosestToCorridor(enemyLocations) {
+function findEnemyWorkerClosestToEnemyExpansion(expansion) {
   let closestDistance = -Infinity;
   let closestEnemyWorker = null;
 
-  for (const zone of enemyLocations.expansionZones) {
-    for (const enemy of zone.enemies) {
-      if (!enemy.type.isWorker) continue;
+  for (const unit of Units.enemies().values()) {
+    // Ignore units that are not workers
+    if (!unit.type.isWorker) continue;
 
-      const distance = enemyLocations.harvest.distance(enemy.body);
+    // Ignore units that scout us
+    if (unit.zone.tier.level < expansion.tier.level) continue;
 
-      if (distance > closestDistance) {
-        closestDistance = distance;
-        closestEnemyWorker = enemy;
-      }
-    }
-  }
+    const distance = squareDistance(unit.body, expansion);
 
-  if (closestEnemyWorker) return closestEnemyWorker;
-
-  for (const zone of enemyLocations.baseZones) {
-    for (const enemy of zone.enemies) {
-      if (!enemy.type.isWorker) continue;
-
-      const distance = enemyLocations.harvest.distance(enemy.body);
-
-      if (distance > closestDistance) {
-        closestDistance = distance;
-        closestEnemyWorker = enemy;
-      }
+    if (distance > closestDistance) {
+      closestDistance = distance;
+      closestEnemyWorker = unit;
     }
   }
 
@@ -536,10 +467,6 @@ function findPylonPlot(base) {
       }
     }
   }
-}
-
-function isInZones(agent, zones) {
-  return zones.has(agent.zone);
 }
 
 function isAttacked(agent) {
@@ -587,11 +514,11 @@ function orderStop(agent) {
   }
 }
 
-function orderSlip(agent, depot) {
-  if (!agent || !agent.order || !agent.body || !depot) return;
+function orderSlip(agent) {
+  if (!agent || !agent.order || !agent.body) return;
 
   if (agent.order.abilityId !== 298) {
-    new Order(agent, 298, [...depot.minerals][0]).accept(true);
+    new Order(agent, 298, [...Depot.home.minerals][0]).accept(true);
   }
 }
 

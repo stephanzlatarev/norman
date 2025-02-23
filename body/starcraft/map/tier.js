@@ -5,93 +5,58 @@ const tiers = [];
 
 class Tier {
 
-  constructor(level, fore, zones, back) {
+  constructor(level, zones) {
     this.level = level;
-    this.fore = fore;
     this.zones = zones;
-    this.back = back;
   }
 
 }
 
 export function syncTiers(force) {
+  const zones = Zone.list();
   const depots = [...Depot.list()].filter(zone => !!zone.depot);
+  const sizeFirstTier = tiers.length ? tiers[0].zones.size : 0;
 
   // Check if active depot changed, assuming only one depot changes state in a single game loop
-  if (!force && tiers.length && (depots.length === tiers[0].zones.size)) return tiers;
+  if (!force && (sizeFirstTier === depots.length)) return;
 
-  if (!depots.length) {
-    const zones = Zone.list();
+  if (depots.length) {  
+    const traversed = new Set();
+    let wave = new Set(depots);
 
-    if (!tiers.length || (zones.length !== tiers[0].zones.size)) {
-      const tier = new Tier(1, new Set(), new Set(zones), new Set());
+    tiers.length = 0;
 
-      for (const zone of zones) {
+    while (wave.size) {
+      const next = new Set();
+      const tier = new Tier(tiers.length + 1, wave);
+  
+      tiers.push(tier);
+  
+      for (const zone of wave) {
+        traversed.add(zone);
         zone.tier = tier;
       }
+  
+      for (const zone of wave) {
+        for (const neighbor of zone.neighbors) {
+          if (!traversed.has(neighbor)) {
+            next.add(neighbor);
+          }
+        }
+      }
 
-      tiers.push(tier);
+      wave = next;
     }
-
-    return tiers;
-  }
-
-  tiers.length = 0;
-
-  let zones = new Set(depots);
-  let back = new Set();
-  let lowTierZones = new Set();
-
-  while (zones.size) {
-    const { fore, nextTierZones } = findCorridorsAndZones(zones, lowTierZones);
-    const tier = new Tier(tiers.length + 1, fore, zones, back);
-
-    tiers.push(tier);
+  } else if (sizeFirstTier !== zones.length) {
+    const tier = new Tier(1, new Set(zones));
 
     for (const zone of zones) {
       zone.tier = tier;
-      lowTierZones.add(zone);
     }
 
-    zones = nextTierZones;
-    back = fore;
+    tiers.length = 0;
+    tiers.push(tier);
   }
-
-  for (const zone of Zone.list()) {
-    if (zone.isCorridor) {
-      const corridor = zone;
-
-      for (const neighbor of corridor.zones) {
-        if (!corridor.tier || (neighbor.tier.level <= corridor.tier.level)) {
-          corridor.tier = neighbor.tier;
-        }
-      }
-
-      if (corridor.cells.size) {
-        corridor.tier.zones.add(corridor);
-      }
-    }
-  }
-
-  return tiers;
-}
-
-function findCorridorsAndZones(zones, lowTierZones) {
-  const fore = new Set();
-  const nextTierZones = new Set();
-
-  for (const zone of zones) {
-    for (const corridor of zone.corridors) {
-      for (const neighbor of corridor.zones) {
-        if (!zones.has(neighbor) && !lowTierZones.has(neighbor)) {
-          fore.add(corridor);
-          nextTierZones.add(neighbor);
-        }
-      }
-    }
-  }
-
-  return { fore, nextTierZones };
 }
 
 export default tiers;

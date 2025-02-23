@@ -2,10 +2,9 @@ import Mission from "../mission.js";
 import Types from "../types.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
-import Depot from "../map/depot.js";
+import { ALERT_WHITE } from "../map/alert.js";
 import Map from "../map/map.js";
 import Tiers from "../map/tier.js";
-import Wall from "../map/wall.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
 import Plan from "../memo/plan.js";
 import Resources from "../memo/resources.js";
@@ -14,7 +13,6 @@ import Resources from "../memo/resources.js";
 
 export default class BuildPylonsMission extends Mission {
 
-  home;
   job;
 
   run() {
@@ -26,67 +24,34 @@ export default class BuildPylonsMission extends Mission {
       }
     }
 
-    if (!this.home) {
-      this.home = locateHomeZone();
-    }
+    // Check if it's too early for a second pylon
+    if ((Resources.supplyUsed < 20) && (TotalCount.Pylon >= 1)) return;
 
-    if ((Resources.supplyUsed < 20) && (TotalCount.Pylon >= 1)) return; // Too early for a second pylon
+    const plot = findPylonForSupply();
 
-    const pos = findWallPylon() || findPylonForSupply(this.home);
-
-    if (pos) {
-      this.job = new Build("Pylon", pos);
+    if (plot) {
+      this.job = new Build("Pylon", plot);
       this.job.priority = 100;
     }
   }
 
 }
 
-function locateHomeZone() {
-  return Units.buildings().values().next().value.zone;
-}
-
-let wallPlot;
-let wallPylon;
-
-function findWallPylon() {
-  if (Plan.BaseLimit) return;
-  if (wallPylon && wallPylon.isAlive) return; // Wall pylon is already built
-
-  if (wallPlot) {
-    for (const building of Units.buildings().values()) {
-      if ((building.body.x === wallPlot.x) && (building.body.y === wallPlot.y)) {
-        wallPylon = building;
-        building.isWall = true;
-        return;
-      }
-    }
-
-    return wallPlot;
-  }
-
-  for (const wall of Wall.list()) {
-    wallPlot = wall.getPlot("Pylon");
-
-    return wallPlot;
-  }
-}
-
-function findPylonForSupply(home) {
+function findPylonForSupply() {
   if (Resources.supplyLimit >= 200) return;
 
   // TODO: Also count a nexus when currently building but only if remaining time to build is the same as the time to build a pylon
   const expectedSupply = ActiveCount.Nexus * 15 + TotalCount.Pylon * 8;
 
   if (Resources.supplyUsed + 8 >= expectedSupply) {
-    return findPylonPlotOnMap(home);
+    return findPylonPlot();
   }
 
   const timeToConsumeSupply = (expectedSupply - Resources.supplyUsed) / countSupplyConsumptionRate();
   const timeToIncreaseSupply = Types.unit("Pylon").buildTime + 5 * 22.4; // Assume 5 seconds for probe to reach pylon construction site
 
   if (timeToConsumeSupply <= timeToIncreaseSupply) {
-    return findPylonPlotOnMap(home);
+    return findPylonPlot();
   }
 }
 
@@ -102,128 +67,42 @@ function countSupplyConsumptionRate() {
   return consumption;
 }
 
-function isBlockingWall(pos) {
-  return (wallPylon && (Math.abs(pos.x - wallPylon.body.x) <= 10) && (Math.abs(pos.y - wallPylon.body.y) <= 10));
-}
+function findPylonPlot() {
+  const tierIndexLimit = Plan.BaseLimit ? 1 : 2;
 
-// TODO: Optimize by remembering found plots and re-using them when pylons are destroyed but otherwise continue the search from where last plot was found
-function findPylonPlotOnMap(home) {
-  return findPylonPlotByDepot() || findPlotInFrontier() || findPylonPlotByZone(home);
-}
+  // First try to find a pylon plot in the center of a zone in our perimeter
+  for (let index = 0; index < tierIndexLimit; index++) {
+    const zones = Tiers[index].zones;
 
-// These pylons add build area next to the Nexus
-function findPylonPlotByDepot() {
-  for (const zone of Depot.list()) {
-    if (!zone.depot) continue;
-    if (!zone.depot.isActive) continue;
-
-    const plot = getAnchor(zone);
-
-    if (Map.accepts(plot.x, plot.y, 2) && !isBlockingWall(plot)) {
-      return plot;
+    for (const zone of zones) {
+      if ((zone.alertLevel <= ALERT_WHITE) && isPlotFree(zone.powerPlot)) {
+        return zone.powerPlot;
+      }
     }
   }
-}
 
-// These pylons add vision too
-function findPlotInFrontier() {
-  if (Plan.BaseLimit) return;
+  // Next try to add a pylon next to a base
+  for (const zone of Tiers[0].zones) {
+    for (const dy of [+2, -2, +4, -4]) {
+      const plot = { x: zone.powerPlot.x, y: zone.powerPlot.y + dy };
 
-  if (Tiers.length >= 2) {
-    const frontier = Tiers[1].zones;
-
-    for (const zone of frontier) {
-      if (!zone.isDepot && Map.accepts(zone.x, zone.y, 2) && !isBlockingWall(zone)) {
-        return { x: zone.x, y: zone.y };
+      if (isPlotFree(plot)) {
+        return plot;
       }
     }
   }
 }
 
-function findPylonPlotByZone(home) {
-  const checked = new Set();
-  const next = new Set();
+function isPlotFree(plot) {
+  for (let x = plot.x - 1; x <= plot.x; x++) {
+    for (let y = plot.y - 1; y <= plot.y; y++) {
+      const cell = Map.cell(x, y);
 
-  next.add(home);
-
-  for (const zone of next) {
-    const plot = findPylonPlotInZone(zone);
-
-    if (plot && !isBlockingWall(plot)) return plot;
-
-    checked.add(zone);
-
-    for (const one of getNeighborZones(zone)) {
-      if (Plan.BaseLimit && (one.tier.level > 2)) continue;
-
-      if (!checked.has(one)) {
-        next.add(one);
-      }
-    }
-
-    next.delete(zone);
-  }
-}
-
-function getNeighborZones(zone) {
-  const zones = new Set();
-
-  for (const corridor of zone.corridors) {
-    for (const one of corridor.zones) {
-      if (one !== zone) {
-        zones.add(one);
+      if (!cell.isPlot || !cell.isPath) {
+        return false;
       }
     }
   }
 
-  return zones;
-}
-
-const ANCHORS = [
-  { x: +10, y: 0 }, { x: -10, y: 0 },
-  { x: +5, y: +10 }, { x: +5, y: -10 },
-  { x: -5, y: +10 }, { x: -5, y: -10 },
-];
-const PLOTS = [...ANCHORS, ...ANCHORS.map(one => ({ x: one.x, y : one.y + 2})), ...ANCHORS.map(one => ({ x: one.x, y : one.y - 2}))];
-
-function findPylonPlotInZone(zone) {
-  const { x, y } = getAnchor(zone);
-
-  for (const one of PLOTS) {
-    const xx = x + one.x;
-    const yy = y + one.y;
-
-    if (zone.isDepot && isHarvestArea(zone, xx, yy)) continue;
-
-    if (Map.accepts(xx, yy, 2)) {
-      return { x: xx, y: yy };
-    }
-  }
-}
-
-function getAnchor(zone) {
-  if (zone.isDepot) {
-    return {
-      x: (zone.exitRally.x > zone.x) ? Math.floor(zone.exitRally.x + 1) : Math.ceil(zone.exitRally.x - 1),
-      y: (zone.exitRally.y > zone.y) ? Math.floor(zone.exitRally.y + 1) : Math.ceil(zone.exitRally.y - 1),
-    };
-  } else {
-    return {
-      x: Math.floor(zone.x),
-      y: Math.floor(zone.y),
-    };
-  }
-}
-
-function isHarvestArea(zone, x, y) {
-  const dx = Math.sign(zone.x - zone.harvestRally.x);
-  const dy = Math.sign(zone.y - zone.harvestRally.y);
-
-  if (dx === 0) {
-    return Math.sign(zone.y - y) === dy;
-  } else if (dy === 0) {
-    return Math.sign(zone.x - x) === dx;
-  }
-
-  return (Math.sign(zone.x - x) === dx) && (Math.sign(zone.y - y) === dy);
+  return true;
 }

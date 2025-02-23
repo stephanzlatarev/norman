@@ -67,9 +67,7 @@ function getPerimeterZones() {
     const tier = Tiers[level];
 
     for (const zone of tier.zones) {
-      if (zone.cells.size) {
-        zones.push(zone);
-      }
+      zones.push(zone);
     }
   }
 

@@ -2,7 +2,9 @@ import Mission from "../mission.js";
 import Types from "../types.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
+import { ALERT_WHITE } from "../map/alert.js";
 import Map from "../map/map.js";
+import Tiers from "../map/tier.js";
 import Wall from "../map/wall.js";
 import { TotalCount } from "../memo/count.js";
 import Limit from "../memo/limit.js";
@@ -12,6 +14,21 @@ import Priority from "../memo/priority.js";
 const DEFAULT_FACILITIES = ["ShieldBattery", "Gateway"];
 const SPECIAL_FACILITIES_DEFAULT = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil", "RoboticsBay"];
 const SPECIAL_FACILITIES_ROBOBAY = ["Gateway", "CyberneticsCore", "RoboticsFacility", "RoboticsBay", "Forge", "TwilightCouncil"];
+
+const SLOTS = [
+  { x: +2.5, y: +1.5 },
+  { x: +2.5, y: -1.5 },
+  { x: -2.5, y: +1.5 },
+  { x: -2.5, y: -1.5 },
+  { x: +2.5, y: +4.5 },
+  { x: +2.5, y: -4.5 },
+  { x: -2.5, y: +4.5 },
+  { x: -2.5, y: -4.5 },
+  { x: +5.5, y: +1.5 },
+  { x: +5.5, y: -1.5 },
+  { x: -5.5, y: +1.5 },
+  { x: -5.5, y: -1.5 },
+];
 
 let wallPylon = null;
 
@@ -88,7 +105,7 @@ function findBuildingPlot(facility) {
   if (!Plan.BaseLimit) {
     for (const wall of Wall.list()) {
       if (!wallPylon || !wallPylon.isAlive) {
-        wallPylon = findPylon(wall);
+        wallPylon = findWallPylon(wall);
       }
 
       if (wallPylon && wallPylon.isActive) {
@@ -101,19 +118,27 @@ function findBuildingPlot(facility) {
     }
   }
 
-  for (const building of Units.buildings().values()) {
-    if (!building.type.isPylon || !building.isActive || building.isWall || building.isDecoy) continue;
+  for (const tier of Tiers) {
+    for (const zone of tier.zones) {
+      if (!zone.buildings.size) continue;
+      if (zone.alertLevel > ALERT_WHITE) continue;
 
-    const pos = building.body;
+      const pylon = findZonePylon(zone);
 
-    if (Map.accepts(pos.x + 2.5, pos.y + 1.5, 3)) return { x: pos.x + 2.5, y: pos.y + 1.5 };
-    if (Map.accepts(pos.x + 2.5, pos.y - 1.5, 3)) return { x: pos.x + 2.5, y: pos.y - 1.5 };
-    if (Map.accepts(pos.x - 2.5, pos.y + 1.5, 3)) return { x: pos.x - 2.5, y: pos.y + 1.5 };
-    if (Map.accepts(pos.x - 2.5, pos.y - 1.5, 3)) return { x: pos.x - 2.5, y: pos.y - 1.5 };
+      if (!pylon) continue;
+
+      for (const slot of SLOTS) {
+        const plot = getBuildingPlotIfFree(pylon.body, slot);
+
+        if (plot) {
+          return plot;
+        }
+      }
+    }
   }
 }
 
-function findPylon(wall) {
+function findWallPylon(wall) {
   const plot = wall.getPlot("Pylon");
 
   if (plot) {
@@ -124,4 +149,35 @@ function findPylon(wall) {
       }
     }
   }
+}
+
+function findZonePylon(zone) {
+  for (const building of zone.buildings) {
+    if (!building.type.isPylon) continue;
+    if (!building.isActive) continue;
+    if (building.isDecoy) continue;
+    if (building.isWall) continue;
+    if (building.body.x !== zone.powerPlot.x) continue;
+    if (building.body.y !== zone.powerPlot.y) continue;
+
+    return building;
+  }
+}
+
+function getBuildingPlotIfFree(plot, slot) {
+  const plotx = plot.x + slot.x;
+  const ploty = plot.y + slot.y;
+
+  for (let x = plotx - 1; x <= plotx + 1; x++) {
+    for (let y = ploty - 1; y <= ploty; y++) {
+      const cell = Map.cell(x, y);
+
+      if (!cell.isPlot || !cell.isPath) {
+        return;
+      }
+    }
+  }
+
+  return { x: plotx, y: ploty };
+
 }

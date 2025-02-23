@@ -25,7 +25,7 @@ export function syncAlerts() {
       zone.alertLevel = ALERT_WHITE;
     }
 
-    if (zone.warriors.size || (zone.tier && (zone.tier.level === 1) && zone.cells.size)) {
+    if (zone.warriors.size || (zone.tier && (zone.tier.level === 1))) {
       accessible.add(zone);
     }
   }
@@ -49,7 +49,7 @@ function increaseAlertLevelForFireRange(zones) {
 
 function increaseAlertLevelForZonesWithoutSecureAccess(zones, accessible) {
   for (const zone of zones) {
-    if (zone.cells.size && (zone.alertLevel <= ALERT_YELLOW) && !accessible.has(zone)) zone.alertLevel = ALERT_PINK;
+    if ((zone.alertLevel <= ALERT_YELLOW) && !accessible.has(zone)) zone.alertLevel = ALERT_PINK;
   }
 }
 
@@ -71,7 +71,6 @@ function traverseAccessibleZones(accessible) {
 
     for (const zone of wave) {
       for (const neighbor of zone.neighbors) {
-        if (!neighbor.cells.size) continue;
         if (traversed.has(neighbor)) continue;
 
         if (neighbor.alertLevel <= ALERT_YELLOW) {
