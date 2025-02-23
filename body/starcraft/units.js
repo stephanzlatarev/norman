@@ -1,6 +1,6 @@
 import Types from "./types.js";
 import Resources from "./memo/resources.js";
-import GameMap from "./map/map.js";
+import Board from "./map/board.js";
 
 const resources = new Map();
 const workers = new Map();
@@ -212,8 +212,8 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
 }
 
 function addToZone(image) {
-  if (GameMap.board && image) {
-    const cell = GameMap.cell(image.body.x, image.body.y);
+  if (Board.cells && image) {
+    const cell = Board.cell(image.body.x, image.body.y);
 
     image.cell = cell;
 

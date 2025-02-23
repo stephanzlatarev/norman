@@ -2,8 +2,8 @@ import Mission from "../mission.js";
 import Order from "../order.js";
 import Build from "../jobs/build.js";
 import { ALERT_WHITE } from "../map/alert.js";
+import Board from "../map/board.js";
 import Depot from "../map/depot.js";
-import GameMap from "../map/map.js";
 import { TotalCount } from "../memo/count.js";
 import Plan from "../memo/plan.js";
 import Priority from "../memo/priority.js";
@@ -90,7 +90,7 @@ function findDepot() {
     const next = new Set();
 
     for (const zone of wave) {
-      if (zone.isDepot && !isZoneThreatened(zone) && GameMap.accepts(zone.x, zone.y, 5)) {
+      if (zone.isDepot && !isZoneThreatened(zone) && Board.accepts(zone.x, zone.y, 5)) {
         const lastAttempt = cooldown.get(zone);
 
         if (!lastAttempt || (Resources.loop - lastAttempt >= COOLDOWN_LOOPS)) {

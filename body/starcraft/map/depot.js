@@ -1,4 +1,4 @@
-import GameMap from "./map.js";
+import Board from "./board.js";
 import Units from "../units.js";
 import Zone from "./zone.js";
 
@@ -38,7 +38,7 @@ export default class Depot extends Zone {
         this.vespene.add(resource);
       }
 
-      const rcell = GameMap.cell(resource.body.x, resource.body.y);
+      const rcell = Board.cell(resource.body.x, resource.body.y);
       if (rcell.area !== cell.area) {
         rcell.area.cells.delete(rcell);
         cell.area.cells.add(rcell);
@@ -46,11 +46,11 @@ export default class Depot extends Zone {
     }
 
     this.harvestRally = findRally(cell, this.minerals);
-    this.exitRally = GameMap.cell(
+    this.exitRally = Board.cell(
       this.x + this.x - this.harvestRally.x - 1,
       this.y + this.y - this.harvestRally.y - 1
     );
-    this.powerPlot = GameMap.cell(
+    this.powerPlot = Board.cell(
       this.exitRally.x + (cell.x > this.harvestRally.x ? 1 : 0),
       this.exitRally.y + (cell.y > this.harvestRally.y ? 1 : 0),
     );
@@ -129,7 +129,7 @@ function findRally(cell, resources) {
   const dx = Math.sign(Math.floor(sumx / resources.size) - cell.x);
   const dy = Math.sign(Math.floor(sumy / resources.size) - cell.y);
 
-  return GameMap.cell(cell.x + dx * 3 + 0.5, cell.y + dy * 3 + 0.5);
+  return Board.cell(cell.x + dx * 3 + 0.5, cell.y + dy * 3 + 0.5);
 }
 
 export function createDepots() {
@@ -161,7 +161,7 @@ function findDepotBuilding(cell) {
 function isDepotBuildingPlot(cell) {
   for (let x = cell.x - 1; x <= cell.x + 1; x++) {
     for (let y = cell.y - 1; y <= cell.y + 1; y++) {
-      if (!GameMap.cell(x, y).isPlot) {
+      if (!Board.cell(x, y).isPlot) {
         return false;
       }
     }
@@ -252,5 +252,5 @@ function getCellAtCoordinatesKey(key) {
   const x = Math.floor(key / 1000);
   const y = Math.floor(key - x * 1000);
 
-  return GameMap.board.cells[y][x];
+  return Board.cells[y][x];
 }

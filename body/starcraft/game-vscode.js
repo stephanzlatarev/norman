@@ -1,7 +1,7 @@
 import Game from "./game.js";
 import Battle from "./battle/battle.js";
 import { ALERT_WHITE } from "./map/alert.js";
-import GameMap from "./map/map.js";
+import Board from "./map/board.js";
 import Zone from "./map/zone.js";
 
 export default class VscodeGame extends Game {
@@ -223,7 +223,7 @@ function createZoneShape(zone) {
 }
 
 function cell(x, y) {
-  const row = GameMap.board.cells[y];
+  const row = Board.cells[y];
 
   return row ? row[x] : null;
 }

@@ -1,4 +1,4 @@
-import GameMap from "./map.js";
+import Board from "./board.js";
 import Pin from "./pin.js";
 
 const ZONE_NAME_COLS = "ABCDEFGHIJ";
@@ -203,7 +203,7 @@ function isSurroundedBySameZoneGround(ground, cell) {
 }
 
 export function createZones() {
-  const free = new Set([...GameMap.board.ground].filter(cell => (!cell.zone && cell.isPlot)));
+  const free = new Set([...Board.ground].filter(cell => (!cell.zone && cell.isPlot)));
   let margins = calculateMargins(free);
   let count = -1;
 
@@ -405,9 +405,8 @@ function expandZonesWithNonGroundCells() {
 
 function nameZones() {
   const table = [];
-  const box = GameMap.board.box;
-  const boxx = 10 / (box.right - box.left);
-  const boxy = 10 / (box.bottom - box.top);
+  const boxx = 10 / (Board.right - Board.left);
+  const boxy = 10 / (Board.bottom - Board.top);
 
   for (let row = 0; row < 10; row++) {
     const list = [];
@@ -420,8 +419,8 @@ function nameZones() {
   }
 
   for (const zone of zones) {
-    const row = Math.floor((zone.y - box.top) * boxy);
-    const col = Math.floor((zone.x - box.left) * boxx);
+    const row = Math.floor((zone.y - Board.top) * boxy);
+    const col = Math.floor((zone.x - Board.left) * boxx);
     table[row][col].push(zone);
   }
 

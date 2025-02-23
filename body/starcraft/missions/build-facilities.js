@@ -3,7 +3,7 @@ import Types from "../types.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
 import { ALERT_WHITE } from "../map/alert.js";
-import Map from "../map/map.js";
+import Board from "../map/board.js";
 import Tiers from "../map/tier.js";
 import Wall from "../map/wall.js";
 import { TotalCount } from "../memo/count.js";
@@ -170,7 +170,7 @@ function getBuildingPlotIfFree(plot, slot) {
 
   for (let x = plotx - 1; x <= plotx + 1; x++) {
     for (let y = ploty - 1; y <= ploty; y++) {
-      const cell = Map.cell(x, y);
+      const cell = Board.cell(x, y);
 
       if (!cell.isPlot || !cell.isPath) {
         return;

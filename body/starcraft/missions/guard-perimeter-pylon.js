@@ -1,6 +1,6 @@
 import Mission from "../mission.js";
+import Board from "../map/board.js";
 import Build from "../jobs/build.js";
-import Map from "../map/map.js";
 import Tiers from "../map/tier.js";
 
 let pylonJob;
@@ -28,7 +28,7 @@ export default class GuardPerimeterPylonMission extends Mission {
 
           const station = zone.isDepot ? zone.exitRally : zone;
 
-          if (!Map.accepts(station.x, station.y, 3)) continue;
+          if (!Board.accepts(station.x, station.y, 3)) continue;
 
           for (const warrior of zone.warriors) {
             if (warrior.isAlive && warrior.job && warrior.job.isGuard && warrior.job.isStationed) {

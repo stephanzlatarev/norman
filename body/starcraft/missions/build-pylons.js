@@ -3,7 +3,7 @@ import Types from "../types.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
 import { ALERT_WHITE } from "../map/alert.js";
-import Map from "../map/map.js";
+import Board from "../map/board.js";
 import Tiers from "../map/tier.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
 import Plan from "../memo/plan.js";
@@ -96,7 +96,7 @@ function findPylonPlot() {
 function isPlotFree(plot) {
   for (let x = plot.x - 1; x <= plot.x; x++) {
     for (let y = plot.y - 1; y <= plot.y; y++) {
-      const cell = Map.cell(x, y);
+      const cell = Board.cell(x, y);
 
       if (!cell.isPlot || !cell.isPath) {
         return false;

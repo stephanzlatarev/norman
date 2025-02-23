@@ -9,10 +9,20 @@ const CORNERS = [
 
 const ground = new Set();
 
-export default class Board {
+class Board {
 
-  constructor(box, placementGrid, pathingGrid) {
-    this.box = box;
+  create(gameInfo) {
+    const playableArea = gameInfo.startRaw.playableArea;
+    const placementGrid = gameInfo.startRaw.placementGrid;
+    const pathingGrid = gameInfo.startRaw.pathingGrid;
+
+    this.left = playableArea.p0.x;
+    this.top = playableArea.p0.y;
+    this.right = playableArea.p1.x;
+    this.bottom = playableArea.p1.y;
+    this.width = this.right - this.left;
+    this.height = this.bottom - this.top;
+
     this.cells = [];
     this.ground = ground;
 
@@ -26,7 +36,7 @@ export default class Board {
         const pos = 7 - index % 8;
         const mask = 1 << pos;
 
-        const isOn = (x >= box.left) && (x <= box.right) && (y >= box.top) && (y <= box.bottom);
+        const isOn = (x >= this.left) && (x <= this.right) && (y >= this.top) && (y <= this.bottom);
         const isPlot = isOn && ((placementGrid.data[Math.floor(index / 8)] & mask) != 0);
         const isPath = isOn && ((pathingGrid.data[Math.floor(index / 8)] & mask) != 0);
 
@@ -41,14 +51,15 @@ export default class Board {
     }
 
     ignoreInitialBuildings(this.cells);
-    identifyNeighbors(this.box, this.cells);
+    identifyNeighbors(this, this.cells);
   }
 
-  sync(grid) {
+  sync(gameInfo) {
+    const grid = gameInfo.startRaw.pathingGrid;
     const size = grid.size;
 
-    for (let y = this.box.top; y <= this.box.bottom; y++) {
-      for (let x = this.box.left; x < this.box.right; x++) {
+    for (let y = this.top; y <= this.bottom; y++) {
+      for (let x = this.left; x < this.right; x++) {
         const index = x + y * size.x;
         const pos = 7 - index % 8;
         const mask = 1 << pos;
@@ -75,6 +86,51 @@ export default class Board {
         this.cells[row][col].block();
       }
     }
+  }
+
+  cell(x, y) {
+    return this.cells[Math.floor(y)][Math.floor(x)];
+  }
+
+  zone(x, y) {
+    return this.cell(x, y).zone;
+  }
+
+  // Check if a unit of the given size can be placed in the given coordinates
+  accepts(x, y, size) {
+    x = Math.floor(x);
+    y = Math.floor(y);
+
+    const head = Math.floor(size / 2);
+    const tail = Math.floor((size - 1) / 2);
+    const minx = x - head;
+    const maxx = x + tail;
+    const miny = y - head;
+    const maxy = y + tail;
+
+    for (let row = miny; row <= maxy; row++) {
+      const line = this.cells[row];
+
+      if (!line) {
+        console.log("ERROR: Cannot accept a unit in row", row, "around coordinates", x, ":", y);
+        return false;
+      }
+
+      for (let col = minx; col <= maxx; col++) {
+        const cell = line[col];
+
+        if (!cell) {
+          console.log("ERROR: Cannot accept a unit in col", col, "of row", row, "around coordinates", x, ":", y);
+          return false;
+        }
+
+        if (!cell.isPlot || !cell.isPath || cell.isObstacle) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
 }
@@ -150,9 +206,9 @@ function clearCell(cells, left, top, right, bottom) {
   }
 }
 
-function identifyNeighbors(box, cells) {
-  for (let y = box.top; y <= box.bottom; y++) {
-    for (let x = box.left; x < box.right; x++) {
+function identifyNeighbors(board, cells) {
+  for (let y = board.top; y <= board.bottom; y++) {
+    for (let x = board.left; x < board.right; x++) {
       const cell = cells[y][x];
 
       for (const one of EDGES) {
@@ -174,3 +230,5 @@ function identifyNeighbors(box, cells) {
     }
   }
 }
+
+export default new Board();

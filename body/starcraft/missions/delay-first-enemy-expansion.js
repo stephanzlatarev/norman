@@ -3,8 +3,8 @@ import Mission from "../mission.js";
 import Order from "../order.js";
 import Types from "../types.js";
 import Units from "../units.js";
+import Board from "../map/board.js";
 import Depot from "../map/depot.js";
-import Map from "../map/map.js";
 import { VisibleCount } from "../memo/encounters.js";
 import Enemy from "../memo/enemy.js";
 import Resources from "../memo/resources.js";
@@ -462,7 +462,7 @@ function findEnemyWorkerToKill(agent) {
 function findPylonPlot(base) {
   for (let x = base.x - 2.5; x < base.x + 2.5; x++) {
     for (let y = base.y - 2.5; y < base.y + 2.5; y++) {
-      if (Map.accepts(x, y, 2)) {
+      if (Board.accepts(x, y, 2)) {
         return { x, y };
       }
     }

@@ -1,5 +1,5 @@
+import Board from "../map/board.js";
 import Build from "../jobs/build.js";
-import GameMap from "../map/map.js";
 import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
@@ -112,7 +112,7 @@ function monitorPlot(plot) {
 }
 
 function isPlotClear(x, y) {
-  return !GameMap.cell(x, y).isObstacle && !GameMap.cell(x + 1, y).isObstacle && !GameMap.cell(x, y + 1).isObstacle && !GameMap.cell(x + 1, y + 1).isObstacle;
+  return !Board.cell(x, y).isObstacle && !Board.cell(x + 1, y).isObstacle && !Board.cell(x, y + 1).isObstacle && !Board.cell(x + 1, y + 1).isObstacle;
 }
 
 function monitorJob(job) {

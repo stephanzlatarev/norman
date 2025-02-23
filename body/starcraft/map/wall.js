@@ -1,4 +1,4 @@
-import Map from "./map.js";
+import Board from "./board.js";
 import Tiers from "./tier.js";
 import { syncTiers } from "./tier.js";
 
@@ -25,12 +25,12 @@ export default class Wall {
     if ((type === "Pylon") || (type.name === "Pylon")) {
       return blueprint.pylon;
     } else if ((type === "ShieldBattery") || (type.name === "ShieldBattery")) {
-      return Map.accepts(blueprint.battery.x, blueprint.battery.y, 2) ? blueprint.battery : null;
-    } else if (Map.accepts(blueprint.left.x, blueprint.left.y, 3)) {
+      return Board.accepts(blueprint.battery.x, blueprint.battery.y, 2) ? blueprint.battery : null;
+    } else if (Board.accepts(blueprint.left.x, blueprint.left.y, 3)) {
       return blueprint.left;
-    } else if (Map.accepts(blueprint.center.x, blueprint.center.y, 3)) {
+    } else if (Board.accepts(blueprint.center.x, blueprint.center.y, 3)) {
       return blueprint.center;
-    } else if (Map.accepts(blueprint.right.x, blueprint.right.y, 3)) {
+    } else if (Board.accepts(blueprint.right.x, blueprint.right.y, 3)) {
       return blueprint.right;
     }
   }
