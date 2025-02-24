@@ -46,15 +46,16 @@ const ALERT_COLOR = [Color.Unknown, Color.Blue, Color.Green, Color.White, Color.
 const zoneShapes = new Map();
 
 async function trace(client) {
-  const texts = [];
+  const lines = [];
+  const text = [];
   const spheres = [];
 
-  traceAlertLevels(texts);
-  traceBattles(texts);
+  traceAlertLevels(text);
+  traceBattles(lines, text);
   traceThreats(spheres);
-  traceZones(texts);
+  traceZones(text);
 
-  await client.debug({ debug: [{ draw: { text: texts, spheres: spheres } }] });
+  await client.debug({ debug: [{ draw: { lines, text, spheres } }] });
 }
 
 function traceAlertLevels(texts) {
@@ -67,7 +68,7 @@ function traceAlertLevels(texts) {
   }
 }
 
-function traceBattles(texts) {
+function traceBattles(lines, texts) {
   const battles = Battle.list().sort((a, b) => (b.priority - a.priority));
   let y = 1;
 
@@ -83,6 +84,14 @@ function traceBattles(texts) {
     text.push(battle.lines.map(line => line.zone.name).join(" "));
 
     texts.push({ text: text.join(" "), virtualPos: { x: 0, y: y++ } });
+
+    const zonep = { x: zone.x, y: zone.y };
+    for (const one of battle.zones) {
+      lines.push({ line: { p0: { x: one.x, y: one.y }, p1: zonep }, color: Color.Red });
+    }
+    for (const one of battle.front) {
+      lines.push({ line: { p0: { x: one.x, y: one.y }, p1: zonep }, color: Color.Yellow });
+    }
   }
 }
 
