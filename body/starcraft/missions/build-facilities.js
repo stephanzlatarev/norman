@@ -10,6 +10,7 @@ import { TotalCount } from "../memo/count.js";
 import Limit from "../memo/limit.js";
 import Plan from "../memo/plan.js";
 import Priority from "../memo/priority.js";
+import Resources from "../memo/resources.js";
 
 const DEFAULT_FACILITIES = ["ShieldBattery", "Gateway"];
 const SPECIAL_FACILITIES_DEFAULT = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil", "RoboticsBay"];
@@ -30,6 +31,11 @@ const SLOTS = [
   { x: -5.5, y: -1.5 },
 ];
 
+const COOLDOWN_LOOPS = 500;
+
+const cooldown = new Map();
+let cooldownKey;
+
 let wallPylon = null;
 
 // TODO: Convert to skill and run one skill per facility type
@@ -39,8 +45,12 @@ export default class BuildFacilitiesMission extends Mission {
 
   run() {
     if (this.job) {
-      if (this.job.isDone || this.job.isFailed) {
-        // This build job is closed. Free the slot to open a new build job
+      if (this.job.isFailed) {
+        // This build job failed. Set the target on cooldown and open a new build job
+        if (cooldownKey) cooldown.set(cooldownKey, Resources.loop);
+        this.job = null;
+      } else if (this.job.isDone) {
+        // This build job is done. Free the build slot to open a new build job
         this.job = null;
       } else if (!this.job.assignee && (TotalCount[this.job.output.name] >= Limit[this.job.output.name])) {
         // This build job is not assigned yet but priorities have meanwhile changed so close it
@@ -51,6 +61,8 @@ export default class BuildFacilitiesMission extends Mission {
         return;
       }
     }
+
+    cooldownKey = null;
 
     const facility = selectFacilityType();
     if (!facility) return;
@@ -128,9 +140,18 @@ function findBuildingPlot(facility) {
       if (!pylon) continue;
 
       for (const slot of SLOTS) {
+        const slotKey = getCooldownKey(pylon, slot);
+        const lastAttempt = cooldown.get(slotKey);
+
+        if (lastAttempt && (Resources.loop - lastAttempt < COOLDOWN_LOOPS)) {
+          // This slot is on cooldown
+          continue;
+        }
+
         const plot = getBuildingPlotIfFree(pylon.body, slot);
 
         if (plot) {
+          cooldownKey = slotKey;
           return plot;
         }
       }
@@ -180,4 +201,8 @@ function getBuildingPlotIfFree(plot, slot) {
 
   return { x: plotx, y: ploty };
 
+}
+
+function getCooldownKey(pylon, slot) {
+  return [pylon.body.x, pylon.body.y, slot.x, slot.y].join();
 }
