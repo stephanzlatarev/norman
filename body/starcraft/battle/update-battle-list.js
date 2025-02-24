@@ -23,8 +23,8 @@ export default function() {
         const battle = findBattle(zone) || new Battle(zone);
         const { zones, front } = findBattleZones(zone);
 
-        battle.front = front;
-        battle.zones = zones;
+        battle.front = reduceToFireRange(zone, front);
+        battle.zones = reduceToFireRange(zone, zones);
 
         battle.move(zone);
         battles.add(battle);
@@ -131,4 +131,16 @@ function findBattleZones(zone) {
   }
 
   return { zones, front };
+}
+
+function reduceToFireRange(zone, zones) {
+  const reduced = new Set();
+
+  for (const one of zones) {
+    if (zone.range.zones.has(one)) {
+      reduced.add(one);
+    }
+  }
+
+  return reduced;
 }
