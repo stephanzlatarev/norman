@@ -39,13 +39,13 @@ export default class DetectOffensiveProxyMission extends Mission {
       if (isOffensiveProxyEnd(this.perimeterZones)) {
         console.log("Offensive proxy ended.");
         this.isOffensiveProxyDetected = false;
-        Plan.BaseLimit = Plan.MULTI_BASE;
+        Plan.setBaseLimit(this, Plan.MULTI_BASE);
       }
     } else {
       if (isOffensiveProxyStart(this.perimeterZones)) {
         console.log("Offensive proxy started.");
         this.isOffensiveProxyDetected = true;
-        Plan.BaseLimit = Plan.ONE_BASE;
+        Plan.setBaseLimit(this, Plan.ONE_BASE);
 
         cancelConstructionsOutsideHomeBase(this.outerZones);
       }

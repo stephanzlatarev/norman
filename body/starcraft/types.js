@@ -7,7 +7,7 @@ const upgrades = new Map();
 const products = new Map();
 const races = [[], [], [], []];
 
-const IS_DEPOT = { Nexus: 1 };
+const IS_DEPOT = { CommandCenter: 1, Hatchery: 1, Hive: 1, Lair: 1, Nexus: 1, PlanetaryFortress: 1 };
 const IS_EXTRACTOR = { Assimilator: 1 };
 const IS_PYLON = { Pylon: 1 };
 const IS_WORKER = { Drone: 1, MULE: 1, Probe: 1, SCV: 1 };
