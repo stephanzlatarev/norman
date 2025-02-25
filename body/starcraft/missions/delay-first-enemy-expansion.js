@@ -421,7 +421,7 @@ function isEnemyWorkerClose(agent) {
 }
 
 function findEnemyWorkerClosestToEnemyExpansion(expansion) {
-  let closestDistance = -Infinity;
+  let closestDistance = Infinity;
   let closestEnemyWorker = null;
 
   for (const unit of Units.enemies().values()) {
@@ -433,7 +433,7 @@ function findEnemyWorkerClosestToEnemyExpansion(expansion) {
 
     const distance = squareDistance(unit.body, expansion);
 
-    if (distance > closestDistance) {
+    if (distance < closestDistance) {
       closestDistance = distance;
       closestEnemyWorker = unit;
     }
