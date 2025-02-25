@@ -168,13 +168,14 @@ class AnnoyEnemy extends Job {
   }
 
   goGuardExpansion() {
-    if (isEnemyExpansionStarted(this.enemyExpansionZone)) return this.transition(this.goHome);
-
-    if (areEnemyWorkersInZone(this.enemyExpansionZone)) {
+    if (isEnemyExpansionStarted(this.enemyExpansionZone)) {
+      // The enemy expansion is already started, so go home
+      this.transition(this.goHome);
+    } else if (areEnemyWorkersInZone(this.enemyExpansionZone)) {
       // An enemy worker entered the expansion zone and is probably building an expansion
       this.transition(this.goBlockExpansion);
-    } else if (this.assignee.zone === Enemy.base) {
-      // The agent is still in the enemy base, so mineral walk to the expansion to avoid being blocked by enemy units
+    } else if (this.assignee.zone !== this.enemyExpansionZone) {
+      // The agent is still away from the enemy expansion zone, so mineral walk to the expansion to avoid being blocked by enemy units
       orderSlip(this.assignee);
     } else if (isSlipping(this.assignee) || isEnemyWorkerClose(this.assignee)) {
       // An enemy worker is following the agent, so move to the expansion
@@ -182,7 +183,7 @@ class AnnoyEnemy extends Job {
     } else if (!isAttacked(this.assignee)) {
       // The agent is now healthy and no enemy worker tries to expand, so attack again
       this.transition(this.goAttackEnemyWorker);
-    } else if (this.assignee.zone === this.enemyExpansionZone) {
+    } else {
       // The agent just entered the expansion zone, so stop to keep close to it
       orderStop(this.assignee);
     }
