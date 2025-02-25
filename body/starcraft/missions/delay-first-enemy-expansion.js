@@ -117,7 +117,7 @@ class AnnoyEnemy extends Job {
   }
 
   goScoutExpansion() {
-    if (isInSightRange(this.assignee.body, this.enemyExpansionZone)) {
+    if (isWithinBlock(this.assignee.body, this.enemyExpansionZone, 2.5)) {
       this.transition(this.goApproachEnemyBase);
     } else {
       orderMove(this.assignee, this.enemyExpansionZone);
@@ -533,10 +533,6 @@ function orderPylon(agent, pos) {
 
 function isSamePosition(a, b) {
   return (Math.abs(a.x - b.x) < 1) && (Math.abs(a.y - b.y) < 1);
-}
-
-function isInSightRange(a, b) {
-  return squareDistance(a, b) < 64;
 }
 
 function isWithinBlock(a, b, distance) {
