@@ -137,9 +137,9 @@ function doEnforceWallNatural() {
 }
 
 function doGroundArmyMaxOut() {
+  const probeLimit = 85;
   const useColossus = (ActiveCount.RoboticsBay > 0);
 
-  Limit.Probe = 85;
   Limit.Colossus = useColossus ? 100 : 0;
   Limit.Immortal = useColossus ? 0 : 100;
   Limit.Observer = (ActiveCount.Colossus + ActiveCount.Immortal < 2) ? 1 : 2;
@@ -156,12 +156,13 @@ function doGroundArmyMaxOut() {
   Priority.Zealot = 50;
 
   if (Resources.supplyLimit < 198) {
-    Limit.Nexus = !TotalCount.RoboticsFacility ? 2 : calculateLimitNexus();
+    Limit.Nexus = !TotalCount.RoboticsFacility ? 2 : calculateLimitNexus(probeLimit);
     Priority.Nexus = (TotalCount.Nexus < Limit.Nexus) ? 70 : 0;
   } else {
     Limit.Nexus = Infinity;
     Priority.Nexus = 40;
   }
+  Limit.Probe = Math.min(Limit.Nexus * 20 + Limit.Assimilator * 3, probeLimit);
   Limit.Assimilator = calculateLimitAssimilator();
 
   Priority.Gateway = 50;
@@ -198,7 +199,8 @@ function doGroundArmyMaxOut() {
 }
 
 function counterMassLightZerg() {
-  Limit.Probe = 100;
+  const probeLimit = 100;
+
   Limit.Zealot = TotalCount.CyberneticsCore ? 100 : 0;
   Limit.Colossus = 100;
   Limit.Sentry = 10; // Maintain 10:1 ratio of Zealot to Sentry
@@ -213,13 +215,14 @@ function counterMassLightZerg() {
   Priority.Zealot = 50;
 
   if (Resources.supplyLimit < 198) {
-    Limit.Nexus = !TotalCount.RoboticsFacility ? 2 : calculateLimitNexus();
+    Limit.Nexus = !TotalCount.RoboticsFacility ? 2 : calculateLimitNexus(probeLimit);
     Priority.Nexus = (TotalCount.Nexus < Limit.Nexus) ? 70 : 0;
   } else {
     Limit.Nexus = Infinity;
     Priority.Nexus = 40;
   }
   Limit.Assimilator = calculateLimitAssimilator();
+  Limit.Probe = Math.min(Limit.Nexus * 20 + Limit.Assimilator * 3, probeLimit);
 
   Priority.Gateway = 50;
   Limit.Gateway = calculateLimitGateway();
@@ -235,12 +238,12 @@ function counterMassLightZerg() {
 // Time to increase harvester capacity = time for probe to reach construction site + nexus build time
 // Time to reach harvester capacity = time to build probe * Math.floor( free capacity / number of active nexuses)
 // TODO: Improve precision by calculating the remaining time of all building probes, and by calculating the time for a probe to move to the next expansion site
-function calculateLimitNexus() {
+function calculateLimitNexus(probeLimit) {
   if (TotalCount.Nexus >= ActiveCount.Gateway) return TotalCount.Nexus;
 
   const mineralHarvesterCapacity = calculateMineralHarvesterCapacity();
   const vespeneHarvesterCapacity = calculateLimitAssimilator() * 3;
-  if (mineralHarvesterCapacity + vespeneHarvesterCapacity >= Limit.Probe) return TotalCount.Nexus;
+  if (mineralHarvesterCapacity + vespeneHarvesterCapacity >= probeLimit) return TotalCount.Nexus;
 
   const timeForProbeToReachConstructionSite = 5 * 22.4; // Assume 5 seconds
   const timeToBuildNexus = Types.unit("Nexus").buildTime;
