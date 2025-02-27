@@ -8,6 +8,7 @@ import Resources from "../memo/resources.js";
 
 const COST_GUARDIAN_SHIELD = 75;
 const COST_HALLUCINATION = 75;
+const MIN_SENTRY_COUNT = 3;
 
 // TODO: Maintain up to 2 hallucinated phoenixes at a time for better map coverage
 // TODO: Create scouts when visible enemies are only at tier 2 or higher
@@ -52,6 +53,8 @@ export default class ScoutSentry extends Mission {
       const energyBeforeOrder = sentry.energy;
 
       this.order = new Order(sentry, 154).accept(() => (sentry.energy < energyBeforeOrder));
+
+      console.log("Sentry", sentry.nick, "creates a Phoenix hallucination for scouting");
     }
   }
 
@@ -68,7 +71,11 @@ export default class ScoutSentry extends Mission {
 }
 
 function selectSentry() {
-  const energyThreshold = COST_HALLUCINATION + (VisibleCount.Warrior ? COST_GUARDIAN_SHIELD : 0);
+  let energyThreshold = COST_HALLUCINATION;
+
+  if (VisibleCount.Warrior && (ActiveCount.Sentry < MIN_SENTRY_COUNT)) {
+    energyThreshold += COST_GUARDIAN_SHIELD;
+  }
 
   for (const unit of Units.warriors().values()) {
     if (unit.type.name !== "Sentry") continue;
