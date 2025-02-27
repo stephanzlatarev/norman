@@ -91,9 +91,6 @@ function isBasicEconomyAndDefenseEstablished() {
 }
 
 function isOffensiveProxyStart(zones) {
-  if (ActiveCount.Stalker) return false;
-  if (ActiveCount.Zealot) return false;
-
   for (const zone of zones) {
     for (const threat of zone.threats) {
       if (!threat.type.isWorker) {

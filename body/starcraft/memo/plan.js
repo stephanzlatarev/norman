@@ -16,7 +16,7 @@ class Plan {
   static setBaseLimit(owner, value) {
     owners.set(owner, value);
 
-    let limit = 0;
+    let limit = Infinity;
 
     for (const value of owners.values()) {
       if (value > 0) {
@@ -24,7 +24,7 @@ class Plan {
       }
     }
 
-    Plan.BaseLimit = limit;
+    Plan.BaseLimit = (limit < Infinity) ? limit : 0;
   }
 
 }
