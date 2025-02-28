@@ -133,7 +133,7 @@ function findBuildingPlot(facility) {
   for (const tier of Tiers) {
     for (const zone of tier.zones) {
       if (!zone.buildings.size) continue;
-      if (zone.alertLevel > ALERT_WHITE) continue;
+      if ((zone.alertLevel > ALERT_WHITE) && !zone.workers.size) continue;
 
       const pylon = findZonePylon(zone);
 
