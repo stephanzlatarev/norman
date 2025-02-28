@@ -136,6 +136,8 @@ class AnnoyEnemy extends Job {
     if (isAttacked(this.assignee)) {
       // Enemy worker fights back
       this.mode = MODE_DAMAGE;
+      this.target = null;
+
       return this.transition(this.goGuardExpansion);
     }
 
@@ -148,6 +150,10 @@ class AnnoyEnemy extends Job {
       if (this.target) {
         return orderAttack(this.assignee, this.target);
       }
+    } else if (this.target && this.target.isAlive && isDamaged(this.target)) {
+      this.mode = MODE_KILL;
+
+      return orderAttack(this.assignee, this.target);
     } else {
       // Make sure the agent is always between the enemy workers and the expansion. Poke enemy workers to provoke them and if possible damage them
       const target = findEnemyWorkerClosestToEnemyExpansion(this.enemyExpansionZone);
@@ -159,6 +165,8 @@ class AnnoyEnemy extends Job {
         } else if (!this.mode && isDamaged(target)) {
           this.mode = MODE_KILL;
         }
+
+        this.target = target;
 
         return orderAttack(this.assignee, target);
       }
@@ -423,6 +431,7 @@ function isEnemyWorkerClose(agent) {
 function findEnemyWorkerClosestToEnemyExpansion(expansion) {
   let closestDistance = Infinity;
   let closestEnemyWorker = null;
+  let closestIsBuilding = null;
 
   for (const unit of Units.enemies().values()) {
     // Ignore units that are not workers
@@ -431,11 +440,15 @@ function findEnemyWorkerClosestToEnemyExpansion(expansion) {
     // Ignore units that scout us
     if (unit.zone.tier.level < expansion.tier.level) continue;
 
+    const isBuilding = isEnemyWorkerBuildingStructures(unit);
+    if (closestIsBuilding && !isBuilding) continue;
+
     const distance = squareDistance(unit.body, expansion);
 
     if (distance < closestDistance) {
       closestDistance = distance;
       closestEnemyWorker = unit;
+      closestIsBuilding = isBuilding;
     }
   }
 
