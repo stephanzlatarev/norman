@@ -68,7 +68,7 @@ function countSupplyConsumptionRate() {
 }
 
 function findPylonPlot() {
-  const tierIndexLimit = Plan.BaseLimit ? 1 : 2;
+  const tierIndexLimit = Math.min(Plan.BaseLimit ? 1 : 2, Tiers.length);
 
   // First try to find a pylon plot in the center of a zone in our perimeter
   for (let index = 0; index < tierIndexLimit; index++) {
@@ -82,12 +82,14 @@ function findPylonPlot() {
   }
 
   // Next try to add a pylon next to a base
-  for (const zone of Tiers[0].zones) {
-    for (const dy of [+2, -2, +4, -4]) {
-      const plot = { x: zone.powerPlot.x, y: zone.powerPlot.y + dy };
+  if (Tiers.length) {
+    for (const zone of Tiers[0].zones) {
+      for (const dy of [+2, -2, +4, -4]) {
+        const plot = { x: zone.powerPlot.x, y: zone.powerPlot.y + dy };
 
-      if (isPlotFree(plot)) {
-        return plot;
+        if (isPlotFree(plot)) {
+          return plot;
+        }
       }
     }
   }
