@@ -9,6 +9,8 @@ const STATUS_ABORT = -3;
 
 const RETRY_AFTER = 3;
 
+let ids = 1;
+
 export default class Order extends Memory {
 
   // The unit to execute this order
@@ -41,6 +43,8 @@ export default class Order extends Memory {
 
   constructor(subject, ability, target) {
     super();
+
+    this.id = ids++;
 
     if (subject instanceof Order) {
       subject.next = this;
@@ -109,7 +113,7 @@ export default class Order extends Memory {
     if (this.isIssued) {
       if (!this.isAccepted && !this.isRejected && (Resources.loop > this.timeIssued + RETRY_AFTER)) {
         // Commands get lost in the arena. Retry them...
-        log("INFO: Retrying command for", this.unit.type.name, this.unit.nick, "action", this.ability);
+        log("INFO: Retrying command for", this.toString());
       } else {
         // Don't repeat commands
         return;
@@ -135,8 +139,7 @@ export default class Order extends Memory {
   }
 
   abort() {
-    log("INFO: Abort order for", this.unit.type.name, this.unit.nick,
-      "action", this.ability, "of status", this.status, this.isIssued ? "issued" : "", this.isAccepted ? "accepted" : "", this.isRejected ? "rejected" : "");
+    log("INFO: Abort", this.toString());
 
     this.status = STATUS_ABORT;
     this.isIssued = false;
@@ -182,9 +185,7 @@ export default class Order extends Memory {
       this.remove();
     } else if (Resources.loop > this.isIssued + 1) {
       // It's normal in a multi-player game that the order is picked up in the second game loop after it's issued. Anything beyond that will mean the the order may need to be retried
-      log("INFO: Waiting for", this.unit.type.name, this.unit.nick,
-        "to accept order", this.ability, "of status", this.status, this.isIssued ? "issued" : "", this.isAccepted ? "accepted" : "", this.isRejected ? "rejected" : "",
-        "while busy with action", this.unit.order.abilityId);
+      log("INFO: Waiting for unit to accept", this.toString(), "while busy with", JSON.stringify(this.unit.order));
     }
   }
 
@@ -201,11 +202,17 @@ export default class Order extends Memory {
   }
 
   toString() {
-    if (this.unit && this.ability) {
-      return "Order: " + this.unit.type.name + " " + this.unit.nick + " ability: " + this.ability + " target: " + targetToString(this.target);
-    }
+    if (!this.unit) return "Order to no unit";
+    if (!this.unit.tag) return "Order to unit without tag";
+    if (!this.ability) return "Order without command";
 
-    return "Empty order";
+    return [
+      "Order #" + this.id,
+      this.unit.type.name, this.unit.nick,
+      "status:", this.status, this.isIssued ? "issued" : "", this.isAccepted ? "accepted" : "", this.isRejected ? "rejected" : "",
+      "ability:", this.ability,
+      "target:", targetToString(this.target),
+    ].join(" ");
   }
 
   static list() {
