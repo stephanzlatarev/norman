@@ -50,20 +50,15 @@ export default class Order extends Memory {
       subject.next = this;
       this.unit = subject.unit;
     } else {
-      orders.push(this);
-
-      this.unit = subject;
-
-      if (this.unit.todo) {
-        this.unit.todo.check();
-
-        if (this.unit.todo) {
-          // Abort the previous order for this unit
-          this.unit.todo.abort();
-        }
+      if (subject.todo) {
+        // Abort the previous order for this unit
+        subject.todo.abort();
       }
 
-      this.unit.todo = this;
+      subject.todo = this;
+      this.unit = subject;
+
+      orders.push(this);
     }
 
     this.ability = ability;
@@ -139,10 +134,15 @@ export default class Order extends Memory {
   }
 
   abort() {
-    log("INFO: Abort", this.toString());
+    if (this.isIssued && !this.isAccepted && !this.isRejected) {
+      this.isAccepted = (this.checkIsAccepted && this.checkIsAccepted(this)) || checkIsAccepted(this);
+
+      if (!this.isAccepted) {
+        log("INFO: Abort", this.toString());
+      }
+    }
 
     this.status = STATUS_ABORT;
-    this.isIssued = false;
     this.isAccepted = false;
     this.isRejected = true;
 
