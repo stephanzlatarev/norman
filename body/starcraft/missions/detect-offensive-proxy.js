@@ -93,7 +93,7 @@ function isBasicEconomyAndDefenseEstablished() {
 function isOffensiveProxyStart(zones) {
   for (const zone of zones) {
     for (const threat of zone.threats) {
-      if (!threat.type.isWorker) {
+      if (threat.type.isBuilding) {
         console.log("Offensive proxy", threat.type.name, threat.nick, "in zones", zones.map(zone => zone.name).join(" "));
         return true;
       }
