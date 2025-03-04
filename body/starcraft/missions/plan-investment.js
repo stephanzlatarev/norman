@@ -73,12 +73,13 @@ function doOneBaseDefense() {
   Limit.Assimilator = TotalCount.CyberneticsCore ? 2 : 1;
   Limit.Gateway = 3;
   Limit.CyberneticsCore = 1;
-  Limit.ShieldBattery = 0;
+  Limit.ShieldBattery = (ActiveCount.Stalker >= 3) ? 1 : 0;
   Limit.RoboticsFacility = (ActiveCount.Stalker >= 3) ? 1 : 0;
   Limit.Forge = 0;
 
   Priority.CyberneticsCore = 100;
   Priority.Observer = 100;
+  Priority.ShieldBattery = 100;
   Priority.Immortal = 95;
   Priority.Gateway = 90;
   Priority.Sentry = (ActiveCount.Stalker > 2) ? 90 : 50;
@@ -87,7 +88,6 @@ function doOneBaseDefense() {
   Priority.RoboticsFacility = 70;
   Priority.Nexus = 0;
   Priority.Zealot = 0;
-  Priority.ShieldBattery = 0;
 
   if (Plan.BaseLimit === Plan.MULTI_BASE) {
     plan = doGroundArmyMaxOut;
