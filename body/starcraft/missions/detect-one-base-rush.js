@@ -54,6 +54,9 @@ function isBasicEconomyAndDefenseEstablished() {
 }
 
 function isRushStart() {
+  const MIN_WARRIOR_COUNT = Math.max(5, ActiveCount.Colossus + ActiveCount.Immortal + ActiveCount.Stalker + ActiveCount.Sentry + ActiveCount.Zealot);
+  const MIN_BARRACKS_COUNT = Math.max(1, ActiveCount.Gateway + ActiveCount.RoboticsFacility);
+
   let warriorCount = 0;
   let barracksCount = 0;
 
@@ -69,7 +72,7 @@ function isRushStart() {
     }
   }
 
-  return (warriorCount >= 6) || (barracksCount >= 2);
+  return (warriorCount > MIN_WARRIOR_COUNT) || (barracksCount > MIN_BARRACKS_COUNT);
 }
 
 function isRushEnd() {
