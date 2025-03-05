@@ -11,6 +11,9 @@ const UPGRADES = {
     "ProtossGroundWeaponsLevel3", "ProtossGroundArmorsLevel3",
     "ProtossShieldsLevel1", "ProtossShieldsLevel2", "ProtossShieldsLevel3",
   ],
+  RoboticsBay: [
+    "ExtendedThermalLance"
+  ],
   TwilightCouncil: [
     "Charge"
   ],
