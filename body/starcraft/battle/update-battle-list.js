@@ -1,4 +1,5 @@
 import Battle from "./battle.js";
+import Enemy from "../memo/enemy.js";
 import Plan from "../memo/plan.js";
 import Tiers from "../map/tier.js";
 import { ALERT_RED, ALERT_YELLOW } from "../map/alert.js";
@@ -38,6 +39,16 @@ export default function() {
         tierLimit = zone.tier.level + 1;
       }
     }
+  }
+
+  if (!battles.size && Enemy.base && !Enemy.base.warriors.size && !Plan.BaseLimit) {
+    const battle = findBattle(Enemy.base) || new Battle(Enemy.base);
+
+    if (!battle.front.size) {
+      battle.front.add(Enemy.base);
+    }
+
+    battles.add(battle);
   }
 
   return battles;
