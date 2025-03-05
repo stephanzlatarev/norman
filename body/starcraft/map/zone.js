@@ -356,6 +356,7 @@ function expandZonesWithUnclaimedGroundCells() {
           neighbor.zone = cell.zone;
 
           // Expand the ground and border of the zone
+          neighbor.zone.cells.add(neighbor);
           neighbor.zone.ground.add(neighbor);
           neighbor.zone.border.add(neighbor);
 
@@ -381,7 +382,7 @@ function expandZonesWithNonGroundCells() {
   let wave = new Set();
 
   for (const zone of zones) {
-    for (const cell of zone.border) {
+    for (const cell of zone.cells) {
       wave.add(cell);
     }
   }
@@ -393,6 +394,7 @@ function expandZonesWithNonGroundCells() {
       for (const neighbor of cell.neighbors) {
         if (!neighbor.zone) {
           neighbor.zone = cell.zone;
+          neighbor.zone.cells.add(neighbor);
 
           next.add(neighbor);
         }
