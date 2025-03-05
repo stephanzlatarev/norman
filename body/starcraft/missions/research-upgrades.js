@@ -32,7 +32,7 @@ export default class ResearchUpgradesMission extends Mission {
       const job = this.jobs.get(facility);
       if (job && !job.isDone && !job.isFailed) continue;
 
-      const upgrade = getUpgradeType(UPGRADES[facility.type.name]);
+      const upgrade = getUpgradeType(UPGRADES[facility.type.name], this.jobs.values());
 
       if (upgrade) {
         this.jobs.set(facility, new Produce(facility, upgrade));
@@ -42,12 +42,24 @@ export default class ResearchUpgradesMission extends Mission {
 
 }
 
-function getUpgradeType(upgrades) {
+function getUpgradeType(upgrades, jobs) {
   if (upgrades) {
     for (const upgrade of upgrades) {
       if (!ActiveCount[upgrade]) {
-        return Types.upgrade(upgrade);
+        const upgradeType = Types.upgrade(upgrade);
+
+        if (!isJobOpenForUpgrade(jobs, upgradeType)) {
+          return upgradeType;
+        }
       }
+    }
+  }
+}
+
+function isJobOpenForUpgrade(jobs, upgradeType) {
+  for (const job of jobs) {
+    if (job.output === upgradeType) {
+      return true;
     }
   }
 }

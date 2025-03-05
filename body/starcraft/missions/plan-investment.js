@@ -181,7 +181,14 @@ function doGroundArmyMaxOut() {
     Limit.ShieldBattery = 0;
   }
 
-  Limit.Forge = (TotalCount.Gateway >= 3) ? 1 : 0;
+  if (TotalCount.Gateway < 3) {
+    Limit.Forge = 0;
+  } else if (!ActiveCount.Forge) {
+    Limit.Forge = 1;
+  } else {
+    Limit.Forge = 2;
+  }
+
   Limit.CyberneticsCore = 1;
 
   if (Plan.BaseLimit === Plan.ONE_BASE) {
