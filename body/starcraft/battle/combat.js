@@ -8,6 +8,7 @@ import updateBattleMode from "./update-battle-mode.js";
 import updateFighterPrio from "./update-fighter-prio.js";
 import updateFighterStations from "./update-fighter-stations.js";
 import updateFighterTargets from "./update-fighter-targets.js";
+import updateFreeWarriors from "./update-free-warriors.js";
 import updateJobsToLines from "./update-jobs-to-lines.js";
 import updateIdleWarriors from "./update-idle-warriors.js";
 import updateLineStations from "./update-line-stations.js";
@@ -50,6 +51,9 @@ export default function() {
       battle.close();
     }
   }
+
+  // Idle warriors outside of battle zones should start moving to the closest battle as reinforcements
+  updateFreeWarriors();
 
   trace();
 }
