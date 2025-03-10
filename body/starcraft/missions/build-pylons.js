@@ -6,7 +6,6 @@ import { ALERT_WHITE } from "../map/alert.js";
 import Board from "../map/board.js";
 import Tiers from "../map/tier.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
-import Plan from "../memo/plan.js";
 import Resources from "../memo/resources.js";
 
 // TODO: Calculate time to new supply from nexuses and pylons in progress of building. Calculate time to supply cap looking at production facilities and ordered units. Build pylons just in time.
