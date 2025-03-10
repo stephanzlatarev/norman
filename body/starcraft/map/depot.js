@@ -126,14 +126,20 @@ function findRally(cell, resources) {
     sumy += one.body.y;
   }
 
-  const dx = Math.sign(Math.floor(sumx / resources.size) - cell.x);
-  const dy = Math.sign(Math.floor(sumy / resources.size) - cell.y);
+  const dx = resources.size ? Math.sign(Math.floor(sumx / resources.size) - cell.x) : 1;
+  const dy = resources.size ? Math.sign(Math.floor(sumy / resources.size) - cell.y) : 1;
 
   return Board.cell(cell.x + dx * 3 + 0.5, cell.y + dy * 3 + 0.5);
 }
 
 export function createDepots() {
   const coordinates = new Map();
+
+  for (const building of Units.buildings().values()) {
+    if (building.type.isDepot) {
+      addToDepotCoordinates(building, coordinates, "depots", [getCoordinatesKey(building.body.x, building.body.y)]);
+    }
+  }
 
   for (const resource of Units.resources().values()) {
     populateDepotCoordinates(coordinates, resource);
@@ -142,22 +148,11 @@ export function createDepots() {
   const candidates = selectDepotCoordinates(coordinates);
 
   for (const candidate of candidates) {
-    new Depot(candidate.cell, candidate.resources, findDepotBuilding(candidate.cell)).expand(Depot.DEPOT_VISION_RANGE, true);
+    new Depot(candidate.cell, candidate.resources, candidate.depot).expand(Depot.DEPOT_VISION_RANGE, true);
   }
 
 }
 
-function canBuildDepotBuilding(cell) {
-  return findDepotBuilding(cell) || isDepotBuildingPlot(cell);
-}
-
-function findDepotBuilding(cell) {
-  for (const building of Units.buildings().values()) {
-    if (building.type.isDepot && (Math.floor(building.body.x) === cell.x) && (Math.floor(building.body.y) === cell.y)) {
-      return building;
-    }
-  }
-}
 function isDepotBuildingPlot(cell) {
   for (let x = cell.x - 1; x <= cell.x + 1; x++) {
     for (let y = cell.y - 1; y <= cell.y + 1; y++) {
@@ -219,7 +214,7 @@ function addToDepotCoordinates(resource, coordinates, type, list) {
     let resources = coordinates.get(key);
 
     if (!resources) {
-      resources = { normalMinerals: [], normalVespene: [], richMinerals: [], richVespene: [] };
+      resources = { depots: [], normalMinerals: [], normalVespene: [], richMinerals: [], richVespene: [] };
       coordinates.set(key, resources);
     }
 
@@ -233,9 +228,20 @@ function selectDepotCoordinates(coordinates) {
   for (const [key, resources] of coordinates) {
     const cell = getCellAtCoordinatesKey(key);
 
-    if ((resources.normalMinerals.length === 8) && (resources.normalVespene.length === 2) && canBuildDepotBuilding(cell)) {
+    let isDepotLocation = false;
+
+    if (resources.depots.length) {
+      isDepotLocation = true;
+    } else if (isDepotBuildingPlot(cell)) {
+      if ((resources.normalMinerals.length === 8) && (resources.normalVespene.length === 2)) {
+        isDepotLocation = true;
+      }
+    }
+
+    if (isDepotLocation) {
       depots.push({
         cell,
+        depot: resources.depots[0],
         resources: [...resources.normalMinerals, ...resources.normalVespene, ...resources.richMinerals, ...resources.richVespene],
       });
     }
