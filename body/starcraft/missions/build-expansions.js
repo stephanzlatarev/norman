@@ -1,7 +1,7 @@
 import Mission from "../mission.js";
 import Order from "../order.js";
 import Build from "../jobs/build.js";
-import { ALERT_WHITE } from "../map/alert.js";
+import { ALERT_WHITE, ALERT_YELLOW } from "../map/alert.js";
 import Board from "../map/board.js";
 import Depot from "../map/depot.js";
 import { TotalCount } from "../memo/count.js";
@@ -9,9 +9,10 @@ import Plan from "../memo/plan.js";
 import Priority from "../memo/priority.js";
 import Resources from "../memo/resources.js";
 
-const COOLDOWN_LOOPS = 500;
+const AVOID_LOOPS = 20 * 22.4; // 20 seconds
+const MIN_SUPPLY = 5;
 
-const cooldown = new Map();
+const avoid = new Map();
 
 export default class BuildExpansionsMission extends Mission {
 
@@ -22,7 +23,11 @@ export default class BuildExpansionsMission extends Mission {
     if (this.job) {
       if (shouldNotBuildNexus()) {
         return this.job.close(true);
-      } else if (this.job.target.alertLevel > ALERT_WHITE) {
+      } else if (this.job.target.alertLevel > ALERT_YELLOW) {
+        // Abort the job if the target zone is threatened
+        this.job = abortBuildJob(this.job, this.retreat);
+      } else if ((this.job.target.alertLevel > ALERT_WHITE) && (Resources.supply >= MIN_SUPPLY)) {
+        // Abort the job if there is still supply for more warriors and the target zone is not secure
         this.job = abortBuildJob(this.job, this.retreat);
       } else if (this.job.isFailed) {
         this.job = abortBuildJob(this.job, this.retreat);
@@ -65,7 +70,7 @@ function selectRetreat(probe) {
 function abortBuildJob(job, retreat) {
   const probe = job.assignee;
 
-  cooldown.set(job.target, Resources.loop);
+  avoidZone(job);
 
   console.log("Job", job.details, "aborted. Target zone alert level:", job.target.alertLevel);
   job.abort(false);
@@ -76,7 +81,14 @@ function abortBuildJob(job, retreat) {
 }
 
 function shouldNotBuildNexus() {
-  return (Plan.BaseLimit && (TotalCount.Nexus >= Plan.BaseLimit));
+  if (Plan.BaseLimit) {
+    if (Resources.supply < MIN_SUPPLY) {
+      // Supply for new warriors is running out. So attempt an expansion even if over the limit.
+      return false;
+    }
+
+    return (TotalCount.Nexus >= Plan.BaseLimit);
+  }
 }
 
 function findDepot() {
@@ -90,12 +102,8 @@ function findDepot() {
     const next = new Set();
 
     for (const zone of wave) {
-      if (zone.isDepot && !isZoneThreatened(zone) && Board.accepts(zone.x, zone.y, 5)) {
-        const lastAttempt = cooldown.get(zone);
-
-        if (!lastAttempt || (Resources.loop - lastAttempt >= COOLDOWN_LOOPS)) {
-          return zone;
-        }
+      if (zone.isDepot && !shouldAvoidZone(zone) && !isZoneThreatened(zone) && Board.accepts(zone.x, zone.y, 5)) {
+        return zone;
       }
 
       for (const neighbor of zone.neighbors) {
@@ -116,4 +124,16 @@ function isZoneThreatened(zone) {
   for (const enemy of zone.enemies) {
     if (enemy.type.isWarrior && !enemy.type.isWorker) return true;
   }
+}
+
+function avoidZone(job) {
+  if (!job || !job.target) return;
+
+  avoid.set(job.target, Resources.loop + AVOID_LOOPS);
+}
+
+function shouldAvoidZone(zone) {
+  const avoidUntilLoop = avoid.get(zone);
+
+  return (avoidUntilLoop && (Resources.loop < avoidUntilLoop));
 }
