@@ -86,7 +86,7 @@ function selectSentry() {
 }
 
 function getTarget(scout) {
-  if (!scout.zone) return;
+  if (!scout.zone || !scout.zone.tier) return;
 
   let best = scout.zone;
   let bestScoutTime = scout.zone.lastScoutTime;
