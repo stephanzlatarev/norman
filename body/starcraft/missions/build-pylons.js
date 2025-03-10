@@ -11,6 +11,10 @@ import Resources from "../memo/resources.js";
 
 // TODO: Calculate time to new supply from nexuses and pylons in progress of building. Calculate time to supply cap looking at production facilities and ordered units. Build pylons just in time.
 
+const AVOID_LOOPS = 20 * 22.4; // 20 seconds
+
+const avoid = new Map();
+
 export default class BuildPylonsMission extends Mission {
 
   job;
@@ -18,6 +22,8 @@ export default class BuildPylonsMission extends Mission {
   run() {
     if (this.job) {
       if (this.job.isFailed) {
+        avoidZone(this.job);
+
         this.job = null;
       } else if (!this.job.isDone) {
         return;
@@ -70,14 +76,12 @@ function countSupplyConsumptionRate() {
 function findPylonPlot() {
   if (!Tiers.length) return;
 
-  const tierIndexLimit = Math.min(Plan.BaseLimit ? 1 : 2, Tiers.length);
-
   // First try to find a pylon plot in the center of a zone in our perimeter
-  for (let index = 0; index < tierIndexLimit; index++) {
+  for (let index = 0; index <= 1; index++) {
     const zones = Tiers[index].zones;
 
     for (const zone of zones) {
-      if ((zone.alertLevel <= ALERT_WHITE) && isPlotFree(zone.powerPlot)) {
+      if ((zone.alertLevel <= ALERT_WHITE) && !shouldAvoidZone(zone) && isPlotFree(zone.powerPlot)) {
         return zone.powerPlot;
       }
     }
@@ -88,7 +92,7 @@ function findPylonPlot() {
     for (const dy of [+2, -2, +4, -4]) {
       const plot = { x: zone.powerPlot.x, y: zone.powerPlot.y + dy };
 
-      if (isPlotFree(plot)) {
+      if (!shouldAvoidZone(zone) && isPlotFree(plot)) {
         return plot;
       }
     }
@@ -107,4 +111,20 @@ function isPlotFree(plot) {
   }
 
   return true;
+}
+
+function avoidZone(job) {
+  if (!job || !job.target || !job.target.x || !job.target.y) return;
+
+  const cell = Board.cell(job.target.x, job.target.y);
+
+  if (!cell || !cell.zone) return;
+
+  avoid.set(cell.zone, Resources.loop + AVOID_LOOPS);
+}
+
+function shouldAvoidZone(zone) {
+  const avoidUntilLoop = avoid.get(zone);
+
+  return (avoidUntilLoop && (Resources.loop < avoidUntilLoop));
 }
