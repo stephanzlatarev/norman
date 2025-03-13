@@ -78,9 +78,17 @@ export default class Fight extends Job {
     this.isCommitted = false;
 
     if ((isDeployed || isAttacking) && this.shouldAttack()) {
-      this.details = getDetails(this, "attack");
+      // Attack
+
+      if (this.target) {
+        this.details = getDetails(this, "attack");
+        this.goAttack();
+      } else {
+        this.details = getDetails(this, "charge");
+        Order.move(warrior, this.battle.zone);
+      }
+
       this.isCommitted = true;
-      this.goAttack();
     } else if (isDeployed) {
       // Deployed but shouldn't attack yet
 
@@ -110,7 +118,7 @@ export default class Fight extends Job {
     const warrior = this.assignee;
     const mode = this.battle.mode;
 
-    return warrior && this.target && ((mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH));
+    return warrior && ((mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH));
   }
 
   shouldKite() {
