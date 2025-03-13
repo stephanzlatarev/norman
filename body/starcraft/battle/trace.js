@@ -178,8 +178,28 @@ function traceWarriorAssignments() {
   console.log("Warrior assignments:");
   for (const warrior of Units.warriors().values()) {
     console.log("-", warrior.type.name, warrior.nick,
+      "zone:", warrior.zone ? warrior.zone.name : "-",
       "job:", warrior.job ? warrior.job.details : "-",
+      "deployed:", isWarriorDeployed(warrior.zone, warrior.job),
+      "target:", getWarriorTarget(warrior.job),
       "order:", warrior.order ? JSON.stringify(warrior.order) : "-",
     );
   }
+}
+
+function isWarriorDeployed(zone, fight) {
+  if (!zone) return "?";
+  if (!fight) return "-";
+  if (!fight.battle) return "no battle";
+  if (!fight.battle.zones) return "no battle zones";
+
+  return fight.battle.zones.has(zone) ? "yes" : "no";
+}
+
+function getWarriorTarget(fight) {
+  if (!fight) return "-";
+  if (!fight.target) return "none";
+  if (!fight.target.type) return "unknown";
+
+  return fight.target.type.name + " " + fight.target.nick;
 }
