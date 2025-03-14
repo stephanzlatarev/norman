@@ -85,7 +85,7 @@ export default class Fight extends Job {
         this.goAttack();
       } else {
         this.details = getDetails(this, "charge");
-        Order.move(warrior, this.battle.zone);
+        new Order(warrior, 23, this.battle.zone).accept(true);
       }
 
       this.isCommitted = true;

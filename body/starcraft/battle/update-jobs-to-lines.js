@@ -90,7 +90,7 @@ function getDistance(distances, unit, line) {
   let distance = map.get(unit);
 
   if (!distance) {
-    distance = calculateSquareDistance(unit.body, line);
+    distance = calculateSquareDistance(unit.body, line.zone);
     map.set(unit, distance);
   }
 
@@ -102,7 +102,7 @@ function getClosestBattleLine(warrior, lines) {
   let closestDistance = Infinity;
 
   for (const line of lines) {
-    const distance = calculateSquareDistance(warrior.body, line);
+    const distance = calculateSquareDistance(warrior.body, line.zone);
 
     if (distance < closestDistance) {
       closestLine = line;
