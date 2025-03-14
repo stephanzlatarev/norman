@@ -6,6 +6,14 @@ const ATTACK_BALANCE = 1.6;
 const RETREAT_BALANCE = 1.0;
 const DEFEND_BALANCE = 0.7;
 
+const IS_STRONG_ENEMY = {
+  Bunker: true,
+  Immortal: true,
+  ShieldBattery: true,
+  SiegeTank: true,
+  SiegeTankSieged: true,
+};
+
 /*
 Battles start in WATCH mode. When there are no battle lines they go back to WATCH mode.
 
@@ -158,6 +166,8 @@ function isSmallFight(battle) {
 
   for (const one of battle.zones) {
     for (const enemy of one.threats) {
+      if (IS_STRONG_ENEMY[enemy.type.name]) return false;
+
       if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
         enemyCount++;
       }

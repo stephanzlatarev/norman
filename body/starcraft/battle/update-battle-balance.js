@@ -27,7 +27,13 @@ function calculateBalance(battle, isDeployed) {
         enemyHealth += enemy.armor.total;
       }
 
-      if (enemy.type.name === "ShieldBattery") {
+      if (enemy.type.name === "Immortal") {
+        // Immortals have bonus damage against my main unit Stalkers
+        enemyDamage += enemy.type.damageGround * 1.5;
+
+        // Immortals absorb up to 100 damage
+        enemyHealth += 100;
+      } else if (enemy.type.name === "ShieldBattery") {
         enemyHealth += 300;
       }
     }
