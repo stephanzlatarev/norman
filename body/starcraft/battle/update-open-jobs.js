@@ -13,9 +13,9 @@ export default function(battle, isFocusBattle, isOnlyBattle) {
 
       closeOpenJobsOutsideBattleLines(battle);
 
-      if (isSmallBattle(battle)) {
+      if (!isOnlyBattle && isSmallBattle(battle)) {
         // Make sure we don't overreact to individual enemy units in our territory
-        if (isOnlyBattle || isBalanceInsufficient || (battle.fighters.length < 3)) {
+        if (isBalanceInsufficient || (battle.fighters.length < 3)) {
           openJobs(battle, "Stalker", "Zealot");
         }
 

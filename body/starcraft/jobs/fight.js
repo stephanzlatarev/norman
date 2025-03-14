@@ -7,6 +7,7 @@ import Resources from "../memo/resources.js";
 const HOP_CLOSE_DISTANCE = 6;
 const KITING_RANGE = 2;
 const KITING_WARRIORS = new Set(["Stalker"]);
+const SQUARE_DISTANCE_BLOCKED_PATH = 1000 * 1000;
 
 export default class Fight extends Job {
 
@@ -57,7 +58,16 @@ export default class Fight extends Job {
       return calculateSquareDistance(unit.body, this.zone);
     }
 
-    return super.distance(unit);
+    const distance = super.distance(unit);
+
+    if ((distance === Infinity) && (this.priority === 100)) {
+      // Priority 100 means this is the focus battle.
+      // All warriors must be considered for this battle.
+      // Add 1000 to the distance to make sure warriors with safe path are prioritized.
+      return SQUARE_DISTANCE_BLOCKED_PATH + calculateSquareDistance(unit.body, this.zone);
+    }
+
+    return distance;
   }
 
   execute() {

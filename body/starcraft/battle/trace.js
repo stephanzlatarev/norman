@@ -180,6 +180,7 @@ function traceWarriorAssignments() {
     console.log("-", warrior.type.name, warrior.nick,
       "zone:", warrior.zone ? warrior.zone.name : "-",
       "job:", warrior.job ? warrior.job.details : "-",
+      "priority:", warrior.job ? warrior.job.priority : "-",
       "deployed:", isWarriorDeployed(warrior.zone, warrior.job),
       "target:", getWarriorTarget(warrior.job),
       "order:", warrior.order ? JSON.stringify(warrior.order) : "-",
