@@ -13,7 +13,7 @@ const MIN_SENTRY_COUNT = 3;
 // TODO: Maintain up to 2 hallucinated phoenixes at a time for better map coverage
 // TODO: Create scouts when visible enemies are only at tier 2 or higher
 // TODO: Maneuver the scout in zones where there are enemies that can shoot air
-export default class ScoutSentry extends Mission {
+export default class ScoutFlyby extends Mission {
 
   order = null;
   scout = null;
