@@ -1,3 +1,4 @@
+import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
 import Units from "../units.js";
@@ -8,72 +9,130 @@ import Resources from "../memo/resources.js";
 
 const COST_GUARDIAN_SHIELD = 75;
 const COST_HALLUCINATION = 75;
-const MIN_SENTRY_COUNT = 3;
 
 // TODO: Maintain up to 2 hallucinated phoenixes at a time for better map coverage
 // TODO: Create scouts when visible enemies are only at tier 2 or higher
 // TODO: Maneuver the scout in zones where there are enemies that can shoot air
 export default class ScoutFlyby extends Mission {
 
-  order = null;
-  scout = null;
-  target = null;
+  jobCreateScout = null;
+  jobScoutFlyby = null;
 
   run() {
+    // Check if job to create scout is closed
+    if (this.jobCreateScout && (this.jobCreateScout.isDone || this.jobCreateScout.isFailed)) {
+      this.jobCreateScout = null;
+    }
+
+    // Check if job to fly by is closed
+    if (this.jobScoutFlyby && (this.jobScoutFlyby.isDone || this.jobScoutFlyby.isFailed)) {
+      this.jobScoutFlyby = null;
+    }
+
+    // When there is no active scout then create job to create it
+    if (!this.jobScoutFlyby && !this.jobCreateScout) {
+      const sentry = selectSentry();
+
+      if (sentry) {
+        this.jobCreateScout = new CreateScout();
+        this.jobScoutFlyby = new Flyby();
+
+        this.jobCreateScout.assign(sentry);
+      }
+    }
+
+    // Ensure the flyby job is assigned. The scheduler won't do it as hallucinations are not considered warriors
+    if (this.jobScoutFlyby && !this.jobScoutFlyby.assignee) {
+      for (const unit of Units.hallucinations().values()) {
+        if (!unit.job) {
+          console.log("Hallucinated phoenix", unit.nick, "starts flyby scouting");
+
+          this.jobScoutFlyby.assign(unit);
+          break;
+        }
+      }
+    }
+  }
+
+}
+
+class CreateScout extends Job {
+
+  order = null;
+
+  constructor() {
+    super("Sentry");
+
+    // Make sure the scout is kept busy until the scout is created
+    this.priority = 100;
+    this.isCommitted = true;
+  }
+
+  execute() {
+    const sentry = this.assignee;
+
+    if (!sentry.isAlive) {
+      this.close(false);
+    } else if (!this.order) {
+      console.log("Sentry", sentry.nick, "creates a Phoenix hallucination for scouting");
+
+      const energy = sentry.energy;
+      this.order = new Order(sentry, 154).accept(() => (sentry.energy < energy));
+    } else if (this.order.isRejected) {
+      this.close(false);
+    } else if (this.order.isAccepted) {
+      // Find the hallucination
+      for (const unit of Units.hallucinations().values()) {
+        if (!unit.job) {
+          this.close(true);
+          break;
+        }
+      }
+    }
+  }
+
+}
+
+class Flyby extends Job {
+
+  constructor() {
+    super("Phoenix");
+  }
+
+  accept(unit) {
+    return unit.isHallucination;
+  }
+
+  execute() {
+    const scout = this.assignee;
+
+    // Check if hallucination expired
+    if (!scout.isAlive) return this.close(true);
+
+    if (!this.target || isSamePosition(scout.body, this.target)) {
+      this.target = getTarget(scout);
+    }
+
+    Order.move(scout, this.target);
+
+    // Update last scout time for all zones
     for (const zone of Zone.list()) {
-      if (zone.warriors.size || zone.buildings.size || (this.scout && this.scout.zone === zone)) {
+      if (zone.warriors.size || zone.buildings.size || (scout.zone === zone)) {
         zone.lastScoutTime = Resources.loop;
       } else if (!zone.lastScoutTime) {
         zone.lastScoutTime = -1;
       }
-    }
-
-    if (!this.scout || !this.scout.isAlive) {
-      this.scout = this.createScout();
-    }
-
-    if (this.scout && this.scout.isAlive) {
-      this.moveScout();
-    }
-  }
-
-  createScout() {
-    if (!ActiveCount.Sentry) return;
-
-    for (const unit of Units.hallucinations().values()) {
-      if (unit.type.name === "Phoenix") return unit;
-    }
-
-    // Wait until the previous order is accepted by the sentry
-    if (this.order && this.order.unit.isAlive && !this.order.isRejected && !this.order.isAccepted) return;
-
-    const sentry = selectSentry();
-
-    if (sentry) {
-      const energyBeforeOrder = sentry.energy;
-
-      this.order = new Order(sentry, 154).accept(() => (sentry.energy < energyBeforeOrder));
-
-      console.log("Sentry", sentry.nick, "creates a Phoenix hallucination for scouting");
-    }
-  }
-
-  moveScout() {
-    if (!this.target || isSamePosition(this.scout.body, this.target)) {
-      this.target = getTarget(this.scout);
-    }
-
-    if (this.target) {
-      orderMove(this.scout, this.target);
     }
   }
 
 }
 
 function selectSentry() {
+  if (!ActiveCount.Sentry) return;
+
   let energyThreshold = COST_HALLUCINATION;
 
-  if (VisibleCount.Warrior && (ActiveCount.Sentry < MIN_SENTRY_COUNT)) {
+  if (VisibleCount.Warrior) {
     energyThreshold += COST_GUARDIAN_SHIELD;
   }
 
@@ -106,12 +165,3 @@ function getTarget(scout) {
 function isSamePosition(a, b) {
   return (Math.abs(a.x - b.x) < 2) && (Math.abs(a.y - b.y) < 2);
 }
-
-function orderMove(unit, pos) {
-  if (!unit || !unit.order || !pos) return;
-
-  if ((unit.order.abilityId !== 16) || !unit.order.targetWorldSpacePos || !isSamePosition(unit.order.targetWorldSpacePos, pos)) {
-    new Order(unit, 16, pos).accept(true);;
-  }
-}
-
