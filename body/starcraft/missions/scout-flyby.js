@@ -5,10 +5,12 @@ import Units from "../units.js";
 import Zone from "../map/zone.js";
 import { ActiveCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
+import Enemy from "../memo/enemy.js";
 import Resources from "../memo/resources.js";
 
 const COST_GUARDIAN_SHIELD = 75;
 const COST_HALLUCINATION = 75;
+const TWO_MINUTES = 22.4 * 60 * 2;
 
 // TODO: Maintain up to 2 hallucinated phoenixes at a time for better map coverage
 // TODO: Create scouts when visible enemies are only at tier 2 or higher
@@ -19,6 +21,15 @@ export default class ScoutFlyby extends Mission {
   jobScoutFlyby = null;
 
   run() {
+    // Update last scout time for all zones
+    for (const zone of Zone.list()) {
+      if (zone.warriors.size || zone.buildings.size) {
+        zone.lastScoutTime = Resources.loop;
+      } else if (!zone.lastScoutTime) {
+        zone.lastScoutTime = 0;
+      }
+    }
+
     // Check if job to create scout is closed
     if (this.jobCreateScout && (this.jobCreateScout.isDone || this.jobCreateScout.isFailed)) {
       this.jobCreateScout = null;
@@ -109,20 +120,17 @@ class Flyby extends Job {
     // Check if hallucination expired
     if (!scout.isAlive) return this.close(true);
 
+    // Update last scout time for all zones
+    if (scout.zone) {
+      scout.zone.lastScoutTime = Resources.loop;
+    }
+
+    // Select next zone for scouting
     if (!this.target || isSamePosition(scout.body, this.target)) {
       this.target = getTarget(scout);
     }
 
     Order.move(scout, this.target);
-
-    // Update last scout time for all zones
-    for (const zone of Zone.list()) {
-      if (zone.warriors.size || zone.buildings.size || (scout.zone === zone)) {
-        zone.lastScoutTime = Resources.loop;
-      } else if (!zone.lastScoutTime) {
-        zone.lastScoutTime = -1;
-      }
-    }
   }
 
 }
@@ -145,23 +153,46 @@ function selectSentry() {
 }
 
 function getTarget(scout) {
-  if (!scout.zone || !scout.zone.tier) return;
+  if (!scout.zone) return;
+  if (Enemy.base && !Enemy.base.lastScoutTime) return Enemy.base;
 
-  let best = scout.zone;
-  let bestScoutTime = scout.zone.lastScoutTime;
-  let bestTierLevel = scout.zone.tier.level;
+  let bestTarget;
+  let bestDistance;
 
   for (const zone of Zone.list()) {
-    if ((zone.lastScoutTime < bestScoutTime) || ((zone.lastScoutTime === bestScoutTime) && (zone.tier.level > bestTierLevel))) {
-      best = zone;
-      bestScoutTime = zone.lastScoutTime;
-      bestTierLevel = zone.tier.level;
+    const distance = calculateSquareDistance(scout.body, zone);
+
+    if (isBetterScoutTarget(zone, distance, bestTarget, bestDistance)) {
+      bestTarget = zone;
+      bestDistance = distance;
     }
   }
 
-  return best;
+  return bestTarget;
+}
+
+function isBetterScoutTarget(zone, zoneDistance, bestTarget, bestDistance) {
+  if (!bestTarget) return true;
+
+  const hasZoneBeenScoutedRecently = (Resources.loop - zone.lastScoutTime < TWO_MINUTES);
+  const hasBestBeenScoutedRecently = (Resources.loop - bestTarget.lastScoutTime < TWO_MINUTES);
+
+  if (hasZoneBeenScoutedRecently && hasBestBeenScoutedRecently) {
+    return (zoneDistance < bestDistance);
+  } else if (!hasZoneBeenScoutedRecently && !hasBestBeenScoutedRecently) {
+    if (zone.isDepot && !bestTarget.isDepot) return true;
+    if (!zone.isDepot && bestTarget.isDepot) return false;
+
+    return (zoneDistance < bestDistance);
+  } else {
+    return !hasZoneBeenScoutedRecently;
+  }
 }
 
 function isSamePosition(a, b) {
   return (Math.abs(a.x - b.x) < 2) && (Math.abs(a.y - b.y) < 2);
+}
+
+function calculateSquareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
