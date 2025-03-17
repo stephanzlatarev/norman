@@ -5,6 +5,7 @@ import Order from "../order.js";
 export default function() {
   for (const warrior of Units.warriors().values()) {
     if (!warrior.isAlive) continue;
+    if (!warrior.type.movementSpeed) continue;
     if (warrior.job) continue;
     if (warrior.order.abilityId) continue;
 
