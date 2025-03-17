@@ -13,8 +13,8 @@ import Priority from "../memo/priority.js";
 import Resources from "../memo/resources.js";
 
 const DEFAULT_FACILITIES = ["ShieldBattery", "Gateway", "Forge"];
-const SPECIAL_FACILITIES_DEFAULT = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil", "RoboticsBay"];
-const SPECIAL_FACILITIES_ROBOBAY = ["Gateway", "CyberneticsCore", "RoboticsFacility", "RoboticsBay", "Forge", "TwilightCouncil"];
+const SPECIAL_FACILITIES_DEFAULT = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil", "RoboticsBay", "DarkShrine"];
+const SPECIAL_FACILITIES_ROBOBAY = ["Gateway", "CyberneticsCore", "RoboticsFacility", "RoboticsBay", "Forge", "TwilightCouncil", "DarkShrine"];
 
 const SLOTS = [
   { x: +2.5, y: +1.5 },

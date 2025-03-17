@@ -11,10 +11,11 @@ const jobs = new Map();
 
 // Units are ordered from cheapest to most expensive so that the cheaper ones are not blocked by resources
 const FACILITY_PRODUCTS = {
-  Gateway: ["Zealot", "Stalker", "Sentry"],
+  Gateway: ["Zealot", "Stalker", "Sentry", "DarkTemplar"],
   RoboticsFacility: ["Observer", "Immortal", "Colossus"],
 };
 const UNIT_PREREQUISITES = {
+  DarkTemplar: "DarkShrine",
   Colossus: "RoboticsBay",
   Sentry: "CyberneticsCore",
   Stalker: "CyberneticsCore",
@@ -53,18 +54,14 @@ function isObsolete(job) {
 }
 
 function createProduceJob(facility) {
-  let job = jobs.get(facility);
+  const product = selectProductType(facility);
 
-  if (!job) {
-    const product = selectProductType(facility);
+  if (product) {
+    const job = new Produce(facility, Types.unit(product));
 
-    if (product) {
-      job = new Produce(facility, Types.unit(product));
+    jobs.set(facility, job);
 
-      jobs.set(facility, job);
-
-      TotalCount[product]++;
-    }
+    TotalCount[product]++;
   }
 }
 

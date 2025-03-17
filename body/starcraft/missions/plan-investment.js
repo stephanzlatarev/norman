@@ -68,6 +68,7 @@ function doOneBaseDefense() {
   Limit.Sentry = 1;
   Limit.Zealot = 0;
   Limit.Colossus = 0;
+  Limit.DarkTemplar = 0;
 
   Limit.Nexus = 1;
   Limit.Assimilator = TotalCount.CyberneticsCore ? 2 : 1;
@@ -105,6 +106,7 @@ function doEnforceWallNatural() {
   Limit.Observer = twoBases ? 1 : 0;
   Limit.Colossus = 0;
   Limit.Sentry = 0;
+  Limit.DarkTemplar = 0;
 
   Limit.Nexus = twoBases ? 2 : 1;
   Limit.Assimilator = TotalCount.CyberneticsCore ? 2 : 1;
@@ -145,10 +147,12 @@ function doGroundArmyMaxOut() {
   Limit.Observer = (ActiveCount.Colossus + ActiveCount.Immortal < 2) ? 1 : 2;
   Limit.Sentry = 100;
   Limit.Stalker = 400; // Maintain 4:1 ratio of Stalker to Zealot and Stalker to Sentry
-  Limit.Zealot = !TotalCount.CyberneticsCore ? 0 : 100;
+  Limit.Zealot = TotalCount.CyberneticsCore ? 100 : 0;
+  Limit.DarkTemplar = ActiveCount.DarkShrine ? 5 : 0;
 
   Priority.Probe = 90;
   Priority.Observer = 80;
+  Priority.DarkTemplar = 40;
   Priority.Colossus = 50;
   Priority.Immortal = 50;
   Priority.Sentry = 50;
@@ -214,6 +218,7 @@ function counterMassLightZerg() {
   Limit.Observer = ActiveCount.RoboticsBay ? 33 : 2; // Maintain 3:1 ratio of Colossus to Observer and build 2 Observers before Colossi can be built
   Limit.Immortal = 0;
   Limit.Stalker = 0;
+  Limit.DarkTemplar = 0;
 
   Priority.Probe = 90;
   Priority.Observer = 90;

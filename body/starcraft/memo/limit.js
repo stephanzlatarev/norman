@@ -3,7 +3,7 @@ export default {
 
   Assimilator: Infinity,
   CyberneticsCore: 3,
-  Colossus: 0,
+  DarkShrine: 0,
   Forge: 3,
   Gateway: 20,
   Nexus: 20,
@@ -12,6 +12,8 @@ export default {
   ShieldBattery: 0,
   TwilightCouncil: 1,
 
+  Colossus: 0,
+  DarkTemplar: 10,
   Immortal: Infinity,
   Observer: 10,
   Probe: 100,
