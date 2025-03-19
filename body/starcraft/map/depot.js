@@ -172,7 +172,7 @@ function populateDepotCoordinates(coordinates, resource) {
   const richVespene = [];
 
   if (resource.type.isMinerals) {
-    const minerals = normalMinerals;
+    const minerals = resource.type.isRich ? richMinerals : normalMinerals;
 
     for (let x = resource.body.x - 6; x <= resource.body.x + 4; x++) {
       minerals.push(getCoordinatesKey(x, resource.body.y - 7));
@@ -191,7 +191,7 @@ function populateDepotCoordinates(coordinates, resource) {
     minerals.push(getCoordinatesKey(resource.body.x + 5, resource.body.y - 5));
     minerals.push(getCoordinatesKey(resource.body.x + 5, resource.body.y + 5));
   } else {
-    const vespene = normalVespene;
+    const vespene = resource.type.isRich ? richVespene : normalVespene;
 
     for (let x = resource.body.x - 7; x <= resource.body.x + 7; x++) {
       vespene.push(getCoordinatesKey(x, resource.body.y - 7));
@@ -233,7 +233,10 @@ function selectDepotCoordinates(coordinates) {
     if (resources.depots.length) {
       isDepotLocation = true;
     } else if (isDepotBuildingPlot(cell)) {
-      if ((resources.normalMinerals.length === 8) && (resources.normalVespene.length === 2)) {
+      const minerals = resources.normalMinerals.length + resources.richMinerals.length * 7 / 5;
+      const vespene = resources.normalVespene.length + resources.richVespene.length * 2;
+
+      if ((minerals >= 8) && (vespene >= 2)) {
         isDepotLocation = true;
       }
     }
