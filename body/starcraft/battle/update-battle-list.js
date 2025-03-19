@@ -24,8 +24,8 @@ export default function() {
         const battle = findBattle(zone) || new Battle(zone);
         const { zones, front } = findBattleZones(zone);
 
-        battle.front = reduceToFireRange(zone, front);
-        battle.zones = reduceToFireRange(zone, zones);
+        battle.front = front;
+        battle.zones = zones;
 
         battle.move(zone);
         battles.add(battle);
@@ -69,11 +69,11 @@ function findBattle(zone) {
 
 function findBattleZones(zone) {
   const zones = new Set();
-  const edges = new Set();
   const front = new Set();
 
   const traversed = new Set();
   let wave = new Set();
+  let isFrontLocked = false;
 
   zones.add(zone);
   traversed.add(zone);
@@ -88,12 +88,13 @@ function findBattleZones(zone) {
 
         if ((neighbor.alertLevel === ALERT_YELLOW) && (neighbor.r >= RALLY_MIN_RADIUS)) {
           zones.add(neighbor);
-          edges.add(neighbor);
+
+          if (!isFrontLocked) front.add(neighbor);
         } else if (neighbor.alertLevel >= ALERT_YELLOW) {
           zones.add(neighbor);
           next.add(neighbor);
-        } else {
-          edges.add(neighbor);
+        } else if (!isFrontLocked) {
+          front.add(neighbor);
         }
 
         traversed.add(neighbor);
@@ -101,10 +102,12 @@ function findBattleZones(zone) {
     }
 
     wave = next;
+    isFrontLocked = front.size;
   }
 
   if (zone.tier.level === 1) {
     // The battle zone becomes the front line
+    front.clear();
     front.add(zone);
   } else if (zone.tier.level === 2) {
     // The lowest tier zone becomes the front line
@@ -116,42 +119,9 @@ function findBattleZones(zone) {
       }
     }
 
+    front.clear();
     front.add(approach);
-  } else {
-    // Front zones are the yellow alert levels that are at the edge of the battle
-    for (const zone of edges) {
-      if ((zone.alertLevel === ALERT_YELLOW) && (zone.r >= RALLY_MIN_RADIUS)) {
-        front.add(zone);
-      } else {
-        let hasYellowNeighbor = false;
-
-        for (const neighbor of zone.neighbors) {
-          if (!zones.has(neighbor)) continue;
-
-          if ((neighbor.alertLevel === ALERT_YELLOW) && (neighbor.r >= RALLY_MIN_RADIUS)) {
-            hasYellowNeighbor = true;
-            front.add(neighbor);
-          }
-        }
-
-        if (!hasYellowNeighbor && (zone.r >= RALLY_MIN_RADIUS)) {
-          front.add(zone);
-        }
-      }
-    }
   }
 
   return { zones, front };
-}
-
-function reduceToFireRange(zone, zones) {
-  const reduced = new Set();
-
-  for (const one of zones) {
-    if (zone.range.zones.has(one)) {
-      reduced.add(one);
-    }
-  }
-
-  return reduced;
 }
