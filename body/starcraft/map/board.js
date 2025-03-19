@@ -83,7 +83,7 @@ class Board {
   block(left, top, width, height) {
     for (let row = top; row < top + height; row++) {
       for (let col = left; col < left + width; col++) {
-        this.cells[row][col].block();
+        this.cell(col, row).block();
       }
     }
   }
@@ -124,7 +124,7 @@ class Board {
           return false;
         }
 
-        if (!cell.isPlot || !cell.isPath || cell.isObstacle) {
+        if (cell.isObstructed()) {
           return false;
         }
       }
@@ -154,6 +154,10 @@ class Cell {
 
   block() {
     this.isObstacle = true;
+  }
+
+  isObstructed() {
+    return !this.isPlot || !this.isPath || this.isObstacle;
   }
 
 }

@@ -68,7 +68,7 @@ export default class Zone extends Pin {
           if (cell.zone !== this) {
             if (cell.zone) cell.zone.cells.delete(cell);
 
-            if (cell.isPlot) {
+            if (!cell.isObstructed()) {
               this.ground.add(cell);
               this.border.add(cell);
             }
@@ -203,7 +203,7 @@ function isSurroundedBySameZoneGround(ground, cell) {
 }
 
 export function createZones() {
-  const free = new Set([...Board.ground].filter(cell => (!cell.zone && cell.isPlot)));
+  const free = new Set([...Board.ground].filter(cell => (!cell.zone && !cell.isObstructed())));
   let margins = calculateMargins(free);
   let count = -1;
 
@@ -352,7 +352,7 @@ function expandZonesWithUnclaimedGroundCells() {
 
     for (const cell of wave) {
       for (const neighbor of cell.neighbors) {
-        if (!neighbor.zone && neighbor.isPlot) {
+        if (!neighbor.zone && !neighbor.isObstructed()) {
           neighbor.zone = cell.zone;
 
           // Expand the ground and border of the zone

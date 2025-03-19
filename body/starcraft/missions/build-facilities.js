@@ -193,7 +193,7 @@ function getBuildingPlotIfFree(plot, slot) {
     for (let y = ploty - 1; y <= ploty; y++) {
       const cell = Board.cell(x, y);
 
-      if (!cell.isPlot || !cell.isPath) {
+      if (cell.isObstructed()) {
         return;
       }
     }

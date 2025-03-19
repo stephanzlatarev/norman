@@ -103,7 +103,7 @@ function isPlotFree(plot) {
     for (let y = plot.y - 1; y <= plot.y; y++) {
       const cell = Board.cell(x, y);
 
-      if (!cell.isPlot || !cell.isPath) {
+      if (cell.isObstructed()) {
         return false;
       }
     }
