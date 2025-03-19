@@ -6,7 +6,6 @@ const ZONE_NAME_ROWS = "0123456789";
 const ZONE_NAME_SUFFIX = "αβγδ";
 
 const RANGE_FIRE = 15;
-const RADIUS_MIN_RALLY = 4;
 
 const zones = [];
 const knownThreats = new Map();
@@ -487,26 +486,33 @@ function identifyNeighborsOfZone(zone) {
 }
 
 function identifyRanges() {
+  // Identiify fire range
   for (const zone of zones) {
-    identifyRangesInRay(zone, zone, (zone.r + RANGE_FIRE) * (zone.r + RANGE_FIRE), new Set());
+    const squareFireRange = (zone.r + RANGE_FIRE) * (zone.r + RANGE_FIRE);
+
+    for (const other of zones) {
+      if (zone === other) continue;
+
+      if (calculateSquareDistance(zone, other) < squareFireRange) {
+        zone.range.fire.add(other);
+        zone.range.zones.add(other);
+      }
+    }
+  }
+
+  // Identify front range
+  for (const zone of zones) {
+    for (const fire of zone.range.fire) {
+      for (const neighbor of fire.neighbors) {
+        if (!zone.range.fire.has(neighbor)) {
+          zone.range.front.add(neighbor);
+          zone.range.zones.add(neighbor);
+        }
+      }
+    }
   }
 }
 
-function identifyRangesInRay(zone, ray, squareFireRange, exclude) {
-  const squareDistance = (zone.x - ray.x) * (zone.x - ray.x) + (zone.y - ray.y) * (zone.y - ray.y);
-
-  zone.range.zones.add(ray);
-  exclude.add(ray);
-
-  if ((squareDistance < squareFireRange) || (ray.r < RADIUS_MIN_RALLY)) {
-    zone.range.fire.add(ray);
-
-    for (const next of ray.neighbors) {
-      if (!exclude.has(next)) {
-        identifyRangesInRay(zone, next, squareFireRange, exclude);
-      }
-    }
-  } else {
-    zone.range.front.add(ray);
-  }
+function calculateSquareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
