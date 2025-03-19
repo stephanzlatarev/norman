@@ -169,7 +169,7 @@ function ignoreInitialBuildings(cells) {
     const top = Math.ceil(building.body.y - building.body.r) - 1;
     const bottom = Math.floor(building.body.y + building.body.r) - 1;
 
-    clearCell(cells, left, top, right, bottom);
+    markCells(cells, left, top, right, bottom, true, true, false);
   }
 
   for (const building of Units.enemies().values()) {
@@ -180,29 +180,39 @@ function ignoreInitialBuildings(cells) {
     const top = Math.ceil(building.body.y - building.body.r) - 1;
     const bottom = Math.floor(building.body.y + building.body.r) - 1;
 
-    clearCell(cells, left, top, right, bottom);
+    markCells(cells, left, top, right, bottom, true, true, false);
   }
-  
+
   for (const unit of Units.resources().values()) {
     const x = Math.floor(unit.body.x);
     const y = Math.floor(unit.body.y);
 
     if (unit.type.isMinerals) {
-      clearCell(cells, x - 1, y, x, y);
+      markCells(cells, x - 1, y, x, y, false, false, true);
     } else if (unit.type.isVespene) {
-      clearCell(cells, x - 1, y - 1, x + 1, y + 1);
+      markCells(cells, x - 1, y - 1, x + 1, y + 1, false, false, true);
     }
+  }
+
+  for (const obstacle of Units.obstacles().values()) {
+    const left = Math.ceil(obstacle.body.x - obstacle.body.r);
+    const right = Math.floor(obstacle.body.x + obstacle.body.r);
+    const top = Math.ceil(obstacle.body.y - obstacle.body.r) - 1;
+    const bottom = Math.floor(obstacle.body.y + obstacle.body.r) - 1;
+
+    markCells(cells, left, top, right, bottom, false, false, true);
   }
 }
 
-function clearCell(cells, left, top, right, bottom) {
+function markCells(cells, left, top, right, bottom, isPath, isPlot, isObstacle) {
   for (let y = top; y <= bottom; y++) {
     for (let x = left; x <= right; x++) {
       const cell = cells[y][x];
 
       if (cell.isOn) {
-        cell.isPath = true;
-        cell.isPlot = true;
+        cell.isPath = isPath;
+        cell.isPlot = isPlot;
+        cell.isObstacle = isObstacle;
 
         ground.add(cell);
       }

@@ -77,7 +77,7 @@ export default class Zone extends Pin {
             cell.zone = this;
           }
 
-          for (const neighbor of cell.neighbors) {
+          for (const neighbor of cell.edges) {
             if (traversed.has(neighbor)) continue;
 
             traversed.add(neighbor);
@@ -351,7 +351,7 @@ function expandZonesWithUnclaimedGroundCells() {
     const next = new Set();
 
     for (const cell of wave) {
-      for (const neighbor of cell.neighbors) {
+      for (const neighbor of cell.edges) {
         if (!neighbor.zone && !neighbor.isObstructed()) {
           neighbor.zone = cell.zone;
 
@@ -467,7 +467,7 @@ function identifyNeighborsOfZone(zone) {
     const next = new Set();
 
     for (const cell of wave) {
-      for (const neighbor of cell.neighbors) {
+      for (const neighbor of cell.edges) {
         if (!neighbor.isPath) continue;
         if (traversed.has(neighbor)) continue;
 
