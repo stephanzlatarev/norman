@@ -19,38 +19,24 @@ export default class DetectOneBaseRushMission extends Mission {
   run() {
     if (this.isMissionComplete) return;
 
-    if (isBasicEconomyAndDefenseEstablished()) {
-      console.log("Mission 'Detect one-base rush' is over.");
-      this.isMissionComplete = true;
-    } else if (this.isRushDetected) {
+    if (this.isRushDetected) {
       if (isRushEnd()) {
         console.log("One-base rush is over.");
         this.isMissionComplete = true;
         Plan.setBaseLimit(this, Plan.MULTI_BASE);
       }
-    } else {
-      if (isRushStart()) {
-        console.log("One-base rush detected.");
-        this.isRushDetected = true;
-        Plan.setBaseLimit(this, Plan.ONE_BASE);
+    } else if (Plan.isBaseEstablished()) {
+      console.log("Mission 'Detect one-base rush' is over.");
+      this.isMissionComplete = true;
+    } else if (isRushStart()) {
+      console.log("One-base rush detected.");
+      this.isRushDetected = true;
+      Plan.setBaseLimit(this, Plan.ONE_BASE);
 
-        cancelConstructionsOutsideHomeBase();
-      }
+      cancelConstructionsOutsideHomeBase();
     }
   }
 
-}
-
-function isBasicEconomyAndDefenseEstablished() {
-  if (ActiveCount.Nexus < 2) return false;
-  if (!ActiveCount.Gateway) return false;
-  if (!ActiveCount.CyberneticsCore) return false;
-  if (ActiveCount.Assimilator < 4) return false;
-  if (ActiveCount.Probe < 52) return false;
-  if (ActiveCount.Stalker < 4) return false;
-  if (!ActiveCount.Observer) return false;
-
-  return true;
 }
 
 function isRushStart() {

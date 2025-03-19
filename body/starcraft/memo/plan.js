@@ -1,3 +1,4 @@
+import { ActiveCount } from "./count.js";
 
 const owners = new Map();
 
@@ -25,6 +26,23 @@ class Plan {
     }
 
     Plan.BaseLimit = (limit < Infinity) ? limit : 0;
+  }
+
+  static isBaseEstablished() {
+    if (Plan.BaseLimit === Plan.ONE_BASE) {
+      if (ActiveCount.Probe < 26) return false;
+    } else {
+      if (ActiveCount.Nexus < 2) return false;
+      if (ActiveCount.Probe < 52) return false;
+    }
+
+    if (!ActiveCount.Gateway) return false;
+    if (!ActiveCount.CyberneticsCore) return false;
+    if (ActiveCount.Assimilator < 4) return false;
+    if (ActiveCount.Stalker < 4) return false;
+    if (!ActiveCount.Observer) return false;
+
+    return true;
   }
 
 }

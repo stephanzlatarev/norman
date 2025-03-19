@@ -17,12 +17,6 @@ export default class DetectOffensiveProxyMission extends Mission {
   run() {
     if (this.isMissionComplete) return;
 
-    if (isBasicEconomyAndDefenseEstablished()) {
-      console.log("Mission 'Detect offensive proxy' is over.");
-      this.isMissionComplete = true;
-      return;
-    }
-
     if (!this.perimeterZones || !this.outerZones) {
       this.perimeterZones = getPerimeterZones();
       this.outerZones = getOuterZones(this.perimeterZones);
@@ -41,14 +35,15 @@ export default class DetectOffensiveProxyMission extends Mission {
         this.isOffensiveProxyDetected = false;
         Plan.setBaseLimit(this, Plan.MULTI_BASE);
       }
-    } else {
-      if (isOffensiveProxyStart(this.perimeterZones)) {
-        console.log("Offensive proxy started.");
-        this.isOffensiveProxyDetected = true;
-        Plan.setBaseLimit(this, Plan.ONE_BASE);
+    } else if (Plan.isBaseEstablished()) {
+      console.log("Mission 'Detect offensive proxy' is over.");
+      this.isMissionComplete = true;
+    } else if (isOffensiveProxyStart(this.perimeterZones)) {
+      console.log("Offensive proxy started.");
+      this.isOffensiveProxyDetected = true;
+      Plan.setBaseLimit(this, Plan.ONE_BASE);
 
-        cancelConstructionsOutsideHomeBase(this.outerZones);
-      }
+      cancelConstructionsOutsideHomeBase(this.outerZones);
     }
   }
 
@@ -76,18 +71,6 @@ function getPerimeterZones() {
 
 function getOuterZones(zones) {
   return zones.filter(zone => (zone.tier.level >= 3));
-}
-
-function isBasicEconomyAndDefenseEstablished() {
-  if (ActiveCount.Nexus < 2) return false;
-  if (!ActiveCount.Gateway) return false;
-  if (!ActiveCount.CyberneticsCore) return false;
-  if (ActiveCount.Assimilator < 4) return false;
-  if (ActiveCount.Probe < 52) return false;
-  if (ActiveCount.Stalker < 4) return false;
-  if (!ActiveCount.Observer) return false;
-
-  return true;
 }
 
 function isOffensiveProxyStart(zones) {
