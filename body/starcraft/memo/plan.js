@@ -1,4 +1,6 @@
 import { ActiveCount } from "./count.js";
+import Resources from "./resources.js";
+import Job from "../job.js";
 
 const owners = new Map();
 
@@ -41,6 +43,17 @@ class Plan {
     if (ActiveCount.Assimilator < 4) return false;
     if (ActiveCount.Stalker < 4) return false;
     if (!ActiveCount.Observer) return false;
+
+    return true;
+  }
+
+  static isBaseSupplyLimitReached() {
+    if (Resources.supplyUsed >= 196) return true;
+    if (Resources.supply >= 4) return false;
+
+    for (const job of Job.list()) {
+      if (job.output && job.output.name && (job.output.name === "Pylon")) return false;
+    }
 
     return true;
   }

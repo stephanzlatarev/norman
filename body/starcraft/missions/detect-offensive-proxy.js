@@ -34,6 +34,10 @@ export default class DetectOffensiveProxyMission extends Mission {
         console.log("Offensive proxy ended.");
         this.isOffensiveProxyDetected = false;
         Plan.setBaseLimit(this, Plan.MULTI_BASE);
+      } else if (Plan.isBaseSupplyLimitReached()) {
+        console.log("Mission 'Detect offensive proxy' is done.");
+        this.isMissionComplete = true;
+        Plan.setBaseLimit(this, Plan.MULTI_BASE);
       }
     } else if (Plan.isBaseEstablished()) {
       console.log("Mission 'Detect offensive proxy' is over.");
