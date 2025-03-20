@@ -124,16 +124,22 @@ function findDepot() {
   const traversed = new Set();
   const options = new Set();
   let wave = new Set();
+  let depotsCount = 0;
+  let depotsWave = 0;
 
   wave.add(Depot.home);
   traversed.add(Depot.home);
 
-  while (wave.size) {
+  while (wave.size && (depotsWave < 2)) {
     const next = new Set();
 
     for (const zone of wave) {
-      if (zone.isDepot && !avoid.has(zone) && !isZoneThreatened(zone) && Board.accepts(zone.x, zone.y, 5)) {
+      if (zone.isDepot && !zone.depot && !avoid.has(zone) && !isZoneThreatened(zone) && Board.accepts(zone.x, zone.y, 5)) {
         options.add(zone);
+      }
+
+      if (zone.isDepot && !zone.depot) {
+        depotsCount++;
       }
 
       for (const neighbor of zone.neighbors) {
@@ -160,7 +166,12 @@ function findDepot() {
       return bestZone;
     }
 
+    if (depotsCount) {      
+      depotsWave++;
+    }
+
     wave = next;
+    depotsCount = 0;
   }
 }
 
