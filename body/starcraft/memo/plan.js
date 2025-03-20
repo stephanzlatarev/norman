@@ -1,4 +1,4 @@
-import { ActiveCount } from "./count.js";
+import { ActiveCount, TotalCount } from "./count.js";
 import Resources from "./resources.js";
 import Job from "../job.js";
 
@@ -50,6 +50,7 @@ class Plan {
   static isBaseSupplyLimitReached() {
     if (Resources.supplyUsed >= 196) return true;
     if (Resources.supply >= 4) return false;
+    if (TotalCount.Pylon > ActiveCount.Pylon) return false;
 
     for (const job of Job.list()) {
       if (job.output && job.output.name && (job.output.name === "Pylon")) return false;
