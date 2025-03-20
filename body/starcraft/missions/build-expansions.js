@@ -20,9 +20,25 @@ export default class BuildExpansionsMission extends Mission {
   retreat;
 
   run() {
+    for (const condition of avoid.values()) {
+      if (condition.isExpired()) {
+        avoid.delete(condition.zone);
+
+        if (this.job && !this.job.assignee) {
+          this.job.close(true);
+          this.job = null;
+        }
+      }
+    }
+
     if (this.job) {
+      // Make sure the job is of the right priority
+      this.job.priority = Priority.Nexus;
+
       if (shouldNotBuildNexus()) {
-        return this.job.close(true);
+        this.job.close(true);
+        this.job = null;
+        return;
       } else if (this.job.target.alertLevel > ALERT_YELLOW) {
         // Abort the job if the target zone is threatened
         this.job = abortBuildJob(this.job, this.retreat);
@@ -32,9 +48,6 @@ export default class BuildExpansionsMission extends Mission {
       } else if (this.job.isFailed) {
         this.job = abortBuildJob(this.job, this.retreat);
       } else if (!this.job.isDone) {
-        // Make sure the job is of the right priority
-        this.job.priority = Priority.Nexus;
-
         if (this.job.assignee && !this.retreat) {
           this.retreat = selectRetreat(this.job.assignee);
         }
@@ -57,6 +70,21 @@ export default class BuildExpansionsMission extends Mission {
 
 }
 
+class Condition {
+
+  constructor(zone) {
+    this.zone = zone;
+    this.alert = zone.alertLevel;
+    this.until = Resources.loop + AVOID_LOOPS;
+  }
+
+  isExpired() {
+    if (Resources.loop > this.until) return true;
+    if ((this.zone.alertLevel <= ALERT_WHITE) && (this.zone.alertLevel < this.alert)) return true;
+  }
+
+}
+
 function selectRetreat(probe) {
   if (!probe || !probe.zone) return;
 
@@ -69,10 +97,11 @@ function selectRetreat(probe) {
 
 function abortBuildJob(job, retreat) {
   const probe = job.assignee;
+  const zone = job.target;
 
-  avoidZone(job);
+  avoid.set(zone, new Condition(zone));
 
-  console.log("Job", job.details, "aborted. Target zone alert level:", job.target.alertLevel);
+  console.log("Job", job.details, "aborted. Target zone alert level:", zone.alertLevel);
   job.abort(false);
 
   if (probe && retreat) {
@@ -93,6 +122,7 @@ function shouldNotBuildNexus() {
 
 function findDepot() {
   const traversed = new Set();
+  const options = new Set();
   let wave = new Set();
 
   wave.add(Depot.home);
@@ -102,8 +132,8 @@ function findDepot() {
     const next = new Set();
 
     for (const zone of wave) {
-      if (zone.isDepot && !shouldAvoidZone(zone) && !isZoneThreatened(zone) && Board.accepts(zone.x, zone.y, 5)) {
-        return zone;
+      if (zone.isDepot && !avoid.has(zone) && !isZoneThreatened(zone) && Board.accepts(zone.x, zone.y, 5)) {
+        options.add(zone);
       }
 
       for (const neighbor of zone.neighbors) {
@@ -112,6 +142,22 @@ function findDepot() {
           traversed.add(neighbor);
         }
       }
+    }
+
+    if (options.size) {
+      let bestZone;
+      let bestDistance = Infinity;
+
+      for (const zone of options) {
+        const distance = calculateSquareDistance(Depot.home, zone);
+
+        if (!bestZone || (distance < bestDistance)) {
+          bestZone = zone;
+          bestDistance = distance;
+        }
+      }
+
+      return bestZone;
     }
 
     wave = next;
@@ -126,14 +172,6 @@ function isZoneThreatened(zone) {
   }
 }
 
-function avoidZone(job) {
-  if (!job || !job.target) return;
-
-  avoid.set(job.target, Resources.loop + AVOID_LOOPS);
-}
-
-function shouldAvoidZone(zone) {
-  const avoidUntilLoop = avoid.get(zone);
-
-  return (avoidUntilLoop && (Resources.loop < avoidUntilLoop));
+function calculateSquareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
