@@ -6,6 +6,7 @@ const Warrior = "Warrior";
 const Worker = "Worker";
 
 export const VisibleCount = {
+  Forge: 0,
   Marine: 0,
   NydusCanal: 0,
   Queen: 0,
