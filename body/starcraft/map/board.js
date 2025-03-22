@@ -89,7 +89,9 @@ class Board {
   }
 
   cell(x, y) {
-    return this.cells[Math.floor(y)][Math.floor(x)];
+    const row = this.cells[Math.floor(y)];
+
+    if (row) return row[Math.floor(x)];
   }
 
   zone(x, y) {

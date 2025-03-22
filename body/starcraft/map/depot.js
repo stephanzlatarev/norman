@@ -154,9 +154,11 @@ export function createDepots() {
 }
 
 function isDepotBuildingPlot(cell) {
-  for (let x = cell.x - 4; x <= cell.x + 4; x++) {
-    for (let y = cell.y - 4; y <= cell.y + 4; y++) {
-      if (Board.cell(x, y).isObstructed()) {
+  for (let x = cell.x - 3; x <= cell.x + 3; x++) {
+    for (let y = cell.y - 3; y <= cell.y + 3; y++) {
+      const cell = Board.cell(x, y);
+
+      if (!cell || cell.isObstructed()) {
         return false;
       }
     }
