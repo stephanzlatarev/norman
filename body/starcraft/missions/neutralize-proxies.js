@@ -118,8 +118,17 @@ class Neutralize extends Job {
     }
 
     // Otherwise, we're done
-    Order.move(probe, home);
-    this.close(true);
+    if (probe.zone === home) {
+      this.close(true);
+    } else {
+      Order.move(probe, home);
+    }
+  }
+
+  close(outcome) {
+    super.close(outcome);
+
+    Order.move(this.assignee, home);
   }
 
 }
@@ -166,6 +175,12 @@ class Patrol extends Job {
     }
 
     return this.route[this.route.length - 1];
+  }
+
+  close(outcome) {
+    super.close(outcome);
+
+    Order.move(this.assignee, home);
   }
 
 }
