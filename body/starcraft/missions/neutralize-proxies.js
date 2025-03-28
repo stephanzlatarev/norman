@@ -249,6 +249,7 @@ function closeAllJobs() {
 }
 
 function isAttackingValidTarget(probe) {
+  if (!proxy || !proxy.zone) return false;
   if (probe.order.abilityId !== 23) return false;
   if (!probe.order.targetUnitTag) return false;
 
