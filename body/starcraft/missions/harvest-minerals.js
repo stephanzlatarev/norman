@@ -42,7 +42,7 @@ class Line {
     this.jobsCount = jobsCount;
     this.details = ["Harvest", zone.name, "minerals", jobsCount, "on", minerals.length].join(" ");
 
-    if ((minerals.length === 4) && (jobsCount === 10)) {
+    if ((minerals.length === 2) && (jobsCount === 5)) {
       this.priority = 30;
     } else {
       const distance = getMinDistance(minerals);
@@ -130,82 +130,31 @@ function getActiveJobs(zone) {
 }
 
 function getLineProfile(zone, availableWorkersCount, activeJobs) {
-  let lines;
-
-  if ((zone.minerals.size !== 8) || (availableWorkersCount <= 16)) {
-    // One line of two workers for each mineral field.
-    lines = zone.minerals.size + "*2";
-  } else if (availableWorkersCount === 17) {
-    // Six direct lines of two workers for one mineral field.
-    // One line of five workers for two mineral fields.
-    lines = "6*2+1*5";
-  } else if (availableWorkersCount === 18) {
-    // Four direct lines of two workers for one mineral field.
-    // Two lines of five workers for two mineral fields.
-    lines = "4*2+2*5";
-  } else if (availableWorkersCount === 19) {
-    // Two direct lines of two workers for one mineral field.
-    // One line of five workers for two mineral fields.
-    // One line of ten workers for four mineral fields.
-    lines = "2*2+1*5+1*10";
-  } else {
-    // Two lines of ten workers for four mineral fields
-    lines = "2*10";
-  }
-
-  return lines + "=" + activeJobs.size;
+  return availableWorkersCount + "/" + zone.minerals.size + "=" + activeJobs.size;
 }
 
 function createLines(zone, availableWorkersCount) {
   const lines = new Set();
-  const minerals = getLineOfMinerals(zone, zone.minerals);
 
-  if ((minerals.length !== 8) || (availableWorkersCount <= 16)) {
-    // One line of two workers for each mineral field.
-    for (const one of minerals) {
+  if (availableWorkersCount <= zone.minerals.size * 2) {
+    // Create lines of two workers per mineral field
+    for (const one of zone.minerals) {
       lines.add(new Line(zone, 2, [one]));
     }
-  } else if (availableWorkersCount === 17) {
-    const sorted = [...minerals.slice(0, 4)].sort((a, b) => (a.d - b.d));
+  } else {
+    const minerals = getLineOfMinerals(zone, zone.minerals);
+    const pairs = availableWorkersCount - zone.minerals.size - zone.minerals.size;
+    let i = 0;
 
-    // Six direct lines of two workers for one mineral field.
-    lines.add(new Line(zone, 2, sorted.slice(0, 1)));
-    lines.add(new Line(zone, 2, sorted.slice(1, 2)));
-    for (let i = 4; i < 8; i++) {
-      lines.add(new Line(zone, 2, [minerals[i]]));
+    // Create lines of five workers per two mineral fields
+    for (let p = 0; (p < pairs) && (i < minerals.length); p++, i += 2) {
+      lines.add(new Line(zone, 5, minerals.slice(i, i + 2)));
     }
 
-    // One line of five workers for two mineral fields.
-    lines.add(new Line(zone, 5, sorted.slice(2)));
-  } else if (availableWorkersCount === 18) {
-    const left = [...minerals.slice(0, 4)].sort((a, b) => (a.d - b.d));
-    const right = [...minerals.slice(4)].sort((a, b) => (a.d - b.d));
-
-    // Four direct lines of two workers for one mineral field.
-    lines.add(new Line(zone, 2, left.slice(0, 1)));
-    lines.add(new Line(zone, 2, left.slice(1, 2)));
-    lines.add(new Line(zone, 2, right.slice(0, 1)));
-    lines.add(new Line(zone, 2, right.slice(1, 2)));
-
-    // Two lines of five workers for two mineral fields.
-    lines.add(new Line(zone, 5, left.slice(2)));
-    lines.add(new Line(zone, 5, right.slice(2)));
-  } else if (availableWorkersCount === 19) {
-    const sorted = [...minerals.slice(0, 4)].sort((a, b) => (a.d - b.d));
-
-    // Two direct lines of two workers for one mineral field.
-    lines.add(new Line(zone, 2, sorted.slice(0, 1)));
-    lines.add(new Line(zone, 2, sorted.slice(1, 2)));
-
-    // One line of five workers for two mineral fields.
-    lines.add(new Line(zone, 5, sorted.slice(2)));
-
-    // One line of ten workers for four mineral fields.
-    lines.add(new Line(zone, 10, minerals.slice(4)));
-  } else {
-    // Two lines of ten workers for four mineral fields
-    lines.add(new Line(zone, 10, minerals.slice(0, 4)));
-    lines.add(new Line(zone, 10, minerals.slice(4)));
+    // Create lines of two workers per mineral field
+    for (; i < minerals.length; i++) {
+      lines.add(new Line(zone, 2, [minerals[i]]));
+    }
   }
 
   return lines;
