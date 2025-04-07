@@ -103,6 +103,8 @@ export default class HarvestMinerals extends Job {
       }
     } else if (!this.order || (this.order.target !== this.target)) {
       this.order = order(worker, 298, this.target);
+    } else if ((worker.order.abilityId !== 299) && (worker.order.targetUnitTag !== this.target.tag)) {
+      this.order = order(worker, 298, this.target);
     } else {
       this.isCommitted = (worker.order.abilityId !== 298) || (worker.lastSeen < Resources.loop);
     }
