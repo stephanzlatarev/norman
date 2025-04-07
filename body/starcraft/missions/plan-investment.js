@@ -166,7 +166,7 @@ function doGroundArmyMaxOut() {
     Limit.Nexus = Infinity;
     Priority.Nexus = 40;
   }
-  Limit.Probe = Math.min(Limit.Nexus * 20 + Limit.Assimilator * 3, probeLimit);
+  Limit.Probe = Math.min(TotalCount.Nexus * 20 + TotalCount.Assimilator * 3, probeLimit);
   Limit.Assimilator = calculateLimitAssimilator();
 
   Priority.Gateway = 50;
@@ -234,7 +234,7 @@ function counterMassLightZerg() {
     Priority.Nexus = 40;
   }
   Limit.Assimilator = calculateLimitAssimilator();
-  Limit.Probe = Math.min(Limit.Nexus * 20 + Limit.Assimilator * 3, probeLimit);
+  Limit.Probe = Math.min(TotalCount.Nexus * 20 + TotalCount.Assimilator * 3, probeLimit);
 
   Priority.Gateway = 50;
   Limit.Gateway = calculateLimitGateway();

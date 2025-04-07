@@ -40,22 +40,11 @@ export default class BuildWorkersMission extends Mission {
 
 function setRallyPoint(nexus) {
   const depot = nexus.zone;
-  const isSaturated = (depot.workers.size >= getMaxWorkerCount(depot));
+  const maxWorkerCount = Math.floor(depot.minerals.size * 5 / 2) + depot.extractors.size * 3;
+  const isSaturated = (depot.workers.size >= maxWorkerCount);
   const rally = isSaturated ? depot.exitRally : depot.harvestRally;
 
   if (rally && (!nexus.rally || (nexus.rally.x !== rally.x) || (nexus.rally.y !== rally.y))) {
     return new Order(nexus, 3690, rally).accept(true);
   }
-}
-
-function getMaxWorkerCount(depot) {
-  let count = depot.minerals.size * 2 + depot.extractors.size * 3;
-
-  if (depot.minerals.size >= 8) {
-    count += 4;
-  } else if (depot.minerals.size >= 4) {
-    count += 2;
-  }
-
-  return count;
 }
