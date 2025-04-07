@@ -4,6 +4,7 @@ import Resources from "../memo/resources.js";
 
 const OFFSET_MINERAL = 0.95;
 const OFFSET_DEPOT = 3.0;
+const COMMIT_SQUARE_DISTANCE = (OFFSET_MINERAL + 1) * (OFFSET_MINERAL + 1);
 
 const MODE_IDLE = "idle";
 const MODE_PUSH = "push";
@@ -107,6 +108,8 @@ export default class HarvestMinerals extends Job {
       this.order = order(worker, 298, this.target);
     } else {
       this.isCommitted = (worker.order.abilityId !== 298) || (worker.lastSeen < Resources.loop);
+
+      if ((worker.order.abilityId === 298) && (squareDistance(worker.body, this.target.body) < COMMIT_SQUARE_DISTANCE)) this.isCommitted = true;
     }
   }
 
