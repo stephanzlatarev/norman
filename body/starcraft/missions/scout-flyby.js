@@ -76,7 +76,7 @@ class CreateScout extends Job {
 
     // Make sure the scout is kept busy until the scout is created
     this.priority = 100;
-    this.isCommitted = true;
+    this.isBusy = true;
   }
 
   execute() {

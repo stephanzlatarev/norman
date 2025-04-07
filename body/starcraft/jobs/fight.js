@@ -19,7 +19,7 @@ export default class Fight extends Job {
     this.station = station;
     this.summary = "Fight " + battle.zone.name;
     this.details = this.summary;
-    this.isCommitted = false;
+    this.isBusy = false;
 
     battle.fighters.push(this);
   }
@@ -78,14 +78,14 @@ export default class Fight extends Job {
       console.log("Warrior", warrior.type.name, warrior.nick, "died in", this.details);
       this.details = getDetails(this, "dead");
       this.assignee = null;
-      this.isCommitted = false;
+      this.isBusy = false;
       return;
     }
 
     const isAttacking = (warrior && target && warrior.order && (warrior.order.targetUnitTag === target.tag));
     const isDeployed = this.battle.zones.has(warrior.zone);
 
-    this.isCommitted = false;
+    this.isBusy = false;
 
     if ((isDeployed || isAttacking) && this.shouldAttack()) {
       // Attack
@@ -98,7 +98,7 @@ export default class Fight extends Job {
         new Order(warrior, 23, this.battle.zone).accept(true);
       }
 
-      this.isCommitted = true;
+      this.isBusy = true;
     } else if (isDeployed) {
       // Deployed but shouldn't attack yet
 

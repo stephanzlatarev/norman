@@ -126,7 +126,7 @@ function findCandidate(job) {
   for (const unit of candidates.values()) {
     if (!unit.cell) continue;
     if (job.zone && !unit.zone) continue;
-    if (unit.job && (unit.job.isCommitted || (unit.job.priority >= priority))) continue;
+    if (unit.job && (unit.job.isBusy || (unit.job.priority >= priority))) continue;
     if (unit.job && bestCandidate && !bestCandidate.job) continue;
     if (profile.type.name && (unit.type !== profile.type)) continue;
     if (!job.accepts(unit)) continue;

@@ -4,7 +4,7 @@ import Resources from "../memo/resources.js";
 
 const OFFSET_MINERAL = 0.95;
 const OFFSET_DEPOT = 3.0;
-const COMMIT_SQUARE_DISTANCE = (OFFSET_MINERAL + 1) * (OFFSET_MINERAL + 1);
+const BUSY_SQUARE_DISTANCE = (OFFSET_MINERAL + 1) * (OFFSET_MINERAL + 1);
 
 const MODE_IDLE = "idle";
 const MODE_PUSH = "push";
@@ -23,7 +23,7 @@ export default class HarvestMinerals extends Job {
     super("Probe");
 
     this.zone = line.zone;
-    this.isCommitted = false;
+    this.isBusy = false;
 
     this.setResource(line, resource);
   }
@@ -76,7 +76,7 @@ export default class HarvestMinerals extends Job {
     this.wasCarryingHarvest = worker.isCarryingHarvest;
 
     if (this.isSpeedMining) {
-      this.isCommitted = true;
+      this.isBusy = true;
 
       // Don't disturb the worker while packing the harvest
       if ((worker.order.abilityId === 299) && !worker.order.targetUnitTag) {
@@ -99,7 +99,7 @@ export default class HarvestMinerals extends Job {
           this.mode = harvestResource(worker, this.target);
 
           // While moving to the resource, the worker is available to take higher priority jobs
-          this.isCommitted = false;
+          this.isBusy = false;
         }
       }
     } else if (!this.order || (this.order.target !== this.target)) {
@@ -107,9 +107,9 @@ export default class HarvestMinerals extends Job {
     } else if ((worker.order.abilityId !== 299) && (worker.order.targetUnitTag !== this.target.tag)) {
       this.order = order(worker, 298, this.target);
     } else {
-      this.isCommitted = (worker.order.abilityId !== 298) || (worker.lastSeen < Resources.loop);
+      this.isBusy = (worker.order.abilityId !== 298) || (worker.lastSeen < Resources.loop);
 
-      if ((worker.order.abilityId === 298) && (squareDistance(worker.body, this.target.body) < COMMIT_SQUARE_DISTANCE)) this.isCommitted = true;
+      if ((worker.order.abilityId === 298) && (squareDistance(worker.body, this.target.body) < BUSY_SQUARE_DISTANCE)) this.isBusy = true;
     }
   }
 

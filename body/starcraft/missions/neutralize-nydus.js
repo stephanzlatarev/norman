@@ -57,7 +57,7 @@ class NeutralizeWorm extends Job {
 
     this.zone = plot.zone;
     this.priority = 100;
-    this.isCommitted = true;
+    this.isBusy = true;
     this.location = plot.body;
   }
 

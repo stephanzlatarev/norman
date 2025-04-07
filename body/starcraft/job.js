@@ -41,8 +41,8 @@ export default class Job extends Memory {
   // This is the product of this job
   product;
 
-  // Is job committed for the assigned unit. If not, the unit can take a higher priority job
-  isCommitted = true;
+  // Busy when the assigned unit cannot or should not be interrupted. When not busy, the unit can take a higher priority job
+  isBusy = true;
 
   // Is done when completed successfully
   isDone = false;
@@ -140,7 +140,7 @@ export default class Job extends Memory {
   // Closes the job and removes the link from the assigned unit.
   close(outcome) {
     this.product = outcome;
-    this.isCommitted = false;
+    this.isBusy = false;
     this.isDone = !!outcome;
     this.isFailed = !outcome;
 

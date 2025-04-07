@@ -13,7 +13,7 @@ export default class Detect extends Job {
     this.battle = battle;
     this.zone = battle.zone;
     this.details = "Detect " + battle.zone.name;
-    this.isCommitted = false;
+    this.isBusy = false;
 
     this.shield = 0;
     this.loopsInDirection = 0;
@@ -51,7 +51,7 @@ export default class Detect extends Job {
       this.observeZone();
     }
 
-    this.isCommitted = (mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH);
+    this.isBusy = (mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH);
     this.shield = observer.armor.shield;
     this.loopsInDirection++;
   }

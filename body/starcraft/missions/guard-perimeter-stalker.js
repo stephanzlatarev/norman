@@ -84,7 +84,7 @@ class Guard extends Job {
     this.station = zone.isDepot ? zone.exitRally : zone;
     this.priority = priority;
     this.details = this.constructor.name + " " + zone.name;
-    this.isCommitted = false;
+    this.isBusy = false;
     this.isGuard = true;
   }
 
