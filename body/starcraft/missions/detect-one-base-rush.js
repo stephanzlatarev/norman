@@ -32,6 +32,7 @@ export default class DetectOneBaseRushMission extends Mission {
     } else if (Plan.isBaseEstablished()) {
       console.log("Mission 'Detect one-base rush' is over.");
       this.isMissionComplete = true;
+      Plan.setBaseLimit(this, Plan.MULTI_BASE);
     } else if (isRushStart()) {
       console.log("One-base rush detected.");
       this.isRushDetected = true;
