@@ -46,13 +46,14 @@ export default class Depot extends Zone {
     }
 
     this.harvestRally = findRally(cell, this.minerals);
-    this.exitRally = Board.cell(
+    this.rally = Board.cell(
       this.x + this.x - this.harvestRally.x - 1,
       this.y + this.y - this.harvestRally.y - 1
     );
+    this.exitRally = this.rally;
     this.powerPlot = Board.cell(
-      this.exitRally.x + (cell.x > this.harvestRally.x ? 1 : 0),
-      this.exitRally.y + (cell.y > this.harvestRally.y ? 1 : 0),
+      this.rally.x + (cell.x > this.harvestRally.x ? 1 : 0),
+      this.rally.y + (cell.y > this.harvestRally.y ? 1 : 0),
     );
 
     if (depot && !Depot.home) {

@@ -28,12 +28,14 @@ export default class Zone extends Pin {
 
   // Navigation
   neighbors = new Set();
+  corridors = new Map();
   range = { zones: new Set(), fire: new Set(), front: new Set() };
 
   constructor(cell) {
     super(cell);
 
     this.r = 1;
+    this.rally = cell;
     this.powerPlot = cell;
 
     this.cells.add(cell);
@@ -191,6 +193,24 @@ export default class Zone extends Pin {
 
 }
 
+class Corridor {
+
+  constructor(path) {
+    const a = path[0];
+    const b = path[path.length - 1];
+
+    this.start = a.zone;
+    this.end = b.zone;
+    this.distance = Math.sqrt(calculateSquareDistance(a, b));
+
+    this.path = reducePath(path, a, b);
+    this.length = calculatePathLength(this.path);
+    this.squareLength = this.length * this.length;
+    this.curvature = this.length - this.distance;
+  }
+
+}
+
 function isSurroundedBySameZoneGround(ground, cell) {
   if (cell.neighbors.length < 8) return false;
 
@@ -275,6 +295,7 @@ function convertMarginPeaksToZones(margins, free) {
           const center = findCenter(zone.ground, zone.border);
   
           zone.cell = center;
+          zone.rally  = center;
           zone.powerPlot = center;
           zone.x = center.x;
           zone.y = center.y;
@@ -451,38 +472,136 @@ function orderZonesBySizeAndPosition(a, b) {
 }
 
 function identifyNeighboringZones() {
+  const corridors = new Set();
+
   for (const zone of zones) {
-    identifyNeighborsOfZone(zone);
+    zone.corridors.clear();
+    zone.neighbors.clear();
   }
+
+  for (const zone of zones) {
+    findCorridors(zone, corridors);
+  }
+
+  for (const corridor of corridors) {
+    corridor.start.neighbors.add(corridor.end);
+    corridor.end.neighbors.add(corridor.start);
+  }
+
+  const ordered = [...corridors].sort((a, b) => (b.length - a.length));
+  const curved = ordered.filter(a => (a.curvature >= 1));
+
+  removeIntersectingCorridors(corridors, ordered);
+  removeObstructedCorridors(corridors, curved);
+  removeObtuseCorridors(corridors, ordered);
 }
 
-function identifyNeighborsOfZone(zone) {
+function findCorridors(zone, corridors) {
   const traversed = new Set();
-  let wave = new Set(zone.border);
+  const blocked = new Set();
+  let wave = new Set();
 
-  zone.neighbors.clear();
+  wave.add([zone.rally]);
+  traversed.add(zone.rally);
 
   while (wave.size) {
     const next = new Set();
 
-    for (const cell of wave) {
-      for (const neighbor of cell.edges) {
-        if (!neighbor.isPath) continue;
-        if (traversed.has(neighbor)) continue;
+    for (const path of wave) {
+      const cell = path[path.length - 1];
 
-        if (neighbor.zone === zone) {
-          next.add(neighbor);
+      if (blocked.has(cell.zone)) continue;
+
+      if ((cell === cell.zone.rally) && (cell.zone !== zone)) {
+        blocked.add(cell.zone);
+
+        const corridor = new Corridor(path);
+        const alternative = cell.zone.corridors.get(zone);
+
+        if (alternative && (alternative.length <= corridor.length)) {
+          corridors.add(alternative);
+          zone.corridors.set(cell.zone, alternative);
         } else {
-          zone.neighbors.add(neighbor.zone);
-          neighbor.zone.neighbors.add(zone);
-        }
+          corridors.add(corridor);
+          zone.corridors.set(cell.zone, corridor);
+          cell.zone.corridors.set(zone, corridor);
 
-        traversed.add(neighbor);
+          if (alternative) {
+            corridors.delete(alternative);
+          }
+        }
+      } else {
+        for (const neighbor of cell.neighbors) {
+          if (!neighbor.isPath) continue;
+          if (traversed.has(neighbor)) continue;
+          if (blocked.has(neighbor.zone)) continue;
+
+          next.add([...path, neighbor]);
+          traversed.add(neighbor);
+        }
       }
     }
 
     wave = next;
   }
+}
+
+function removeIntersectingCorridors(corridors, list) {
+  for (let i = 0; i < list.length; i++) {
+    const a = list[i];
+
+    for (let j = i + 1; j < list.length; j++) {
+      const b = list[j];
+
+      if (doCorridorsIntersect(a, b)) {
+        removeCorridor(corridors, a);
+      }
+    }
+  }
+}
+
+// Obtuse corridors are those that participate in a triangle of corridors with angle > 90 degrees
+function removeObtuseCorridors(corridors, list) {
+  for (const c of list) {
+    if (!corridors.has(c)) continue;
+
+    const azone = c.start; 
+    const bzone = c.end; 
+
+    for (const czone of azone.neighbors) {
+      if (!bzone.neighbors.has(czone)) continue;
+
+      const a = azone.corridors.get(czone);
+      const b = bzone.corridors.get(czone);
+
+      if (c.squareLength > a.squareLength + b.squareLength) {
+        removeCorridor(corridors, c);
+      }
+    }
+  }
+}
+
+// Remove the corridor with greatest curvature of a triangle with at least one curved corridor
+function removeObstructedCorridors(corridors, list) {
+  for (const c of list) {
+    if (!corridors.has(c)) continue;
+
+    for (const zone of c.start.neighbors) {
+      if (c.end.neighbors.has(zone)) {
+        // The corridor participates in a triangle
+        removeCorridor(corridors, c);
+        break;
+      }
+    }
+  }
+}
+
+function removeCorridor(corridors, corridor) {
+  corridors.delete(corridor);
+  corridor.start.corridors.delete(corridor.end);
+  corridor.start.neighbors.delete(corridor.end);
+  corridor.end.corridors.delete(corridor.start);
+  corridor.end.neighbors.delete(corridor.start);
 }
 
 function identifyRanges() {
@@ -513,6 +632,212 @@ function identifyRanges() {
   }
 }
 
+function doCorridorsIntersect(a, b) {
+  const a1 = a.start.rally;
+  const a2 = a.end.rally;
+  const b1 = b.start.rally;
+  const b2 = b.end.rally;
+
+  const d = (a2.x - a1.x) * (b2.y - b1.y) - (b2.x - b1.x) * (a2.y - a1.y);
+
+  if (d) {
+    const lambda = ((b2.y - b1.y) * (b2.x - a1.x) + (b1.x - b2.x) * (b2.y - a1.y)) / d;
+    const gamma = ((a1.y - a2.y) * (b2.x - a1.x) + (a2.x - a1.x) * (b2.y - a1.y)) / d;
+
+    return (0 < lambda) && (lambda < 1) && (0 < gamma) && (gamma < 1);
+  }
+};
+
 function calculateSquareDistance(a, b) {
   return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+}
+
+function calculatePathLength(path) {
+  if (!path || !path.length) return 0;
+
+  let length = 0;
+  let last = path[0];
+
+  for (const cell of path) {
+    if (cell !== last) {
+      length += Math.sqrt(calculateSquareDistance(cell, last));
+      last = cell;
+    }
+  }
+
+  return length;
+}
+
+function reducePath(path, start, end) {
+  const segments = [
+    { cell: start, path: path, reduce: true }, // The entire path is the segment to reduce
+    { cell: end, path: [], reduce: false }     // This is stop holder of the end point in the path
+  ];
+  let length;
+
+  while (length !== segments.length) {
+    length = segments.length;
+
+    for (const segment of segments) {
+      if (segment.reduce && (segment.path.length > 2)) {
+        reducePathSegment(segments, segment);
+      }
+    }
+  }
+
+  return segments.map(segment => segment.cell);
+}
+
+function reducePathSegment(segments, segment) {
+  const start = segment.path[0];
+  const end = segment.path[segment.path.length - 1];
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const adx = Math.abs(dx);
+  const ady = Math.abs(dy);
+
+  if (!reducePathSegmentByTurn(segments, segment, start, dx, dy, adx, ady)) {
+    if (!reducePathSegmentByObstruction(segments, segment, start, dx, dy, adx, ady)) {
+      segment.reduce = false;
+    }
+  }
+}
+
+function reducePathSegmentByTurn(segments, segment, start, dx, dy, adx, ady) {
+  let turnDistance = 0;
+  let turnCell;
+  let turnIndex;
+
+  if (adx >= ady) {
+    for (let i = 1; i < segment.path.length; i++) {
+      const cell = segment.path[i];
+
+      if (dx > 0) {
+        if ((cell.x < start.x) && (start.x - cell.x > turnDistance)) {
+          turnDistance = start.x - cell.x;
+          turnCell = cell;
+          turnIndex = i;
+        }
+      } else {
+        if ((cell.x > start.x) && (cell.x - start.x > turnDistance)) {
+          turnDistance = cell.x - start.x;
+          turnCell = cell;
+          turnIndex = i;
+        }
+      }
+    }
+  } else {
+    for (let i = 1; i < segment.path.length; i++) {
+      const cell = segment.path[i];
+
+      if (dy > 0) {
+        if ((cell.y < start.y) && (start.y - cell.y > turnDistance)) {
+          turnDistance = start.y - cell.y;
+          turnCell = cell;
+          turnIndex = i;
+        }
+      } else {
+        if ((cell.y > start.y) && (cell.y - start.y > turnDistance)) {
+          turnDistance = cell.y - start.y;
+          turnCell = cell;
+          turnIndex = i;
+        }
+      }
+    }
+  }
+
+  if (turnCell) {
+    const left = { cell: start, path: [...segment.path.slice(0, turnIndex), turnCell], reduce: true };
+    const right  = { cell: turnCell, path: [turnCell, ...segment.path.slice(turnIndex)], reduce: true };
+
+    if ((left.path.length > 1) && (right.path.length > 1)) {
+      segments.splice(segments.indexOf(segment), 1, left, right);
+    } else {
+      turnCell = null;
+    }
+  }
+
+  return !!turnCell;
+}
+
+function reducePathSegmentByObstruction(segments, segment, start, dx, dy, adx, ady) {
+  const steps = Math.max(adx, ady) - 1;
+  let stepx;
+  let stepy;
+
+  if (adx >= ady) {
+    stepx = (dx > 0) ? 1 : -1;
+    stepy = dy / adx;
+  } else {
+    stepx = dx / ady;
+    stepy = (dy > 0) ? 1 : -1;
+  }
+
+  let pathCell = start;
+  let pathCellIndex = 0;
+  let splitCell = null;
+  let splitDistance = 0;
+  let splitPathIndex = 0;
+
+  for (let i = 1; i < steps; i++) {
+    const x = start.x + stepx * i;
+    const y = start.y + stepy * i;
+    const idealPathCell = Board.cell(x, y);
+
+    let clearx = 0;
+    let cleary = 0;
+
+    if (adx >= ady) {
+      if (dx > 0) {
+        while (pathCell.x < x) pathCell = segment.path[++pathCellIndex];
+      } else {
+        while (pathCell.x > x) pathCell = segment.path[++pathCellIndex];
+      }
+
+      cleary = (pathCell.y > idealPathCell.y) ? 1 : -1;
+    } else {
+      if (dy > 0) {
+        while (pathCell.y < y) pathCell = segment.path[++pathCellIndex];
+      } else {
+        while (pathCell.y > y) pathCell = segment.path[++pathCellIndex];
+      }
+
+      clearx = (pathCell.x > idealPathCell.x) ? 1 : -1;
+    }
+
+    const clearPathCell = findClearPathCell(idealPathCell, clearx, cleary);
+    const distance = Math.abs(idealPathCell.x - clearPathCell.x) + Math.abs(idealPathCell.y - clearPathCell.y);
+
+    if (distance > splitDistance) {
+      splitDistance = distance;
+      splitCell = clearPathCell;
+      splitPathIndex = pathCellIndex;
+    }
+  }
+
+  if (splitCell) {
+    // Perform reduction of path
+    const left = { cell: start, path: [...segment.path.slice(0, splitPathIndex), splitCell], reduce: true };
+    const right  = { cell: splitCell, path: [splitCell, ...segment.path.slice(splitPathIndex + 1)], reduce: true };
+
+    if ((left.path.length > 1) && (right.path.length > 1)) {
+      segments.splice(segments.indexOf(segment), 1, left, right);
+    } else {
+      splitCell = null;
+    }
+  }
+
+  return !!splitCell;
+}
+
+function findClearPathCell(start, dx, dy) {
+  let distance = 0;
+  let cell = start;
+
+  while (!cell.isPath || cell.isObstacle) {
+    cell = Board.cell(cell.x + dx, cell.y + dy);
+    distance++;
+  }
+
+  return cell;
 }
