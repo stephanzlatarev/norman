@@ -361,34 +361,23 @@ function findClosestUnitToPos(units, pos) {
 function getEnemyExpansionZone() {
   const traversed = new Set();
   let wave = new Set();
-  let expansion = null;
 
-  wave.add(Enemy.base);
+  wave.add(Enemy.base.cell);
 
   while (wave.size) {
     const next = new Set();
 
-    for (const zone of wave) {
-      traversed.add(zone);
+    for (const cell of wave) {
+      traversed.add(cell);
 
-      for (const neighbor of zone.neighbors) {
+      for (const neighbor of cell.neighbors) {
+        if (!neighbor.isPath) continue;
         if (traversed.has(neighbor)) continue;
 
-        if (neighbor.isDepot) {
-          if (!expansion || (expansion === neighbor)) {
-            expansion = neighbor;
-          } else {
-            // At least two depots are found at this distance. There's no single expansion
-            return;
-          }
-        }
+        if ((neighbor.zone !== Enemy.base) && neighbor.zone.isDepot) return neighbor.zone;
 
         next.add(neighbor);
       }
-    }
-
-    if (expansion) {
-      return expansion;
     }
 
     wave = next;
