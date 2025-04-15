@@ -6,8 +6,11 @@ import { ActiveCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
 
 const PROXY_TIERS = 4;
-const WORKER_ATTACKERS = 3;
+const CANNON_ATTACKERS = 6;
 const PYLON_ATTACKERS = 6;
+const WORKER_ATTACKERS = 3;
+
+const TYPE_CANNON = "PhotonCannon";
 
 const zones = new Set();
 const jobs = new Set();
@@ -36,20 +39,20 @@ export default class NeutralizeProxiesMission extends Mission {
     proxy = findProxy();
 
     if (proxy) {
-      if (proxy.attackers === Infinity) {
-        // The proxy is active and defended and cannot be neutralized with workers only
+
+      if (!proxy.warriors.length || proxy.isHome) {
+        // When the proxy is not defended yet then we can neutralize it with workers
+        // When the proxy is in our base then we should attempt to neutralize it at all cost
+        openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS);
+        openNeutralizeJobs(99, proxy.pylons, PYLON_ATTACKERS);
+        openNeutralizeJobs(98, proxy.cannons, CANNON_ATTACKERS);
+      } else {
+        // The proxy is defended and cannot be neutralized with workers only
         closeAllJobs();
 
         isMissionComplete = true;
-      } else if (proxy.attackers > ActiveCount.Probe) {
-        // Too many workers are needed to neutralize the proxy
-        closeAllJobs();
-      } else {
-        // The proxy can be neutralized with workers
-        for (let i = jobs.size; i < proxy.attackers; i++) {
-          jobs.add(new Neutralize());
-        }
       }
+
     } else if (forge) {
       if (!jobs.size) jobs.add(new Patrol());
     } else if (jobs.size) {
@@ -61,20 +64,26 @@ export default class NeutralizeProxiesMission extends Mission {
 
 class Proxy {
 
-  constructor(zone, attackers) {
-    this.zone = zone;
-    this.attackers = attackers;
+  constructor(isHome, workers, pylons, cannons, warriors) {
+    this.isHome = isHome;
+    this.workers = workers;
+    this.pylons = pylons;
+    this.cannons = cannons;
+    this.warriors = warriors;
   }
 
 }
 
 class Neutralize extends Job {
 
-  constructor() {
-    super("Probe");
+  isNeutralizeJob = true;
 
-    this.zone = proxy.zone;
-    this.priority = 100;
+  constructor(target, priority) {
+    super("Probe", null, target);
+
+    this.zone = home;
+    this.target = target;
+    this.priority = priority;
   }
   
   distance(unit) {
@@ -83,46 +92,23 @@ class Neutralize extends Job {
 
   execute() {
     const probe = this.assignee;
-    const targets = this.zone.enemies;
+    const target = this.target;
 
-    // If already attacking a valid target continue with the attack
-    if (isAttackingValidTarget(probe)) return;
-
-    // If outside of the proxy zone move to it
-    if (probe.zone !== this.zone) return Order.move(probe, this.zone);
-
-    // Target workers as first priority
-    for (const target of targets) {
-      if (target.type.isWorker && target.isAlive && (target.lastSeen === probe.lastSeen)) {
-        return Order.attack(probe, target);
-      }
-    }
-
-    // Target pylons as second priority
-    for (const target of targets) {
-      if (target.type.isPylon && target.isAlive && (target.lastSeen === probe.lastSeen)) {
-        return Order.attack(probe, target);
-      }
-    }
-
-    // If no workers and pylons are in sight, move to the closest target in fog of war
-    for (const target of this.zone.threats) {
-      if (!target.type.isWorker && !target.type.isPylon) continue;
-      if (targets.has(target)) continue;
-
+    if (!target.isAlive || (target.lastSeen !== probe.lastSeen)) {
       if (isSamePosition(probe.body, target.body)) {
-        this.zone.threats.delete(target);
+        target.zone.threats.delete(target);
+
+        if (probe.zone === home) {
+          this.close(true);
+        } else {
+          Order.move(probe, home);
+        }
       } else {
         return Order.move(probe, target.body);
       }
     }
 
-    // Otherwise, we're done
-    if (probe.zone === home) {
-      this.close(true);
-    } else {
-      Order.move(probe, home);
-    }
+    Order.attack(probe, target);
   }
 
   close(outcome) {
@@ -200,33 +186,69 @@ function findHomeAndProxyZones() {
 }
 
 function findProxy() {
+  let isHome = false;
+  const buildings = [];
+  const cannons = [];
+  const pylons = [];
+  const warriors = [];
+  const workers = [];
+
   for (const zone of zones) {
-    const proxy = findProxyInZone(zone);
+    for (const enemy of zone.threats) {
+      if (zone === home) isHome = true;
 
-    if (proxy) return proxy;
-  }
-}
+      if (enemy.type.isWorker) {
+        workers.push(enemy);
+      } else if (enemy.type.isWarrior && enemy.isActive) {
+        warriors.push(enemy);
 
-function findProxyInZone(zone) {
-  let hasBuilding = false;
-  let hasPylon = false;
-  let hasWorker = false;
+        if (enemy.type.name === TYPE_CANNON) cannons.push(enemy);
+      } else if (enemy.type.isPylon) {
+        pylons.push(enemy);
+      } else if (enemy.type.isBuilding) {
+        buildings.push(enemy);
 
-  for (const enemy of zone.threats) {
-    if (enemy.type.isWorker) {
-      hasWorker = true;
-    } else if (enemy.type.isWarrior && enemy.isActive) {
-      return new Proxy(zone, Infinity);
-    } else if (enemy.type.isBuilding) {
-      hasBuilding = true;
-      hasPylon |= enemy.type.isPylon;
+        if (enemy.type.name === TYPE_CANNON) cannons.push(enemy);
+      }
     }
   }
 
-  if (hasWorker && hasBuilding) {
-    return new Proxy(zone, WORKER_ATTACKERS);
-  } else if (hasPylon && hasBuilding) {
-    return new Proxy(zone, PYLON_ATTACKERS);
+  if (
+    (workers.length && pylons.length) ||
+    (workers.length && buildings.length) ||
+    (pylons.length && cannons.length) ||
+    (pylons.length && buildings.length)
+  ) {
+    return new Proxy(isHome, workers, pylons, cannons, warriors);
+  }
+}
+
+
+function openNeutralizeJobs(priority, targets, count) {
+  for (const target of targets) {
+    openNeutralizeJobsForTarget(priority, target, count);
+  }
+}
+
+function openNeutralizeJobsForTarget(priority, target, count) {
+  if (!count) return;
+  if (!proxy) return;
+
+  let active = 0;
+
+  for (const job of jobs) {
+    if (job.isNeutralizeJob && (job.target === target)) {
+      if (active > count) {
+        job.close(true);
+        jobs.delete(job);
+      } else {
+        active++;
+      }
+    }
+  }
+
+  for (; active < count; active++) {
+    jobs.add(new Neutralize(target, priority));
   }
 }
 
@@ -246,25 +268,6 @@ function closeAllJobs() {
 
     jobs.clear();
   }
-}
-
-function isAttackingValidTarget(probe) {
-  if (!proxy || !proxy.zone) return false;
-  if (probe.order.abilityId !== 23) return false;
-  if (!probe.order.targetUnitTag) return false;
-
-  let hasWorkers = false;
-  let isAttackingPylon = false;
-
-  for (const enemy of proxy.zone.enemies) {
-    if (enemy.type.isWorker) hasWorkers = true;
-    if (probe.order.targetUnitTag !== enemy.tag) continue;
-
-    if (enemy.type.isWorker) return true;
-    if (enemy.type.isPylon) isAttackingPylon = true;
-  }
-
-  return isAttackingPylon && !hasWorkers;
 }
 
 function isSamePosition(a, b) {
