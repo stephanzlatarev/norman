@@ -1,4 +1,5 @@
 import Types from "./types.js";
+import Enemy from "./memo/enemy.js";
 import Resources from "./memo/resources.js";
 import Board from "./map/board.js";
 
@@ -44,7 +45,7 @@ class Units {
     return obstacles;
   }
 
-  sync(units, events, me, enemy) {
+  sync(units, events, me) {
     const alive = new Map();
 
     if (events && events.deadUnits) {
@@ -80,9 +81,9 @@ class Units {
 
     for (const unit of units) {
       const type = Types.unit(unit.unitType);
-      const group = findGroup(unit, type, me, enemy)
+      const group = findGroup(unit, type, me)
 
-      syncUnit(group, unit, type, zombies, me, enemy);
+      syncUnit(group, unit, type, zombies, me);
 
       alive.set(unit.tag, true);
     }
@@ -90,7 +91,7 @@ class Units {
 
 }
 
-function findGroup(unit, type, me, enemy) {
+function findGroup(unit, type, me) {
   if (unit.owner === me.id) {
     if (unit.isHallucination) {
       return hallucinations;
@@ -101,7 +102,7 @@ function findGroup(unit, type, me, enemy) {
     } else if (type.isBuilding) {
       return buildings;
     }
-  } else if (unit.owner === enemy.id) {
+  } else if (unit.owner !== Enemy.NEUTRAL_ID) {
     if (!unit.isHallucination) {
       return enemies;
     }
@@ -112,7 +113,7 @@ function findGroup(unit, type, me, enemy) {
   return obstacles;
 }
 
-function syncUnit(units, unit, type, zombies, me, enemy) {
+function syncUnit(units, unit, type, zombies, me) {
   let image = units.get(unit.tag);
 
   if (!image) {
@@ -128,7 +129,7 @@ function syncUnit(units, unit, type, zombies, me, enemy) {
         tag: unit.tag,
         nick: unit.tag.slice(unit.tag.length - 3),
         isOwn: (unit.owner === me.id),
-        isEnemy: (unit.owner === enemy.id),
+        isEnemy: (unit.owner !== me.id) && (unit.owner !== Enemy.NEUTRAL_ID),
         type: type,
         body: {
           r: unit.radius,

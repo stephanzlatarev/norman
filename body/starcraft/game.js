@@ -35,20 +35,21 @@ export default class Game {
       race: getRace(gameInfo, this.observation.playerCommon.playerId),
       ...(this.observation.rawData.units.find(unit => (unit.unitType === 59)) || { pos: { x: 0, y: 0 } }).pos, // TODO: Replace with first building in Units
     };
-    this.enemy = {
-      id: gameInfo.playerInfo.find(player => (player.playerId !== this.me.id)).playerId,
-      ...gameInfo.startRaw.startLocations[0],
-    };
-
-    Enemy.id = this.enemy.id;
 
     Types.sync((await this.client.data({ unitTypeId: true, upgradeId: true })));
-    Units.sync(this.observation.rawData.units, null, this.me, this.enemy);
+    Units.sync(this.observation.rawData.units, null, this.me);
     Resources.sync(this.observation);
 
     createMap(gameInfo);
 
-    Enemy.base = [...Depot.list()].find(depot => ((depot.x === this.enemy.x) && (depot.y === this.enemy.y)));
+    for (const location of gameInfo.startRaw.startLocations) {
+      const base = [...Depot.list()].find(depot => ((depot.x === location.x) && (depot.y === location.y)));
+
+      if (base) {
+        Enemy.base = base;
+        break;
+      }
+    }
 
     setTimeout(this.run.bind(this));
 
@@ -78,7 +79,7 @@ export default class Game {
         syncMap(gameInfo);
 
         Resources.sync(this.observation);
-        Units.sync(this.observation.rawData.units, this.observation.rawData.event, this.me, this.enemy);
+        Units.sync(this.observation.rawData.units, this.observation.rawData.event, this.me);
 
         countUnits(this.observation, this.me.race);
         countEncounters();
@@ -110,7 +111,7 @@ export default class Game {
         }
 
         if ((Resources.loop > 2) && !this.hasGreetedOpponent) {
-          await greet(this, gameInfo, Enemy.id);
+          await greet(this, gameInfo, Enemy.OPPONENT_ID);
           this.hasGreetedOpponent = true;
         }
 
