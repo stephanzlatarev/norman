@@ -71,7 +71,7 @@ function doOneBaseDefense() {
   Limit.DarkTemplar = 0;
 
   Limit.Nexus = 1;
-  Limit.Assimilator = TotalCount.CyberneticsCore ? 2 : 1;
+  Limit.Assimilator = TotalCount.Gateway ? TotalCount.CyberneticsCore ? 2 : 1 : 0;
   Limit.Gateway = 3;
   Limit.CyberneticsCore = 1;
   Limit.ShieldBattery = (ActiveCount.Stalker >= 3) ? 1 : 0;
