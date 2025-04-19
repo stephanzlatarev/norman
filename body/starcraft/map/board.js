@@ -166,10 +166,10 @@ class Cell {
 
 function ignoreInitialBuildings(cells) {
   for (const building of Units.buildings().values()) {
-    const left = Math.ceil(building.body.x - building.body.r);
-    const right = Math.floor(building.body.x + building.body.r);
-    const top = Math.ceil(building.body.y - building.body.r) - 1;
-    const bottom = Math.floor(building.body.y + building.body.r) - 1;
+    const left = Math.round(building.body.x - building.body.r);
+    const right = Math.round(building.body.x + building.body.r) - 1;
+    const top = Math.round(building.body.y - building.body.r);
+    const bottom = Math.round(building.body.y + building.body.r) - 1;
 
     markCells(cells, left, top, right, bottom, true, true, false);
   }
@@ -177,10 +177,10 @@ function ignoreInitialBuildings(cells) {
   for (const building of Units.enemies().values()) {
     if (!building.type.isBuilding) continue;
 
-    const left = Math.ceil(building.body.x - building.body.r);
-    const right = Math.floor(building.body.x + building.body.r);
-    const top = Math.ceil(building.body.y - building.body.r) - 1;
-    const bottom = Math.floor(building.body.y + building.body.r) - 1;
+    const left = Math.round(building.body.x - building.body.r);
+    const right = Math.round(building.body.x + building.body.r) - 1;
+    const top = Math.round(building.body.y - building.body.r);
+    const bottom = Math.round(building.body.y + building.body.r) - 1;
 
     markCells(cells, left, top, right, bottom, true, true, false);
   }
@@ -197,10 +197,10 @@ function ignoreInitialBuildings(cells) {
   }
 
   for (const obstacle of Units.obstacles().values()) {
-    const left = Math.ceil(obstacle.body.x - obstacle.body.r);
-    const right = Math.floor(obstacle.body.x + obstacle.body.r);
-    const top = Math.ceil(obstacle.body.y - obstacle.body.r) - 1;
-    const bottom = Math.floor(obstacle.body.y + obstacle.body.r) - 1;
+    const left = Math.round(obstacle.body.x - obstacle.body.r);
+    const right = Math.round(obstacle.body.x + obstacle.body.r) - 1;
+    const top = Math.round(obstacle.body.y - obstacle.body.r);
+    const bottom = Math.round(obstacle.body.y + obstacle.body.r) - 1;
 
     markCells(cells, left, top, right, bottom, false, false, true);
   }

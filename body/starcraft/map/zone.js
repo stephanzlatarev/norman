@@ -201,9 +201,9 @@ class Corridor {
 
     this.start = a.zone;
     this.end = b.zone;
+    this.segments = reducePathToSegments(path, a, b);
+    this.path = this.segments.map(segment => segment.cell);
     this.distance = Math.sqrt(calculateSquareDistance(a, b));
-
-    this.path = reducePath(path, a, b);
     this.length = calculatePathLength(this.path);
     this.squareLength = this.length * this.length;
     this.curvature = this.length - this.distance;
@@ -494,6 +494,7 @@ function identifyNeighboringZones() {
   removeIntersectingCorridors(corridors, ordered);
   removeObstructedCorridors(corridors, curved);
   removeObtuseCorridors(corridors, ordered);
+  removeZoneCrossingCorridors(corridors);
 }
 
 function findCorridors(zone, corridors) {
@@ -531,7 +532,7 @@ function findCorridors(zone, corridors) {
           }
         }
       } else {
-        for (const neighbor of cell.neighbors) {
+        for (const neighbor of cell.edges) {
           if (!neighbor.isPath) continue;
           if (traversed.has(neighbor)) continue;
           if (blocked.has(neighbor.zone)) continue;
@@ -549,12 +550,15 @@ function findCorridors(zone, corridors) {
 function removeIntersectingCorridors(corridors, list) {
   for (let i = 0; i < list.length; i++) {
     const a = list[i];
+    if (!corridors.has(a)) continue;
 
     for (let j = i + 1; j < list.length; j++) {
       const b = list[j];
+      if (!corridors.has(b)) continue;
 
       if (doCorridorsIntersect(a, b)) {
         removeCorridor(corridors, a);
+        break;
       }
     }
   }
@@ -596,12 +600,55 @@ function removeObstructedCorridors(corridors, list) {
   }
 }
 
+function removeZoneCrossingCorridors(corridors) {
+  for (const corridor of corridors) {
+    if ((corridor.curvature > 10) && (countCrossedZones(corridor) > 3) && areZoneIndirectlyReachable(corridor.start, corridor.end)) {
+      removeCorridor(corridors, corridor);
+    }
+  }
+}
+
 function removeCorridor(corridors, corridor) {
   corridors.delete(corridor);
   corridor.start.corridors.delete(corridor.end);
   corridor.start.neighbors.delete(corridor.end);
   corridor.end.corridors.delete(corridor.start);
   corridor.end.neighbors.delete(corridor.start);
+}
+
+function countCrossedZones(corridor) {
+  const crossed = new Set();
+
+  for (const segment of corridor.segments) {
+    for (const cell of segment.path) {
+      crossed.add(cell.zone);
+    }
+  }
+
+  return crossed.size;
+}
+
+function areZoneIndirectlyReachable(start, end) {
+  const traversed = new Set([start, end, ...start.neighbors]);
+  let wave = new Set(start.neighbors);
+
+  wave.delete(end);
+
+  while (wave.size) {
+    const next = new Set();
+
+    for (const zone of wave) {
+      for (const neighbor of zone.neighbors) {
+        if (neighbor === end) return true;
+        if (traversed.has(neighbor)) continue;
+
+        next.add(neighbor);
+        traversed.add(neighbor);
+      }
+    }
+
+    wave = next;
+  }
 }
 
 function identifyRanges() {
@@ -668,7 +715,7 @@ function calculatePathLength(path) {
   return length;
 }
 
-function reducePath(path, start, end) {
+function reducePathToSegments(path, start, end) {
   const segments = [
     { cell: start, path: path, reduce: true }, // The entire path is the segment to reduce
     { cell: end, path: [], reduce: false }     // This is stop holder of the end point in the path
@@ -685,7 +732,52 @@ function reducePath(path, start, end) {
     }
   }
 
-  return segments.map(segment => segment.cell);
+  for (const segment of segments) {
+    segment.path = squashPath(segment.path);
+  }
+
+  for (let i = segments.length - 2; i >= 0; i--) {
+    const a = segments[i];
+    const b = segments[i + 1];
+
+    if (a.turnRight && b.turnLeft) {
+      const segment = { cell: a.cell, path: [...a.path, ...b.path.slice(1)] };
+      segments.splice(i, 2, segment);
+      reducePathSegment(segments, segment);
+    }
+  }
+
+  return segments;
+}
+
+function squashPath(path) {
+  const squashed = [];
+  const start = path[0];
+  const end = path[path.length - 1];
+
+  for (let i = 0; i < path.length; i++) {
+    let cell = path[i];
+
+    if (start.x <= end.x) {
+      if (cell.x < start.x) cell = Board.cell(start.x, cell.y);
+      if (cell.x > end.x) cell = Board.cell(end.x, cell.y);
+    } else {
+      if (cell.x > start.x) cell = Board.cell(start.x, cell.y);
+      if (cell.x < end.x) cell = Board.cell(end.x, cell.y);
+    }
+
+    if (start.y <= end.y) {
+      if (cell.y < start.y) cell = Board.cell(cell.x, start.y);
+      if (cell.y > end.y) cell = Board.cell(cell.x, end.y);
+    } else {
+      if (cell.y > start.y) cell = Board.cell(cell.x, start.y);
+      if (cell.y < end.y) cell = Board.cell(cell.x, end.y);
+    }
+
+    squashed.push(cell);
+  }
+
+  return squashed;
 }
 
 function reducePathSegment(segments, segment) {
@@ -696,14 +788,14 @@ function reducePathSegment(segments, segment) {
   const adx = Math.abs(dx);
   const ady = Math.abs(dy);
 
-  if (!reducePathSegmentByTurn(segments, segment, start, dx, dy, adx, ady)) {
+  if (!reducePathSegmentByTurn(segments, segment, start, end, dx, dy, adx, ady)) {
     if (!reducePathSegmentByObstruction(segments, segment, start, dx, dy, adx, ady)) {
       segment.reduce = false;
     }
   }
 }
 
-function reducePathSegmentByTurn(segments, segment, start, dx, dy, adx, ady) {
+function reducePathSegmentByTurn(segments, segment, start, end, dx, dy, adx, ady) {
   let turnDistance = 0;
   let turnCell;
   let turnIndex;
@@ -717,12 +809,21 @@ function reducePathSegmentByTurn(segments, segment, start, dx, dy, adx, ady) {
           turnDistance = start.x - cell.x;
           turnCell = cell;
           turnIndex = i;
+        } else if ((cell.x > end.x) && (cell.x - end.x > turnDistance)) {
+          turnDistance = cell.x - end.x;
+          turnCell = cell;
+          turnIndex = i;
         }
       } else {
         if ((cell.x > start.x) && (cell.x - start.x > turnDistance)) {
           turnDistance = cell.x - start.x;
           turnCell = cell;
           turnIndex = i;
+        } else if ((cell.x < end.x) && (end.x - cell.x > turnDistance)) {
+          turnDistance = end.x - cell.x;
+          turnCell = cell;
+          turnIndex = i;
+
         }
       }
     }
@@ -735,10 +836,18 @@ function reducePathSegmentByTurn(segments, segment, start, dx, dy, adx, ady) {
           turnDistance = start.y - cell.y;
           turnCell = cell;
           turnIndex = i;
+        } else if ((cell.y > end.y) && (cell.y - end.y > turnDistance)) {
+          turnDistance = cell.y - end.y;
+          turnCell = cell;
+          turnIndex = i;
         }
       } else {
         if ((cell.y > start.y) && (cell.y - start.y > turnDistance)) {
           turnDistance = cell.y - start.y;
+          turnCell = cell;
+          turnIndex = i;
+        } else if ((cell.y < end.y) && (end.y - cell.y > turnDistance)) {
+          turnDistance = end.y - cell.y;
           turnCell = cell;
           turnIndex = i;
         }
@@ -747,8 +856,8 @@ function reducePathSegmentByTurn(segments, segment, start, dx, dy, adx, ady) {
   }
 
   if (turnCell) {
-    const left = { cell: start, path: [...segment.path.slice(0, turnIndex), turnCell], reduce: true };
-    const right  = { cell: turnCell, path: [turnCell, ...segment.path.slice(turnIndex)], reduce: true };
+    const left = { cell: start, path: segment.path.slice(0, turnIndex + 1), turnLeft: segment.turnLeft, turnRight: true, reduce: true };
+    const right  = { cell: turnCell, path: segment.path.slice(turnIndex), turnLeft: true, turnRight: segment.turnLeft, reduce: true };
 
     if ((left.path.length > 1) && (right.path.length > 1)) {
       segments.splice(segments.indexOf(segment), 1, left, right);
@@ -794,7 +903,7 @@ function reducePathSegmentByObstruction(segments, segment, start, dx, dy, adx, a
         while (pathCell.x > x) pathCell = segment.path[++pathCellIndex];
       }
 
-      cleary = (pathCell.y > idealPathCell.y) ? 1 : -1;
+      cleary = (idealPathCell.y > pathCell.y) ? 1 : -1;
     } else {
       if (dy > 0) {
         while (pathCell.y < y) pathCell = segment.path[++pathCellIndex];
@@ -802,10 +911,10 @@ function reducePathSegmentByObstruction(segments, segment, start, dx, dy, adx, a
         while (pathCell.y > y) pathCell = segment.path[++pathCellIndex];
       }
 
-      clearx = (pathCell.x > idealPathCell.x) ? 1 : -1;
+      clearx = (idealPathCell.x > pathCell.x) ? 1 : -1;
     }
 
-    const clearPathCell = findClearPathCell(idealPathCell, clearx, cleary);
+    const clearPathCell = findClearPathCell(pathCell, idealPathCell, clearx, cleary);
     const distance = Math.abs(idealPathCell.x - clearPathCell.x) + Math.abs(idealPathCell.y - clearPathCell.y);
 
     if (distance > splitDistance) {
@@ -816,9 +925,11 @@ function reducePathSegmentByObstruction(segments, segment, start, dx, dy, adx, a
   }
 
   if (splitCell) {
-    // Perform reduction of path
-    const left = { cell: start, path: [...segment.path.slice(0, splitPathIndex), splitCell], reduce: true };
-    const right  = { cell: splitCell, path: [splitCell, ...segment.path.slice(splitPathIndex + 1)], reduce: true };
+    const splitPathCell = segment.path[splitPathIndex];
+    const bridgeLeft = createBridgePath(splitPathCell, splitCell);
+    const bridgeRight = createBridgePath(splitCell, splitPathCell);
+    const left = { cell: start, path: segment.path.slice(0, splitPathIndex).concat(bridgeLeft), turnLeft: segment.turnLeft, turnRight: false, reduce: true };
+    const right  = { cell: splitCell, path: bridgeRight.concat(segment.path.slice(splitPathIndex + 1)), turnLeft: false, turnRight: segment.turnRight, reduce: true };
 
     if ((left.path.length > 1) && (right.path.length > 1)) {
       segments.splice(segments.indexOf(segment), 1, left, right);
@@ -830,14 +941,70 @@ function reducePathSegmentByObstruction(segments, segment, start, dx, dy, adx, a
   return !!splitCell;
 }
 
-function findClearPathCell(start, dx, dy) {
-  let distance = 0;
-  let cell = start;
+function findClearPathCell(pathCell, idealPathCell, dx, dy) {
+  let x = pathCell.x;
+  let y = pathCell.y;
+  let clearCell;
+  let cell;
 
-  while (!cell.isPath || cell.isObstacle) {
-    cell = Board.cell(cell.x + dx, cell.y + dy);
-    distance++;
+  while (cell !== idealPathCell) {
+    cell = Board.cell(x, y);
+
+    if (cell.isPath && !cell.isObstacle) {
+      clearCell = cell;
+    } else {
+      break;
+    }
+
+    x += dx;
+    y += dy;
   }
 
-  return cell;
+  return clearCell;
+}
+
+function createBridgePath(a, b) {
+  if (a === b) return [a];
+
+  const path = [a];
+
+  let x = a.x;
+  let y = a.y;
+  let dx = b.x - x;
+  let dy = b.y - y;
+  let sx = (dx > 0) ? 1 : -1;
+  let sy = (dy > 0) ? 1 : -1;
+
+  if (dx && dy) {
+    const diagonal = Math.min(Math.abs(dx), Math.abs(dy));
+
+    for (let i = 0; i < diagonal; i++) {
+      x += sx;
+      path.push(Board.cell(x, y));
+
+      y += sy;
+      path.push(Board.cell(x, y));
+    }
+
+    dx = b.x - x;
+    dy = b.y - y;
+  }
+
+  if (dx) {
+    const line = Math.abs(dx);
+
+    for (let i = 0; i < line; i++) {
+      x += sx;
+      path.push(Board.cell(x, y));
+    }
+  } else if (dy) {
+    const line = Math.abs(dy);
+
+    for (let i = 0; i < line; i++) {
+      y += sy;
+      path.push(Board.cell(x, y));
+    }
+  }
+
+  return path;
 }
