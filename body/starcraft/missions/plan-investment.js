@@ -27,7 +27,7 @@ export default class PlanInvestmentsMission extends Mission {
 }
 
 function doStartUp() {
-  Limit.Assimilator = TotalCount.Gateway ? 1 : 0;
+  Limit.Assimilator = calculateLimitAssimilator();
   Limit.CyberneticsCore = 1;
   Limit.Forge = 0;
   Limit.Gateway = 2;
@@ -71,7 +71,7 @@ function doOneBaseDefense() {
   Limit.DarkTemplar = 0;
 
   Limit.Nexus = 1;
-  Limit.Assimilator = TotalCount.Gateway ? TotalCount.CyberneticsCore ? 2 : 1 : 0;
+  Limit.Assimilator = calculateLimitAssimilator();
   Limit.Gateway = 3;
   Limit.CyberneticsCore = 1;
   Limit.ShieldBattery = (ActiveCount.Stalker >= 3) ? 1 : 0;
@@ -109,7 +109,7 @@ function doEnforceWallNatural() {
   Limit.DarkTemplar = 0;
 
   Limit.Nexus = twoBases ? 2 : 1;
-  Limit.Assimilator = TotalCount.CyberneticsCore ? 2 : 1;
+  Limit.Assimilator = calculateLimitAssimilator();
   Limit.Gateway = 2;
   Limit.CyberneticsCore = 1;
   Limit.ShieldBattery = ((TotalCount.Gateway >= 2) && ((TotalCount.Stalker >= 1) || (TotalCount.Zealot >= 1))) ? 1 : 0;
@@ -295,7 +295,19 @@ function countMineralHarvesters() {
 }
 
 function calculateLimitAssimilator() {
-  if (!TotalCount.CyberneticsCore) return 0;
+  if (!TotalCount.Gateway) return 0;
+
+  if (!TotalCount.CyberneticsCore) {
+    if (ActiveCount.Gateway) {
+      return 1;
+    } else {
+      // Last 15 percent give 7 seconds. Cybernetics core is built in 36 seconds.
+      // Assimilator is built in 21 seconds. Add a few more seconds for worker movement time.
+      // It takes 22 seconds from miner assignment to collecting 50 gas.
+      // We aim at starting the first assimilator in about 43 seconds before enough gas for a Stalker.
+      return getBuildProgressOfFirstGateway() > 0.80;
+    }
+  }
 
   let limit = 0;
 
@@ -308,7 +320,7 @@ function calculateLimitAssimilator() {
       limit++; // Count the existing one assimilator
 
       // Allow one more assimilator if minerals are saturated
-      if (zone.workers.size >= zone.minerals.size * 2) limit++;
+      if (zone.workers.size >= zone.minerals.size * 2 + 3) limit++;
     } else {
       // Allow one more assimilator if minerals are saturated
       if (zone.workers.size >= zone.minerals.size * 2) limit++;
@@ -316,6 +328,18 @@ function calculateLimitAssimilator() {
   }
 
   return limit;
+}
+
+function getBuildProgressOfFirstGateway() {
+  if (Depot.home) {
+    for (const building of Depot.home.buildings.values()) {
+      if (building.type.name === "Gateway") {
+        return building.buildProgress;
+      }
+    }
+  }
+
+  return 0;
 }
 
 const MineralCostPerSecondProbe    =  50 / 12;
