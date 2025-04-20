@@ -1,7 +1,7 @@
 import Job from "../job.js";
 import Order from "../order.js";
 import Battle from "../battle/battle.js";
-import { getHopRoute, getHopZone } from "../map/route.js";
+import { getHopZone } from "../map/route.js";
 import Resources from "../memo/resources.js";
 
 const HOP_CLOSE_DISTANCE = 6;
@@ -240,27 +240,13 @@ export default class Fight extends Job {
     const warrior = this.assignee;
     const station = this.station;
 
-    let hop;
+    const hop = getHopZone(warrior.cell, station);
 
-    if (warrior.order.abilityId === 16) {
-      const route = getHopRoute(warrior.cell, station);
-
-      if (isOrderAlongRoute(warrior.order, route)) {
-        // Warrior is already moving along the route
-        return;
-      } else {
-        // Warrior is moving but not along the route. Correct move to the next hop in the route.
-        hop = route[0];
-      }
+    if (hop) {
+      Order.move(warrior, hop.rally, Order.MOVE_CLOSE_TO);
     } else {
-      hop = getHopZone(warrior.cell, station);
+      Order.move(warrior, station, Order.MOVE_CLOSE_TO);
     }
-
-    if (!hop || isClose(warrior.body, hop, HOP_CLOSE_DISTANCE)) {
-      hop = station;
-    }
-
-    Order.move(warrior, hop, Order.MOVE_CLOSE_TO);
   }
 
   goMarch() {
@@ -351,16 +337,6 @@ function getDetails(fight, mode) {
   details.push(mode);
 
   return details.join(" ");
-}
-
-function isOrderAlongRoute(order, route) {
-  const pos = order.targetWorldSpacePos;
-
-  if (pos) {
-    for (const turn of route) {
-      if (isClose(pos, turn, 1)) return true;
-    }
-  }
 }
 
 function shouldMoveToCoolDown(warrior) {

@@ -1,4 +1,4 @@
-import { ALERT_WHITE } from "./alert.js";
+import { ALERT_YELLOW } from "./alert.js";
 import Zone from "./zone.js";
 
 const path = new Map();
@@ -10,10 +10,8 @@ export function createRoutes() {
   for (const zone of zones) {
     path.set(key(zone, zone), { zone: zone, distance: 0 });
 
-    for (const neighbor of zone.neighbors) {
-      const distance = Math.sqrt((zone.x - neighbor.x) * (zone.x - neighbor.x) + (zone.y - neighbor.y) * (zone.y - neighbor.y));
-
-      path.set(key(neighbor, zone), { zone, distance });
+    for (const [neighbor, corridor] of zone.corridors) {
+      path.set(key(neighbor, zone), { zone, distance: corridor.length });
     }
   }
 }
@@ -79,7 +77,7 @@ function findHop(direction, destination) {
       for (const neighbor of zone.neighbors) {
         if (done.has(neighbor)) continue;
 
-        if (neighbor.alertLevel <= ALERT_WHITE) {
+        if (neighbor.alertLevel <= ALERT_YELLOW) {
           next.add(neighbor);
         }
 
