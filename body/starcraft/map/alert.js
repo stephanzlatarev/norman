@@ -39,17 +39,34 @@ export function syncAlerts() {
 function increaseAlertLevelForFireRange(zones) {
   for (const zone of zones) {
     if (hasLongRangeThreats(zone)) {
-      for (const one of zone.range.front) if (one.alertLevel < ALERT_YELLOW) one.alertLevel = ALERT_YELLOW;
-      for (const one of zone.range.fire) if (one.alertLevel < ALERT_ORANGE) one.alertLevel = ALERT_ORANGE;
+      setAlertLevelToOrangeForFireRange(zone.range.fire, zone.threats);
+
+      for (const one of zone.range.fire) {
+        if (one.alertLevel >= ALERT_ORANGE) {
+          setAlertLevelToYellowForFireRange(one.neighbors);
+        }
+      }
     } else {
-      for (const one of zone.neighbors) if (one.alertLevel < ALERT_YELLOW) one.alertLevel = ALERT_YELLOW;
+      setAlertLevelToYellowForFireRange(zone.neighbors);
     }
   }
 }
 
-function increaseAlertLevelForZonesWithoutSecureAccess(zones, accessible) {
-  for (const zone of zones) {
-    if ((zone.alertLevel <= ALERT_YELLOW) && !accessible.has(zone)) zone.alertLevel = ALERT_PINK;
+function setAlertLevelToYellowForFireRange(rangeZones) {
+  for (const zone of rangeZones) {
+    if (zone.alertLevel < ALERT_YELLOW) {
+      zone.alertLevel = ALERT_YELLOW;
+    }
+  }
+}
+
+function setAlertLevelToOrangeForFireRange(rangeZones, threats) {
+  for (const zone of rangeZones) {
+    if ((zone.alertLevel < ALERT_ORANGE) && isZoneRallyWithinFireRange(zone, threats)) {
+      zone.alertLevel = ALERT_ORANGE;
+    } else if (zone.alertLevel < ALERT_YELLOW) {
+      zone.alertLevel = ALERT_YELLOW;
+    }
   }
 }
 
@@ -58,6 +75,26 @@ function hasLongRangeThreats(zone) {
     if (threat.type.rangeGround > 3) {
       return true;
     }
+  }
+}
+
+function isZoneRallyWithinFireRange(zone, threats) {
+  for (const threat of threats) {
+    const range = threat.type.rangeGround;
+
+    if (range <= 3) continue;
+
+    const squareDistance = calculateSquareDistance(zone.rally, threat.body);
+
+    if (squareDistance <= range * range) {
+      return true;
+    }
+  }
+}
+
+function increaseAlertLevelForZonesWithoutSecureAccess(zones, accessible) {
+  for (const zone of zones) {
+    if ((zone.alertLevel <= ALERT_YELLOW) && !accessible.has(zone)) zone.alertLevel = ALERT_PINK;
   }
 }
 
@@ -75,9 +112,6 @@ function traverseAccessibleZones(accessible) {
 
         if (neighbor.alertLevel <= ALERT_YELLOW) {
           accessible.add(neighbor);
-        }
-
-        if (neighbor.alertLevel <= ALERT_WHITE) {
           next.add(neighbor);
         }
 
@@ -87,4 +121,8 @@ function traverseAccessibleZones(accessible) {
 
     wave = next;
   }
+}
+
+function calculateSquareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
