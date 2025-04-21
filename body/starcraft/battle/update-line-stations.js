@@ -10,7 +10,7 @@ export default function(battle) {
   } else {
     for (const line of battle.lines) {
       if (line.fighters.length > line.stations.length) {
-        addStations(getStation(line), line.stations, line.fighters);
+        addStations(line.zone, line.stations, line.fighters);
       } else if (line.fighters.length < line.stations.length) {
         removeStations(line.stations, line.fighters);
       }
@@ -30,22 +30,17 @@ function getShieldBattery(battle) {
   }
 }
 
-function getStation(line) {
-  const zone = line.zone;
-
-  return zone.isDepot ? zone.exitRally : zone.cell;
-}
-
-function addStations(center, stations, fighters) {
+function addStations(zone, stations, fighters) {
+  const rally = zone.rally;
   const taken = new Set(stations);
   const traversed = new Set();
 
   let addCount = fighters.length - stations.length;
-  let wave = new Set([center]);
+  let wave = new Set([rally]);
 
-  if (!taken.has(center)) {
-    stations.push(center);
-    taken.add(center);
+  if (!taken.has(rally)) {
+    stations.push(rally);
+    taken.add(rally);
     addCount--;
   }
 
@@ -64,7 +59,7 @@ function addStations(center, stations, fighters) {
       }
 
       for (const neighbor of cell.neighbors) {
-        if (neighbor.isPath && !neighbor.isObstacle && !traversed.has(neighbor)) {
+        if ((neighbor.zone === zone) && neighbor.isPath && !neighbor.isObstacle && !traversed.has(neighbor)) {
           next.add(neighbor);
         }
       }

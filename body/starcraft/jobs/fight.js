@@ -4,7 +4,6 @@ import Battle from "../battle/battle.js";
 import { getHopZone } from "../map/route.js";
 import Resources from "../memo/resources.js";
 
-const HOP_CLOSE_DISTANCE = 6;
 const KITING_RANGE = 2;
 const KITING_WARRIORS = new Set(["Stalker"]);
 const SQUARE_DISTANCE_BLOCKED_PATH = 1000 * 1000;
