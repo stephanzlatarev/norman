@@ -7,6 +7,8 @@ const ZONE_NAME_SUFFIX = "αβγδ";
 
 const MIN_ZONE_MARGIN = 2;
 const MIN_CORRIDOR_ANGLE = 1.6;
+const MIN_SQUARE_DISTANCE_START_ZONES = 22 * 22;
+const MIN_SQUARE_DISTANCE_DEPOT_ZONES = 15 * 15;
 const RANGE_FIRE = 15;
 
 const zones = [];
@@ -238,6 +240,7 @@ export function createZones() {
 
   zones.sort((a, b) => (b.r - a.r));
 
+  mergeCloseZonesIntoDepotZones();
   expandZonesWithUnclaimedGroundCells();
   expandZonesWithNonGroundCells();
   nameZones();
@@ -358,6 +361,48 @@ function findCenter(cells, exclude) {
   }
 
   return bestCenter;
+}
+
+function mergeCloseZonesIntoDepotZones() {
+  for (const zone of zones) {
+    if (!zone.isDepot) continue;
+
+    const neighbors = findBorderZones(zone);
+    const minSquareDistance = zone.depot ? MIN_SQUARE_DISTANCE_START_ZONES : MIN_SQUARE_DISTANCE_DEPOT_ZONES;
+
+    for (const neighbor of neighbors) {
+      const squareDistance = calculateSquareDistance(zone, neighbor);
+
+      if (squareDistance <= minSquareDistance) {
+        neighbor.remove();
+
+        for (const cell of neighbor.cells) {
+          cell.zone = zone;
+          zone.cells.add(cell);
+        }
+        for (const cell of neighbor.ground) {
+          zone.ground.add(cell);
+        }
+        for (const cell of neighbor.border) {
+          zone.border.add(cell);
+        }
+      }
+    }
+  }
+}
+
+function findBorderZones(zone) {
+  const zones = new Set();
+
+  for (const cell of zone.border) {
+    for (const neighbor of cell.edges) {
+      if (neighbor.zone && (neighbor.zone !== zone)) {
+        zones.add(neighbor.zone);
+      }
+    }
+  }
+
+  return zones;
 }
 
 function expandZonesWithUnclaimedGroundCells() {
