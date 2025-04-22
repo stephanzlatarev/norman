@@ -5,6 +5,8 @@ const ZONE_NAME_COLS = "ABCDEFGHIJ";
 const ZONE_NAME_ROWS = "0123456789";
 const ZONE_NAME_SUFFIX = "αβγδ";
 
+const MIN_ZONE_MARGIN = 2;
+const MIN_CORRIDOR_ANGLE = 1.6;
 const RANGE_FIRE = 15;
 
 const zones = [];
@@ -226,7 +228,7 @@ export function createZones() {
   let margins = calculateMargins(free);
   let count = -1;
 
-  while ((margins.length > 1) && (zones.length > count)) {
+  while ((margins.length > MIN_ZONE_MARGIN) && (zones.length > count)) {
     count = zones.length;
 
     convertMarginPeaksToZones(margins, free);
@@ -281,7 +283,7 @@ function calculateMargins(cells) {
 }
 
 function convertMarginPeaksToZones(margins, free) {
-  for (let i = margins.length - 1; i >= 1; i--) {
+  for (let i = margins.length - 1; i >= MIN_ZONE_MARGIN; i--) {
     const cells = margins[i];
 
     for (const cell of cells) {
@@ -578,7 +580,7 @@ function removeObtuseCorridors(corridors, list) {
       const a = azone.corridors.get(czone);
       const b = bzone.corridors.get(czone);
 
-      if (c.squareLength > a.squareLength + b.squareLength) {
+      if ((c.length > a.length) && (c.length > b.length) && (c.length * MIN_CORRIDOR_ANGLE > a.length + b.length)) {
         removeCorridor(corridors, c);
       }
     }
