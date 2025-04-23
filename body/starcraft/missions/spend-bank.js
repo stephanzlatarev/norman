@@ -55,8 +55,8 @@ export default class SpendBankMission extends Mission {
 function findPylonPlot() {
   for (const tier of Tiers) {
     for (const zone of tier.zones) {
-      if ((zone.alertLevel <= ALERT_YELLOW) && !shouldAvoidZone(zone) && isPlotFree(zone.powerPlot)) {
-        return zone.powerPlot;
+      if (!zone.isDepot && (zone.alertLevel <= ALERT_YELLOW) && !shouldAvoidZone(zone) && isPlotFree(zone.rally)) {
+        return zone.rally;
       }
     }
   }
@@ -70,11 +70,11 @@ function findCannonPlot() {
       if (shouldAvoidZone(zone)) continue;
       if (!isZonePowered(zone)) continue;
 
-      const top = { x: zone.powerPlot.x, y: zone.powerPlot.y - 2 };
+      const top = { x: zone.rally.x, y: zone.rally.y - 2 };
 
       if (isPlotFree(top)) return top;
 
-      const bottom = { x: zone.powerPlot.x, y: zone.powerPlot.y + 2 };
+      const bottom = { x: zone.rally.x, y: zone.rally.y + 2 };
 
       if (isPlotFree(bottom)) return bottom;
     }

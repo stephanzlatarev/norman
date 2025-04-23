@@ -1,14 +1,11 @@
 import Mission from "../mission.js";
 import Types from "../types.js";
-import Units from "../units.js";
 import Build from "../jobs/build.js";
 import { ALERT_WHITE } from "../map/alert.js";
 import Board from "../map/board.js";
-import Tiers from "../map/tier.js";
-import Wall from "../map/wall.js";
+import Depot from "../map/depot.js";
 import { TotalCount } from "../memo/count.js";
 import Limit from "../memo/limit.js";
-import Plan from "../memo/plan.js";
 import Priority from "../memo/priority.js";
 import Resources from "../memo/resources.js";
 
@@ -16,27 +13,10 @@ const DEFAULT_FACILITIES = ["ShieldBattery", "Gateway", "Forge"];
 const SPECIAL_FACILITIES_DEFAULT = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil", "RoboticsBay", "DarkShrine"];
 const SPECIAL_FACILITIES_ROBOBAY = ["Gateway", "CyberneticsCore", "RoboticsFacility", "RoboticsBay", "Forge", "TwilightCouncil", "DarkShrine"];
 
-const SLOTS = [
-  { x: +2.5, y: +1.5 },
-  { x: +2.5, y: -1.5 },
-  { x: -2.5, y: +1.5 },
-  { x: -2.5, y: -1.5 },
-  { x: +2.5, y: +4.5 },
-  { x: +2.5, y: -4.5 },
-  { x: -2.5, y: +4.5 },
-  { x: -2.5, y: -4.5 },
-  { x: +5.5, y: +1.5 },
-  { x: +5.5, y: -1.5 },
-  { x: -5.5, y: +1.5 },
-  { x: -5.5, y: -1.5 },
-];
-
 const COOLDOWN_LOOPS = 500;
 
 const cooldown = new Map();
-let cooldownKey;
-
-let wallPylon = null;
+let cooldownSite;
 
 // TODO: Convert to skill and run one skill per facility type
 export default class BuildFacilitiesMission extends Mission {
@@ -47,7 +27,7 @@ export default class BuildFacilitiesMission extends Mission {
     if (this.job) {
       if (this.job.isFailed) {
         // This build job failed. Set the target on cooldown and open a new build job
-        if (cooldownKey) cooldown.set(cooldownKey, Resources.loop);
+        if (cooldownSite) cooldown.set(cooldownSite, Resources.loop);
         this.job = null;
       } else if (this.job.isDone) {
         // This build job is done. Free the build slot to open a new build job
@@ -62,12 +42,12 @@ export default class BuildFacilitiesMission extends Mission {
       }
     }
 
-    cooldownKey = null;
+    cooldownSite = null;
 
     const facility = selectFacilityType();
     if (!facility) return;
 
-    const pos = findBuildingPlot(facility);
+    const pos = findBuildingPlot();
     if (!pos) return;
 
     this.job = new Build(facility, pos);
@@ -113,45 +93,22 @@ function selectDefaultFacilityType() {
 }
 
 //TODO: Optimize by remembering found plots and re-using them when pylons are destroyed but otherwise continue the search from where last plot was found
-function findBuildingPlot(facility) {
-  if (!Plan.BaseLimit) {
-    for (const wall of Wall.list()) {
-      if (!wallPylon || !wallPylon.isAlive) {
-        wallPylon = findWallPylon(wall);
+function findBuildingPlot() {
+  for (const zone of Depot.list()) {
+    if (!zone.depot) continue;
+    if ((zone.alertLevel > ALERT_WHITE) && !zone.workers.size) continue;
+
+    for (const site of zone.sites) {
+      const lastAttempt = cooldown.get(site);
+
+      if (lastAttempt && (Resources.loop - lastAttempt < COOLDOWN_LOOPS)) {
+        // This site is on cooldown
+        continue;
       }
 
-      if (wallPylon && wallPylon.isActive) {
-        const plot = wall.getPlot(facility);
-
-        if (plot) {
-          return plot;
-        }
-      }
-    }
-  }
-
-  for (const tier of Tiers) {
-    for (const zone of tier.zones) {
-      if (!zone.buildings.size) continue;
-      if ((zone.alertLevel > ALERT_WHITE) && !zone.workers.size) continue;
-
-      const pylon = findZonePylon(zone);
-
-      if (!pylon) continue;
-
-      for (const slot of SLOTS) {
-        const slotKey = getCooldownKey(pylon, slot);
-        const lastAttempt = cooldown.get(slotKey);
-
-        if (lastAttempt && (Resources.loop - lastAttempt < COOLDOWN_LOOPS)) {
-          // This slot is on cooldown
-          continue;
-        }
-
-        const plot = getBuildingPlotIfFree(pylon.body, slot);
-
-        if (plot) {
-          cooldownKey = slotKey;
+      for (const plot of site.medium) {
+        if (isPlotFree(plot) && isPowered(plot)) {
+          cooldownSite = site;
           return plot;
         }
       }
@@ -159,50 +116,29 @@ function findBuildingPlot(facility) {
   }
 }
 
-function findWallPylon(wall) {
-  const plot = wall.getPlot("Pylon");
-
-  if (plot) {
-    for (const building of Units.buildings().values()) {
-      if (building.type.isPylon && (building.body.x === plot.x) && (building.body.y === plot.y)) {
-        building.isWall = true;
-        return building;
-      }
-    }
-  }
-}
-
-function findZonePylon(zone) {
-  for (const building of zone.buildings) {
-    if (!building.type.isPylon) continue;
-    if (!building.isActive) continue;
-    if (building.isDecoy) continue;
-    if (building.isWall) continue;
-    if (building.body.x !== zone.powerPlot.x) continue;
-    if (building.body.y !== zone.powerPlot.y) continue;
-
-    return building;
-  }
-}
-
-function getBuildingPlotIfFree(plot, slot) {
-  const plotx = plot.x + slot.x;
-  const ploty = plot.y + slot.y;
-
-  for (let x = plotx - 1; x <= plotx + 1; x++) {
-    for (let y = ploty - 1; y <= ploty; y++) {
+function isPlotFree(plot) {
+  for (let x = plot.x - 1; x <= plot.x + 1; x++) {
+    for (let y = plot.y - 1; y <= plot.y; y++) {
       const cell = Board.cell(x, y);
 
       if (cell.isObstructed()) {
-        return;
+        return false;
       }
     }
   }
 
-  return { x: plotx, y: ploty };
-
+  return true;
 }
 
-function getCooldownKey(pylon, slot) {
-  return [pylon.body.x, pylon.body.y, slot.x, slot.y].join();
+function isPowered(plot) {
+  const zone = plot.zone;
+
+  for (const pylon of zone.buildings) {
+    if (!pylon.type.isPylon) continue;
+    if (!pylon.isActive) continue;
+
+    if ((Math.abs(pylon.body.x - plot.x) < 5) && (Math.abs(pylon.body.y - plot.y) < 5)) {
+      return true;
+    }
+  }
 }

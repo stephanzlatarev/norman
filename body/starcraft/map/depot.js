@@ -15,6 +15,7 @@ export default class Depot extends Zone {
 
   // The depot building of this zone
   depot = null;
+  sites = new Set();
 
   minerals = new Set();
   vespene = new Set();
@@ -51,10 +52,6 @@ export default class Depot extends Zone {
       this.y + this.y - this.harvestRally.y - 1
     );
     this.exitRally = this.rally;
-    this.powerPlot = Board.cell(
-      this.rally.x + (cell.x > this.harvestRally.x ? 1 : 0),
-      this.rally.y + (cell.y > this.harvestRally.y ? 1 : 0),
-    );
 
     if (depot && !Depot.home) {
       this.depot = depot;
@@ -265,4 +262,104 @@ function getCellAtCoordinatesKey(key) {
   const y = Math.floor(key - x * 1000);
 
   return Board.cells[y][x];
+}
+
+class Site {
+
+  constructor(x, y) {
+    this.x = x + 4;
+    this.y = y + 0.5;
+
+    this.pylon = set(Board.cell(x + 4, y + 2));
+    this.small = set(Board.cell(x + 2, y + 2), Board.cell(x + 6, y + 2));
+    this.medium = set(Board.cell(x + 2, y - 1), Board.cell(x + 5, y - 1));
+  }
+
+}
+
+function set(...items) {
+  const set = new Set();
+
+  for (const item of items) {
+    if (item) {
+      set.add(item);
+    }
+  }
+
+  return set;
+}
+
+export function createSites() {
+  for (const depot of depots) {
+    let line = 0;
+    let count;
+
+    while (count !== depot.sites.size) {
+      count = depot.sites.size;
+
+      createSiteLine(depot, depot.cell.y + line);
+      createSiteLine(depot, depot.cell.y - line - 6);
+
+      line += 6;
+    }
+  }
+}
+
+function createSiteLine(depot, y) {
+  const center = Board.cell(depot.cell.x, y);
+
+  if (center && (center.zone === depot)) {
+    const zone = center.zone;
+    const startx = getZoneLeftEnd(depot, y);
+    const endx = getZoneRightEnd(depot, y) - 7;
+
+    for (let x = startx; x <= endx; x++) {
+      if (isSiteBlock(zone, x, y)) {
+        depot.sites.add(new Site(x, y));
+        x += 7;
+      }
+    }
+  }
+}
+
+function getZoneLeftEnd(zone, y) {
+  let x = zone.cell.x;
+  let cell = Board.cell(x, y);
+
+  while (cell && (cell.zone === zone)) cell = Board.cell(--x, y);
+
+  return x + 1;
+}
+
+function getZoneRightEnd(zone, y) {
+  let x = zone.cell.x;
+  let cell = Board.cell(x, y);
+
+  while (cell && (cell.zone === zone)) cell = Board.cell(++x, y);
+
+  return x - 1;
+}
+
+function isSiteBlock(zone, startx, centery) {
+  for (let x = startx; x <= startx + 7; x++) {
+    if (!isSiteVertical(zone, x, centery)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isSiteVertical(zone, centerx, centery) {
+  if ((centery === zone.cell.y) && (centerx >= zone.cell.x - 2) && (centerx <= zone.cell.x + 2)) return false;
+
+  for (let y = centery - 3; y <= centery + 3; y++) {
+    const c = Board.cell(centerx, y);
+
+    if (!c || !c.isPlot || c.isObstacle || (c.zone !== zone)) {
+      return false;
+    }
+  }
+
+  return true;
 }

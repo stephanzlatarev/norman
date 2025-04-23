@@ -40,7 +40,6 @@ export default class Zone extends Pin {
 
     this.r = 1;
     this.rally = cell;
-    this.powerPlot = cell;
 
     this.cells.add(cell);
     this.ground.add(cell);
@@ -301,7 +300,6 @@ function convertMarginPeaksToZones(margins, free) {
   
           zone.cell = center;
           zone.rally  = center;
-          zone.powerPlot = center;
           zone.x = center.x;
           zone.y = center.y;
         } else {

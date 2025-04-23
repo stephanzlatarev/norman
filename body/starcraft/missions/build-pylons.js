@@ -4,7 +4,7 @@ import Units from "../units.js";
 import Build from "../jobs/build.js";
 import { ALERT_WHITE } from "../map/alert.js";
 import Board from "../map/board.js";
-import Tiers from "../map/tier.js";
+import Depot from "../map/depot.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
 import Resources from "../memo/resources.js";
 
@@ -73,26 +73,50 @@ function countSupplyConsumptionRate() {
 }
 
 function findPylonPlot() {
-  if (!Tiers.length) return;
+  return findHomeBaseSitePlot() || findSitePlotOfType("pylon") || findSitePlotOfType("small");
+}
 
-  // First try to find a pylon plot in the center of a zone in our perimeter
-  for (let index = 0; index <= 1; index++) {
-    const zones = Tiers[index].zones;
+function findHomeBaseSitePlot() {
+  const zone = Depot.home;
 
-    for (const zone of zones) {
-      if ((zone.alertLevel <= ALERT_WHITE) && !shouldAvoidZone(zone) && isPlotFree(zone.powerPlot)) {
-        return zone.powerPlot;
+  if (!zone) return;
+  if (zone.alertLevel > ALERT_WHITE) return;
+  if (shouldAvoidZone(zone)) return;
+
+  let bestDistance = 0;
+  let bestPlot;
+
+  for (const site of zone.sites) {
+    let distance = 0;
+
+    for (const building of zone.buildings) {
+      distance += calculateDistance(site, building.body);
+    }
+
+    if (distance > bestDistance) {
+      for (const plot of site.pylon) {
+        if (isPlotFree(plot)) {
+          bestDistance = distance;
+          bestPlot = plot;
+          break;
+        }
       }
     }
   }
 
-  // Next try to add a pylon next to a base
-  for (const zone of Tiers[0].zones) {
-    for (const dy of [+2, -2, +4, -4]) {
-      const plot = { x: zone.powerPlot.x, y: zone.powerPlot.y + dy };
+  return bestPlot;
+}
 
-      if (!shouldAvoidZone(zone) && isPlotFree(plot)) {
-        return plot;
+function findSitePlotOfType(type) {
+  for (const zone of Depot.list()) {
+    if (!zone.depot) continue;
+    if ((zone.alertLevel > ALERT_WHITE) || shouldAvoidZone(zone)) continue;
+
+    for (const site of zone.sites) {
+      for (const plot of site[type]) {
+        if (isPlotFree(plot)) {
+          return plot;
+        }
       }
     }
   }
@@ -126,4 +150,8 @@ function shouldAvoidZone(zone) {
   const avoidUntilLoop = avoid.get(zone);
 
   return (avoidUntilLoop && (Resources.loop < avoidUntilLoop));
+}
+
+function calculateDistance(a, b) {
+  return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
