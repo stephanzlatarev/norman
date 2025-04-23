@@ -534,7 +534,7 @@ function identifyNeighboringZones() {
   }
 
   const ordered = [...corridors].sort((a, b) => (b.length - a.length));
-  const curved = ordered.filter(a => (a.curvature >= 1));
+  const curved = ordered.filter(a => (a.curvature >= 1)).sort((a, b) => (b.curvature - a.curvature));
 
   removeIntersectingCorridors(corridors, ordered);
   removeObstructedCorridors(corridors, curved);
