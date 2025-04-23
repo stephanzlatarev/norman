@@ -19,6 +19,7 @@ export default class Fight extends Job {
     this.summary = "Fight " + battle.zone.name;
     this.details = this.summary;
     this.isBusy = false;
+    this.hopping = false;
 
     battle.fighters.push(this);
   }
@@ -84,8 +85,6 @@ export default class Fight extends Job {
     const isAttacking = (warrior && target && warrior.order && (warrior.order.targetUnitTag === target.tag));
     const isDeployed = this.battle.zones.has(warrior.zone);
 
-    this.isBusy = false;
-
     if ((isDeployed || isAttacking) && this.shouldAttack()) {
       // Attack
 
@@ -98,6 +97,7 @@ export default class Fight extends Job {
       }
 
       this.isBusy = true;
+      this.hopping = false;
     } else if (isDeployed) {
       // Deployed but shouldn't attack yet
 
@@ -117,9 +117,13 @@ export default class Fight extends Job {
         Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
       }
 
+      this.isBusy = false;
+      this.hopping = false;
     } else {
       this.details = getDetails(this, "deploy");
       this.goDeploy();
+
+      this.isBusy = false;
     }
   }
 
@@ -239,11 +243,20 @@ export default class Fight extends Job {
     const warrior = this.assignee;
     const station = this.station;
 
+    // Make sure pecularities in the map don't make the warrior hop back and forth between two zones
+    // When the warrior starts a hop to another zone, it should reach it before changing course
+    if (this.hopping && (this.hopping.to === station.zone) && (warrior.zone !== this.hopping.via)) {
+      this.details += " hopping to " + this.hopping.to.name + " via " + this.hopping.via.name;
+      return Order.move(warrior, this.hopping.via, Order.MOVE_CLOSE_TO);
+    }
+
     const hop = getHopZone(warrior.cell, station);
 
     if (hop) {
+      this.hopping = { via: hop, to: station.zone };
       Order.move(warrior, hop.rally, Order.MOVE_CLOSE_TO);
     } else {
+      this.hopping = false;
       Order.move(warrior, station, Order.MOVE_CLOSE_TO);
     }
   }
