@@ -623,7 +623,7 @@ function removeObtuseCorridors(corridors, list) {
       const a = azone.corridors.get(czone);
       const b = bzone.corridors.get(czone);
 
-      if ((c.length > a.length) && (c.length > b.length) && (c.length * MIN_CORRIDOR_ANGLE > a.length + b.length)) {
+      if (a && b && (c.length > a.length) && (c.length > b.length) && (c.length * MIN_CORRIDOR_ANGLE > a.length + b.length)) {
         removeCorridor(corridors, c);
       }
     }
