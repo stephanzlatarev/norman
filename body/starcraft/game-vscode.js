@@ -110,19 +110,22 @@ function traceZones(texts) {
   const color = "black";
 
   for (const zone of Zone.list()) {
-    const centerx = zone.isDepot ? Math.floor(zone.x) + 0.5 : zone.x;
-    const centery = zone.isDepot ? Math.floor(zone.y) + 0.5 : zone.y;
+    const rallyx = zone.isDepot ? zone.rally.x + 0.5 : zone.rally.x;
+    const rallyy = zone.isDepot ? zone.rally.y + 0.5 : zone.rally.y;
     const radius = zone.isDepot ? 3.5 : 1.2;
 
-    shapes.push({ shape: "circle", x: centerx, y: centery, r: radius, color });
+    shapes.push({ shape: "circle", x: rallyx, y: rallyy, r: 1.2, color });
 
     for (const neighbor of zone.neighbors) {
-      shapes.push({ shape: "line", x1: zone.rally.x, y1: zone.rally.y, x2: neighbor.rally.x, y2: neighbor.rally.y, color });
+      const neighborrallyx = neighbor.isDepot ? neighbor.rally.x + 0.5 : neighbor.rally.x;
+      const neighborrallyy = neighbor.isDepot ? neighbor.rally.y + 0.5 : neighbor.rally.y;
+
+      shapes.push({ shape: "line", x1: rallyx, y1: rallyy, x2: neighborrallyx, y2: neighborrallyy, color });
     }
 
     if (zone.isDepot) {
+      shapes.push({ shape: "circle", x: Math.floor(zone.x) + 0.5, y: Math.floor(zone.y) + 0.5, r: radius, color });
       shapes.push({ shape: "circle", x: zone.harvestRally.x + 0.5, y: zone.harvestRally.y + 0.5, r: 0.5, color });
-      shapes.push({ shape: "circle", x: zone.rally.x, y: zone.rally.y, r: 1.2, color });
     }
   }
 
