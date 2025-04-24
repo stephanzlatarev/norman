@@ -245,7 +245,7 @@ export default class Fight extends Job {
 
     // Make sure pecularities in the map don't make the warrior hop back and forth between two zones
     // When the warrior starts a hop to another zone, it should reach it before changing course
-    if (this.hopping && (this.hopping.to === station.zone) && (warrior.zone !== this.hopping.via)) {
+    if (this.hopping && (this.hopping.to === station.zone) && (warrior.zone !== this.hopping.via) && (this.hopping.via.alertLevel <= this.hopping.alertLevel)) {
       this.details += " hopping to " + this.hopping.to.name + " via " + this.hopping.via.name;
       return Order.move(warrior, this.hopping.via, Order.MOVE_CLOSE_TO);
     }
@@ -253,7 +253,7 @@ export default class Fight extends Job {
     const hop = getHopZone(warrior.cell, station);
 
     if (hop) {
-      this.hopping = { via: hop, to: station.zone };
+      this.hopping = { via: hop, to: station.zone, alertLevel: hop.alertLevel };
       Order.move(warrior, hop.rally, Order.MOVE_CLOSE_TO);
     } else {
       this.hopping = false;
