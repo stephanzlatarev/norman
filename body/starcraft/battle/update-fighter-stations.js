@@ -16,20 +16,21 @@ export default function(battle) {
 
     const stations = new Set(line.stations);
     const takenStations = new Set();
+    const reassignFighters = [];
+    const unassignedFighters = [];
     const remainingStations = [];
-    const remainingFighters = [];
 
     for (const fighter of line.fighters) {
       const station = fighter.station;
 
       if (station && stations.has(station)) {
         if (takenStations.has(station)) {
-          remainingFighters.push(fighter);
+          reassignFighters.push(fighter);
         } else {
           takenStations.add(station);
         }
       } else {
-        remainingFighters.push(fighter);
+        unassignedFighters.push(fighter);
       }
     }
 
@@ -39,12 +40,16 @@ export default function(battle) {
       }
     }
 
-    let i = 0;
-    for (; (i < remainingFighters.length) && (i < remainingStations.length); i++) {
-      remainingFighters[i].setStation(remainingStations[i]);
-    }
-    for (; i < remainingFighters.length; i++) {
-      remainingFighters[i].setStation(remainingStations[i % remainingStations.length]);
+    if (remainingStations.length) {
+      if (unassignedFighters.length) {
+        for (let i = 0; i < unassignedFighters.length; i++) {
+          unassignedFighters[i].setStation(remainingStations[i % remainingStations.length]);
+        }
+      } else if (reassignFighters.length) {
+        for (let i = 0; i < reassignFighters.length; i++) {
+          reassignFighters[i].setStation(remainingStations[i % remainingStations.length]);
+        }
+      }
     }
   }
 }

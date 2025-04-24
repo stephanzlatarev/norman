@@ -1,3 +1,4 @@
+import { ALERT_YELLOW } from "../map/alert.js";
 
 export default function(battle) {
   if (!battle.lines.length) return;
@@ -6,9 +7,12 @@ export default function(battle) {
   const jobs = new Map();
 
   for (const fighter of battle.fighters) {
+    const isAssigned = fighter.assignee && fighter.assignee.isAlive;
+    const isInHotZone = isAssigned ? (fighter.assignee.zone.alertLevel > ALERT_YELLOW) : false;
+
     let line;
 
-    if (fighter.assignee && fighter.assignee.isAlive) {
+    if (isAssigned && isInHotZone) {
       line = getBattleLine(battle, fighter, distances);
     } else {
       line = battle.lines.find(one => (one.zone === fighter.zone));
