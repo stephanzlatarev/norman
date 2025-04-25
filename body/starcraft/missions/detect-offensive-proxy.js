@@ -1,8 +1,6 @@
 import Mission from "../mission.js";
 import Order from "../order.js";
 import Tiers from "../map/tier.js";
-import Wall from "../map/wall.js";
-import { ActiveCount } from "../memo/count.js";
 import Plan from "../memo/plan.js";
 
 // When enemy warriors are seen near home base before basic economy and basic defense are established
@@ -48,7 +46,7 @@ export default class DetectOffensiveProxyMission extends Mission {
       this.isOffensiveProxyDetected = true;
       Plan.setBaseLimit(this, Plan.ONE_BASE);
 
-      cancelConstructionsOutsideHomeBase(this.outerZones);
+      cancelExcessConstructions(this.outerZones);
     }
   }
 
@@ -56,14 +54,8 @@ export default class DetectOffensiveProxyMission extends Mission {
 
 function getPerimeterZones() {
   const zones = [];
-  const walls = Wall.list();
-  let level = Math.min(5, Tiers.length - 1);
 
-  if (walls.length) {
-    level = walls[0].tier.level + 1
-  }
-
-  for (; level >= 0; level--) {
+  for (let level = Math.min(5, Tiers.length - 1); level >= 0; level--) {
     const tier = Tiers[level];
 
     for (const zone of tier.zones) {
@@ -75,7 +67,7 @@ function getPerimeterZones() {
 }
 
 function getOuterZones(zones) {
-  return zones.filter(zone => (zone.tier.level >= 3));
+  return zones.filter(zone => (zone.tier.level > 1));
 }
 
 function isOffensiveProxyStart(zones) {
@@ -100,7 +92,7 @@ function isOffensiveProxyEnd(zones) {
   return true;
 }
 
-function cancelConstructionsOutsideHomeBase(zones) {
+function cancelExcessConstructions(zones) {
   for (const zone of zones) {
     for (const building of zone.buildings) {
       // Keep the Gateway so that in case it finishes we can start a CyberneticsCore sooner

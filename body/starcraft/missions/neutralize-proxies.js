@@ -13,7 +13,8 @@ const WORKER_ATTACKERS = 3;
 const TYPE_CANNON = "PhotonCannon";
 
 const zones = new Set();
-const jobs = new Set();
+const neutralizeJobs = new Set();
+let patrolJob = null;
 
 let home;
 let proxy;
@@ -34,7 +35,7 @@ export default class NeutralizeProxiesMission extends Mission {
 
     if (VisibleCount.Forge) forge = true;
 
-    if (jobs.size) removeCompletedJobs();
+    if (neutralizeJobs.size || patrolJob) removeCompletedJobs();
 
     proxy = findProxy();
 
@@ -43,20 +44,25 @@ export default class NeutralizeProxiesMission extends Mission {
       if (!proxy.warriors.length || proxy.isHome) {
         // When the proxy is not defended yet then we can neutralize it with workers
         // When the proxy is in our base then we should attempt to neutralize it at all cost
-        openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS);
-        openNeutralizeJobs(99, proxy.pylons, PYLON_ATTACKERS);
-        openNeutralizeJobs(98, proxy.cannons, CANNON_ATTACKERS);
+        const zone = proxy.isHome ? home : null;
+
+        openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS, zone);
+        openNeutralizeJobs(99, proxy.pylons, PYLON_ATTACKERS, zone);
+        openNeutralizeJobs(98, proxy.cannons, CANNON_ATTACKERS, zone);
       } else {
         // The proxy is defended and cannot be neutralized with workers only
-        closeAllJobs();
+        closeAllNeutralizeJobs();
+        closePatrolJob();
 
         isMissionComplete = true;
       }
 
-    } else if (forge) {
-      if (!jobs.size) jobs.add(new Patrol());
-    } else if (jobs.size) {
-      closeAllJobs();
+    } else {
+      closeAllNeutralizeJobs();
+
+      if (forge && !patrolJob) {
+        patrolJob = new Patrol();
+      }
     }
   }
 
@@ -75,8 +81,6 @@ class Proxy {
 }
 
 class Neutralize extends Job {
-
-  isNeutralizeJob = true;
 
   constructor(target, priority) {
     super("Probe", null, target);
@@ -217,16 +221,17 @@ function findProxy() {
     (workers.length && pylons.length) ||
     (workers.length && buildings.length) ||
     (pylons.length && cannons.length) ||
-    (pylons.length && buildings.length)
+    (pylons.length && buildings.length) ||
+    (cannons.length || warriors.length)
   ) {
     return new Proxy(isHome, workers, pylons, cannons, warriors);
   }
 }
 
 
-function openNeutralizeJobs(priority, targets, count) {
+function openNeutralizeJobs(priority, targets, count, zone) {
   for (const target of targets) {
-    openNeutralizeJobsForTarget(priority, target, count);
+    openNeutralizeJobsForTarget(priority, target, (!zone || (target.zone === zone)) ? count : 0);
   }
 }
 
@@ -236,11 +241,11 @@ function openNeutralizeJobsForTarget(priority, target, count) {
 
   let active = 0;
 
-  for (const job of jobs) {
-    if (job.isNeutralizeJob && (job.target === target)) {
+  for (const job of neutralizeJobs) {
+    if (job.target === target) {
       if (active > count) {
         job.close(true);
-        jobs.delete(job);
+        neutralizeJobs.delete(job);
       } else {
         active++;
       }
@@ -248,25 +253,36 @@ function openNeutralizeJobsForTarget(priority, target, count) {
   }
 
   for (; active < count; active++) {
-    jobs.add(new Neutralize(target, priority));
+    neutralizeJobs.add(new Neutralize(target, priority));
   }
 }
 
 function removeCompletedJobs() {
-  for (const job of jobs) {
+  for (const job of neutralizeJobs) {
     if (job.isDone || job.isFailed) {
-      jobs.delete(job);
+      neutralizeJobs.delete(job);
     }
+  }
+
+  if (patrolJob && (patrolJob.isDone || patrolJob.isFailed)) {
+    patrolJob = null;
   }
 }
 
-function closeAllJobs() {
-  if (jobs.size) {
-    for (const job of jobs) {
+function closeAllNeutralizeJobs() {
+  if (neutralizeJobs.size) {
+    for (const job of neutralizeJobs) {
       job.close(true);
     }
 
-    jobs.clear();
+    neutralizeJobs.clear();
+  }
+}
+
+function closePatrolJob() {
+  if (patrolJob) {
+    patrolJob.close(true);
+    patrolJob = null;
   }
 }
 
