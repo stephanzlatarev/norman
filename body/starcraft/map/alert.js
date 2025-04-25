@@ -31,9 +31,22 @@ export function syncAlerts() {
   }
 
   increaseAlertLevelForFireRange(enemy);
+  increaseAlertLevelForNeighborsOfRedZones(enemy);
 
   traverseAccessibleZones(accessible);
   increaseAlertLevelForZonesWithoutSecureAccess(zones, accessible);
+}
+
+function increaseAlertLevelForNeighborsOfRedZones(zones) {
+  for (const zone of zones) {
+    if (zone.alertLevel < ALERT_RED) continue;
+
+    for (const neighbor of zone.neighbors) {
+      if (neighbor.alertLevel < ALERT_YELLOW) {
+        neighbor.alertLevel = ALERT_YELLOW;
+      }
+    }
+  }
 }
 
 function increaseAlertLevelForFireRange(zones) {
