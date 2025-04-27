@@ -15,7 +15,7 @@ const UPGRADES = {
     "ExtendedThermalLance"
   ],
   TwilightCouncil: [
-    "Charge"
+    "BlinkTech", "Charge"
   ],
 };
 

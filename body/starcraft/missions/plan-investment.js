@@ -34,7 +34,7 @@ function doStartUp() {
   Limit.Nexus = TotalCount.CyberneticsCore ? 2 : 1;
   Limit.ShieldBattery = 0;
   Limit.RoboticsFacility = 0;
-  Limit.Forge = 0;
+  Limit.TwilightCouncil = 0;
   Limit.Sentry = 0;
   Limit.Stalker = (TotalCount.Nexus > 1) ? 1 : 0;
   Limit.Zealot = TotalCount.CyberneticsCore ? 1 : 0;
@@ -77,6 +77,7 @@ function doOneBaseDefense() {
   Limit.ShieldBattery = (ActiveCount.Stalker >= 3) ? 1 : 0;
   Limit.RoboticsFacility = (ActiveCount.Stalker >= 3) ? 1 : 0;
   Limit.Forge = 0;
+  Limit.TwilightCouncil = 0;
 
   Priority.CyberneticsCore = 100;
   Priority.Observer = 100;
@@ -192,8 +193,10 @@ function doGroundArmyMaxOut() {
   } else {
     Limit.Forge = 2;
   }
+  Priority.Forge = (TotalCount.Gateway >= 3) ? 80 : 30;
 
   Limit.CyberneticsCore = 1;
+  Limit.TwilightCouncil = TotalCount.Forge ? 1 : 0;
 
   if (Plan.BaseLimit === Plan.ONE_BASE) {
     Plan.WallNatural = Plan.WALL_NATURAL_OFF;
