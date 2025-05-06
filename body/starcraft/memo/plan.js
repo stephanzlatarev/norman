@@ -16,6 +16,11 @@ class Plan {
   static TWO_BASE = 2;
   static BaseLimit = Plan.MULTI_BASE;
 
+  static DEFEND = 0;
+  static ATTACK = 1;
+  static CHARGE = 2;
+  static CombatMode = Plan.ATTACK;
+
   static setBaseLimit(owner, value) {
     owners.set(owner, value);
 
@@ -27,7 +32,7 @@ class Plan {
       }
     }
 
-    Plan.BaseLimit = (limit < Infinity) ? limit : 0;
+    Plan.BaseLimit = (limit < Infinity) ? limit : Plan.MULTI_BASE;
   }
 
   static isBaseEstablished() {

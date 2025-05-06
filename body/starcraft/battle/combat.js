@@ -5,6 +5,7 @@ import updateBattleLines from "./update-battle-lines.js";
 import updateBattleList from "./update-battle-list.js";
 import updateBattleMarching from "./update-battle-marching.js";
 import updateBattleMode from "./update-battle-mode.js";
+import updateCombatMode from "./update-combat-mode.js";
 import updateFighterPrio from "./update-fighter-prio.js";
 import updateFighterStations from "./update-fighter-stations.js";
 import updateFighterTargets from "./update-fighter-targets.js";
@@ -33,6 +34,8 @@ const ops = [
 ];
 
 export default function() {
+  updateCombatMode();
+
   const battles = updateBattleList();
   const focusBattle = selectFocusBattle(battles);
 

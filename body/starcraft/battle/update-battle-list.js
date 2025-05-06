@@ -1,12 +1,25 @@
 import Battle from "./battle.js";
 import Enemy from "../memo/enemy.js";
 import Plan from "../memo/plan.js";
+import Depot from "../map/depot.js";
 import Tiers from "../map/tier.js";
 import { ALERT_RED, ALERT_YELLOW } from "../map/alert.js";
+import { ActiveCount } from "../memo/count.js";
 
 const RALLY_MIN_RADIUS = 4;
 
 export default function() {
+  if (Plan.CombatMode === Plan.DEFEND) {
+    const front = findFrontBaseZone();
+    const battle = findBattle(front) || new Battle(front);
+
+    if (!battle.front.size) {
+      battle.front.add(front);
+    }
+
+    return new Set([battle]);
+  }
+
   const battles = new Set();
   const traversed = new Set();
 
@@ -41,7 +54,7 @@ export default function() {
     }
   }
 
-  if (!battles.size && Enemy.base && !Enemy.base.warriors.size && !Plan.BaseLimit) {
+  if (!battles.size && Enemy.base && !Enemy.base.warriors.size) {
     const battle = findBattle(Enemy.base) || new Battle(Enemy.base);
 
     if (!battle.front.size) {
@@ -52,6 +65,14 @@ export default function() {
   }
 
   return battles;
+}
+
+function findFrontBaseZone() {
+  if (ActiveCount.Nexus === 1) {
+    return Depot.home;
+  }
+
+  return Depot.list().find(zone => (zone !== Depot.home));
 }
 
 function orderBattleZones(zones) {

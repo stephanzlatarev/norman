@@ -10,17 +10,10 @@ import Priority from "../memo/priority.js";
 import Resources from "../memo/resources.js";
 
 let plan = doStartUp;
-let encounteredMarineCount = 0;
-let encounteredZealotCount = 0;
-let encounteredZerglingCount = 0;
 
 export default class PlanInvestmentsMission extends Mission {
 
   run() {
-    encounteredMarineCount = Math.max(VisibleCount.Marine, encounteredMarineCount);
-    encounteredZealotCount = Math.max(VisibleCount.Zealot, encounteredZealotCount);
-    encounteredZerglingCount = Math.max(VisibleCount.Zergling, encounteredZerglingCount);
-
     plan();
   }
 
@@ -47,13 +40,8 @@ function doStartUp() {
   Priority.Zealot = 50;
 
   if (Plan.BaseLimit === Plan.ONE_BASE) {
-    Plan.WallNatural = Plan.WALL_NATURAL_OFF;
     plan = doOneBaseDefense;
     console.log("Transition to one base defense.");
-  } else if (VisibleCount.SpawningPool || encounteredZerglingCount) {
-    Plan.WallNatural = Plan.WALL_NATURAL_READY;
-    plan = doEnforceWallNatural;
-    console.log("Transition to enforcing wall to natural expansion.");
   } else if (TotalCount.Stalker) {
     plan = doGroundArmyMaxOut;
     console.log("Transition to maxing out with ground army.");
@@ -97,48 +85,6 @@ function doOneBaseDefense() {
   }
 }
 
-function doEnforceWallNatural() {
-  const twoBases = (ActiveCount.Immortal + ActiveCount.Stalker >= 4);
-
-  Limit.Immortal = Infinity;
-  Limit.Stalker = Infinity;
-  Limit.Probe = twoBases ? 46 : 26;
-  Limit.Zealot = ActiveCount.Immortal ? 0 : 1;
-  Limit.Observer = twoBases ? 1 : 0;
-  Limit.Colossus = 0;
-  Limit.Sentry = 0;
-  Limit.DarkTemplar = 0;
-
-  Limit.Nexus = twoBases ? 2 : 1;
-  Limit.Assimilator = calculateLimitAssimilator();
-  Limit.Gateway = 2;
-  Limit.CyberneticsCore = 1;
-  Limit.ShieldBattery = ((TotalCount.Gateway >= 2) && ((TotalCount.Stalker >= 1) || (TotalCount.Zealot >= 1))) ? 1 : 0;
-  Limit.RoboticsFacility = (TotalCount.ShieldBattery && (ActiveCount.Stalker >= 3)) ? 1 : 0;
-  Limit.Forge = 0;
-
-  Priority.ShieldBattery = 100;
-  Priority.CyberneticsCore = 100;
-  Priority.Observer = 100;
-  Priority.Nexus = (twoBases && (TotalCount.Nexus === 1)) ? 100 : 0;
-  Priority.Zealot = 95;
-  Priority.Immortal = 95;
-  Priority.Gateway = (TotalCount.Gateway < 2) ? 90 : 60;
-  Priority.Stalker = 80;
-  Priority.Probe = 75;
-  Priority.RoboticsFacility = 70;
-
-  if (Plan.BaseLimit === Plan.ONE_BASE) {
-    Plan.WallNatural = Plan.WALL_NATURAL_OFF;
-    plan = doOneBaseDefense;
-    console.log("Transition to one base defense.");
-  } else if (twoBases && (ActiveCount.Nexus >= 2) && (ActiveCount.Probe >= 33) && (ActiveCount.Stalker > 4)) {
-    Plan.WallNatural = Plan.WALL_NATURAL_OFF;
-    plan = doGroundArmyMaxOut;
-    console.log("Transition to maxing out with ground army.");
-  }
-}
-
 function doGroundArmyMaxOut() {
   const probeLimit = 85;
   const useColossus = (ActiveCount.RoboticsBay > 0);
@@ -174,7 +120,7 @@ function doGroundArmyMaxOut() {
   Limit.Gateway = calculateLimitGateway();
   Limit.RoboticsFacility = (TotalCount.Nexus > 1) ? 1 : 0;
 
-  if ((encounteredMarineCount >= 6) || (encounteredZealotCount >= 3) || (encounteredZerglingCount >= 12)) {
+  if (Plan.CombatMode === Plan.DEFEND) {
     Priority.RoboticsBay = 100;
     Priority.ShieldBattery = 100;
     Limit.RoboticsBay = 1;
@@ -199,13 +145,8 @@ function doGroundArmyMaxOut() {
   Limit.TwilightCouncil = TotalCount.Forge ? 1 : 0;
 
   if (Plan.BaseLimit === Plan.ONE_BASE) {
-    Plan.WallNatural = Plan.WALL_NATURAL_OFF;
     plan = doOneBaseDefense;
     console.log("Transition to one base defense.");
-  } else if ((Resources.loop < 3000) && encounteredZerglingCount) {
-    Plan.WallNatural = Plan.WALL_NATURAL_READY;
-    plan = doEnforceWallNatural;
-    console.log("Transition to enforcing wall to natural expansion.");
   } else if ((VisibleCount.Queen >= 5) && (VisibleCount.Warrior <= 5)) {
     plan = counterMassLightZerg;
     console.log("Transition to countering mass light zerg.");

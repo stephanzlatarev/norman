@@ -31,7 +31,7 @@ export default function(battle) {
   let mode = Battle.MODE_WATCH;
 
   if (battle.lines.length) {
-    if (isArmyComplete() && isPrimaryBattle(battle)) {
+    if ((Plan.CombatMode === Plan.CHARGE) && isPrimaryBattle(battle)) {
       mode = maxoutTransition(battle);
     } else {
       mode = normalTransition(battle);
@@ -121,10 +121,6 @@ function maxoutTransition(battle) {
   }
 
   return Battle.MODE_RALLY;
-}
-
-function isArmyComplete() {
-  return (Resources.supplyUsed > 190);
 }
 
 function isPrimaryBattle() {
