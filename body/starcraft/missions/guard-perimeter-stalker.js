@@ -1,7 +1,7 @@
+import Memory from "../../../code/memory.js";
 import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
-import Plan from "../memo/plan.js";
 import Tiers from "../map/tier.js";
 
 const jobs = new Map();
@@ -14,8 +14,7 @@ let perimeter;
 export default class GuardPerimeterStalkerMission extends Mission {
 
   run() {
-    if (Plan.BaseLimit) return;
-    if (Plan.WallNatural) return;
+    if (Memory.ExpectEnemyRush) return;
     if (!Tiers.length) return;
     if (!frontier) frontier = Tiers[0];
     if (!perimeter) perimeter = Tiers[0];

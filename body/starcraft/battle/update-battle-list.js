@@ -1,32 +1,20 @@
+import Memory from "../../../code/memory.js";
 import Battle from "./battle.js";
 import Enemy from "../memo/enemy.js";
-import Plan from "../memo/plan.js";
 import Depot from "../map/depot.js";
 import Tiers from "../map/tier.js";
 import { ALERT_RED, ALERT_YELLOW } from "../map/alert.js";
-import { ActiveCount } from "../memo/count.js";
+import { TotalCount } from "../memo/count.js";
 
 const RALLY_MIN_RADIUS = 4;
 
 export default function() {
-  if (Plan.CombatMode === Plan.DEFEND) {
-    const front = findFrontBaseZone();
-    const battle = findBattle(front) || new Battle(front);
-
-    if (!battle.front.size) {
-      battle.front.add(front);
-    }
-
-    return new Set([battle]);
-  }
-
   const battles = new Set();
   const traversed = new Set();
-
-  let tierLimit = Infinity;
+  const tierLevelLimit = Memory.ModeCombatDefend ? 1 : Infinity;
 
   for (const tier of Tiers) {
-    if (tier.level > tierLimit) break;
+    if (tier.level > tierLevelLimit) break;
 
     const zones = orderBattleZones(tier.zones);
 
@@ -47,18 +35,22 @@ export default function() {
           traversed.add(zone);
         }
       }
-
-      if (zone.isWall && Plan.WallNatural) {
-        tierLimit = zone.tier.level + 1;
-      }
     }
   }
 
-  if (!battles.size && Enemy.base && !Enemy.base.warriors.size) {
-    const battle = findBattle(Enemy.base) || new Battle(Enemy.base);
+  if (!battles.size) {
+    let defendZone = Depot.home;
+
+    if (Memory.ModeCombatDefend) {
+      defendZone = findFrontBaseZone();
+    } else if (Enemy.base && !Enemy.base.warriors.size) {
+      defendZone = Enemy.base;
+    }
+
+    const battle = findBattle(defendZone) || new Battle(defendZone);
 
     if (!battle.front.size) {
-      battle.front.add(Enemy.base);
+      battle.front.add(defendZone);
     }
 
     battles.add(battle);
@@ -68,11 +60,11 @@ export default function() {
 }
 
 function findFrontBaseZone() {
-  if (ActiveCount.Nexus === 1) {
+  if (TotalCount.Nexus === 1) {
     return Depot.home;
   }
 
-  return Depot.list().find(zone => (zone !== Depot.home));
+  return Depot.list().find(zone => (zone.depot && (zone !== Depot.home))) || Depot.home;
 }
 
 function orderBattleZones(zones) {

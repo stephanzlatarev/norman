@@ -1,6 +1,5 @@
+import Memory from "../../../code/memory.js";
 import Battle from "./battle.js";
-import Resources from "../memo/resources.js";
-import Plan from "../memo/plan.js";
 
 const ATTACK_BALANCE = 1.6;
 const RETREAT_BALANCE = 1.0;
@@ -31,7 +30,7 @@ export default function(battle) {
   let mode = Battle.MODE_WATCH;
 
   if (battle.lines.length) {
-    if ((Plan.CombatMode === Plan.CHARGE) && isPrimaryBattle(battle)) {
+    if (Memory.ModeCombatCharge && isPrimaryBattle(battle)) {
       mode = maxoutTransition(battle);
     } else {
       mode = normalTransition(battle);
@@ -53,7 +52,7 @@ function normalTransition(battle) {
 
   // Check if there's no resistence.
   if (battle.deployedBalance === Infinity) {
-    return Battle.MODE_SMASH;
+    return battle.enemyHealth ? Battle.MODE_SMASH : Battle.MODE_STAND;
   }
 
   // Check if the balance is enough for attacking
@@ -77,9 +76,7 @@ function normalTransition(battle) {
 
   // Check if we are defending the approaches to our bases
   if (battle.zone.tier.level === 2) {
-    const defendBalance = Plan.BaseLimit ? ATTACK_BALANCE : DEFEND_BALANCE;
-
-    if (battle.deployedBalance >= defendBalance) {
+    if (battle.deployedBalance >= RETREAT_BALANCE) {
       return Battle.MODE_FIGHT;
     } else {
       return Battle.MODE_RALLY;

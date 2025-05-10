@@ -8,8 +8,13 @@ export default class Battle {
   static MODE_RALLY = "rally";
   static MODE_MARCH = "march";
   static MODE_SMASH = "smash";
+  static MODE_STAND = "stand";
   static MODE_WATCH = "watch";
 
+  enemyHealth = 0;
+  enemyStrength = 0;
+  recruitedStrength = 0;
+  deployedStrength = 0;
   recruitedBalance = 0;
   deployedBalance = 0;
 

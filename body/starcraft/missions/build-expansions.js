@@ -1,3 +1,4 @@
+import Memory from "../../../code/memory.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
 import Build from "../jobs/build.js";
@@ -5,7 +6,6 @@ import { ALERT_WHITE, ALERT_YELLOW } from "../map/alert.js";
 import Board from "../map/board.js";
 import Depot from "../map/depot.js";
 import { TotalCount } from "../memo/count.js";
-import Plan from "../memo/plan.js";
 import Priority from "../memo/priority.js";
 import Resources from "../memo/resources.js";
 
@@ -110,14 +110,12 @@ function abortBuildJob(job, retreat) {
 }
 
 function shouldNotBuildNexus() {
-  if (Plan.BaseLimit) {
-    if (Resources.supply < MIN_SUPPLY) {
-      // Supply for new warriors is running out. So attempt an expansion even if over the limit.
-      return false;
-    }
-
-    return (TotalCount.Nexus >= Plan.BaseLimit);
+  if (Resources.supply < MIN_SUPPLY) {
+    // Supply for new warriors is running out. So attempt an expansion even if over the limit.
+    return false;
   }
+
+  return (TotalCount.Nexus >= Memory.LimitBase);
 }
 
 function findDepot() {

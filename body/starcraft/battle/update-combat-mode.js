@@ -1,55 +1,29 @@
-import Plan from "../memo/plan.js";
-import Resources from "../memo/resources.js";
-import { ActiveCount } from "../memo/count.js";
-import { VisibleCount } from "../memo/encounters.js";
+import Memory from "../../../code/memory.js";
 
 /*
-We are in ATTACK combat mode by default.
-If we detect an early rush by the enemy, we switch to DEFEND mode.
-When we reach the supply limit with low-tier warriors, we switch to CHARGE mode to rotate our army.
-When we reach the supply limit with high-tier warriors, we switch back to ATTACK mode.
+We are in attack combat mode by default.
+If we detect an early rush by the enemy, we switch to defend mode.
+When we reach the supply limit with low-tier warriors, we switch to charge mode to rotate our army.
+When we reach the supply limit with high-tier warriors, we switch back to attack mode.
 */
 export default function() {
-  let details;
+  if (Memory.MilestoneMaxArmy) {
+    if (!Memory.ModeCombatCharge) console.log("Combat mode set to charge");
 
-  if (isArmyComplete()) {
-    if (Plan.CombatMode !== Plan.CHARGE) console.log("Combat mode set to charge");
+    Memory.ModeCombatAttack = false;
+    Memory.ModeCombatCharge = true;
+    Memory.ModeCombatDefend = false;
+  } else if (Memory.ExpectEnemyRush) {
+    if (!Memory.ModeCombatDefend) console.log("Combat mode set to defend");
 
-    Plan.CombatMode = Plan.CHARGE;
-  } else if (details = isEnemyRushing()) {
-    if (Plan.CombatMode !== Plan.DEFEND) console.log("Combat mode set to defend", details);
-
-    Plan.CombatMode = Plan.DEFEND;
+    Memory.ModeCombatAttack = false;
+    Memory.ModeCombatCharge = false;
+    Memory.ModeCombatDefend = true;
   } else {
-    if (Plan.CombatMode !== Plan.ATTACK) console.log("Combat mode set to attack");
+    if (!Memory.ModeCombatAttack) console.log("Combat mode set to attack");
 
-    Plan.CombatMode = Plan.ATTACK;
+    Memory.ModeCombatAttack = true;
+    Memory.ModeCombatCharge = false;
+    Memory.ModeCombatDefend = false;
   }
-}
-
-let encounteredMarineCount = 0;
-let encounteredZealotCount = 0;
-let encounteredZerglingCount = 0;
-let detectedEarlySpawningPool = false;
-
-function isArmyComplete() {
-  return (Resources.supplyUsed >= 196);
-}
-
-function isEnemyRushing() {
-  encounteredMarineCount = Math.max(VisibleCount.Marine, encounteredMarineCount);
-  encounteredZealotCount = Math.max(VisibleCount.Zealot, encounteredZealotCount);
-  encounteredZerglingCount = Math.max(VisibleCount.Zergling, encounteredZerglingCount);
-
-  if (detectedEarlySpawningPool) {
-    if (Resources.loop < 3000) return "early spawning pool";
-  } else if (VisibleCount.SpawningPool && !ActiveCount.Stalker) {
-    detectedEarlySpawningPool = true;
-    return "early spawning pool";
-  }
-
-  if (encounteredZerglingCount && !ActiveCount.Stalker) return "early zergling rush";
-  if ((encounteredZealotCount >= 3) && (encounteredZealotCount > ActiveCount.Stalker)) return "zealot rush";
-  if ((encounteredMarineCount >= 6) && (encounteredMarineCount > ActiveCount.Stalker)) return "marine rush";
-  if ((encounteredZerglingCount >= 12) && (encounteredZerglingCount > ActiveCount.Stalker * 3)) return "mass zerglings";
 }

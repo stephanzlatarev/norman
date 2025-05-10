@@ -1,3 +1,4 @@
+import Memory from "../../../code/memory.js";
 import Mission from "../mission.js";
 import Job from "../job.js";
 import Types from "../types.js";
@@ -5,7 +6,6 @@ import Depot from "../map/depot.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
 import Limit from "../memo/limit.js";
-import Plan from "../memo/plan.js";
 import Priority from "../memo/priority.js";
 import Resources from "../memo/resources.js";
 
@@ -39,7 +39,7 @@ function doStartUp() {
   Priority.Stalker = 50;
   Priority.Zealot = 50;
 
-  if (Plan.BaseLimit === Plan.ONE_BASE) {
+  if (Memory.LimitBase === 1) {
     plan = doOneBaseDefense;
     console.log("Transition to one base defense.");
   } else if (TotalCount.Stalker) {
@@ -79,7 +79,7 @@ function doOneBaseDefense() {
   Priority.Nexus = 0;
   Priority.Zealot = 0;
 
-  if (Plan.BaseLimit === Plan.MULTI_BASE) {
+  if (Memory.LimitBase > 1) {
     plan = doGroundArmyMaxOut;
     console.log("Transition to maxing out with ground army.");
   }
@@ -120,7 +120,7 @@ function doGroundArmyMaxOut() {
   Limit.Gateway = calculateLimitGateway();
   Limit.RoboticsFacility = (TotalCount.Nexus > 1) ? 1 : 0;
 
-  if (Plan.CombatMode === Plan.DEFEND) {
+  if (Memory.ModeCombatDefend) {
     Priority.RoboticsBay = 100;
     Priority.ShieldBattery = 100;
     Limit.RoboticsBay = 1;
@@ -144,7 +144,7 @@ function doGroundArmyMaxOut() {
   Limit.CyberneticsCore = 1;
   Limit.TwilightCouncil = TotalCount.Forge ? 1 : 0;
 
-  if (Plan.BaseLimit === Plan.ONE_BASE) {
+  if (Memory.LimitBase === 1) {
     plan = doOneBaseDefense;
     console.log("Transition to one base defense.");
   } else if ((VisibleCount.Queen >= 5) && (VisibleCount.Warrior <= 5)) {

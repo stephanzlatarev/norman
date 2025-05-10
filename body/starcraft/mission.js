@@ -1,13 +1,10 @@
 import fs from "fs";
-import Memory from "../../code/memory.js";
 
 const missions = [];
 
-export default class Mission extends Memory {
+export default class Mission {
 
   constructor() {
-    super();
-
     missions.push(this);
   }
 

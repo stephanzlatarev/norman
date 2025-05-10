@@ -1,4 +1,3 @@
-import Memory from "../../code/memory.js";
 import Order from "./order.js";
 import Types from "./types.js";
 import { getHopDistance } from "./map/route.js";
@@ -6,7 +5,7 @@ import Priority from "./memo/priority.js";
 
 const jobs = new Set();
 
-export default class Job extends Memory {
+export default class Job {
 
   // A short description of the job
   summary;
@@ -51,8 +50,6 @@ export default class Job extends Memory {
   isFailed = false;
 
   constructor(agent, output, target) {
-    super();
-
     this.agent = getAgent(agent);
     this.output = output;
     this.target = target;

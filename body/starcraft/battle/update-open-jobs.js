@@ -13,7 +13,10 @@ export default function(battle, isFocusBattle, isOnlyBattle) {
 
       closeOpenJobsOutsideBattleLines(battle);
 
-      if (!isOnlyBattle && isSmallBattle(battle)) {
+      if (isOnlyBattle) {
+        // All warriors go to the only battle in case enemy is reinforced
+        openJobs(battle, ...ALL_WARRIORS);
+      } else if (isSmallBattle(battle)) {
         // Make sure we don't overreact to individual enemy units in our territory
         if (isBalanceInsufficient || (battle.fighters.length < 3)) {
           openJobs(battle, "Stalker", "Zealot");

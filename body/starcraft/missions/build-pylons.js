@@ -2,7 +2,7 @@ import Mission from "../mission.js";
 import Types from "../types.js";
 import Units from "../units.js";
 import Build from "../jobs/build.js";
-import { ALERT_WHITE } from "../map/alert.js";
+import { ALERT_WHITE, ALERT_YELLOW } from "../map/alert.js";
 import Board from "../map/board.js";
 import Depot from "../map/depot.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
@@ -80,7 +80,7 @@ function findHomeBaseSitePlot() {
   const zone = Depot.home;
 
   if (!zone) return;
-  if (zone.alertLevel > ALERT_WHITE) return;
+  if (zone.alertLevel > ALERT_YELLOW) return;
   if (shouldAvoidZone(zone)) return;
 
   let bestDistance = 0;
@@ -142,6 +142,7 @@ function avoidZone(job) {
   const cell = Board.cell(job.target.x, job.target.y);
 
   if (!cell || !cell.zone) return;
+  if (cell.zone === Depot.home) return;
 
   avoid.set(cell.zone, Resources.loop + AVOID_LOOPS);
 }

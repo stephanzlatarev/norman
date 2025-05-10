@@ -1,14 +1,14 @@
 import Battle from "./battle.js";
-import Plan from "../memo/plan.js";
+import { traceBattle } from "./trace.js";
 
 export default function(battle) {
-  if (Plan.BaseLimit) return;
-
   const isAssault = (battle.mode === Battle.MODE_FIGHT) || (battle.mode === Battle.MODE_SMASH);
   const hasDetector = battle.detector && battle.detector.assignee;
 
   if (isAssault && !hasDetector) {
-    ignoreInvisibleThreats(battle.zone);
+    if (ignoreInvisibleThreats(battle.zone)) {
+      traceBattle(battle, "cleared invisible threats");
+    }
   }
 }
 
@@ -23,5 +23,5 @@ function ignoreInvisibleThreats(zone) {
     }
   }
 
-  if (threats.size !== count) console.log("Zone", zone.name, "cleared of invisible threats");
+  return (threats.size !== count);
 }

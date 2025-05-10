@@ -1,3 +1,4 @@
+import Memory from "../../code/memory.js";
 import Game from "./game.js";
 import Battle from "./battle/battle.js";
 import { ALERT_WHITE } from "./map/alert.js";
@@ -54,6 +55,7 @@ async function trace(client) {
   traceBattles(lines, text);
   traceThreats(spheres);
   traceZones(text);
+  traceMemory(text);
 
   await client.debug({ debug: [{ draw: { lines, text, spheres } }] });
 }
@@ -93,6 +95,29 @@ function traceBattles(lines, texts) {
       lines.push({ line: { p0: { x: one.x, y: one.y }, p1: zonep }, color: Color.Yellow });
     }
   }
+
+  texts.push({ text: "", virtualPos: { x: 0, y: y++ } });
+}
+
+function traceMemory(texts) {
+  let y = 15;
+
+  if (Memory.FlagSupplyBlocked) texts.push({ text: "Flag Supply Blocked", virtualPos: { x: 0, y: y++ } });
+
+  if (Memory.MilestoneBasicEconomy) texts.push({ text: "Milestone Basic Economy", virtualPos: { x: 0, y: y++ } });
+  if (Memory.MilestoneBasicMilitary) texts.push({ text: "Milestone Basic Military", virtualPos: { x: 0, y: y++ } });
+  if (Memory.MilestoneMaxArmy) texts.push({ text: "Milestone Max Army", virtualPos: { x: 0, y: y++ } });
+
+  if (Memory.LimitBase) texts.push({ text: "Limit Base: " + Memory.LimitBase, virtualPos: { x: 0, y: y++ } });
+
+  if (Memory.DetectedEnemyExpansion) texts.push({ text: "Detected Enemy Expansion", virtualPos: { x: 0, y: y++ } });
+  if (Memory.DetectedEnemyHoard) texts.push({ text: "Detected Enemy Hoard", virtualPos: { x: 0, y: y++ } });
+  if (Memory.DetectedEnemyProxy) texts.push({ text: "Detected Enemy Proxy", virtualPos: { x: 0, y: y++ } });
+  if (Memory.ExpectEnemyRush) texts.push({ text: "Expect Enemy Rush", virtualPos: { x: 0, y: y++ } });
+
+  if (Memory.ModeCombatAttack) texts.push({ text: "Mode Combat Attack", virtualPos: { x: 0, y: y++ } });
+  if (Memory.ModeCombatCharge) texts.push({ text: "Mode Combat Charge", virtualPos: { x: 0, y: y++ } });
+  if (Memory.ModeCombatDefend) texts.push({ text: "Mode Combat Defend", virtualPos: { x: 0, y: y++ } });
 }
 
 function traceThreats(spheres) {

@@ -93,7 +93,7 @@ export default class Fight extends Job {
         this.goAttack();
       } else {
         this.details = getDetails(this, "charge");
-        new Order(warrior, 23, this.battle.zone).accept(true);
+        new Order(warrior, 23, this.battle.zone.rally).accept(true);
       }
 
       this.isBusy = true;
@@ -114,7 +114,7 @@ export default class Fight extends Job {
         this.goMarch();
       } else {
         this.details = getDetails(this, "station");
-        Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
+        Order.move(warrior, this.station, (this.battle.mode !== Battle.MODE_STAND) ? Order.MOVE_CLOSE_TO : Order.MOVE_NEAR_BY);
       }
 
       this.isBusy = false;
@@ -167,7 +167,7 @@ export default class Fight extends Job {
   }
 
   shouldMarch() {
-    return this.assignee && (this.battle.mode === Battle.MODE_MARCH);
+    return this.assignee && (this.battle.mode === Battle.MODE_MARCH) && (this.target || (this.assignee.zone !== this.battle.zone));
   }
 
   // Warrior should keep distance if it entered the fire range of the enemy or its shields are not full
@@ -292,7 +292,7 @@ export default class Fight extends Job {
       // Make sure the spread movement is counted as marching
       marching.isMarching = true;
 
-      Order.move(warrior, this.target || this.battle.zone);
+      Order.move(warrior, this.target || this.battle.zone.rally);
     }
   }
 

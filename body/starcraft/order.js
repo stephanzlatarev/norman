@@ -1,4 +1,3 @@
-import Memory from "../../code/memory.js";
 import Resources from "./memo/resources.js";
 
 const orders = [];
@@ -11,7 +10,7 @@ const RETRY_AFTER = 3;
 
 let ids = 1;
 
-export default class Order extends Memory {
+export default class Order {
 
   // The unit to execute this order
   unit;
@@ -42,8 +41,6 @@ export default class Order extends Memory {
   isRejected = false;
 
   constructor(subject, ability, target) {
-    super();
-
     this.id = ids++;
 
     if (subject instanceof Order) {
@@ -230,6 +227,7 @@ export default class Order extends Memory {
   }
 
   static MOVE_CLOSE_TO = 0b0001;
+  static MOVE_NEAR_BY  = 0b0010;
 
   static move(unit, target, options) {
     if (!unit || !unit.order || !target) return;
@@ -237,7 +235,14 @@ export default class Order extends Memory {
     const pos = target.body ? target.body : target;
 
     if (unit.todo && (unit.todo.ability === 16) && isSamePosition(unit.todo.target, pos)) return unit.todo;
-    if (isClose(unit.body, pos, (options & Order.MOVE_CLOSE_TO) ? 3 : 1)) return;
+
+    let distance = 1;
+    if (options & Order.MOVE_CLOSE_TO) {
+      distance = 3;
+    } else if (options & Order.MOVE_NEAR_BY) {
+      distance = 8;
+    }
+    if (isClose(unit.body, pos, distance)) return;
 
     if ((unit.order.abilityId !== 16) || !unit.order.targetWorldSpacePos || !isSamePosition(unit.order.targetWorldSpacePos, pos)) {
       return new Order(unit, 16, { x: pos.x, y: pos.y }).accept(true);
