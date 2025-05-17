@@ -55,6 +55,8 @@ class BlockSite extends Site {
 
 class WallSite extends Site {
 
+  isWall = true;
+
   constructor(x, y, dx, dy) {
     super(x + 0.5, y + 0.5);
 
@@ -82,7 +84,7 @@ export function createSites() {
   }
 
   for (const depot of Depot.list()) {
-    const sites = new Set();
+    const sites = [];
     let starty = depot.cell.y;
 
     if (depot.depot) {
@@ -95,13 +97,13 @@ export function createSites() {
 
     createSiteLine(depot, sites, starty);
 
-    for (let y = starty + 6, count = -1; count !== sites.size; y += 6) {
-      count = sites.size;
+    for (let y = starty + 6, count = -1; count !== sites.length; y += 6) {
+      count = sites.length;
       createSiteLine(depot, sites, y);
     }
 
-    for (let y = starty - 6, count = -1; count !== sites.size; y -= 6) {
-      count = sites.size;
+    for (let y = starty - 6, count = -1; count !== sites.length; y -= 6) {
+      count = sites.length;
       createSiteLine(depot, sites, y);
     }
 
@@ -122,7 +124,7 @@ function createWallSite(depot, sites) {
     const site = getWallSite(cell);
 
     if (site) {
-      sites.add(site);
+      sites.push(site);
 
       return site;
     }
@@ -190,7 +192,7 @@ function createSiteLine(zone, sites, y) {
       const step = 6 + (width % 6) / count;
 
       for (let x = bounds.left, i = 0; i < count; i++, x += step) {
-        sites.add(new BlockSite(Math.floor(x), y));
+        sites.push(new BlockSite(Math.floor(x), y));
       }
     }
   }

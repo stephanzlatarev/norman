@@ -73,23 +73,28 @@ function countSupplyConsumptionRate() {
 }
 
 function findPylonPlot() {
-  return findHomeBaseSitePlot() || findSitePlotOfType("pylon") || findSitePlotOfType("small");
+  return findFirstPylonPlot() || findHomeBaseSitePlot() || findSitePlotOfType("pylon") || findSitePlotOfType("small");
 }
 
-function findHomeBaseSitePlot() {
-  const zone = Depot.home;
+// The first pylon is placed at the wall site of the home base
+function findFirstPylonPlot() {
+  if (!Depot.home) return;
+  if (TotalCount.Pylon) return;
 
-  if (!zone) return;
-  if (zone.alertLevel > ALERT_YELLOW) return;
-  if (shouldAvoidZone(zone)) return;
+  return Depot.home.sites.find(site => site.isWall)?.pylon[0];
+}
+
+// Pylons at the home base are placed with maximum distance from each other to increase vision
+function findHomeBaseSitePlot() {
+  if (!Depot.home) return;
 
   let bestDistance = 0;
   let bestPlot;
 
-  for (const site of zone.sites) {
+  for (const site of Depot.home.sites) {
     let distance = 0;
 
-    for (const building of zone.buildings) {
+    for (const building of Depot.home.buildings) {
       distance += calculateDistance(site, building.body);
     }
 
