@@ -1,7 +1,8 @@
 import Board from "./board.js";
 import { syncAlerts } from "./alert.js";
-import { createDepots, createSites } from "./depot.js";
+import { createDepots } from "./depot.js";
 import { createRoutes, syncRoutes } from "./route.js";
+import { createSites } from "./site.js";
 import { syncTiers } from "./tier.js";
 import { createZones } from "./zone.js";
 

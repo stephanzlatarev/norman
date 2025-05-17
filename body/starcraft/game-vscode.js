@@ -5,6 +5,8 @@ import { ALERT_WHITE } from "./map/alert.js";
 import Board from "./map/board.js";
 import Zone from "./map/zone.js";
 
+const SHOW_SITES = false;
+
 export default class VscodeGame extends Game {
 
   async connect() {
@@ -151,6 +153,37 @@ function traceZones(texts) {
     if (zone.isDepot) {
       shapes.push({ shape: "circle", x: Math.floor(zone.x) + 0.5, y: Math.floor(zone.y) + 0.5, r: radius, color });
       shapes.push({ shape: "circle", x: zone.harvestRally.x + 0.5, y: zone.harvestRally.y + 0.5, r: 0.5, color });
+    }
+
+    if (SHOW_SITES && zone.sites) {
+      for (const site of zone.sites) {
+        shapes.push({ shape: "circle", x: site.x, y: site.y, r: 0.2, color: "red" });
+
+        for (const type of ["pylon", "battery", "small", "medium", "wall"]) {
+          for (const plot of site[type]) {
+            let x, y, r, color;
+
+            if (type === "wall") {
+              x = plot.x + 0.5;
+              y = plot.y + 0.5;
+              r = 0.4;
+              color = "green";
+            } else if (type === "medium") {
+              x = plot.x + 0.5;
+              y = plot.y + 0.5;
+              r = 1.4;
+              color = "purple";
+            } else {
+              x = plot.x;
+              y = plot.y;
+              r = 0.9;
+              color = (type === "battery") ? "orange" : "blue";
+            }
+
+            shapes.push({ shape: "circle", x, y, r, color });
+          }
+        }
+      }
     }
   }
 
