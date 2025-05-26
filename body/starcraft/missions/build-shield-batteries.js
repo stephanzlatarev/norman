@@ -40,7 +40,7 @@ export default class BuildShieldBatteriesMission extends Mission {
 }
 
 function shouldBuildShieldBattery() {
-  return (Limit.ShieldBattery) && !TotalCount.ShieldBattery;
+  return Limit.ShieldBattery && !TotalCount.ShieldBattery;
 }
 
 function findBuildingPlot() {
@@ -54,7 +54,7 @@ function findBuildingPlot() {
 }
 
 function isPlotFree(plot) {
-  for (let x = plot.x - 1; x <= plot.x + 1; x++) {
+  for (let x = plot.x - 1; x <= plot.x; x++) {
     for (let y = plot.y - 1; y <= plot.y; y++) {
       const cell = Board.cell(x, y);
 
