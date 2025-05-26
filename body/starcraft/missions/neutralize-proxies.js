@@ -8,7 +8,8 @@ import { VisibleCount } from "../memo/encounters.js";
 const PROXY_TIERS = 4;
 const CANNON_ATTACKERS = 6;
 const PYLON_ATTACKERS = 6;
-const WORKER_ATTACKERS = 3;
+const WORKER_ATTACKERS_MANY = 3;
+const WORKER_ATTACKERS_ONE = 1;
 
 const TYPE_CANNON = "PhotonCannon";
 
@@ -41,14 +42,14 @@ export default class NeutralizeProxiesMission extends Mission {
 
     if (proxy) {
 
-      if (!proxy.warriors.length || proxy.isHome) {
-        // When the proxy is not defended yet then we can neutralize it with workers
+      if (proxy.isHome) {
         // When the proxy is in our base then we should attempt to neutralize it at all cost
-        const zone = proxy.isHome ? home : null;
-
-        openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS, zone);
-        openNeutralizeJobs(99, proxy.pylons, PYLON_ATTACKERS, zone);
-        openNeutralizeJobs(98, proxy.cannons, CANNON_ATTACKERS, zone);
+        openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS_MANY, home);
+        openNeutralizeJobs(99, proxy.pylons, PYLON_ATTACKERS, home);
+        openNeutralizeJobs(98, proxy.cannons, CANNON_ATTACKERS, home);
+      } else if (!proxy.warriors.length) {
+        // When the proxy is not defended yet then attack any workers. Don't stop harvest to destroy the structures
+        openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS_ONE);
       } else {
         // The proxy is defended and cannot be neutralized with workers only
         closeAllNeutralizeJobs();
@@ -103,9 +104,9 @@ class Neutralize extends Job {
         target.zone.threats.delete(target);
 
         if (probe.zone === home) {
-          this.close(true);
+          return this.close(true);
         } else {
-          Order.move(probe, home);
+          return Order.move(probe, home);
         }
       } else {
         return Order.move(probe, target.body);
@@ -236,14 +237,11 @@ function openNeutralizeJobs(priority, targets, count, zone) {
 }
 
 function openNeutralizeJobsForTarget(priority, target, count) {
-  if (!count) return;
-  if (!proxy) return;
-
   let active = 0;
 
   for (const job of neutralizeJobs) {
     if (job.target === target) {
-      if (active > count) {
+      if (active >= count) {
         job.close(true);
         neutralizeJobs.delete(job);
       } else {
