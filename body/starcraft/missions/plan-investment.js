@@ -54,7 +54,6 @@ function doOneBaseDefense() {
   Limit.Probe = 26;
   Limit.Observer = 1;
   Limit.Sentry = 1;
-  Limit.Zealot = 0;
   Limit.Colossus = 0;
   Limit.DarkTemplar = 0;
 
@@ -75,7 +74,6 @@ function doOneBaseDefense() {
   Priority.Probe = 75;
   Priority.RoboticsFacility = 70;
   Priority.Nexus = 0;
-  Priority.Zealot = 0;
 
   if (Memory.ModeCombatDefend) {
     Priority.ShieldBattery = 100;
@@ -83,6 +81,14 @@ function doOneBaseDefense() {
   } else {
     Priority.ShieldBattery = 0;
     Limit.ShieldBattery = 0;
+  }
+
+  if (Memory.ExpectEnemyRush) {
+    Priority.Zealot = 95;
+    Limit.Zealot = 1;
+  } else {
+    Priority.Zealot = 0;
+    Limit.Zealot = 0;
   }
 
   if (Memory.LimitBase > 1) {
