@@ -56,7 +56,7 @@ class WallKeeper extends Job {
 
     if (!warrior.isAlive) {
       this.close(false);
-    } else if (warrior.zone.enemies.size) {
+    } else if (areEnemiesApproaching()) {
       orderHold(warrior, this.wall);
     } else {
       orderMove(warrior, this.rally);
@@ -85,8 +85,19 @@ function findWallKeeperType() {
   }
 }
 
-function orderHold(warrior, pos) {
-  if (!warrior || !warrior.order || !warrior.body || !pos) return;
+function areEnemiesApproaching() {
+  if (!Depot.home) return false;
+  if (Depot.home.enemies.size) return true;
+
+  for (const zone of Depot.home.neighbors) {
+    if (zone.enemies.size) return true;
+  }
+}
+
+function orderHold(warrior, cell) {
+  if (!warrior || !warrior.order || !warrior.body || !cell) return;
+
+  const pos = { x: cell.x + 0.5, y: cell.y + 0.5 };
   if ((warrior.order.abilityId === 18) && isExactPosition(warrior.body, pos)) return;
   if ((warrior.order.abilityId === 23) && isSamePosition(warrior.body, pos)) return;
 
