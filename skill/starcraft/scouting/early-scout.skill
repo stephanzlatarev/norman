@@ -1,0 +1,5 @@
+# A probe scouts enemy base in early game
+
+name: Early scout
+brain: early-scout.js
+type: javascript

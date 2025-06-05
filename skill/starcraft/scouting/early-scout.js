@@ -1,63 +1,50 @@
-import Job from "../job.js";
-import Mission from "../mission.js";
-import Order from "../order.js";
-import Types from "../types.js";
-import Units from "../units.js";
-import Board from "../map/board.js";
-import Depot from "../map/depot.js";
-import { VisibleCount } from "../memo/encounters.js";
-import Enemy from "../memo/enemy.js";
-import Resources from "../memo/resources.js";
+import { Job, Order, Types, Units, Board, Depot, TotalCount, VisibleCount, Enemy, Resources } from "./imports.js";
 
-export default class DelayFirstEnemyExpansionMission extends Mission {
+let job = null;
 
-  job = null;
+export default function() {
+  if (job) return;                        // Early scout mission is already running
+  if (!Depot.home || !Enemy.base) return; // No target for early scouting
+  if (TotalCount.Pylon > 1) return;       // Early scout moment has already passed
 
-  run() {
-    if (this.job || !Depot.home || !Enemy.base) return;
+  const agent = selectAgent();
+  const homeWallSite = Depot.home.sites.find(site => site.isWall);
+  const enemyExpansionZone = getEnemyExpansionZone();
 
-    const agent = selectAgent();
-    const homePylonJob = [...Job.list()].find(job => job.output && job.output.isPylon);
-    const enemyExpansionZone = getEnemyExpansionZone();
-
-    if (agent && homePylonJob && homePylonJob.target && !homePylonJob.assignee && enemyExpansionZone) {
-      console.log("Mission 'Delay first enemy expansion' starts");
-
-      this.job = new AnnoyEnemy(homePylonJob, enemyExpansionZone);
-      this.job.assign(agent);
-    } else {
-      console.log("Mission 'Delay first enemy expansion' will not start");
-      this.job = "skip";
-    }
+  if (agent && homeWallSite && enemyExpansionZone) {
+    job = new EarlyScout(agent, homeWallSite, enemyExpansionZone);
+  } else {
+    console.log("No early scout.");
+    job = "skip";
   }
-
 }
 
 const MODE_KILL = 1;
 const MODE_DAMAGE = 2;
 
-class AnnoyEnemy extends Job {
+class EarlyScout extends Job {
 
-  homePylonJob = null;
+  homeWallSite = null;
   enemyExpansionZone = null;
   enemyHarvestLine = null;
   mode = null;
   pylon = null;
 
-  constructor(homePylonJob, enemyExpansionZone) {
+  constructor(agent, homeWallSite, enemyExpansionZone) {
     super("Probe");
 
-    this.homePylonJob = homePylonJob;
+    this.homeWallSite = homeWallSite;
     this.enemyExpansionZone = enemyExpansionZone;
     this.enemyHarvestLine = new HarvestLine(enemyExpansionZone);
     this.priority = 100;
 
+    this.assign(agent);
     this.transition(this.goBuildHomePylon);
   }
 
   execute() {
     if (!this.assignee.isAlive) {
-      console.log("Agent died. Mission 'Delay first enemy expansion' is over.");
+      console.log("Early scout died.");
 
       this.close(false);
     } else if (this.shouldGoHome()) {
@@ -86,7 +73,7 @@ class AnnoyEnemy extends Job {
   }
 
   goHome() {
-    console.log("Mission 'Delay first enemy expansion' is over.");
+    console.log("Early scout retires.");
 
     orderSlip(this.assignee);
 
@@ -94,26 +81,27 @@ class AnnoyEnemy extends Job {
   }
 
   goBuildHomePylon() {
-    if (Resources.minerals >= 100) {
-      this.homePylonJob.assignee = this.assignee;
-      this.transition(this.goWaitForHomePylon);
+    if (this.order) {
+      if (this.assignee.order.abilityId === 16) {
+        this.order = null;
+        return this.transition(this.goScoutExpansion);
+      }
+    } else if (Resources.minerals >= 100) {
+      this.order = orderPylon(this.assignee, this.homeWallSite.pylon[0]);
+      this.order.queue(16, this.enemyExpansionZone);
     } else {
-      orderMove(this.assignee, this.homePylonJob.target);
+      const pylonpos = this.homeWallSite.pylon[0];
+      const wallpos = this.homeWallSite.wall[0];
+      const rally = {
+        x : pylonpos.x + ((wallpos.x >= pylonpos.x) ? 0.2 : -0.2),
+        y : pylonpos.y + ((wallpos.y >= pylonpos.y) ? 0.2 : -0.2),
+      };
+
+      orderMove(this.assignee, rally);
     }
 
     // Reserve minerals for the pylon
-    Resources.minerals -= 100;
-  }
-
-  goWaitForHomePylon() {
-    if (this.homePylonJob.isDone) {
-      this.transition(this.goScoutExpansion);
-    } else if (this.homePylonJob.isFailed) {
-      this.transition(this.goHome);
-    } else {
-      // Keep a reserve of minerals for the pylon
-      Resources.minerals -= 100;
-    }
+    Resources.minerals = 0;
   }
 
   goScoutExpansion() {

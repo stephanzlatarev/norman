@@ -20,8 +20,7 @@ const print = console.log;
 
 export default class Game {
 
-  async attach(endCallback) {
-    this.endCallback = endCallback;
+  async attach() {
     this.client = starcraft();
 
     await this.connect();
@@ -51,8 +50,6 @@ export default class Game {
       }
     }
 
-    setTimeout(this.run.bind(this));
-
     console.log = function() { const prefix = this.clock(); if (prefix) { print(prefix, ...arguments); } else { print(...arguments); } }.bind(this);
   }
 
@@ -68,65 +65,62 @@ export default class Game {
     }
   }
 
-  async run() {
-    try {
-      while (this.client) {
-        const gameInfo = await this.client.gameInfo();
-        const observation = await this.client.observation();
+  async observe() {
+    if (!this.client) return;
 
-        this.observation = observation.observation;
+    const gameInfo = await this.client.gameInfo();
+    const observation = await this.client.observation();
 
-        syncMap(gameInfo);
+    this.observation = observation.observation;
 
-        Resources.sync(this.observation);
-        Units.sync(this.observation.rawData.units, this.observation.rawData.event, this.me);
+    syncMap(gameInfo);
 
-        countUnits(this.observation, this.me.race);
-        countEncounters();
+    Resources.sync(this.observation);
+    Units.sync(this.observation.rawData.units, this.observation.rawData.event, this.me);
 
-        for (const job of Job.list()) {
-          if (job.assignee && !job.assignee.isAlive) {
-            console.log(job.assignee.type.name, job.assignee.nick, "died on job", job.details);
-            job.close(false);
-          }
-        }
+    countUnits(this.observation, this.me.race);
+    countEncounters();
 
-        for (const order of Order.list()) {
-          order.check();
-        }
-
-        for (const mission of Mission.list()) {
-          mission.run();
-        }
-
-        scheduleJobs();
-
-        await this.executeOrders();
-
-        for (const job of Job.list()) {
-          if (job.order && job.order.isAccepted && job.assignee && !job.assignee.order.abilityId) {
-            console.log("WARNING! Unit", job.assignee.type.name, job.assignee.nick, "idle on job", job.details);
-            job.close(false);
-          }
-        }
-
-        if ((Resources.loop > 2) && !this.hasGreetedOpponent) {
-          await greet(this, gameInfo, Enemy.OPPONENT_ID);
-          this.hasGreetedOpponent = true;
-        }
-
-        if (Units.buildings().size) {
-          await this.step();
-        } else {
-          await this.say("gg");
-          break;
-        }
+    for (const job of Job.list()) {
+      if (job.assignee && !job.assignee.isAlive) {
+        console.log(job.assignee.type.name, job.assignee.nick, "died on job", job.details);
+        job.close(false);
       }
+    }
 
-      this.endCallback();
-    } catch (error) {
-      console.log(error);
-      this.endCallback(error);
+    for (const order of Order.list()) {
+      order.check();
+    }
+  }
+
+  async act() {
+    if (!this.client) return;
+
+    for (const mission of Mission.list()) {
+      mission.run();
+    }
+
+    scheduleJobs();
+
+    await this.executeOrders();
+
+    for (const job of Job.list()) {
+      if (job.order && job.order.isAccepted && job.assignee && !job.assignee.order.abilityId) {
+        console.log("WARNING! Unit", job.assignee.type.name, job.assignee.nick, "idle on job", job.details);
+        job.close(false);
+      }
+    }
+
+    if ((Resources.loop > 2) && !this.hasGreetedOpponent) {
+      await greet(this, Enemy.OPPONENT_ID);
+      this.hasGreetedOpponent = true;
+    }
+
+    if (Units.buildings().size) {
+      await this.step();
+    } else {
+      await this.say("gg");
+      await this.detach();
     }
   }
 
@@ -178,16 +172,16 @@ export default class Game {
     console.log = print;
 
     if (this.client) {
-      try {
-        await this.client.quit();
-      } catch (error) {
-      }
+      await this.client.quit();
+      this.client = null;
     }
   }
 
 }
 
-async function greet(game, gameInfo, enemyId) {
+async function greet(game, enemyId) {
+  const gameInfo = await game.client.gameInfo();
+
   for (const playerInfo of gameInfo.playerInfo) {
     if (playerInfo.playerName && playerInfo.playerName.length && (playerInfo.playerId === enemyId)) {
       return await game.say("Good luck, " + playerInfo.playerName + "! Have fun.");

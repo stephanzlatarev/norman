@@ -38,16 +38,6 @@ export default class LadderGame extends Game {
     }
   }
 
-  async detach(error) {
-    await super.detach();
-
-    if (error) {
-      console.log("CRASH");
-      console.log(error);
-      process.exit(1);
-    }
-  }
-
 }
 
 function parseArguments(args) {
