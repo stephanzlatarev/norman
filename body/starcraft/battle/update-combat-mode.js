@@ -13,7 +13,7 @@ export default function() {
     Memory.ModeCombatAttack = false;
     Memory.ModeCombatCharge = true;
     Memory.ModeCombatDefend = false;
-  } else if (Memory.ExpectEnemyRush) {
+  } else if (Memory.EnemyArmyIsSuperior || Memory.ExpectEnemyRush) {
     if (!Memory.ModeCombatDefend) console.log("Combat mode set to defend");
 
     Memory.ModeCombatAttack = false;

@@ -3,6 +3,7 @@ import Battle from "./battle.js";
 import Enemy from "../memo/enemy.js";
 import Depot from "../map/depot.js";
 import Tiers from "../map/tier.js";
+import Zone from "../map/zone.js";
 import { ALERT_RED, ALERT_YELLOW } from "../map/alert.js";
 import { TotalCount } from "../memo/count.js";
 
@@ -10,29 +11,34 @@ const RALLY_MIN_RADIUS = 4;
 
 export default function() {
   const battles = new Set();
-  const traversed = new Set();
-  const tierLevelLimit = Memory.ModeCombatDefend ? 1 : Infinity;
 
-  for (const tier of Tiers) {
-    if (tier.level > tierLevelLimit) break;
+  Memory.EnemyArmyIsSuperior = isEnemyArmySuperior();
 
-    const zones = orderBattleZones(tier.zones);
+  if (!Memory.EnemyArmyIsSuperior) {
+    const traversed = new Set();
+    const tierLevelLimit = Memory.ModeCombatDefend ? 1 : Infinity;
 
-    for (const zone of zones) {
-      if (traversed.has(zone)) continue;
+    for (const tier of Tiers) {
+      if (tier.level > tierLevelLimit) break;
 
-      if (zone.alertLevel === ALERT_RED) {
-        const battle = findBattle(zone) || new Battle(zone);
-        const { zones, front } = findBattleZones(zone);
+      const zones = orderBattleZones(tier.zones);
 
-        battle.front = front;
-        battle.zones = zones;
+      for (const zone of zones) {
+        if (traversed.has(zone)) continue;
 
-        battle.move(zone);
-        battles.add(battle);
+        if (zone.alertLevel === ALERT_RED) {
+          const battle = findBattle(zone) || new Battle(zone);
+          const { zones, front } = findBattleZones(zone);
 
-        for (const zone of zones) {
-          traversed.add(zone);
+          battle.front = front;
+          battle.zones = zones;
+
+          battle.move(zone);
+          battles.add(battle);
+
+          for (const zone of zones) {
+            traversed.add(zone);
+          }
         }
       }
     }
@@ -53,6 +59,7 @@ export default function() {
       battle.front.add(defendZone);
     }
 
+    battles.clear();
     battles.add(battle);
   }
 
@@ -137,4 +144,36 @@ function findBattleZones(zone) {
   }
 
   return { zones, front };
+}
+
+function isEnemyArmySuperior() {
+  let enemyDamage = 0;
+  let enemyHealth = 0;
+  let warriorDamage = 0;
+  let warriorHealth = 0;
+
+  for (const zone of Zone.list()) {
+    for (const warrior of zone.warriors) {
+      if (!warrior.isAlive) continue;
+      if (!warrior.type.movementSpeed) continue;
+      if (warrior.type.isWorker) continue;
+
+      warriorDamage += warrior.type.damageGround;
+      warriorHealth += warrior.armor.total;
+    }
+
+    for (const threat of zone.threats) {
+      if (!threat.type.movementSpeed) continue;
+      if (!threat.type.isWarrior) continue;
+      if (threat.type.isWorker) continue;
+
+      enemyDamage += threat.type.damageGround;
+      enemyHealth += threat.armor.total;
+    }
+  }
+
+  const warriorStrength = warriorHealth * warriorDamage;
+  const enemyStrength = enemyHealth * enemyDamage;
+
+  return (enemyStrength > warriorStrength * 1.5);
 }
