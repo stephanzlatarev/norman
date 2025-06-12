@@ -1,4 +1,4 @@
-import { Depot, Memory, Order, Units } from "./imports.js";
+import { ActiveCount, Depot, Memory, Order, Units } from "./imports.js";
 
 export default function() {
   const previousLimitBase = Memory.LimitBase;
@@ -13,6 +13,10 @@ export default function() {
 
 function setBaseLimit() {
   if (Memory.ExpectEnemyRush) {
+    // Don't expand if we expect an enemy rush
+    Memory.LimitBase = 1;
+  } else if ((ActiveCount.Nexus === 1) && Memory.EnemyArmyIsSuperior) {
+    // Don't start first expansion before we have army to defend it
     Memory.LimitBase = 1;
   } else {
     Memory.LimitBase = Depot.list().length;
