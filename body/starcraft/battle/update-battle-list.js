@@ -42,18 +42,25 @@ export default function() {
   }
 
   if (!battles.size) {
-    let defendZone = Depot.home;
+    let battleZone = Depot.home;
 
     if (Memory.ModeCombatDefend) {
-      defendZone = findFrontBaseZone();
+      battleZone = findFrontBaseZone();
     } else if (Enemy.base && !Enemy.base.warriors.size) {
-      defendZone = Enemy.base;
+      battleZone = Enemy.base;
     }
 
-    const battle = findBattle(defendZone) || new Battle(defendZone);
+    const battle = findBattle(battleZone) || new Battle(battleZone);
 
     if (!battle.front.size) {
-      battle.front.add(defendZone);
+      battle.front.add(battleZone);
+    }
+
+    if (battleZone !== Enemy.base) {
+      // Add all zones in range to the battle so that defenders can attack them
+      for (const zone of battleZone.range.zones) {
+        battle.zones.add(zone);
+      }
     }
 
     battles.clear();
