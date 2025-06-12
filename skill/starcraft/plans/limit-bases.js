@@ -1,25 +1,22 @@
-import Memory from "../../../code/memory.js";
-import Mission from "../mission.js";
-import Order from "../order.js";
-import Units from "../units.js";
-import Depot from "../map/depot.js";
+import { Depot, Memory, Order, Units } from "./imports.js";
 
-export default class LimitBaseMission extends Mission {
+export default function() {
+  const previousLimitBase = Memory.LimitBase;
 
-  run() {
-    const limitBase = Memory.LimitBase;
+  setBaseLimit();
 
-    if (Memory.ExpectEnemyRush) {
-      Memory.LimitBase = 1;
-    } else {
-      Memory.LimitBase = Depot.list().length;
-    }
-
-    if (Memory.LimitBase < limitBase) {
-      cancelExposedConstructions();
-    }
+  if (Memory.LimitBase < previousLimitBase) {
+    cancelExposedConstructions();
   }
 
+}
+
+function setBaseLimit() {
+  if (Memory.ExpectEnemyRush) {
+    Memory.LimitBase = 1;
+  } else {
+    Memory.LimitBase = Depot.list().length;
+  }
 }
 
 function cancelExposedConstructions() {

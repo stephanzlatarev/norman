@@ -1,0 +1,5 @@
+# Limits number of bases
+
+name: Limit bases
+brain: limit-bases.js
+type: javascript
