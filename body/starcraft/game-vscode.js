@@ -112,8 +112,9 @@ function traceMemory(texts) {
 
   if (Memory.LimitBase) texts.push({ text: "Limit Base: " + Memory.LimitBase, virtualPos: { x: 0, y: y++ } });
 
-  if (Memory.EnemyArmyIsSuperior) texts.push({ text: "Enemy Is Superior", virtualPos: { x: 0, y: y++ } });
+  if (Memory.EnemyArmyIsSuperior) texts.push({ text: "Enemy Army Is Superior", virtualPos: { x: 0, y: y++ } });
   if (Memory.DetectedEnemyExpansion) texts.push({ text: "Detected Enemy Expansion", virtualPos: { x: 0, y: y++ } });
+  if (Memory.DetectedEnemyDefensiveStance) texts.push({ text: "Detected Enemy Defensive Stance", virtualPos: { x: 0, y: y++ } });
   if (Memory.DetectedEnemyHoard) texts.push({ text: "Detected Enemy Hoard", virtualPos: { x: 0, y: y++ } });
   if (Memory.DetectedEnemyProxy) texts.push({ text: "Detected Enemy Proxy", virtualPos: { x: 0, y: y++ } });
   if (Memory.ExpectEnemyRush) texts.push({ text: "Expect Enemy Rush", virtualPos: { x: 0, y: y++ } });

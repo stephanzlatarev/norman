@@ -1,0 +1,5 @@
+# Monitors enemy for signs of defensive stance.
+
+name: Detect enemy defensive stance
+brain: detect-enemy-defensive-stance.js
+type: javascript

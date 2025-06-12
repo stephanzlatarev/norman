@@ -14,6 +14,8 @@ export default function() {
     Memory.ExpectEnemyRush = false;
   } else if (Memory.DetectedEnemyProxy || Memory.DetectedEnemyHoard) {
     Memory.ExpectEnemyRush = true;
+  } else if (Memory.DetectedEnemyDefensiveStance) {
+    Memory.ExpectEnemyRush = false;
   } else if (!Memory.DetectedEnemyExpansion) {
     // TODO: Add Crawler case = enemy expansion without vespene
     Memory.ExpectEnemyRush = true;
