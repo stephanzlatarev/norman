@@ -1,0 +1,5 @@
+# Monitor military units and assess enemy army strength compared to own army
+
+name: Enemy army assessment
+brain: enemy-army-assessment.js
+type: javascript

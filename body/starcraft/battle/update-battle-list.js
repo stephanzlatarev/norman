@@ -3,7 +3,6 @@ import Battle from "./battle.js";
 import Enemy from "../memo/enemy.js";
 import Depot from "../map/depot.js";
 import Tiers from "../map/tier.js";
-import Zone from "../map/zone.js";
 import { ALERT_RED, ALERT_YELLOW } from "../map/alert.js";
 import { TotalCount } from "../memo/count.js";
 
@@ -11,8 +10,6 @@ const RALLY_MIN_RADIUS = 4;
 
 export default function() {
   const battles = new Set();
-
-  Memory.EnemyArmyIsSuperior = isEnemyArmySuperior();
 
   if (!Memory.EnemyArmyIsSuperior) {
     const traversed = new Set();
@@ -144,36 +141,4 @@ function findBattleZones(zone) {
   }
 
   return { zones, front };
-}
-
-function isEnemyArmySuperior() {
-  let enemyDamage = 0;
-  let enemyHealth = 0;
-  let warriorDamage = 0;
-  let warriorHealth = 0;
-
-  for (const zone of Zone.list()) {
-    for (const warrior of zone.warriors) {
-      if (!warrior.isAlive) continue;
-      if (!warrior.type.movementSpeed) continue;
-      if (warrior.type.isWorker) continue;
-
-      warriorDamage += warrior.type.damageGround;
-      warriorHealth += warrior.armor.total;
-    }
-
-    for (const threat of zone.threats) {
-      if (!threat.type.movementSpeed) continue;
-      if (!threat.type.isWarrior) continue;
-      if (threat.type.isWorker) continue;
-
-      enemyDamage += threat.type.damageGround;
-      enemyHealth += threat.armor.total;
-    }
-  }
-
-  const warriorStrength = warriorHealth * warriorDamage;
-  const enemyStrength = enemyHealth * enemyDamage;
-
-  return (enemyStrength > warriorStrength * 1.5);
 }
