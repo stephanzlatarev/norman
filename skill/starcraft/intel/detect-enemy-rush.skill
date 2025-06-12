@@ -1,0 +1,5 @@
+# Monitors enemy for signs of rush or timing attack.
+
+name: Detect enemy rush
+brain: detect-enemy-rush.js
+type: javascript
