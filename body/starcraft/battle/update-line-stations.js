@@ -1,11 +1,12 @@
+import Depot from "../map/depot.js";
 import { ActiveCount } from "../memo/count.js";
 
 export default function(battle) {
-  const battery = getShieldBattery(battle);
+  const rechargePoint = getRechargePoint(battle);
 
-  if (battery) {
+  if (rechargePoint) {
     for (const line of battle.lines) {
-      line.stations = [battery.cell];
+      line.stations = [rechargePoint];
     }
   } else {
     for (const line of battle.lines) {
@@ -18,13 +19,21 @@ export default function(battle) {
   }
 }
 
-function getShieldBattery(battle) {
+function getRechargePoint(battle) {
   if (!ActiveCount.ShieldBattery) return;
 
   for (const zone of battle.zones) {
+    if (zone === Depot.home) {
+      for (const site of zone.sites) {
+        if (site.recharge) {
+          return site.recharge;
+        }
+      }
+    }
+
     for (const building of zone.buildings) {
       if (building.type.name === "ShieldBattery") {
-        return building;
+        return building.cell;
       }
     }
   }

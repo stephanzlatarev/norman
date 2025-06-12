@@ -242,7 +242,7 @@ export default class Order {
     } else if (options & Order.MOVE_NEAR_BY) {
       distance = 8;
     }
-    if (isClose(unit.body, pos, distance)) return;
+    if (!unit.order.abilityId && isClose(unit.body, pos, distance)) return;
 
     if ((unit.order.abilityId !== 16) || !unit.order.targetWorldSpacePos || !isSamePosition(unit.order.targetWorldSpacePos, pos)) {
       return new Order(unit, 16, { x: pos.x, y: pos.y }).accept(true);
