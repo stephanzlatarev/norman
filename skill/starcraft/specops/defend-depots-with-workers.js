@@ -1,6 +1,7 @@
 import { Depot, Job, Order } from "./imports.js";
 
-const MAX_ATTACKERS = 12;
+const MAX_WORKER_DEFENDERS = 12;
+const MAX_WORKER_FLANKERS = 4;
 
 const jobs = new Map();
 
@@ -16,7 +17,16 @@ export default function() {
 
     if ((targets > 0) && (zone.depot.isUnderAttack || isUnderAttack(zone))) {
       zone.depot.isUnderAttack = true;
-      defenders = Math.min(targets * 3, zone.workers.size, MAX_ATTACKERS);
+
+      if (zone.warriors.size) {
+        // There are military units in the zone, so we only support them with workers.
+        defenders = Math.max(MAX_WORKER_FLANKERS - zone.warriors.size, 0);
+      } else {
+        // There are no military units in the zone, so we need to use workers to defend.
+        defenders = targets * 3;
+      }
+
+      defenders = Math.min(defenders, zone.workers.size, MAX_WORKER_DEFENDERS);
 
       for (let i = 0; i < defenders; i++) {
         addJob(zone, i);
@@ -25,7 +35,7 @@ export default function() {
       zone.depot.isUnderAttack = false;
     }
 
-    for (let i = defenders; i < MAX_ATTACKERS; i++) {
+    for (let i = defenders; i < MAX_WORKER_DEFENDERS; i++) {
       closeJob(zone, i);
     }
   }
