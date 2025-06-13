@@ -4,28 +4,36 @@ import Board from "./board.js";
 // Use this function to store the map info for AI Arena Kibitz
 // Change zone.js:MIN_SQUARE_DISTANCE_START_ZONES to equal MIN_SQUARE_DISTANCE_DEPOT_ZONES
 
-export default function() {
-  let text = `
-export default {
-  left: ${Board.left},
-  top: ${Board.top},
-  width: ${Board.width},
-  height: ${Board.height},
-  zones: [`;
+export default function(gameInfo) {
+  const name = gameInfo.localMapPath.split(".")[0];
+  const center = pos((Board.left + Board.right) / 2, (Board.top + Board.bottom) / 2);
 
-  for (let y = Board.top + Board.height - 1; y >= 0; y--) {
+  const text = [
+    `export default {`,
+    `  left: ${Board.left},`,
+    `  top: ${Board.top},`,
+    `  width: ${Board.width},`,
+    `  height: ${Board.height},`,
+    `  zones: [`,
+  ];
+
+  for (let y = 0; y < Board.bottom; y++) {
     const line = [];
-    for (const cell of Board.cells[y]) {
-      line.push(cell.zone ? cell.zone.cell.x * 1000 + cell.zone.cell.y : 0);
+
+    for (let x = 0; x < Board.right; x++) {
+      const cell = Board.cells[y][x];
+      line.push(cell.zone ? pos(cell.zone.x, cell.zone.y) : center);
     }
-    text += `
-    [${line.join(",")}]`;
-    if (y) text += ",";
+
+    text.push("    [" + line.join(",") + "],");
   }
 
-  text += `
-  ]
-}`;
+  text.push("  ]");
+  text.push("}");
 
-  fs.writeFileSync("map-info.js", text.trim());
+  fs.writeFileSync(name + ".js", text.join("\r\n"));
+}
+
+function pos(x, y) {
+  return Math.floor(x - Board.left) * 1000 + Math.floor(Board.bottom - y);
 }
