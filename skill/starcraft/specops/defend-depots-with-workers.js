@@ -1,41 +1,34 @@
-import Job from "../job.js";
-import Mission from "../mission.js";
-import Order from "../order.js";
-import Depot from "../map/depot.js";
+import { Depot, Job, Order } from "./imports.js";
 
 const MAX_ATTACKERS = 12;
 
 const jobs = new Map();
 
-export default class DefendDepotsMission extends Mission {
+export default function() {
+  removeCompletedJobs();
 
-  run() {
-    removeCompletedJobs();
+  for (const zone of Depot.list()) {
+    if (!zone.depot) continue;
 
-    for (const zone of Depot.list()) {
-      if (!zone.depot) continue;
+    let defenders = 0;
 
-      let defenders = 0;
+    const targets = zone.enemies.size ? countTargets(zone.depot, zone.enemies) : 0;
 
-      const targets = zone.enemies.size ? countTargets(zone.depot, zone.enemies) : 0;
+    if ((targets > 0) && (zone.depot.isUnderAttack || isUnderAttack(zone))) {
+      zone.depot.isUnderAttack = true;
+      defenders = Math.min(targets * 3, zone.workers.size, MAX_ATTACKERS);
 
-      if ((targets > 0) && (zone.depot.isUnderAttack || isUnderAttack(zone))) {
-        zone.depot.isUnderAttack = true;
-        defenders = Math.min(targets * 3, zone.workers.size, MAX_ATTACKERS);
-
-        for (let i = 0; i < defenders; i++) {
-          addJob(zone, i);
-        }
-      } else {
-        zone.depot.isUnderAttack = false;
+      for (let i = 0; i < defenders; i++) {
+        addJob(zone, i);
       }
-  
-      for (let i = defenders; i < MAX_ATTACKERS; i++) {
-        closeJob(zone, i);
-      }
+    } else {
+      zone.depot.isUnderAttack = false;
+    }
+
+    for (let i = defenders; i < MAX_ATTACKERS; i++) {
+      closeJob(zone, i);
     }
   }
-
 }
 
 class Defend extends Job {
