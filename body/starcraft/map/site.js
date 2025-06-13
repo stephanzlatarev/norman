@@ -69,7 +69,6 @@ class WallSite extends Site {
     this.medium = [Board.cell(x + (sx ? 2 : -2), y + (sy ? -1 : 1))];
     this.battery = [Board.cell(x + (sx ? -1 : 2), y + (sy ? 2 : -1))];
     this.wall = [Board.cell(x, y + dy)];
-    this.recharge = Board.cell(x + (sx ? 4 : -3), y + (sy ? 2 : -1));
   }
 
 }

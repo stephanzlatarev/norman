@@ -93,7 +93,7 @@ export default class Fight extends Job {
         this.goAttack();
       } else {
         this.details = getDetails(this, "charge");
-        new Order(warrior, 23, this.battle.zone.rally).accept(true);
+        new Order(warrior, 23, (this.station.zone === this.battle.zone) ? this.station : this.battle.zone.rally).accept(true);
       }
 
       this.isBusy = true;
