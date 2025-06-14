@@ -10,6 +10,7 @@ const MIN_CORRIDOR_ANGLE = 1.6;
 const MIN_SQUARE_DISTANCE_START_ZONES = 22 * 22;
 const MIN_SQUARE_DISTANCE_DEPOT_ZONES = 15 * 15;
 const RANGE_FIRE = 15;
+const SQUARE_RANGE_FIRE = RANGE_FIRE * RANGE_FIRE;
 
 const zones = [];
 const knownThreats = new Map();
@@ -119,7 +120,7 @@ export default class Zone extends Pin {
       }
     }
 
-    this.r = Math.floor(Math.sqrt(squareRadius));
+    this.r = Math.ceil(Math.sqrt(squareRadius));
   }
 
   addUnit(unit) {
@@ -699,12 +700,8 @@ function areZoneIndirectlyReachable(start, end) {
 function identifyRanges() {
   // Identiify fire range
   for (const zone of zones) {
-    const squareFireRange = (zone.r + RANGE_FIRE) * (zone.r + RANGE_FIRE);
-
     for (const other of zones) {
-      if (zone === other) continue;
-
-      if (calculateSquareDistance(zone, other) < squareFireRange) {
+      if ((zone !== other) && areZonesInFireRange(zone, other)) {
         zone.range.fire.add(other);
         zone.range.zones.add(other);
       }
@@ -718,6 +715,20 @@ function identifyRanges() {
         if (!zone.range.fire.has(neighbor)) {
           zone.range.front.add(neighbor);
           zone.range.zones.add(neighbor);
+        }
+      }
+    }
+  }
+}
+
+function areZonesInFireRange(a, b) {
+  const squareZoneFireRange = (a.r + b.r + RANGE_FIRE) * (a.r + b.r + RANGE_FIRE);
+
+  if (calculateSquareDistance(a, b) <= squareZoneFireRange) {
+    for (const ac of a.border) {
+      for (const bc of b.border) {
+        if (calculateSquareDistance(ac, bc) <= SQUARE_RANGE_FIRE) {
+          return true;
         }
       }
     }
