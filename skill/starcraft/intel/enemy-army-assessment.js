@@ -1,6 +1,7 @@
 import { Memory, Zone } from "./imports.js";
 
 export default function() {
+  const previousEnemyArmyIsSuperior = Memory.EnemyArmyIsSuperior;
   let enemyDamage = 0;
   let enemyHealth = 0;
   let warriorDamage = 0;
@@ -28,6 +29,11 @@ export default function() {
 
   const warriorStrength = warriorHealth * warriorDamage;
   const enemyStrength = enemyHealth * enemyDamage;
+  const enemyArmyIsSuperior = (enemyStrength > warriorStrength * 1.5);
 
-  Memory.EnemyArmyIsSuperior = (enemyStrength > warriorStrength * 1.5);
+  if (enemyArmyIsSuperior != previousEnemyArmyIsSuperior) {
+    console.log("Detected that enemy army is", enemyArmyIsSuperior ? "superior" : "not superior");
+    console.log(enemyArmyIsSuperior, "vs", previousEnemyArmyIsSuperior);
+    Memory.EnemyArmyIsSuperior = enemyArmyIsSuperior;
+  }
 }
