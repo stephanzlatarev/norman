@@ -1,5 +1,6 @@
 import Memory from "../../../code/memory.js";
 import Battle from "./battle.js";
+import Depot from "../map/depot.js";
 
 const ATTACK_BALANCE = 1.6;
 const RETREAT_BALANCE = 1.0;
@@ -67,7 +68,7 @@ function normalTransition(battle) {
 
   // Check if we are defending our bases
   if (battle.zone.tier.level === 1) {
-    if ((battle.deployedBalance >= DEFEND_BALANCE) || areEnoughFightersRallied(battle)) {
+    if ((battle.deployedBalance >= DEFEND_BALANCE) || (battle.zone == Depot.home) || areEnoughFightersRallied(battle)) {
       return Battle.MODE_FIGHT;
     } else {
       return Battle.MODE_RALLY;
@@ -76,7 +77,7 @@ function normalTransition(battle) {
 
   // Check if we are defending the approaches to our bases
   if (battle.zone.tier.level === 2) {
-    if (battle.deployedBalance >= RETREAT_BALANCE) {
+    if ((battle.deployedBalance >= RETREAT_BALANCE) || isFrontlineAtHomeBase(battle)) {
       return Battle.MODE_FIGHT;
     } else {
       return Battle.MODE_RALLY;
@@ -143,6 +144,14 @@ function areEnoughFightersRallied(battle) {
   // TODO: Check for capacity of zone (now hardcoded to 20).
   // If deployed fighters are more than that count units rallied to neighbor zones as deployed
   return (deployed > 20) || (deployed > rallying * 4);
+}
+
+function isFrontlineAtHomeBase(battle) {
+  for (const line of battle.lines) {
+    if (line.zone === Depot.home) {
+      return true;
+    }
+  }
 }
 
 function isSmallFight(battle) {
