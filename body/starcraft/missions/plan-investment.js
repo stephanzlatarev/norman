@@ -59,7 +59,7 @@ function doOneBaseDefense() {
 
   Limit.Nexus = 1;
   Limit.Assimilator = calculateLimitAssimilator();
-  Limit.Gateway = TotalCount.Stalker ? 3 : 2;
+  Limit.Gateway = TotalCount.Assimilator ? TotalCount.Stalker ? 3 : 2 : 1;
   Limit.CyberneticsCore = 1;
   Limit.RoboticsFacility = (ActiveCount.Stalker >= 3) ? 1 : 0;
   Limit.Forge = 0;
