@@ -1,45 +1,33 @@
-import Mission from "../mission.js";
-import Types from "../types.js";
-import Units from "../units.js";
-import Build from "../jobs/build.js";
-import { ALERT_WHITE, ALERT_YELLOW } from "../map/alert.js";
-import Board from "../map/board.js";
-import Depot from "../map/depot.js";
-import { ActiveCount, TotalCount } from "../memo/count.js";
-import Resources from "../memo/resources.js";
+import { Board, Build, Depot, Types, Units, ALERT_WHITE } from "./imports.js";
+import { ActiveCount, TotalCount, Resources } from "./imports.js";
 
 // TODO: Calculate time to new supply from nexuses and pylons in progress of building. Calculate time to supply cap looking at production facilities and ordered units. Build pylons just in time.
 
 const AVOID_LOOPS = 20 * 22.4; // 20 seconds
 
 const avoid = new Map();
+let job = null;
 
-export default class BuildPylonsMission extends Mission {
+export default function() {
+  if (job) {
+    if (job.isFailed) {
+      avoidZone(job);
 
-  job;
-
-  run() {
-    if (this.job) {
-      if (this.job.isFailed) {
-        avoidZone(this.job);
-
-        this.job = null;
-      } else if (!this.job.isDone) {
-        return;
-      }
-    }
-
-    // Check if it's too early for a second pylon
-    if ((Resources.supplyUsed < 20) && (TotalCount.Pylon >= 1)) return;
-
-    const plot = findPylonForSupply();
-
-    if (plot) {
-      this.job = new Build("Pylon", plot);
-      this.job.priority = 100;
+      job = null;
+    } else if (!job.isDone) {
+      return;
     }
   }
 
+  // Check if it's too early for a second pylon
+  if ((Resources.supplyUsed < 20) && (TotalCount.Pylon >= 1)) return;
+
+  const plot = findPylonForSupply();
+
+  if (plot) {
+    job = new Build("Pylon", plot);
+    job.priority = 100;
+  }
 }
 
 function findPylonForSupply() {
