@@ -1,24 +1,32 @@
-import { Depot, Job, Order, Units, ActiveCount, TotalCount } from "./imports.js";
+import { Depot, Job, Order, Units, TotalCount } from "./imports.js";
+import { findBuildingPlot } from "./utils-find-plot.js";
 
 let jobWaitOnPylonSite = null;
 let jobWaitOnGatewaySite = null;
+let jobWaitOnCyberCoreSite = null;
 let probe = null;
 let rally = null;
 
 let pylon = null;
 let gateway = null;
+let cybercore = null;
 
 export default function() {
   if (!Depot.home) return;
 
   if (jobWaitOnPylonSite && TotalCount.Pylon) cleanJobWaitOnPylonSite();
   if (jobWaitOnGatewaySite && TotalCount.Gateway) cleanJobWaitOnGatewaySite();
+  if (jobWaitOnCyberCoreSite && TotalCount.CyberneticsCore) cleanJobWaitOnCyberCoreSite();
 
   if (!TotalCount.Pylon) {
     buildFirstPylon();
   } else if (!TotalCount.Gateway) {
     if (pylon && (pylon.buildProgress > 0.85)) {
       buildFirstGateway();
+    }
+  } else if (!TotalCount.CyberneticsCore) {
+    if (gateway && (gateway.buildProgress > 0.85)) {
+      buildCyberneticsCore();
     }
   }
 }
@@ -58,6 +66,14 @@ function findGateway() {
   }
 }
 
+function findCyberCore() {
+  for (const unit of Units.buildings().values()) {
+    if (unit.type.name === "CyberneticsCore") {
+      return unit;
+    }
+  }
+}
+
 function cleanJobWaitOnPylonSite() {
   pylon = findPylon();
 
@@ -79,6 +95,20 @@ function cleanJobWaitOnGatewaySite() {
     if (jobWaitOnGatewaySite) {
       jobWaitOnGatewaySite.close(true);
       jobWaitOnGatewaySite = null;
+    }
+
+    probe = null;
+    rally = null;
+  }
+}
+
+function cleanJobWaitOnCyberCoreSite() {
+  cybercore = findCyberCore();
+
+  if (cybercore) {
+    if (jobWaitOnCyberCoreSite) {
+      jobWaitOnCyberCoreSite.close(true);
+      jobWaitOnCyberCoreSite = null;
     }
 
     probe = null;
@@ -157,6 +187,36 @@ function selectRallyForFirstGateway() {
     return {
       x : gatewaypos.x + 0.5 + ((Depot.home.x >= gatewaypos.x) ? 0.8 : -0.8),
       y : gatewaypos.y + 0.5 + ((Depot.home.y >= gatewaypos.y) ? 0.8 : -0.8),
+    };
+  }
+}
+
+function buildCyberneticsCore() {
+  if (jobWaitOnCyberCoreSite) return;
+
+  if (!probe) probe = selectProbeForCyberneticsCore();
+  if (!rally) rally = selectRallyForCyberneticsCore();
+
+  if (probe && rally) {
+    jobWaitOnCyberCoreSite = new WaitOnSite(rally);
+  }
+}
+
+function selectProbeForCyberneticsCore() {
+  for (const worker of Depot.home.workers) {
+    if (worker.isCarryingHarvest) {
+      return worker;
+    }
+  }
+}
+
+function selectRallyForCyberneticsCore() {
+  const plot = findBuildingPlot();
+
+  if (plot) {
+    return {
+      x : plot.x + 0.5 + ((Depot.home.x >= plot.x) ? 0.8 : -0.8),
+      y : plot.y + 0.5 + ((Depot.home.y >= plot.y) ? 0.8 : -0.8),
     };
   }
 }
