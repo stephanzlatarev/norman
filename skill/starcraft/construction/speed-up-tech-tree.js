@@ -1,5 +1,6 @@
-import { Depot, Job, Order, Units, TotalCount } from "./imports.js";
+import { Depot, Units, TotalCount } from "./imports.js";
 import { findBuildingPlot } from "./utils-find-plot.js";
+import WaitOnSite from "./job-wait-on-site.js";
 
 let jobWaitOnPylonSite = null;
 let jobWaitOnGatewaySite = null;
@@ -29,25 +30,6 @@ export default function() {
       buildCyberneticsCore();
     }
   }
-}
-
-class WaitOnSite extends Job {
-
-  constructor(rally) {
-    super("Probe", null, rally);
-
-    this.priority = 70;  // Higher than harvest jobs and lower than build jobs
-    this.isBusy = false; // Allows to re-assign the probe to the build job
-  }
-
-  accepts(unit) {
-    return (unit === probe);
-  }
-
-  execute() {
-    Order.move(this.assignee, this.target);
-  }
-
 }
 
 function findPylon() {
@@ -123,7 +105,7 @@ function buildFirstPylon() {
   if (!rally) rally = selectRallyForFirstPylon();
 
   if (probe && rally) {
-    jobWaitOnPylonSite = new WaitOnSite(rally);
+    jobWaitOnPylonSite = new WaitOnSite(probe, rally);
   }
 }
 
@@ -165,7 +147,7 @@ function buildFirstGateway() {
   if (!rally) rally = selectRallyForFirstGateway();
 
   if (probe && rally) {
-    jobWaitOnGatewaySite = new WaitOnSite(rally);
+    jobWaitOnGatewaySite = new WaitOnSite(probe, rally);
   }
 }
 
@@ -198,7 +180,7 @@ function buildCyberneticsCore() {
   if (!rally) rally = selectRallyForCyberneticsCore();
 
   if (probe && rally) {
-    jobWaitOnCyberCoreSite = new WaitOnSite(rally);
+    jobWaitOnCyberCoreSite = new WaitOnSite(probe, rally);
   }
 }
 

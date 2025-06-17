@@ -1,0 +1,5 @@
+# Move a probe for just-in-time build of home shield battery
+
+name: Speed up shield battery
+brain: speed-up-shield-battery.js
+type: javascript

@@ -68,6 +68,7 @@ function doOneBaseDefense() {
   Priority.CyberneticsCore = 100;
   Priority.Observer = 100;
   Priority.Immortal = 95;
+  Priority.Assimilator = 90;
   Priority.Gateway = 90;
   Priority.Sentry = (ActiveCount.Stalker > 2) ? 90 : 50;
   Priority.Stalker = 80;
@@ -78,6 +79,11 @@ function doOneBaseDefense() {
   if (Memory.ModeCombatDefend) {
     Priority.ShieldBattery = 100;
     Limit.ShieldBattery = (TotalCount.Stalker + TotalCount.Zealot >= 1) ? 1 : 0;
+
+    if (!TotalCount.ShieldBattery && ActiveCount.Assimilator) {
+      Priority.Assimilator = 50;
+      Limit.Assimilator = 1;
+    }
   } else {
     Priority.ShieldBattery = 0;
     Limit.ShieldBattery = 0;
@@ -261,7 +267,7 @@ function calculateLimitAssimilator() {
       // Assimilator is built in 21 seconds. Add a few more seconds for worker movement time.
       // It takes 22 seconds from miner assignment to collecting 50 gas.
       // We aim at starting the first assimilator in about 43 seconds before enough gas for a Stalker.
-      return getBuildProgressOfFirstGateway() > 0.80;
+      return (getBuildProgressOfFirstGateway() > 0.80) ? 1 : 0;
     }
   }
 
