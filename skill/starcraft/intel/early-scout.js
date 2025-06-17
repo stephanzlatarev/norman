@@ -1,17 +1,20 @@
-import { Job, Order, Types, Units, Board, Depot, TotalCount, VisibleCount, Enemy, Resources } from "./imports.js";
+import { Job, Order, Types, Units, Board, Depot, ActiveCount, VisibleCount, Enemy, Resources } from "./imports.js";
 
+let agent = null;
 let job = null;
 
 export default function() {
   if (job) return;                        // Early scout mission is already running
   if (!Depot.home || !Enemy.base) return; // No target for early scouting
-  if (TotalCount.Pylon > 1) return;       // Early scout moment has already passed
+  if (ActiveCount.Pylon) return;          // Early scout moment has already passed
 
-  const agent = selectAgent();
+  if (!agent) agent = selectAgent();
+  if (!agent) return;
+
   const homeWallSite = Depot.home.sites.find(site => site.isWall);
   const enemyExpansionZone = getEnemyExpansionZone();
 
-  if (agent && homeWallSite && enemyExpansionZone) {
+  if (homeWallSite && enemyExpansionZone) {
     job = new EarlyScout(agent, homeWallSite, enemyExpansionZone);
   } else {
     console.log("No early scout.");
@@ -38,8 +41,11 @@ class EarlyScout extends Job {
     this.enemyHarvestLine = new HarvestLine(enemyExpansionZone);
     this.priority = 100;
 
-    this.assign(agent);
-    this.transition(this.goBuildHomePylon);
+    this.transition(this.goScoutExpansion);
+  }
+
+  accepts(unit) {
+    return (unit === agent) && findPylon();
   }
 
   execute() {
@@ -78,30 +84,6 @@ class EarlyScout extends Job {
     orderSlip(this.assignee);
 
     this.close(true);
-  }
-
-  goBuildHomePylon() {
-    if (this.order) {
-      if (this.assignee.order.abilityId === 16) {
-        this.order = null;
-        return this.transition(this.goScoutExpansion);
-      }
-    } else if (Resources.minerals >= 100) {
-      this.order = orderPylon(this.assignee, this.homeWallSite.pylon[0]);
-      this.order.queue(16, this.enemyExpansionZone);
-    } else {
-      const pylonpos = this.homeWallSite.pylon[0];
-      const wallpos = this.homeWallSite.wall[0];
-      const rally = {
-        x : pylonpos.x + ((wallpos.x >= pylonpos.x) ? 0.2 : -0.2),
-        y : pylonpos.y + ((wallpos.y >= pylonpos.y) ? 0.2 : -0.2),
-      };
-
-      orderMove(this.assignee, rally);
-    }
-
-    // Reserve minerals for the pylon
-    Resources.minerals = 0;
   }
 
   goScoutExpansion() {
@@ -308,20 +290,11 @@ class HarvestLine {
 }
 
 function selectAgent() {
-  const selectUp = (Depot.home.exitRally.y > Depot.home.y);
-  let agent;
-
-  for (const worker of Depot.home.workers) {
-    if (!agent) {
-      agent = worker;
-    } else if (selectUp && (worker.body.y > agent.body.y)) {
-      agent = worker;
-    } else if (!selectUp && (worker.body.y < agent.body.y)) {
-      agent = worker;
+  for (const job of Job.list()) {
+    if (job.assignee && job.output && (job.output.name === "Pylon")) {
+      return job.assignee;
     }
   }
-
-  return agent;
 }
 
 function isInRange(a, b, range) {
@@ -448,6 +421,14 @@ function findEnemyWorkerToKill(agent) {
   }
 
   return bestTarget;
+}
+
+function findPylon() {
+  for (const unit of Units.buildings().values()) {
+    if (unit.type.isPylon) {
+      return unit;
+    }
+  }
 }
 
 function findPylonPlot(base) {

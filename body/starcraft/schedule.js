@@ -121,7 +121,8 @@ function findCandidate(job) {
   const candidates = profile.type.isWorker ? Units.workers() : Units.warriors();
 
   let bestCandidate;
-  let bestDistance = Infinity;
+  let bestJobDistance = Infinity;
+  let bestMapDistance = Infinity;
 
   for (const unit of candidates.values()) {
     if (!unit.cell) continue;
@@ -131,16 +132,36 @@ function findCandidate(job) {
     if (profile.type.name && (unit.type !== profile.type)) continue;
     if (!job.accepts(unit)) continue;
 
-    const distance = job.distance(unit);
+    const jobDistance = job.distance(unit);
+    let mapDistance = Infinity;
+    let isBetterCandidate = (jobDistance < bestJobDistance);
 
-    if (distance < bestDistance) {
+    if (job.target && job.target.x && job.target.y) {
+      if (isBetterCandidate) {
+        mapDistance = calculateSquaredDistance(unit.body, job.target);
+      } else if (jobDistance === bestJobDistance) {
+        mapDistance = calculateSquaredDistance(unit.body, job.target);
+
+        isBetterCandidate = (mapDistance < bestMapDistance);
+      }
+    }
+
+    if (isBetterCandidate) {
       bestCandidate = unit;
-      bestDistance = distance;
+      bestJobDistance = jobDistance;
+      bestMapDistance = mapDistance;
 
       // Check if an idle candidate in the same zone is found. There's no better candidate
-      if (!bestDistance && !bestCandidate.job) break;
+      if (!bestJobDistance && !bestCandidate.job) break;
     }
   }
 
   return bestCandidate;
+}
+
+function calculateSquaredDistance(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+
+  return (dx * dx) + (dy * dy);
 }

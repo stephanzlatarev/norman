@@ -1,0 +1,5 @@
+# Move a probe for just-in-time build of initial tech tree structures
+
+name: Speed up tech tree
+brain: speed-up-tech-tree.js
+type: javascript
