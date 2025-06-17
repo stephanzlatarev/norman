@@ -1,18 +1,25 @@
 import { Depot, Job, Order, Units, ActiveCount, TotalCount } from "./imports.js";
 
 let jobWaitOnPylonSite = null;
+let jobWaitOnGatewaySite = null;
 let probe = null;
 let rally = null;
+
+let pylon = null;
+let gateway = null;
 
 export default function() {
   if (!Depot.home) return;
 
   if (jobWaitOnPylonSite && TotalCount.Pylon) cleanJobWaitOnPylonSite();
+  if (jobWaitOnGatewaySite && TotalCount.Gateway) cleanJobWaitOnGatewaySite();
 
   if (!TotalCount.Pylon) {
     buildFirstPylon();
-  } else if (ActiveCount.Pylon && !TotalCount.Gateway) {
-    buildFirstGateway();
+  } else if (!TotalCount.Gateway) {
+    if (pylon && (pylon.buildProgress > 0.85)) {
+      buildFirstGateway();
+    }
   }
 }
 
@@ -43,11 +50,35 @@ function findPylon() {
   }
 }
 
+function findGateway() {
+  for (const unit of Units.buildings().values()) {
+    if (unit.type.name === "Gateway") {
+      return unit;
+    }
+  }
+}
+
 function cleanJobWaitOnPylonSite() {
-  if (findPylon()) {
+  pylon = findPylon();
+
+  if (pylon) {
     if (jobWaitOnPylonSite) {
       jobWaitOnPylonSite.close(true);
       jobWaitOnPylonSite = null;
+    }
+
+    probe = null;
+    rally = null;
+  }
+}
+
+function cleanJobWaitOnGatewaySite() {
+  gateway = findGateway();
+
+  if (gateway) {
+    if (jobWaitOnGatewaySite) {
+      jobWaitOnGatewaySite.close(true);
+      jobWaitOnGatewaySite = null;
     }
 
     probe = null;
@@ -98,4 +129,34 @@ function selectRallyForFirstPylon() {
 }
 
 function buildFirstGateway() {
+  if (jobWaitOnGatewaySite) return;
+
+  if (!probe) probe = selectProbeForFirstGateway();
+  if (!rally) rally = selectRallyForFirstGateway();
+
+  if (probe && rally) {
+    jobWaitOnGatewaySite = new WaitOnSite(rally);
+  }
+}
+
+// Pick a worker that returns harvest
+function selectProbeForFirstGateway() {
+  for (const worker of Depot.home.workers) {
+    if (worker.isCarryingHarvest) {
+      return worker;
+    }
+  }
+}
+
+function selectRallyForFirstGateway() {
+  const site = Depot.home.sites.find(s => s.isWall);
+
+  if (site) {
+    const gatewaypos = site.medium[0];
+
+    return {
+      x : gatewaypos.x + 0.5 + ((Depot.home.x >= gatewaypos.x) ? 0.8 : -0.8),
+      y : gatewaypos.y + 0.5 + ((Depot.home.y >= gatewaypos.y) ? 0.8 : -0.8),
+    };
+  }
 }
