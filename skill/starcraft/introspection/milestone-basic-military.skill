@@ -1,0 +1,5 @@
+# Raises milestone flag when initial army is active
+
+name: Milestone basic military
+brain: milestone-basic-military.js
+type: javascript
