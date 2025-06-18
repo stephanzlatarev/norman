@@ -1,0 +1,5 @@
+# Raises milestone flag when army is enough to defend home base against a siege
+
+name: Flag siege defense
+brain: flag-siege-defense.js
+type: javascript
