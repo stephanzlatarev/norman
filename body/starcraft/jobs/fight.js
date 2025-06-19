@@ -96,7 +96,7 @@ export default class Fight extends Job {
         new Order(warrior, 23, (this.station.zone === this.battle.zone) ? this.station : this.battle.zone.rally).accept(true);
       }
 
-      this.isBusy = true;
+      this.isBusy = isAttacking;
       this.hopping = false;
     } else if (isDeployed) {
       // Deployed but shouldn't attack yet
