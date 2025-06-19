@@ -103,7 +103,7 @@ function findHomeBaseSitePlot() {
 function findSitePlotOfType(type) {
   for (const zone of Depot.list()) {
     if (!zone.depot) continue;
-    if ((zone.alertLevel > ALERT_WHITE) || shouldAvoidZone(zone)) continue;
+    if ((zone !== Depot.home) && ((zone.alertLevel > ALERT_WHITE) || shouldAvoidZone(zone))) continue;
 
     for (const site of zone.sites) {
       for (const plot of site[type]) {
