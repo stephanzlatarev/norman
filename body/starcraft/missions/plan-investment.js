@@ -54,7 +54,6 @@ function doOneBaseDefense() {
   Limit.Probe = 26;
   Limit.Observer = 1;
   Limit.Sentry = 1;
-  Limit.Colossus = 0;
   Limit.DarkTemplar = 0;
 
   Limit.Nexus = 1;
@@ -95,6 +94,24 @@ function doOneBaseDefense() {
   } else {
     Priority.Zealot = 0;
     Limit.Zealot = 0;
+  }
+
+  if (Memory.ModeCombatDefend && Memory.FlagSiegeDefense) {
+    Priority.RoboticsBay = 100;
+    Limit.Colossus = 5;
+    Limit.RoboticsBay = 1;
+
+    if (TotalCount.RoboticsBay) {
+      Priority.Colossus = 95;
+      Priority.Immortal = 0;
+    } else {
+      Priority.Colossus = 0;
+      Priority.Immortal = 95;
+    }
+  } else {
+    Priority.RoboticsBay = 0;
+    Limit.Colossus = 0;
+    Limit.RoboticsBay = 0;
   }
 
   if (Memory.LimitBase > 1) {
