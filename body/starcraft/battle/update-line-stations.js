@@ -49,6 +49,7 @@ function addStationsAroundWall(wall, stations, fighters) {
 
     if (cell && (cell.zone === wall.zone) && cell.isPath && !cell.isObstacle && !taken.has(cell)) {
       stations.push(cell);
+      cell.isHoldStation = true;
       taken.add(cell);
       addCount--;
 
@@ -66,6 +67,7 @@ function addStationsAroundRally(rally, stations, fighters) {
 
   if (!taken.has(rally)) {
     stations.push(rally);
+    cell.isHoldStation = false;
     taken.add(rally);
     addCount--;
   }
@@ -78,6 +80,7 @@ function addStationsAroundRally(rally, stations, fighters) {
 
       if (!taken.has(cell)) {
         stations.push(cell);
+        cell.isHoldStation = false;
         taken.add(cell);
         addCount--;
 

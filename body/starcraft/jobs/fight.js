@@ -207,7 +207,7 @@ export default class Fight extends Job {
         // Move closer to see the target so that warrior can attack it
         Order.move(warrior, target.body);
       }
-    } else if (shouldMoveToCoolDown(warrior)) { 
+    } else if (!this.station.isHoldStation && shouldMoveToCoolDown(warrior)) { 
       const range = target.body.isFlying ? warrior.type.rangeAir : warrior.type.rangeGround;
       const distance = Math.sqrt(calculateSquareDistance(warrior.body, target.body)) - warrior.body.r - target.body.r;
       const closestDistanceOnReadyWeapon = distance + (target.type.movementSpeed - warrior.type.movementSpeed) * (warrior.weapon.cooldown - 3);
