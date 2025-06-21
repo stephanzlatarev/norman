@@ -64,6 +64,7 @@ class WallSite extends Site {
     const sy = dy > 0;
 
     this.dy = dy;
+    this.cell = Board.cell(x, y);
     this.pylon = [Board.cell(x + (sx ? 2 : -1), y + (sy ? 2 : -1))];
     this.small = [];
     this.medium = [Board.cell(x + (sx ? 2 : -2), y + (sy ? -1 : 1))];

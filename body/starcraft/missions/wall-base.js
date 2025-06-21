@@ -7,6 +7,7 @@ import { ActiveCount } from "../memo/count.js";
 import Depot from "../map/depot.js";
 
 let wallKeeperJob;
+let wallZones;
 
 export default class WallBase extends Mission {
 
@@ -30,6 +31,12 @@ export default class WallBase extends Mission {
     const wallSite = Depot.home.sites.find(site => site.isWall);
 
     if (wallSite && keeperType) {
+      if (!wallZones) {
+        wallZones = [Depot.home, ...Depot.home.neighbors];
+
+        calculateRampVisionLevels(wallSite);
+      }
+
       wallKeeperJob = new WallKeeper(keeperType, wallSite);
     }
   }
@@ -51,23 +58,32 @@ class WallKeeper extends Job {
     this.wall = wallSite.wall[0];
   }
 
+  // Order 6=Cheer, 7=Dance
   execute() {
     const warrior = this.assignee;
 
-    if (!warrior.isAlive) {
-      this.close(false);
-    } else if (areEnemiesApproaching()) {
-      orderHold(warrior, this.wall);
+    if (!warrior.isAlive) return this.close(false);
+
+    const enemy = findClosestEnemy();
+
+    if (enemy) {
+      if ((enemy.type.rangeGround > 1) && (enemy.cell.rampVisionLevel > -warrior.cell.rampVisionLevel)) {
+        Order.attack(warrior, enemy);
+      } else {
+        orderHold(warrior, this.wall);
+      }
     } else {
-      orderMove(warrior, this.rally);
+      orderMove(warrior, this.rally, this.isOn);
     }
+
+    this.isOn = !!enemy;
   }
 
   close(outcome) {
     const warrior = this.assignee;
 
     if (warrior && warrior.isAlive) {
-      orderMove(warrior, this.rally);
+      orderMove(warrior, this.rally, true);
     }
 
     super.close(outcome);
@@ -85,12 +101,54 @@ function findWallKeeperType() {
   }
 }
 
-function areEnemiesApproaching() {
-  if (!Depot.home) return false;
-  if (Depot.home.enemies.size) return true;
+function findClosestEnemy() {
+  let closestEnemy = null;
+  let highestLevel = -Infinity;
 
-  for (const zone of Depot.home.neighbors) {
-    if (zone.enemies.size) return true;
+  for (const zone of wallZones) {
+    for (const enemy of zone.enemies) {
+      if (!enemy.isAlive) continue;
+
+      if (enemy.cell.rampVisionLevel > highestLevel) {
+        highestLevel = enemy.cell.rampVisionLevel;
+        closestEnemy = enemy;
+      }
+    }
+  }
+
+  return closestEnemy;
+}
+
+function calculateRampVisionLevels(site) {
+  let wave = new Set();
+
+  const center = site.cell;
+  center.rampVisionLevel = 7;
+
+  for (const neighbor of center.edges) {
+    neighbor.rampVisionLevel = 7;
+
+    if (neighbor.isPath && !neighbor.isPlot) {
+      wave.add(neighbor);
+    }
+  }
+
+  for (let i = 0; (i < 16) && wave.size; i++) {
+    const next = new Set();
+
+    for (const cell of wave) {
+      for (const neighbor of cell.edges) {
+        if (neighbor.rampVisionLevel !== undefined) continue;
+
+        neighbor.rampVisionLevel = cell.rampVisionLevel - 1;
+
+        if (neighbor.isPath) {
+          next.add(neighbor);
+        }
+      }
+    }
+
+    wave = next;
   }
 }
 
@@ -108,9 +166,9 @@ function orderHold(warrior, cell) {
   }
 }
 
-function orderMove(warrior, pos) {
+function orderMove(warrior, pos, force) {
   if (!warrior || !warrior.order || !warrior.body || !pos) return;
-  if (!warrior.order.abilityId && isNearPosition(warrior.body, pos)) return;
+  if (!force && !warrior.order.abilityId && isNearPosition(warrior.body, pos)) return;
 
   if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isSamePosition(warrior.order.targetWorldSpacePos, pos)) {
     new Order(warrior, 16, pos);
