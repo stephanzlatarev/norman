@@ -233,6 +233,9 @@ export default class Fight extends Job {
         Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
         this.attackMoveForward = false;
       }
+    } else if (shouldLeaveTarget(warrior, this.station, target)) {
+      Order.move(warrior, this.station);
+      this.attackMoveForward = false;
     } else {
       Order.attack(warrior, target);
       this.attackMoveForward = false;
@@ -353,6 +356,18 @@ function getDetails(fight, mode) {
 
 function shouldMoveToCoolDown(warrior) {
   return (warrior.weapon.cooldown > 3) && (warrior.weapon.cooldown < warrior.type.weaponCooldown - 3);
+}
+
+function shouldLeaveTarget(warrior, station, target) {
+  if (!station.isHoldStation) return false;
+  if ((warrior.zone === station.zone) && warrior.cell.isPlot) return false;
+
+  const squareDistance = calculateSquareDistance(warrior.body, target.body);
+  const range = warrior.body.r + (target.body.isFlying ? warrior.type.rangeAir : warrior.type.rangeGround) + target.body.r;
+  const squareRange = range * range;
+
+  return (squareDistance > squareRange);
+
 }
 
 function isClose(a, b, distance) {

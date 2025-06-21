@@ -33,6 +33,7 @@ class TargetMatrix {
     const groundWarriors = new Set();
     const airRangeWarriors = new Set();
     const groundRangeWarriors = new Set();
+    const secondaryTargets = [];
 
     for (const fighter of battle.fighters) {
       const warrior = fighter.assignee;
@@ -51,8 +52,14 @@ class TargetMatrix {
         // Treat the enemy warriors that are in the battle zone and those that have range over my warriors as primary targets
         if ((zone === battle.zone) || isEnemyWarriorAbleToAttack(threat, groundWarriors)) {
           this.primaryTargets.push(threat);
+        } else {
+          secondaryTargets.push(threat);
         }
       }
+    }
+
+    if (!this.primaryTargets.length) {
+      this.primaryTargets = secondaryTargets;
     }
 
     for (const target of this.primaryTargets) {

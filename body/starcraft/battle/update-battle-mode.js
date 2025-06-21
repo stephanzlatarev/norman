@@ -38,7 +38,7 @@ export default function(battle) {
     }
   }
 
-  if ((mode === Battle.MODE_MARCH) && areMarchingFightersInFireRange(battle)) {
+  if ((mode === Battle.MODE_MARCH) && ((battle.zone.tier.level === 1) || areMarchingFightersInFireRange(battle))) {
     mode = Battle.MODE_FIGHT;
   }
 
