@@ -67,7 +67,7 @@ function addStationsAroundRally(rally, stations, fighters) {
 
   if (!taken.has(rally)) {
     stations.push(rally);
-    cell.isHoldStation = false;
+    rally.isHoldStation = false;
     taken.add(rally);
     addCount--;
   }
