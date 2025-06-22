@@ -1,0 +1,5 @@
+# Guard wall at home base
+
+name: Wall base
+brain: wall-base/wall-base.js
+type: javascript

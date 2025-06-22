@@ -1,52 +1,8 @@
-import Memory from "../../../code/memory.js";
-import Job from "../job.js";
-import Mission from "../mission.js";
-import Order from "../order.js";
-import Types from "../types.js";
-import { ActiveCount } from "../memo/count.js";
-import Depot from "../map/depot.js";
+import { Depot, Job, Order } from "../imports.js";
 
-let wallKeeperJob;
 let wallZones;
 
-export default class WallBase extends Mission {
-
-  run() {
-    if (wallKeeperJob) {
-      if (!shouldWallBase()) {
-        wallKeeperJob.close(true);
-        wallKeeperJob = null;
-        return;
-      } else if (wallKeeperJob.isDone || wallKeeperJob.isFailed) {
-        wallKeeperJob = null;
-      } else {
-        return;
-      }
-    }
-
-    if (!Depot.home) return;
-    if (!shouldWallBase()) return;
-
-    const keeperType = findWallKeeperType();
-    const wallSite = Depot.home.sites.find(site => site.isWall);
-
-    if (wallSite && keeperType) {
-      if (!wallZones) {
-        wallZones = [Depot.home, ...Depot.home.neighbors];
-
-        calculateRampVisionLevels(wallSite);
-      }
-
-      wallKeeperJob = new WallKeeper(keeperType, wallSite);
-    }
-  }
-}
-
-function shouldWallBase() {
-  return Memory.ModeCombatDefend;
-}
-
-class WallKeeper extends Job {
+export default class WallKeeper extends Job {
 
   constructor(keeperType, wallSite) {
     super(keeperType);
@@ -56,6 +12,12 @@ class WallKeeper extends Job {
 
     this.rally = wallSite;
     this.wall = wallSite.wall[0];
+
+    if (!wallZones) {
+      wallZones = [Depot.home, ...Depot.home.neighbors];
+
+      calculateRampVisionLevels(wallSite);
+    }
   }
 
   // Order 6=Cheer, 7=Dance
@@ -89,16 +51,6 @@ class WallKeeper extends Job {
     super.close(outcome);
   }
 
-}
-
-function findWallKeeperType() {
-  if (ActiveCount.Immortal) {
-    return Types.unit("Immortal");
-  } else if (ActiveCount.Zealot) {
-    return Types.unit("Zealot");
-  } else if (ActiveCount.Stalker) {
-    return Types.unit("Stalker");
-  }
 }
 
 function findClosestEnemy() {
