@@ -6,6 +6,7 @@ import Resources from "../memo/resources.js";
 
 const KITING_RANGE = 2;
 const KITING_WARRIORS = new Set(["Stalker"]);
+const REASSIGNABLE_WARRIORS = new Set(["Sentry"]);
 const SQUARE_DISTANCE_BLOCKED_PATH = 1000 * 1000;
 
 export default class Fight extends Job {
@@ -96,7 +97,12 @@ export default class Fight extends Job {
         new Order(warrior, 23, (this.station.zone === this.battle.zone) ? this.station : this.battle.zone.rally).accept(true);
       }
 
-      this.isBusy = isAttacking;
+      if (REASSIGNABLE_WARRIORS.has(warrior.type.name)) {
+        this.isBusy = false;
+      } else {
+        this.isBusy = isAttacking;
+      }
+
       this.hopping = false;
     } else if (isDeployed) {
       // Deployed but shouldn't attack yet

@@ -1,29 +1,26 @@
 import { ActiveCount, Depot, Memory, Types } from "../imports.js";
+import WallFielder from "./wall-fielder.js";
 import WallKeeper from "./wall-keeper.js";
+import calculateRampVisionLevels from "./ramp-vision.js";
 
+let wallSite;
+let wallFielderJob;
 let wallKeeperJob;
 
 export default function() {
-  if (wallKeeperJob) {
-    if (!shouldWallBase()) {
-      wallKeeperJob.close(true);
-      wallKeeperJob = null;
-      return;
-    } else if (wallKeeperJob.isDone || wallKeeperJob.isFailed) {
-      wallKeeperJob = null;
-    } else {
-      return;
+  if (!Depot.home) return;
+
+  if (!wallSite) {
+    wallSite = Depot.home.sites.find(site => site.isWall);
+
+    if (wallSite) {
+      calculateRampVisionLevels(wallSite);
     }
   }
 
-  if (!Depot.home) return;
-  if (!shouldWallBase()) return;
-
-  const keeperType = findWallKeeperType();
-  const wallSite = Depot.home.sites.find(site => site.isWall);
-
-  if (wallSite && keeperType) {
-    wallKeeperJob = new WallKeeper(keeperType, wallSite);
+  if (wallSite) {
+    maintainWallKeeperJob();
+    maintainWallFielderJob();
   }
 }
 
@@ -38,5 +35,45 @@ function findWallKeeperType() {
     return Types.unit("Zealot");
   } else if (ActiveCount.Stalker) {
     return Types.unit("Stalker");
+  }
+}
+
+function maintainWallKeeperJob() {
+  if (wallKeeperJob) {
+    if (!shouldWallBase()) {
+      wallKeeperJob.close(true);
+      wallKeeperJob = null;
+      return;
+    } else if (wallKeeperJob.isDone || wallKeeperJob.isFailed) {
+      wallKeeperJob = null;
+    } else {
+      return;
+    }
+  }
+
+  if (shouldWallBase()) {
+    const keeperType = findWallKeeperType();
+
+    if (keeperType) {
+      wallKeeperJob = new WallKeeper(keeperType, wallSite);
+    }
+  }
+}
+
+function maintainWallFielderJob() {
+  if (wallFielderJob) {
+    if (!shouldWallBase()) {
+      wallFielderJob.close(true);
+      wallFielderJob = null;
+      return;
+    } else if (wallFielderJob.isDone || wallFielderJob.isFailed) {
+      wallFielderJob = null;
+    } else {
+      return;
+    }
+  }
+
+  if (shouldWallBase()) {
+    wallFielderJob = new WallFielder(wallSite);
   }
 }
