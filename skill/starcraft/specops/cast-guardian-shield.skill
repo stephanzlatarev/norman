@@ -1,0 +1,5 @@
+# Cast guardian shield in battles
+
+name: Cast guardian shield
+brain: cast-guardian-shield.js
+type: javascript
