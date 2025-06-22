@@ -53,7 +53,7 @@ function doOneBaseDefense() {
   Limit.Stalker = Infinity;
   Limit.Probe = 26;
   Limit.Observer = 1;
-  Limit.Sentry = 1;
+  Limit.Sentry = 2;
   Limit.DarkTemplar = 0;
 
   Limit.Nexus = 1;

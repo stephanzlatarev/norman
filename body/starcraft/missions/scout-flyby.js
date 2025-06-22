@@ -1,3 +1,4 @@
+import Memory from "../../../code/memory.js";
 import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
@@ -8,6 +9,7 @@ import { VisibleCount } from "../memo/encounters.js";
 import Enemy from "../memo/enemy.js";
 import Resources from "../memo/resources.js";
 
+const COST_FORCE_FIELD = 50;
 const COST_GUARDIAN_SHIELD = 75;
 const COST_HALLUCINATION = 75;
 const TWO_MINUTES = 22.4 * 60 * 2;
@@ -140,7 +142,9 @@ function selectSentry() {
 
   let energyThreshold = COST_HALLUCINATION;
 
-  if (VisibleCount.Warrior) {
+  if (Memory.ModeCombatDefend) {
+    energyThreshold += COST_FORCE_FIELD;
+  } else if (VisibleCount.Warrior) {
     energyThreshold += COST_GUARDIAN_SHIELD;
   }
 
