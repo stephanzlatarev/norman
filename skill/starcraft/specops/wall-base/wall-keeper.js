@@ -27,11 +27,11 @@ export default class WallKeeper extends Job {
     const enemy = findClosestEnemy();
 
     if (enemy) {
-      if ((enemy.type.rangeGround > 1) && (enemy.cell.rampVisionLevel > -warrior.cell.rampVisionLevel)) {
-        Order.attack(warrior, enemy);
-      } else {
+      // if ((enemy.type.rangeGround > 1) && (enemy.cell.rampVisionLevel > -warrior.cell.rampVisionLevel)) {
+      //   Order.attack(warrior, enemy);
+      // } else {
         orderHold(warrior, this.wall);
-      }
+      // }
     } else {
       orderMove(warrior, this.rally, this.isOn);
     }
