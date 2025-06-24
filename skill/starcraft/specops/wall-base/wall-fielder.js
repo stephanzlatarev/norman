@@ -98,7 +98,7 @@ function findWallRamp() {
 
 function findWallTarget(ramp) {
   for (const cell of ramp) {
-    if (cell.rampVisionLevel === 0) {
+    if (cell.isPath && (cell.rampVisionLevel === 0)) {
       return { x: cell.x + 0.5, y: cell.y + 0.5 };
     }
   }

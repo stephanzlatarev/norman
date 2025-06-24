@@ -2,6 +2,7 @@
 export default function(site) {
   let wave = new Set();
 
+  const border = site.cell.zone.border;
   const center = site.cell;
   center.rampVisionLevel = 7;
 
@@ -19,6 +20,7 @@ export default function(site) {
     for (const cell of wave) {
       for (const neighbor of cell.edges) {
         if (neighbor.rampVisionLevel !== undefined) continue;
+        if (border.has(neighbor)) continue;
 
         neighbor.rampVisionLevel = cell.rampVisionLevel - 1;
 
