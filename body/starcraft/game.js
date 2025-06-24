@@ -11,6 +11,7 @@ import countUnits from "./memo/count.js";
 import countEncounters from "./memo/encounters.js";
 import Enemy from "./memo/enemy.js";
 import Resources from "./memo/resources.js";
+import Score from "./memo/score.js";
 
 const LOOPS_PER_STEP = 1;
 const LOOPS_PER_SECOND = 22.4;
@@ -38,6 +39,7 @@ export default class Game {
     Types.sync((await this.client.data({ unitTypeId: true, upgradeId: true })));
     Units.sync(this.observation.rawData.units, null, this.me);
     Resources.sync(this.observation);
+    Score.sync(this.observation);
 
     createMap(gameInfo);
 
@@ -76,6 +78,7 @@ export default class Game {
     syncMap(gameInfo);
 
     Resources.sync(this.observation);
+    Score.sync(this.observation);
     Units.sync(this.observation.rawData.units, this.observation.rawData.event, this.me);
 
     countUnits(this.observation, this.me.race);

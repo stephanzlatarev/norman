@@ -22,7 +22,7 @@ export default class VscodeGame extends Game {
     }
 
     console.log("Joining game...");
-    await this.client.joinGame({ race: 3, options: { raw: true } });
+    await this.client.joinGame({ race: 3, options: { raw: true, score: true } });
 
     console.log("Playing...");
   }

@@ -93,7 +93,7 @@ export default class LocalGame extends Game {
     console.log("Joining game...");
     await this.client.joinGame({
       race: this.config.playerSetup[0].race,
-      options: { raw: true },
+      options: { raw: true, score: true },
     });
 
     if (fs.existsSync(SIMULATION_FILE)) {

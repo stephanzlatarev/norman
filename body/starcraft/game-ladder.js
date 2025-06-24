@@ -19,7 +19,7 @@ export default class LadderGame extends Game {
     const player = {};
 
     player.race = 3;
-    player.options = { raw: true };
+    player.options = { raw: true, score: true };
     player.sharedPort = startPort++;
     player.serverPorts = { gamePort: startPort++, basePort: startPort++ };
     player.clientPorts = [
