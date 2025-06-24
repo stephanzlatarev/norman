@@ -1,7 +1,5 @@
 import { Depot, Job, Order } from "../imports.js";
 
-let wallZones;
-
 export default class WallKeeper extends Job {
 
   constructor(keeperType, wallSite) {
@@ -12,10 +10,6 @@ export default class WallKeeper extends Job {
 
     this.rally = wallSite;
     this.wall = wallSite.wall[0];
-
-    if (!wallZones) {
-      wallZones = [Depot.home, ...Depot.home.neighbors];
-    }
   }
 
   // Order 6=Cheer, 7=Dance
@@ -46,7 +40,7 @@ export default class WallKeeper extends Job {
 }
 
 function areEnemiesApproaching() {
-  for (const zone of wallZones) {
+  for (const zone of Depot.home.range.fire) {
     if (zone.enemies.size) return true;
   }
 }
