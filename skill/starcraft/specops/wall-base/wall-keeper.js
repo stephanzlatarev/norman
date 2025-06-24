@@ -24,19 +24,13 @@ export default class WallKeeper extends Job {
 
     if (!warrior.isAlive) return this.close(false);
 
-    const enemy = findClosestEnemy();
-
-    if (enemy) {
-      // if ((enemy.type.rangeGround > 1) && (enemy.cell.rampVisionLevel > -warrior.cell.rampVisionLevel)) {
-      //   Order.attack(warrior, enemy);
-      // } else {
-        orderHold(warrior, this.wall);
-      // }
+    if (areEnemiesApproaching()) {
+      orderHold(warrior, this.wall);
+      this.isHoldingPoisiton = true;
     } else {
-      orderMove(warrior, this.rally, this.isOn);
+      orderMove(warrior, this.rally, this.isHoldingPoisiton);
+      this.isHoldingPoisiton = false;
     }
-
-    this.isOn = !!enemy;
   }
 
   close(outcome) {
@@ -51,22 +45,10 @@ export default class WallKeeper extends Job {
 
 }
 
-function findClosestEnemy() {
-  let closestEnemy = null;
-  let highestLevel = -Infinity;
-
+function areEnemiesApproaching() {
   for (const zone of wallZones) {
-    for (const enemy of zone.enemies) {
-      if (!enemy.isAlive) continue;
-
-      if (enemy.cell.rampVisionLevel > highestLevel) {
-        highestLevel = enemy.cell.rampVisionLevel;
-        closestEnemy = enemy;
-      }
-    }
+    if (zone.enemies.size) return true;
   }
-
-  return closestEnemy;
 }
 
 function orderHold(warrior, cell) {
