@@ -1,6 +1,7 @@
 import { ActiveCount, Order, Resources, Units } from "./imports.js";
 
 const SHIELD_TIME = 280;
+const SHIELD_ENERGY = 75;
 
 let order = null;
 
@@ -18,7 +19,7 @@ export default function() {
   for (const unit of Units.warriors().values()) {
     if (unit.type.name !== "Sentry") continue;
     if (unit.order.abilityId !== 23) continue;
-    if (unit.energy < 75) continue;
+    if (unit.energy < SHIELD_ENERGY + (unit.energyReserved || 0)) continue;
 
     const energy = unit.energy;
 

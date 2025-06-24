@@ -6,6 +6,7 @@ let wallStation;
 let wallTarget;
 let order;
 
+const FORCE_FIELD_ENERGY  = 50;
 const FORCE_FIELD_TIME = 11 * 22.4;
 
 export default class WallFielder extends Job {
@@ -30,8 +31,10 @@ export default class WallFielder extends Job {
 
     if (!sentry.isAlive) return this.close(false);
 
+    sentry.energyReserved = FORCE_FIELD_ENERGY;
+
     if (isDefending()) {
-      if (wallTarget && (energy >= 50)) {
+      if (wallTarget && (energy >= FORCE_FIELD_ENERGY)) {
         if (order && !order.isRejected && (order.unit === sentry)) {
           // Wait until the previous order is accepted by the sentry
           if (!order.isAccepted) return;
@@ -56,6 +59,7 @@ export default class WallFielder extends Job {
     const sentry = this.assignee;
 
     if (sentry && sentry.isAlive) {
+      sentry.energyReserved = 0;
       Order.move(sentry, wallRally);
     }
 
@@ -74,6 +78,12 @@ function findWallRally(wallSite) {
 
 function findWallRamp() {
   const ramp = [];
+
+  for (const cell of Depot.home.cells) {
+    if (cell.rampVisionLevel >= 0) {
+      ramp.push(cell);
+    }
+  }
 
   for (const zone of Depot.home.range.fire) {
     for (const cell of zone.cells) {
@@ -95,15 +105,19 @@ function findWallTarget(ramp) {
 }
 
 function isDefending() {
+  if (Depot.home.enemies.size) return true;
+
   for (const zone of Depot.home.range.fire) {
     if (zone.enemies.size) return true;
   }
 }
 
 function shouldCastForceField() {
-  let count = 0;
+  let count = Depot.home.enemies.size;
 
   for (const zone of Depot.home.range.fire) {
+    if (zone === Depot.home) continue;
+
     for (const enemy of zone.enemies) {
       if (enemy.cell.rampVisionLevel >= 0) {
         count++;

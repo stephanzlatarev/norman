@@ -40,6 +40,8 @@ export default class WallKeeper extends Job {
 }
 
 function areEnemiesApproaching() {
+  if (Depot.home.enemies.size) return true;
+
   for (const zone of Depot.home.range.fire) {
     if (zone.enemies.size) return true;
   }
