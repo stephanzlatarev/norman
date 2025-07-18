@@ -1,4 +1,4 @@
-import { Job, Order, Types, Units, Board, Depot, ActiveCount, VisibleCount, Enemy, Resources } from "./imports.js";
+import { Job, Order, Types, Units, Board, Depot, ActiveCount, Enemy, Resources } from "./imports.js";
 
 let agent = null;
 let job = null;
@@ -72,17 +72,17 @@ class EarlyScout extends Job {
   }
 
   isInEnemyWarriorsRange() {
-    if (!VisibleCount.Warrior) return false;
-
     const agent = this.assignee;
 
     if (agent && agent.zone) {
-      for (const enemy of agent.zone.enemies) {
-        if (enemy.type.isWorker) continue;
-        if (!enemy.type.isWarrior) continue;
-        if (!enemy.type.rangeGround) continue;
+      for (const zone of agent.zone.range.zones) {
+        for (const enemy of zone.threats) {
+          if (enemy.type.isWorker) continue;
+          if (!enemy.type.isWarrior) continue;
+          if (!enemy.type.rangeGround) continue;
 
-        if (isInRange(agent.body, enemy.body, enemy.type.rangeGround + 3)) return true;
+          if (isInRange(agent.body, enemy.body, enemy.type.rangeGround + 7)) return true;
+        }
       }
     }
   }
@@ -265,7 +265,15 @@ class EarlyScout extends Job {
   }
 
   goMonitorEnemyExpansions() {
-    orderSlip(this.assignee);
+    const agent = this.assignee;
+
+    if (this.isInEnemyWarriorsRange()) {
+      // Retreat to home base
+      orderSlip(agent);
+    } else {
+      // Move towards the enemy base
+      orderMove(agent, Enemy.base.harvestRally);
+    }
   }
 
 }
