@@ -67,14 +67,14 @@ function isExpectingEnemyWaves() {
   } else if (didWaveStart()) {
     isInWave = true;
 
-    valueArmyAtWaveStart = Score.currrentValueArmy;
+    valueArmyAtWaveStart = Score.currentValueArmy;
     valueArmyAtMoveOut = valueArmyAtWaveStart * 1.5 * 1.2;
     killedValueArmyAtWaveStart = Score.killedValueArmy;
     lostValueArmyAtWaveStart = Score.lostValueArmy;
     loopsWithoutDamageTaken = 0;
 
     console.log("Enemy wave started.");
-  } else if (Score.currrentValueArmy > valueArmyAtMoveOut) {
+  } else if (Score.currentValueArmy > valueArmyAtMoveOut) {
     // We have enough army to move out
     return false;
   }

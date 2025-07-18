@@ -1,6 +1,7 @@
 import Job from "../job.js";
 import Units from "../units.js";
 import Battle from "./battle.js";
+import Score from "../memo/score.js";
 
 const INTERVAL = 224;
 let loop = 0;
@@ -26,6 +27,7 @@ export default function() {
     traceBattle(battle, "orphan");
   }
 
+  traceArmyScore();
   traceWarriorAssignments();
 
   loop = INTERVAL;
@@ -172,6 +174,14 @@ function increment(map, key) {
   const value = map.get(key);
 
   map.set(key, value ? value + 1 : 1);
+}
+
+function traceArmyScore() {
+  console.log(
+    "Army value:", Score.currentValueArmy,
+    "Killed:", Score.killedValueArmy,
+    "Lost:", Score.lostValueArmy,
+  );
 }
 
 function traceWarriorAssignments() {
