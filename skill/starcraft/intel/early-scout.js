@@ -15,7 +15,7 @@ export default function() {
   const enemyExpansionZone = getEnemyExpansionZone();
 
   if (homeWallSite && enemyExpansionZone) {
-    job = new EarlyScout(agent, homeWallSite, enemyExpansionZone);
+    job = new EarlyScout(homeWallSite, enemyExpansionZone);
   } else {
     console.log("No early scout.");
     job = "skip";
@@ -27,13 +27,15 @@ const MODE_DAMAGE = 2;
 
 class EarlyScout extends Job {
 
+  hasDetectedEnemyWarriors = false;
+
   homeWallSite = null;
   enemyExpansionZone = null;
   enemyHarvestLine = null;
   mode = null;
   pylon = null;
 
-  constructor(agent, homeWallSite, enemyExpansionZone) {
+  constructor(homeWallSite, enemyExpansionZone) {
     super("Probe");
 
     this.homeWallSite = homeWallSite;
@@ -52,38 +54,37 @@ class EarlyScout extends Job {
     if (!this.assignee.isAlive) {
       console.log("Early scout died.");
 
-      this.close(false);
-    } else if (this.shouldGoHome()) {
-      this.goHome();
-    } else {
-      this.act();
+      return this.close(false);
     }
+
+    if (!this.hasDetectedEnemyWarriors && this.isInEnemyWarriorsRange()) {
+      console.log("Early scout transitions to monitoring enemy expansions.");
+      this.hasDetectedEnemyWarriors = true;
+
+      this.transition(this.goMonitorEnemyExpansions);
+    }
+
+    this.act();
   }
 
   transition(action) {
     this.act = action.bind(this);
   }
 
-  shouldGoHome() {
+  isInEnemyWarriorsRange() {
+    if (!VisibleCount.Warrior) return false;
+
     const agent = this.assignee;
 
-    if ((this.mode === MODE_KILL) && agent && agent.zone) {
+    if (agent && agent.zone) {
       for (const enemy of agent.zone.enemies) {
-        if (enemy.type.isWarrior && !enemy.type.isWorker && isInRange(agent.body, enemy.body, enemy.type.rangeGround)) return true;
+        if (enemy.type.isWorker) continue;
+        if (!enemy.type.isWarrior) continue;
+        if (!enemy.type.rangeGround) continue;
+
+        if (isInRange(agent.body, enemy.body, enemy.type.rangeGround + 3)) return true;
       }
-
-      return false;
-    } else {
-      return (VisibleCount.Warrior > 0);
     }
-  }
-
-  goHome() {
-    console.log("Early scout retires.");
-
-    orderSlip(this.assignee);
-
-    this.close(true);
   }
 
   goScoutExpansion() {
@@ -148,7 +149,7 @@ class EarlyScout extends Job {
   goGuardExpansion() {
     if (isEnemyExpansionStarted(this.enemyExpansionZone)) {
       // The enemy expansion is already started, so go home
-      this.transition(this.goHome);
+      this.transition(this.goMonitorEnemyExpansions);
     } else if (areEnemyWorkersInZone(this.enemyExpansionZone)) {
       // An enemy worker entered the expansion zone and is probably building an expansion
       this.transition(this.goBlockExpansion);
@@ -168,7 +169,7 @@ class EarlyScout extends Job {
   }
 
   goBlockExpansion() {
-    if (isEnemyExpansionStarted(this.enemyExpansionZone)) return this.transition(this.goHome);
+    if (isEnemyExpansionStarted(this.enemyExpansionZone)) return this.transition(this.goMonitorEnemyExpansions);
 
     if (isWithinBlock(this.assignee.body, this.enemyExpansionZone, 6) && !areEnemyWorkersInZone(this.enemyExpansionZone)) {
       return this.transition(this.goGuardExpansion);
@@ -178,12 +179,12 @@ class EarlyScout extends Job {
         // The agent already built a pylon
         return this.transition(this.goCancelPylon);
       } else if (isAlmostDead(this.assignee)) {
-        return this.transition(this.goHome);
+        return this.transition(this.goMonitorEnemyExpansions);
       } else if (Resources.minerals >= 100) {
         const plot = findPylonPlot(this.enemyExpansionZone);
 
         if (!plot) {
-          return this.transition(this.goHome);
+          return this.transition(this.goMonitorEnemyExpansions);
         } else if (orderPylon(this.assignee, plot)) {
           Resources.minerals -= 100;
 
@@ -258,9 +259,13 @@ class EarlyScout extends Job {
       if ((this.pylon.buildProgress >= 0.99) || (this.pylon.armor.health < 20)) {
         new Order(this.pylon, 3659).accept(true);
 
-        this.transition(this.goHome);
+        this.transition(this.goMonitorEnemyExpansions);
       }
     }
+  }
+
+  goMonitorEnemyExpansions() {
+    orderSlip(this.assignee);
   }
 
 }
