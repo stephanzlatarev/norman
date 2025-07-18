@@ -31,6 +31,7 @@ export default class Detect extends Job {
     const observer = this.assignee;
     const mode = this.battle.mode;
     const threats = this.zone.threats;
+    const isBattleInAttackMode = (mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_MARCH) || (mode === Battle.MODE_SMASH);
 
     for (const threat of threats) {
       if ((threat.lastSeen < observer.lastSeen) && isInSight(observer, threat.body)) {
@@ -47,8 +48,13 @@ export default class Detect extends Job {
       // Rally to battle zone
       // TODO: Make sure rally move doesn't go through threat zones
       this.target = this.zone;
-    } else if (shouldChangeTarget(observer, this.target, this.loopsInDirection, this.battle)) {
-      this.target = selectTarget(observer, this.battle, this.target);
+    } else if (!shouldChangeTarget(observer, this.target, this.loopsInDirection, this.battle)) {
+      // Should not change target
+    } else if (isBattleInAttackMode) {
+      this.target = selectTargetInAttackMode(observer, this.battle, this.target);
+      this.loopsInDirection = 0;
+    } else {
+      this.target = selectTargetInRallyMode(observer, this.battle, this.target);
       this.loopsInDirection = 0;
     }
 
@@ -56,7 +62,7 @@ export default class Detect extends Job {
       Order.move(observer, this.target);
     }
 
-    this.isBusy = (mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH);
+    this.isBusy = isBattleInAttackMode;
     this.shield = observer.armor.shield;
     this.loopsInDirection++;
   }
@@ -79,16 +85,31 @@ function shouldChangeTarget(observer, target, loopsInDirection, battle) {
   return false;
 }
 
-function selectTarget(observer, battle, previousTarget) {
+function selectTargetInAttackMode(observer, battle, previousTarget) {
   if (!previousTarget) return battle.zone;
 
   const invisibleThreat = findClosestInvisibleThreat(observer, battle.zone.threats, battle.zone.enemies, previousTarget);
   if (invisibleThreat) return invisibleThreat;
 
-  const frontline = battle.lines.filter(line => ((line.zone !== battle.zone) && (line.zone !== previousTarget)));
-  if (frontline.length) return frontline[Math.floor(frontline.length * Math.random())].zone;
+  if (previousTarget !== battle.zone) return battle.zone;
+
+  const zones = [...battle.zone.neighbors].filter(zone => ((zone !== battle.zone) && (zone !== previousTarget) && !battle.lines.some(line => (line.zone === zone))));
+  if (zones.length) return zones[Math.floor(zones.length * Math.random())];
+
+  const bordercells = [...battle.zone.border];
+  return bordercells[Math.floor(bordercells.length * Math.random())];
+}
+
+function selectTargetInRallyMode(observer, battle, previousTarget) {
+  if (!previousTarget) return battle.zone;
+
+  const invisibleThreat = findClosestInvisibleThreat(observer, battle.zone.threats, battle.zone.enemies, previousTarget);
+  if (invisibleThreat) return invisibleThreat;
 
   if (previousTarget !== battle.zone) return battle.zone;
+
+  const frontline = battle.lines.filter(line => ((line.zone !== battle.zone) && (line.zone !== previousTarget)));
+  if (frontline.length) return frontline[Math.floor(frontline.length * Math.random())].zone;
 
   const bordercells = [...battle.zone.border];
   return bordercells[Math.floor(bordercells.length * Math.random())];
@@ -168,6 +189,8 @@ function isInSight(observer, body) {
 function isInEnemyFireRange(battle, observer) {
   for (const zone of battle.zones) {
     for (const threat of zone.threats) {
+      if (!threat.type.rangeAir) continue;
+
       const fireRange = threat.type.rangeAir + SAFETY_DISTANCE;
 
       if (calculateSquareDistance(threat.body, observer.body) <= fireRange * fireRange) {
@@ -184,8 +207,14 @@ function isTargetValid(battle, target) {
     // A unit target is valid only if it is a threat but is not visible
     return battle.zone.threats.has(target) && !battle.zone.enemies.has(target);
   } else if (target.cell) {
-    // A zone target is valid only if it's one of the battle line zones
-    return battle.lines.some(line => (target === line.zone));
+    // A zone target is valid only if...
+    if ((battle.mode === Battle.MODE_FIGHT) || (battle.mode === Battle.MODE_MARCH) || (battle.mode === Battle.MODE_SMASH)) {
+      // ... it's one of the neighbors but none of the battle lines
+      return battle.zone.neighbors.has(target) && !battle.lines.some(line => (target === line.zone));
+    } else {
+      // ... it's one of the battle line zones
+      return battle.lines.some(line => (target === line.zone));
+    }
   }
 
   return target.zone && battle.zones.has(target.zone);
