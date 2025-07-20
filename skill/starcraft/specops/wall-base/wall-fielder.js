@@ -3,7 +3,7 @@ import { Depot, Job, Order, Resources } from "../imports.js";
 let wallRally;
 let wallRamp;
 let wallStation;
-let wallTarget;
+let forceFieldPoints;
 let order;
 
 const FORCE_FIELD_ENERGY  = 50;
@@ -20,7 +20,7 @@ export default class WallFielder extends Job {
     if (!wallStation) {
       wallRally = findWallRally(wallSite);
       wallRamp = findWallRamp();
-      wallTarget = findWallTarget(wallRamp);
+      forceFieldPoints = findForceFieldPoints(wallRamp);
       wallStation = wallSite.wall[0];
     }
   }
@@ -34,7 +34,7 @@ export default class WallFielder extends Job {
     sentry.energyReserved = FORCE_FIELD_ENERGY;
 
     if (isDefending()) {
-      if (wallTarget && (energy >= FORCE_FIELD_ENERGY)) {
+      if (forceFieldPoints && (energy >= FORCE_FIELD_ENERGY)) {
         if (order && !order.isRejected && (order.unit === sentry)) {
           // Wait until the previous order is accepted by the sentry
           if (!order.isAccepted) return;
@@ -43,8 +43,10 @@ export default class WallFielder extends Job {
           if (Resources.loop - order.timeIssued <= FORCE_FIELD_TIME) return;
         }
 
-        if (shouldCastForceField()) {
-          order = new Order(sentry, 1526, wallTarget).accept(order => (order.unit.energy < energy));
+        const point = selectForceFieldPoint();
+
+        if (point) {
+          order = new Order(sentry, 1526, point).accept(order => (order.unit.energy < energy));
           return;
         }
       }
@@ -96,12 +98,18 @@ function findWallRamp() {
   return ramp;
 }
 
-function findWallTarget(ramp) {
+function findForceFieldPoints(ramp) {
+  const points = [];
+
   for (const cell of ramp) {
-    if (cell.isPath && (cell.rampVisionLevel === 0)) {
-      return { x: cell.x + 0.5, y: cell.y + 0.5 };
+    if (!cell.isPath) continue;
+
+    if (cell.rampVisionLevel >= 0) {
+      points[cell.rampVisionLevel] = { x: cell.x + 0.5, y: cell.y + 0.5 };
     }
   }
+
+  return points;
 }
 
 function isDefending() {
@@ -112,20 +120,29 @@ function isDefending() {
   }
 }
 
-function shouldCastForceField() {
-  let count = Depot.home.enemies.size;
+function selectForceFieldPoint() {
+  let countAt0 = 0;
+  let countAt2 = 0;
+  let countAt4 = Depot.home.enemies.size;
 
   for (const zone of Depot.home.range.fire) {
     if (zone === Depot.home) continue;
 
     for (const enemy of zone.enemies) {
-      if (enemy.cell.rampVisionLevel >= 0) {
-        count++;
+      if (enemy.cell.rampVisionLevel >= 4) {
+        countAt4++;
+        countAt2++;
+        countAt0++;
+      } else if (enemy.cell.rampVisionLevel >= 2) {
+        countAt2++;
+        countAt0++;
+      } else if (enemy.cell.rampVisionLevel >= 0) {
+        countAt0++;
       }
 
-      if (count >= 5) {
-        return true;
-      }
+      if (forceFieldPoints[4] && countAt4 >= 5) return forceFieldPoints[4];
+      if (forceFieldPoints[2] && countAt2 >= 5) return forceFieldPoints[2];
+      if (forceFieldPoints[0] && countAt0 >= 5) return forceFieldPoints[0];
     }
   }
 }
