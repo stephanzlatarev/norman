@@ -27,6 +27,7 @@ const MODE_DAMAGE = 2;
 
 class EarlyScout extends Job {
 
+  hasDetectedEnemyExpansion = false;
   hasDetectedEnemyWarriors = false;
 
   homeWallSite = null;
@@ -57,6 +58,11 @@ class EarlyScout extends Job {
       return this.close(false);
     }
 
+    if (!this.hasDetectedEnemyExpansion && isEnemyExpansionStarted(this.enemyExpansionZone)) {
+      console.log("Early scout detected enemy expansion.");
+      this.hasDetectedEnemyExpansion = true;
+    }
+
     if (!this.hasDetectedEnemyWarriors && this.isInEnemyWarriorsRange()) {
       console.log("Early scout transitions to monitoring enemy expansions.");
       this.hasDetectedEnemyWarriors = true;
@@ -68,6 +74,8 @@ class EarlyScout extends Job {
   }
 
   transition(action) {
+    console.log("Early scout transitions to", action.name);
+
     this.act = action.bind(this);
   }
 
@@ -105,11 +113,15 @@ class EarlyScout extends Job {
 
   goAttackEnemyWorker() {
     if (isAttacked(this.assignee)) {
-      // Enemy worker fights back
-      this.mode = MODE_DAMAGE;
-      this.target = null;
+      if (this.hasDetectedEnemyExpansion) {
+        return this.transition(this.goMonitorEnemyExpansions);
+      } else {
+        // Enemy worker fights back
+        this.mode = MODE_DAMAGE;
+        this.target = null;
 
-      return this.transition(this.goGuardExpansion);
+        return this.transition(this.goGuardExpansion);
+      }
     }
 
     if (this.mode === MODE_KILL) {
@@ -130,7 +142,7 @@ class EarlyScout extends Job {
       const target = findEnemyWorkerClosestToEnemyExpansion(this.enemyExpansionZone);
 
       if (target) {
-        if ((this.enemyHarvestLine.distance(target.body) > 0.5) && !isEnemyWorkerBuildingStructures(target)) {
+        if (!this.hasDetectedEnemyExpansion && (this.enemyHarvestLine.distance(target.body) > 0.5) && !isEnemyWorkerBuildingStructures(target)) {
           // The enemy worker is outside the harvest zone, presumably going to build an expansion
           return this.transition(this.goGuardExpansion);
         } else if (!this.mode && isDamaged(target)) {
@@ -147,8 +159,8 @@ class EarlyScout extends Job {
   }
 
   goGuardExpansion() {
-    if (isEnemyExpansionStarted(this.enemyExpansionZone)) {
-      // The enemy expansion is already started, so go home
+    if (this.hasDetectedEnemyExpansion) {
+      // The enemy expansion is already started, so switch to next phase of scouting
       this.transition(this.goMonitorEnemyExpansions);
     } else if (areEnemyWorkersInZone(this.enemyExpansionZone)) {
       // An enemy worker entered the expansion zone and is probably building an expansion
@@ -169,7 +181,7 @@ class EarlyScout extends Job {
   }
 
   goBlockExpansion() {
-    if (isEnemyExpansionStarted(this.enemyExpansionZone)) return this.transition(this.goMonitorEnemyExpansions);
+    if (this.hasDetectedEnemyExpansion) return this.transition(this.goMonitorEnemyExpansions);
 
     if (isWithinBlock(this.assignee.body, this.enemyExpansionZone, 6) && !areEnemyWorkersInZone(this.enemyExpansionZone)) {
       return this.transition(this.goGuardExpansion);
@@ -267,9 +279,11 @@ class EarlyScout extends Job {
   goMonitorEnemyExpansions() {
     const agent = this.assignee;
 
-    if (this.isInEnemyWarriorsRange()) {
+    if ((agent.zone === Enemy.base) || isAttacked(agent) || this.isInEnemyWarriorsRange()) {
       // Retreat to home base
       orderSlip(agent);
+    } else if (!this.hasDetectedEnemyWarriors) {
+      this.transition(this.goAttackEnemyWorker);
     } else {
       // Move towards the enemy base
       orderMove(agent, Enemy.base.harvestRally);
