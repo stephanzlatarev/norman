@@ -71,11 +71,22 @@ export default function() {
 }
 
 function findFrontBaseZone() {
-  if (TotalCount.Nexus === 1) {
+  if ((TotalCount.Nexus === 1) || (Depot.home.alertLevel >= ALERT_RED)) {
     return Depot.home;
   }
 
-  return Depot.list().find(zone => (zone.depot && (zone !== Depot.home))) || Depot.home;
+  let frontThreatened;
+  let frontSecure;
+
+  for (const zone of Depot.list()) {
+    if (!zone.depot) continue;
+    if (zone.alertLevel >= ALERT_RED) return zone;
+    if (zone.alertLevel >= ALERT_YELLOW) frontThreatened = zone;
+
+    frontSecure = zone;
+  }
+
+  return frontThreatened || frontSecure || Depot.home;
 }
 
 function orderBattleZones(zones) {
