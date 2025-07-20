@@ -26,7 +26,7 @@ export default class BuildExtractorsMission extends Mission {
       if (zone.extractors.size >= 2) continue;
 
       for (const vespene of zone.vespene) {
-        if (vespene.extractor && vespene.extractor.isAlive) continue;
+        if (hasExtractor(zone, vespene)) continue;
 
         this.vespene = vespene;
         this.job = new Build("Assimilator", vespene);
@@ -36,4 +36,14 @@ export default class BuildExtractorsMission extends Mission {
     }
   }
 
+}
+
+function hasExtractor(depot, vespene) {
+  if (vespene.extractor && vespene.extractor.isAlive) return true;
+
+  for (const extractor of depot.extractors) {
+    if (extractor.isActive && (extractor.body.x === vespene.body.x) && (extractor.body.y === vespene.body.y)) {
+      return true;
+    }
+  }
 }
