@@ -10,6 +10,7 @@ export default class Battle {
   static MODE_SMASH = "smash";
   static MODE_STAND = "stand";
   static MODE_WATCH = "watch";
+  static MODE_WEAR = "wear";
 
   enemyHealth = 0;
   enemyStrength = 0;

@@ -47,7 +47,7 @@ function getPerimeterZones() {
 function checkEnemyProxyStart(zones) {
   for (const zone of zones) {
     for (const threat of zone.threats) {
-      if (threat.type.isBuilding) {
+      if (threat.type.isBuilding && !threat.type.damageGround) {
         console.log("Enemy proxy", threat.type.name, threat.nick, "detected in zones", zones.map(zone => zone.name).join(" "));
         Memory.DetectedEnemyProxy = true;
         return;

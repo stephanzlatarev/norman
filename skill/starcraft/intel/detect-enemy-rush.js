@@ -1,10 +1,18 @@
-import { ActiveCount, Depot, Memory, Score } from "./imports.js";
+import { ActiveCount, Depot, Memory, Score, VisibleCount } from "./imports.js";
 
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
 
+// TODO: Improve this by keeping track of all enemy investments
+// When enemy has lower investment in economy than us, we expect enemy rush
+// When enemy has invested in warriors and warrior production, we expect enemy waves
+// When enemy has invested in economy and static defense, we don't expect enemy expansion
+let enemyPhotonCannons = 0;
+
 export default function() {
   let expectEnemyRush = false;
+
+  enemyPhotonCannons = Math.max(VisibleCount.PhotonCannon, enemyPhotonCannons);
 
   if ((ActiveCount.Nexus === 1) && isExpectingEnemyWaves()) {
     expectEnemyRush = true;
@@ -12,7 +20,8 @@ export default function() {
     expectEnemyRush = false;
   } else if (Memory.DetectedEnemyProxy || Memory.DetectedEnemyHoard) {
     expectEnemyRush = true;
-  } else if (Memory.DetectedEnemyDefensiveStance) {
+  } else if (Memory.DetectedEnemyDefensiveStance || (enemyPhotonCannons > 3)) {
+    // TODO: Improve this by checking enemy investments
     expectEnemyRush = false;
   } else if (!Memory.DetectedEnemyExpansion) {
     // TODO: Add Crawler case = enemy expansion without vespene
@@ -83,7 +92,7 @@ function isExpectingEnemyWaves() {
 }
 
 function didWaveStart() {
-  return isDamageTaken();
+  return Memory.EnemyArmyIsSuperior && isDamageTaken();
 }
 
 function didWaveEnd() {

@@ -1,6 +1,7 @@
 import Memory from "../../../code/memory.js";
 import Battle from "./battle.js";
 import Depot from "../map/depot.js";
+import { ALERT_YELLOW } from "../map/alert.js";
 
 const ATTACK_BALANCE = 1.6;
 const RETREAT_BALANCE = 1.0;
@@ -30,7 +31,10 @@ The other battles will behave as while building the army.
 export default function(battle) {
   let mode = Battle.MODE_WATCH;
 
-  if (battle.lines.length) {
+  if (battle.zone.alertLevel <= ALERT_YELLOW) {
+    // This is the case when preparing for defence or making an ambush
+    mode = Battle.MODE_RALLY;
+  } else if (battle.lines.length) {
     if (Memory.ModeCombatCharge && isPrimaryBattle(battle)) {
       mode = maxoutTransition(battle);
     } else {
@@ -40,6 +44,10 @@ export default function(battle) {
 
   if ((mode === Battle.MODE_MARCH) && ((battle.zone.tier.level === 1) || areMarchingFightersInFireRange(battle))) {
     mode = Battle.MODE_FIGHT;
+  }
+
+  if ((mode === Battle.MODE_FIGHT) && shouldWearEnemies(battle.zone)) {
+    mode = Battle.MODE_WEAR;
   }
 
   battle.go(mode);
@@ -177,6 +185,14 @@ function isSmallFight(battle) {
   }
 
   return (enemyCount <= 3) && (warriorCount > enemyCount);
+}
+
+function shouldWearEnemies(zone) {
+  for (const threat of zone.threats) {
+    if (threat.type.movementSpeed > 0) return false;
+  }
+
+  return true;
 }
 
 // TODO: Use target matrix for battle

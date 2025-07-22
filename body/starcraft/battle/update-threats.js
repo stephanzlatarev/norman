@@ -2,7 +2,7 @@ import Battle from "./battle.js";
 import { traceBattle } from "./trace.js";
 
 export default function(battle) {
-  const isAssault = (battle.mode === Battle.MODE_FIGHT) || (battle.mode === Battle.MODE_SMASH);
+  const isAssault = (battle.mode === Battle.MODE_FIGHT) || (battle.mode === Battle.MODE_SMASH) || (battle.mode === Battle.MODE_WEAR);
   const hasDetector = battle.detector && battle.detector.assignee;
 
   if (isAssault && !hasDetector) {

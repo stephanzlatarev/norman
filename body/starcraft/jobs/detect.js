@@ -31,7 +31,7 @@ export default class Detect extends Job {
     const observer = this.assignee;
     const mode = this.battle.mode;
     const threats = this.zone.threats;
-    const isBattleInAttackMode = (mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_MARCH) || (mode === Battle.MODE_SMASH);
+    const isBattleInAttackMode = (mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_MARCH) || (mode === Battle.MODE_SMASH) || (mode === Battle.MODE_WEAR);
 
     for (const threat of threats) {
       if ((threat.lastSeen < observer.lastSeen) && isInSight(observer, threat.body)) {
@@ -208,7 +208,7 @@ function isTargetValid(battle, target) {
     return battle.zone.threats.has(target) && !battle.zone.enemies.has(target);
   } else if (target.cell) {
     // A zone target is valid only if...
-    if ((battle.mode === Battle.MODE_FIGHT) || (battle.mode === Battle.MODE_MARCH) || (battle.mode === Battle.MODE_SMASH)) {
+    if ((battle.mode === Battle.MODE_FIGHT) || (battle.mode === Battle.MODE_MARCH) || (battle.mode === Battle.MODE_SMASH) || (battle.mode === Battle.MODE_WEAR)) {
       // ... it's one of the neighbors but none of the battle lines
       return battle.zone.neighbors.has(target) && !battle.lines.some(line => (target === line.zone));
     } else {

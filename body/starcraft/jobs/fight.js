@@ -137,7 +137,7 @@ export default class Fight extends Job {
     const warrior = this.assignee;
     const mode = this.battle.mode;
 
-    return warrior && ((mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH));
+    return warrior && ((mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH) || (mode === Battle.MODE_WEAR));
   }
 
   shouldKite() {
@@ -213,7 +213,11 @@ export default class Fight extends Job {
         // Move closer to see the target so that warrior can attack it
         Order.move(warrior, target.body);
       }
-    } else if (!this.station.isHoldStation && shouldMoveToCoolDown(warrior)) { 
+    } else if (shouldRegenerateShields(warrior, this.battle, this.station)) {
+      // Regenerate shields
+      Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
+      this.attackMoveForward = false;
+    } else if (!this.station.isHoldStation && shouldMoveToCoolDown(warrior)) {
       const range = target.body.isFlying ? warrior.type.rangeAir : warrior.type.rangeGround;
       const distance = Math.sqrt(calculateSquareDistance(warrior.body, target.body)) - warrior.body.r - target.body.r;
       const closestDistanceOnReadyWeapon = distance + (target.type.movementSpeed - warrior.type.movementSpeed) * (warrior.weapon.cooldown - 3);
@@ -373,7 +377,24 @@ function shouldLeaveTarget(warrior, station, target) {
   const squareRange = range * range;
 
   return (squareDistance > squareRange);
+}
 
+function shouldRegenerateShields(warrior, battle, station) {
+  if (battle.mode !== Battle.MODE_WEAR) return false;
+  if (station.isHoldStation) return false;
+
+  if (warrior.hasRegeneratedShields && warrior.weapon.cooldown && (warrior.armor.shield < warrior.armor.shieldMax)) {
+    // Warrior has been hit after regenerating shields and firing a weapon.
+    warrior.hasRegeneratedShields = false;
+    return true;
+  }
+
+  if (!warrior.weapon.cooldown && (warrior.armor.shield >= warrior.armor.shieldMax)) {
+    // Warrior has regenerated shields and is ready to fire.
+    warrior.hasRegeneratedShields = true;
+  }
+
+  return !warrior.hasRegeneratedShields;
 }
 
 function isClose(a, b, distance) {

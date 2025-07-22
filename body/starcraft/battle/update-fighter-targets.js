@@ -6,6 +6,8 @@ export default function(battle) {
     setFightTargets(battle);
   } else if (battle.mode === Battle.MODE_SMASH) {
     setFightTargets(battle);
+  } else if (battle.mode === Battle.MODE_WEAR) {
+    setFightTargets(battle);
   } else {
     setKiteTargets(battle);
   }
