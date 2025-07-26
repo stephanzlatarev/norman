@@ -370,6 +370,7 @@ function shouldMoveToCoolDown(warrior) {
 
 function shouldLeaveTarget(warrior, station, target) {
   if (!station.isHoldStation) return false;
+  if (!target.type.movementSpeed) return false;
   if ((warrior.zone === station.zone) && warrior.cell.isPlot) return false;
 
   const squareDistance = calculateSquareDistance(warrior.body, target.body);
