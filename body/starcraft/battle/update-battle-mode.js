@@ -46,9 +46,11 @@ export default function(battle) {
     mode = Battle.MODE_FIGHT;
   }
 
-  if ((mode === Battle.MODE_FIGHT) && shouldWearEnemies(battle.zone)) {
-    mode = Battle.MODE_WEAR;
-  }
+  // TODO: Re-examine matches with Apidae before enabling
+  // Stalkers clamped on ramp and only 2-3 were attacking while the rest couldn't reach the targets.
+  // if ((mode === Battle.MODE_FIGHT) && shouldWearEnemies(battle.zone)) {
+  //   mode = Battle.MODE_WEAR;
+  // }
 
   battle.go(mode);
 }
