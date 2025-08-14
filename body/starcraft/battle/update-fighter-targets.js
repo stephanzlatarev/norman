@@ -199,6 +199,16 @@ function setKiteTargets(battle) {
       fighter.target = getPrimaryThreat(warrior, battle.zone.threats) ||
         getClosestVisibleTarget(warrior, warrior.zone.threats) ||
         getClosestVisibleTarget(warrior, battle.zone.threats);
+
+      if (!fighter.target) {
+        const targets = [];
+
+        for (const zone of battle.zones) {
+          targets.push(...zone.threats);
+        }
+
+        fighter.target = getClosestVisibleTarget(warrior, targets);
+      }
     }
   }
 }

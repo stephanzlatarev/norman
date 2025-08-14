@@ -137,7 +137,13 @@ export default class Fight extends Job {
     const warrior = this.assignee;
     const mode = this.battle.mode;
 
-    return warrior && ((mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_SMASH) || (mode === Battle.MODE_WEAR));
+    if (!warrior) return false;
+
+    if (mode === Battle.MODE_FIGHT) return true;
+    if (mode === Battle.MODE_SMASH) return true;
+    if (mode === Battle.MODE_WEAR) return true;
+
+    if ((mode === Battle.MODE_RALLY) && this.station.isHoldStation && (warrior.zone === this.station.zone)) return true;
   }
 
   shouldKite() {
