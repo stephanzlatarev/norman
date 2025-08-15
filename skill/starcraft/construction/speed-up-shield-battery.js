@@ -13,7 +13,7 @@ export default function() {
   if (jobWaitOnShieldBatterySite && TotalCount.ShieldBattery) cleanJobWaitOnShieldBatterySite();
   if (TotalCount.CyberneticsCore && !cybercore) cybercore = findCyberCore();
 
-  if (!TotalCount.ShieldBattery && cybercore && (cybercore.buildProgress > 0.85)) {
+  if (!TotalCount.ShieldBattery && cybercore && (cybercore.buildProgress > 0.82)) {
     buildShieldBattery();
   }
 }
@@ -61,7 +61,7 @@ function buildShieldBattery() {
 
 function selectProbe() {
   for (const worker of Depot.home.workers) {
-    if (worker.isCarryingHarvest) {
+    if (worker.isCarryingMinerals) {
       return worker;
     }
   }

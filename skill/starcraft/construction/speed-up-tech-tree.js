@@ -154,7 +154,7 @@ function buildFirstGateway() {
 // Pick a worker that returns harvest
 function selectProbeForFirstGateway() {
   for (const worker of Depot.home.workers) {
-    if (worker.isCarryingHarvest) {
+    if (worker.isCarryingMinerals) {
       return worker;
     }
   }
@@ -186,7 +186,7 @@ function buildCyberneticsCore() {
 
 function selectProbeForCyberneticsCore() {
   for (const worker of Depot.home.workers) {
-    if (worker.isCarryingHarvest) {
+    if (worker.isCarryingMinerals) {
       return worker;
     }
   }
