@@ -93,6 +93,10 @@ function isUnderAttack(zone) {
   for (const building of zone.buildings) {
     if (building.isHit) return true;
   }
+  if (zone.warriors.size === 1) {
+    const warrior = zone.warriors.values().next().value;
+    if (warrior.isHit) return true;
+  }
 }
 
 function removeCompletedJobs() {
