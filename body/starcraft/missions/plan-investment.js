@@ -88,7 +88,7 @@ function doOneBaseDefense() {
     Limit.ShieldBattery = 0;
   }
 
-  if (Memory.ExpectEnemyRush) {
+  if (Memory.LevelEnemyRush) {
     Priority.Zealot = 95;
     Limit.Zealot = 1;
   } else {

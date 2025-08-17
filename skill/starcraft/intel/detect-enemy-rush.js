@@ -3,6 +3,11 @@ import { ActiveCount, Depot, Memory, Score, VisibleCount } from "./imports.js";
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
 
+export const ENEMY_RUSH_NOT_EXPECTED = 0;
+export const ENEMY_RUSH_MODERATE_LEVEL = 1;
+export const ENEMY_RUSH_HIGH_LEVEL = 2;
+export const ENEMY_RUSH_EXTREME_LEVEL = 3;
+
 // TODO: Improve this by keeping track of all enemy investments
 // When enemy has lower investment in economy than us, we expect enemy rush
 // When enemy has invested in warriors and warrior production, we expect enemy waves
@@ -10,27 +15,27 @@ const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
 let enemyPhotonCannons = 0;
 
 export default function() {
-  let expectEnemyRush = false;
+  let level = ENEMY_RUSH_NOT_EXPECTED;
 
   enemyPhotonCannons = Math.max(VisibleCount.PhotonCannon, enemyPhotonCannons);
 
   if ((ActiveCount.Nexus === 1) && isExpectingEnemyWaves()) {
-    expectEnemyRush = true;
+    level = ENEMY_RUSH_HIGH_LEVEL;
   } else if (Memory.FlagSiegeDefense || Memory.MilestoneMaxArmy) {
-    expectEnemyRush = false;
+    level = ENEMY_RUSH_NOT_EXPECTED;
   } else if (Memory.DetectedEnemyProxy || Memory.DetectedEnemyHoard) {
-    expectEnemyRush = true;
+    level = ENEMY_RUSH_HIGH_LEVEL;
   } else if (Memory.DetectedEnemyDefensiveStance || (enemyPhotonCannons > 3)) {
     // TODO: Improve this by checking enemy investments
-    expectEnemyRush = false;
+    level = ENEMY_RUSH_NOT_EXPECTED;
   } else if (!Memory.DetectedEnemyExpansion) {
     // TODO: Add Crawler case = enemy expansion without vespene
-    expectEnemyRush = true;
+    level = ENEMY_RUSH_HIGH_LEVEL;
   }
 
-  if (expectEnemyRush != Memory.ExpectEnemyRush) {
-    console.log(expectEnemyRush ? "Expect" : "Don't expect", "enemy rush");
-    Memory.ExpectEnemyRush = expectEnemyRush;
+  if (level != Memory.LevelEnemyRush) {
+    console.log("Enemy rush level:", Memory.LevelEnemyRush);
+    Memory.LevelEnemyRush = level;
   }
 }
 

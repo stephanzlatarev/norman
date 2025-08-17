@@ -14,7 +14,7 @@ let perimeter;
 export default class GuardPerimeterStalkerMission extends Mission {
 
   run() {
-    if (Memory.ExpectEnemyRush) return;
+    if (Memory.LevelEnemyRush) return;
     if (!Tiers.length) return;
     if (!frontier) frontier = Tiers[0];
     if (!perimeter) perimeter = Tiers[0];

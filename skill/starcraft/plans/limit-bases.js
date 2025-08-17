@@ -12,7 +12,7 @@ export default function() {
 }
 
 function setBaseLimit() {
-  if (Memory.ExpectEnemyRush) {
+  if (Memory.LevelEnemyRush) {
     // Don't expand if we expect an enemy rush
     Memory.LimitBase = 1;
   } else if ((ActiveCount.Nexus === 1) && Memory.EnemyArmyIsSuperior) {

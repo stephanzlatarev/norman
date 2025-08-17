@@ -118,7 +118,7 @@ function traceMemory(texts) {
   if (Memory.DetectedEnemyDefensiveStance) texts.push({ text: "Detected Enemy Defensive Stance", virtualPos: { x: 0, y: y++ } });
   if (Memory.DetectedEnemyHoard) texts.push({ text: "Detected Enemy Hoard", virtualPos: { x: 0, y: y++ } });
   if (Memory.DetectedEnemyProxy) texts.push({ text: "Detected Enemy Proxy", virtualPos: { x: 0, y: y++ } });
-  if (Memory.ExpectEnemyRush) texts.push({ text: "Expect Enemy Rush", virtualPos: { x: 0, y: y++ } });
+  if (Memory.LevelEnemyRush) texts.push({ text: "Level Enemy Rush: " + Memory.LevelEnemyRush, virtualPos: { x: 0, y: y++ } });
 
   if (Memory.ModeCombatAttack) texts.push({ text: "Mode Combat Attack", virtualPos: { x: 0, y: y++ } });
   if (Memory.ModeCombatCharge) texts.push({ text: "Mode Combat Charge", virtualPos: { x: 0, y: y++ } });
