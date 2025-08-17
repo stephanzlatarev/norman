@@ -1,7 +1,9 @@
-import { Depot, Job, Order } from "./imports.js";
+import { Depot, Job, Order, TotalCount } from "./imports.js";
 
-const MAX_WORKER_DEFENDERS = 12;
-const MAX_WORKER_FLANKERS = 4;
+const MAX_WORKER_DEFENDERS_NO_WALL = 12;
+const MAX_WORKER_DEFENDERS_ON_WALL = 2;
+const MAX_WORKER_FLANKERS_NO_WALL = 4;
+const MAX_WORKER_FLANKERS_ON_WALL = 2;
 
 const jobs = new Map();
 
@@ -18,15 +20,19 @@ export default function() {
     if ((targets > 0) && (zone.depot.isUnderAttack || isUnderAttack(zone))) {
       zone.depot.isUnderAttack = true;
 
+      const isZoneWalled = (zone === Depot.home) && TotalCount.ShieldBattery;
+      const maxWorkerDefenders = isZoneWalled ? MAX_WORKER_DEFENDERS_ON_WALL : MAX_WORKER_DEFENDERS_NO_WALL;
+      const maxWorkerFlankers = isZoneWalled ? MAX_WORKER_FLANKERS_ON_WALL : MAX_WORKER_FLANKERS_NO_WALL;
+
       if (zone.warriors.size) {
         // There are military units in the zone, so we only support them with workers.
-        defenders = Math.max(MAX_WORKER_FLANKERS - zone.warriors.size, 0);
+        defenders = Math.max(maxWorkerFlankers - zone.warriors.size, 0);
       } else {
         // There are no military units in the zone, so we need to use workers to defend.
         defenders = targets * 3;
       }
 
-      defenders = Math.min(defenders, zone.workers.size, MAX_WORKER_DEFENDERS);
+      defenders = Math.min(defenders, zone.workers.size, maxWorkerDefenders);
 
       for (let i = 0; i < defenders; i++) {
         addJob(zone, i);
@@ -35,7 +41,7 @@ export default function() {
       zone.depot.isUnderAttack = false;
     }
 
-    for (let i = defenders; i < MAX_WORKER_DEFENDERS; i++) {
+    for (let i = defenders; i < MAX_WORKER_DEFENDERS_NO_WALL; i++) {
       closeJob(zone, i);
     }
   }
