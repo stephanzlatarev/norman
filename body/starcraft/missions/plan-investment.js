@@ -51,7 +51,7 @@ function doStartUp() {
 function doOneBaseDefense() {
   Limit.Immortal = Infinity;
   Limit.Stalker = Infinity;
-  Limit.Probe = 26;
+  Limit.Probe = (Memory.LevelEnemyRush >= 3) ? 19 : 26;
   Limit.Observer = 1;
   Limit.Sentry = 2;
   Limit.DarkTemplar = 0;
@@ -286,6 +286,11 @@ function calculateLimitAssimilator() {
       // We aim at starting the first assimilator in about 43 seconds before enough gas for a Stalker.
       return (getBuildProgressOfFirstGateway() > 0.80) ? 1 : 0;
     }
+  }
+
+  if (Memory.LevelEnemyRush >= 3) {
+    // Expecting extreme enemy rush on minerals-only economy
+    return 1;
   }
 
   let limit = 0;

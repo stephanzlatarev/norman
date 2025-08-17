@@ -1,4 +1,4 @@
-import { ActiveCount, Depot, Memory, Score, VisibleCount } from "./imports.js";
+import { ActiveCount, Depot, Memory, Score, TotalCount, VisibleCount } from "./imports.js";
 
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
@@ -19,7 +19,13 @@ export default function() {
 
   enemyPhotonCannons = Math.max(VisibleCount.PhotonCannon, enemyPhotonCannons);
 
-  if ((ActiveCount.Nexus === 1) && isExpectingEnemyWaves()) {
+  if ((Memory.LevelEnemyRush >= 3) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3))) {
+    // Extreme enemy rush is still expected
+    level = ENEMY_RUSH_EXTREME_LEVEL;
+  } else if ((TotalCount.Assimilator <= 1) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3)) && areZerglingsApproaching()) {
+    // Extreme enemy rush is now expected
+    level = ENEMY_RUSH_EXTREME_LEVEL;
+  } else if ((ActiveCount.Nexus === 1) && isExpectingEnemyWaves()) {
     level = ENEMY_RUSH_HIGH_LEVEL;
   } else if (Memory.FlagSiegeDefense || Memory.MilestoneMaxArmy) {
     level = ENEMY_RUSH_NOT_EXPECTED;
@@ -122,4 +128,10 @@ function isDamageTaken() {
       if (worker.isHit) return true;
     }
   }
+}
+
+function areZerglingsApproaching() {
+  if (VisibleCount.Zergling < 4) return false;
+  // TODO: Consider the position of the zerglings. If they are still in the enemy base, don't assume they are approaching.
+  return true;
 }

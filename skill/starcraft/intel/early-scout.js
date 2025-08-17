@@ -1,4 +1,4 @@
-import { Job, Order, Types, Units, Board, Depot, ActiveCount, Enemy, Resources } from "./imports.js";
+import { Memory, Job, Order, Types, Units, Board, Depot, ActiveCount, Enemy, Resources } from "./imports.js";
 
 let agent = null;
 let job = null;
@@ -52,10 +52,22 @@ class EarlyScout extends Job {
   }
 
   execute() {
-    if (!this.assignee.isAlive) {
+    const agent = this.assignee;
+
+    if (!agent.isAlive) {
       console.log("Early scout died.");
 
       return this.close(false);
+    }
+
+    if (Memory.LevelEnemyRush >= 3) {
+      if (agent.zone === Depot.home) {
+        console.log("Early scout retires due to extreme enemy rush.");
+
+        return this.close(true);
+      } else {
+        return orderSlip(agent);
+      }
     }
 
     if (!this.hasDetectedEnemyExpansion && isEnemyExpansionStarted(this.enemyExpansionZone)) {

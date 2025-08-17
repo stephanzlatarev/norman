@@ -1,6 +1,8 @@
 import Mission from "../mission.js";
 import Build from "../jobs/build.js";
 import Depot from "../map/depot.js";
+import Limit from "../memo/limit.js";
+import { TotalCount } from "../memo/count.js";
 
 export default class BuildExtractorsMission extends Mission {
 
@@ -20,6 +22,8 @@ export default class BuildExtractorsMission extends Mission {
         return;
       }
     }
+
+    if (TotalCount.Assimilator >= Limit.Assimilator) return;
 
     for (const zone of Depot.list()) {
       if (!zone.depot || !zone.depot.isActive) continue;
