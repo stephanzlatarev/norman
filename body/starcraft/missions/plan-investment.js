@@ -97,13 +97,15 @@ function doOneBaseDefense() {
   }
 
   if (Memory.ModeCombatDefend && Memory.FlagSiegeDefense) {
+    Priority.RoboticsFacility = 100;
     Priority.RoboticsBay = 100;
     Limit.Colossus = 5;
     Limit.RoboticsBay = 1;
 
-    if (TotalCount.RoboticsBay) {
+    if (TotalCount.RoboticsBay && (TotalCount.Colossus < Limit.Colossus)) {
       Priority.Colossus = 95;
       Priority.Immortal = 0;
+      Limit.Immortal = TotalCount.Immortal; // TODO: Fix build-warrior job to remove unassigned conflicting jobs with lower priority for the same facility type
     } else {
       Priority.Colossus = 0;
       Priority.Immortal = 95;
