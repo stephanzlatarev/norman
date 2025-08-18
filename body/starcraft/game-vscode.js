@@ -1,5 +1,6 @@
 import Memory from "../../code/memory.js";
 import Game from "./game.js";
+import Job from "./job.js";
 import Battle from "./battle/battle.js";
 import { ALERT_WHITE } from "./map/alert.js";
 import Board from "./map/board.js";
@@ -51,32 +52,36 @@ const zoneShapes = new Map();
 async function trace(client) {
   const lines = [];
   const text = [];
+  const shapes = [];
   const spheres = [];
 
-  traceAlertLevels(text);
+  traceAlertLevels(shapes);
   traceBattles(lines, text);
   traceThreats(spheres);
-  traceZones(text);
+  traceZones(shapes);
   traceMemory(text);
+  traceJobs(text);
+
+  for (let row = 0; row < text.length; row++) text[row] = { text: text[row], virtualPos: { x: 0, y: row } };
+  for (const shape of shapes) text.push(shape);
 
   await client.debug({ debug: [{ draw: { lines, text, spheres } }] });
 }
 
-function traceAlertLevels(texts) {
+function traceAlertLevels(shapes) {
   for (const zone of Zone.list()) {
     if (zone.alertLevel === ALERT_WHITE) continue;
     if (!ALERT_COLOR[zone.alertLevel]) continue;
 
     const color = ALERT_COLOR[zone.alertLevel];
-    texts.push({ text: JSON.stringify({ shape: "polygon", points: getZoneShape(zone), color: `rgb(${color.r}, ${color.g}, ${color.b})` }) });
+    shapes.push({ text: JSON.stringify({ shape: "polygon", points: getZoneShape(zone), color: `rgb(${color.r}, ${color.g}, ${color.b})` }) });
   }
 }
 
 function traceBattles(lines, texts) {
   const battles = Battle.list().sort((a, b) => (b.priority - a.priority));
-  let y = 1;
 
-  texts.push({ text: "Tier Zone Recruit/Rallied Mode  Frontline", virtualPos: { x: 0, y: 0 } });
+  texts.push("Tier Zone Recruit/Rallied Mode  Frontline");
 
   for (const battle of battles) {
     const zone = battle.zone;
@@ -87,7 +92,7 @@ function traceBattles(lines, texts) {
     text.push(battle.mode);
     text.push(battle.lines.map(line => line.zone.name).join(" "));
 
-    texts.push({ text: text.join(" "), virtualPos: { x: 0, y: y++ } });
+    texts.push(text.join(" "));
 
     const zonep = { x: zone.x, y: zone.y };
     for (const one of battle.zones) {
@@ -98,31 +103,77 @@ function traceBattles(lines, texts) {
     }
   }
 
-  texts.push({ text: "", virtualPos: { x: 0, y: y++ } });
+  texts.push("");
+}
+
+function traceJobs(texts) {
+  const jobs = [...Job.list()];
+  const started = jobs.filter(job => !!job.assignee).sort(orderByPriorityAndSummary);
+  const pending = jobs.filter(job => !job.assignee).sort(orderByPriorityAndSummary);
+
+  texts.push("Job Prio Zone");
+  displayJobList(texts, started);
+
+  texts.push("--- ---- ----");
+  displayJobList(texts, pending);
+
+  texts.push("");
+}
+
+
+function orderByPriorityAndSummary(a, b) {
+  if (b.priority !== a.priority) return b.priority - a.priority;
+  if (a.zone && b.zone && (b.summary === a.summary)) return b.zone.name.localeCompare(a.zone.name);
+
+  return b.summary.localeCompare(a.summary);
+}
+
+function displayJobList(texts, jobs) {
+  let groupText;
+  let groupCount;
+
+  for (const job of jobs) {
+    const text = threeletter(" ", job.priority) + (job.zone ? threeletter("  ", job.zone.name) : "     ") + "  " + job.summary;
+
+    if (text !== groupText) {
+      if (groupCount) {
+        texts.push(threeletter("", groupCount) + groupText);
+      }
+
+      groupText = text;
+      groupCount = 1;
+    } else {
+      groupCount++;
+    }
+  }
+
+  if (groupCount) {
+    texts.push(threeletter("", groupCount) + groupText);
+  }
 }
 
 function traceMemory(texts) {
-  let y = 15;
+  if (Memory.FlagSupplyBlocked) texts.push("Flag Supply Blocked");
 
-  if (Memory.FlagSupplyBlocked) texts.push({ text: "Flag Supply Blocked", virtualPos: { x: 0, y: y++ } });
+  if (Memory.MilestoneBasicEconomy) texts.push("Milestone Basic Economy");
+  if (Memory.MilestoneBasicMilitary) texts.push("Milestone Basic Military");
+  if (Memory.MilestoneMaxArmy) texts.push("Milestone Max Army");
 
-  if (Memory.MilestoneBasicEconomy) texts.push({ text: "Milestone Basic Economy", virtualPos: { x: 0, y: y++ } });
-  if (Memory.MilestoneBasicMilitary) texts.push({ text: "Milestone Basic Military", virtualPos: { x: 0, y: y++ } });
-  if (Memory.MilestoneMaxArmy) texts.push({ text: "Milestone Max Army", virtualPos: { x: 0, y: y++ } });
+  if (Memory.LimitBase) texts.push("Limit Base: " + Memory.LimitBase);
 
-  if (Memory.LimitBase) texts.push({ text: "Limit Base: " + Memory.LimitBase, virtualPos: { x: 0, y: y++ } });
+  if (Memory.FlagSiegeDefense) texts.push("Flag Siege Defense");
+  if (Memory.DetectedEnemyExpansion) texts.push("Detected Enemy Expansion");
+  if (Memory.DetectedEnemyDefensiveStance) texts.push("Detected Enemy Defensive Stance");
+  if (Memory.DetectedEnemyHoard) texts.push("Detected Enemy Hoard");
+  if (Memory.DetectedEnemyProxy) texts.push("Detected Enemy Proxy");
+  if (Memory.LevelEnemyRush) texts.push("Level Enemy Rush: " + Memory.LevelEnemyRush);
+  if (Memory.LevelEnemyArmySuperiority) texts.push("Level Enemy Army Superiority: " + Memory.LevelEnemyArmySuperiority);
 
-  if (Memory.FlagSiegeDefense) texts.push({ text: "Flag Siege Defense", virtualPos: { x: 0, y: y++ } });
-  if (Memory.DetectedEnemyExpansion) texts.push({ text: "Detected Enemy Expansion", virtualPos: { x: 0, y: y++ } });
-  if (Memory.DetectedEnemyDefensiveStance) texts.push({ text: "Detected Enemy Defensive Stance", virtualPos: { x: 0, y: y++ } });
-  if (Memory.DetectedEnemyHoard) texts.push({ text: "Detected Enemy Hoard", virtualPos: { x: 0, y: y++ } });
-  if (Memory.DetectedEnemyProxy) texts.push({ text: "Detected Enemy Proxy", virtualPos: { x: 0, y: y++ } });
-  if (Memory.LevelEnemyRush) texts.push({ text: "Level Enemy Rush: " + Memory.LevelEnemyRush, virtualPos: { x: 0, y: y++ } });
-  if (Memory.LevelEnemyArmySuperiority) texts.push({ text: "Level Enemy Army Superiority: " + Memory.LevelEnemyArmySuperiority, virtualPos: { x: 0, y: y++ } });
+  if (Memory.ModeCombatAttack) texts.push("Mode Combat Attack");
+  if (Memory.ModeCombatCharge) texts.push("Mode Combat Charge");
+  if (Memory.ModeCombatDefend) texts.push("Mode Combat Defend");
 
-  if (Memory.ModeCombatAttack) texts.push({ text: "Mode Combat Attack", virtualPos: { x: 0, y: y++ } });
-  if (Memory.ModeCombatCharge) texts.push({ text: "Mode Combat Charge", virtualPos: { x: 0, y: y++ } });
-  if (Memory.ModeCombatDefend) texts.push({ text: "Mode Combat Defend", virtualPos: { x: 0, y: y++ } });
+  texts.push("");
 }
 
 function traceThreats(spheres) {
@@ -135,27 +186,27 @@ function traceThreats(spheres) {
   }
 }
 
-function traceZones(texts) {
-  const shapes = [];
+function traceZones(shapes) {
   const color = "black";
+  const add = (shape) => shapes.push(JSON.stringify(shape));
 
   for (const zone of Zone.list()) {
     const rallyx = zone.isDepot ? zone.rally.x + 0.5 : zone.rally.x;
     const rallyy = zone.isDepot ? zone.rally.y + 0.5 : zone.rally.y;
     const radius = zone.isDepot ? 3.5 : 1.2;
 
-    shapes.push({ shape: "circle", x: rallyx, y: rallyy, r: 1.2, color });
+    add({ shape: "circle", x: rallyx, y: rallyy, r: 1.2, color });
 
     for (const neighbor of zone.neighbors) {
       const neighborrallyx = neighbor.isDepot ? neighbor.rally.x + 0.5 : neighbor.rally.x;
       const neighborrallyy = neighbor.isDepot ? neighbor.rally.y + 0.5 : neighbor.rally.y;
 
-      shapes.push({ shape: "line", x1: rallyx, y1: rallyy, x2: neighborrallyx, y2: neighborrallyy, color });
+      add({ shape: "line", x1: rallyx, y1: rallyy, x2: neighborrallyx, y2: neighborrallyy, color });
     }
 
     if (zone.isDepot) {
-      shapes.push({ shape: "circle", x: Math.floor(zone.x) + 0.5, y: Math.floor(zone.y) + 0.5, r: radius, color });
-      shapes.push({ shape: "circle", x: zone.harvestRally.x + 0.5, y: zone.harvestRally.y + 0.5, r: 0.5, color });
+      add({ shape: "circle", x: Math.floor(zone.x) + 0.5, y: Math.floor(zone.y) + 0.5, r: radius, color });
+      add({ shape: "circle", x: zone.harvestRally.x + 0.5, y: zone.harvestRally.y + 0.5, r: 0.5, color });
     }
 
     if (SHOW_SITES && zone.sites) {
@@ -188,10 +239,6 @@ function traceZones(texts) {
         }
       }
     }
-  }
-
-  for (const shape of shapes) {
-    texts.push({ text: JSON.stringify(shape) });
   }
 }
 
