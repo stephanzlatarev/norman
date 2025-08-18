@@ -70,9 +70,9 @@ function doOneBaseDefense() {
   Priority.Assimilator = 90;
   Priority.Gateway = 90;
   Priority.Sentry = (ActiveCount.Stalker > 2) ? 90 : 50;
-  Priority.Stalker = 80;
+  Priority.Stalker = (TotalCount.Stalker < 12) ? 80 : 60;
   Priority.Probe = 75;
-  Priority.RoboticsFacility = 70;
+  Priority.RoboticsFacility = (TotalCount.Stalker >= 6) ? 85 : 70;
   Priority.Nexus = 0;
 
   if (Memory.ModeCombatDefend) {
