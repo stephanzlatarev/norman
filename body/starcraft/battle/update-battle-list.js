@@ -11,8 +11,9 @@ const MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK = 1.5;
 
 export default function() {
   const battles = new Set();
+  const canFightBattles = (Memory.LevelEnemyArmySuperiority < MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK);
 
-  if (Memory.LevelEnemyArmySuperiority > MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK) {
+  if (canFightBattles) {
     const traversed = new Set();
     const tierLevelLimit = Memory.ModeCombatDefend ? 1 : Infinity;
 
@@ -34,7 +35,7 @@ export default function() {
           battle.move(zone);
           battles.add(battle);
 
-          for (const zone of zones) {
+          for (const zone of battle.zones) {
             traversed.add(zone);
           }
         }
