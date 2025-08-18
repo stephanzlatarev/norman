@@ -113,12 +113,12 @@ function traceMemory(texts) {
   if (Memory.LimitBase) texts.push({ text: "Limit Base: " + Memory.LimitBase, virtualPos: { x: 0, y: y++ } });
 
   if (Memory.FlagSiegeDefense) texts.push({ text: "Flag Siege Defense", virtualPos: { x: 0, y: y++ } });
-  if (Memory.EnemyArmyIsSuperior) texts.push({ text: "Enemy Army Is Superior", virtualPos: { x: 0, y: y++ } });
   if (Memory.DetectedEnemyExpansion) texts.push({ text: "Detected Enemy Expansion", virtualPos: { x: 0, y: y++ } });
   if (Memory.DetectedEnemyDefensiveStance) texts.push({ text: "Detected Enemy Defensive Stance", virtualPos: { x: 0, y: y++ } });
   if (Memory.DetectedEnemyHoard) texts.push({ text: "Detected Enemy Hoard", virtualPos: { x: 0, y: y++ } });
   if (Memory.DetectedEnemyProxy) texts.push({ text: "Detected Enemy Proxy", virtualPos: { x: 0, y: y++ } });
   if (Memory.LevelEnemyRush) texts.push({ text: "Level Enemy Rush: " + Memory.LevelEnemyRush, virtualPos: { x: 0, y: y++ } });
+  if (Memory.LevelEnemyArmySuperiority) texts.push({ text: "Level Enemy Army Superiority: " + Memory.LevelEnemyArmySuperiority, virtualPos: { x: 0, y: y++ } });
 
   if (Memory.ModeCombatAttack) texts.push({ text: "Mode Combat Attack", virtualPos: { x: 0, y: y++ } });
   if (Memory.ModeCombatCharge) texts.push({ text: "Mode Combat Charge", virtualPos: { x: 0, y: y++ } });

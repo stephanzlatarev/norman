@@ -7,11 +7,12 @@ import { ALERT_RED, ALERT_YELLOW } from "../map/alert.js";
 import { TotalCount } from "../memo/count.js";
 
 const RALLY_MIN_RADIUS = 4;
+const MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK = 1.5;
 
 export default function() {
   const battles = new Set();
 
-  if (!Memory.EnemyArmyIsSuperior) {
+  if (Memory.LevelEnemyArmySuperiority > MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK) {
     const traversed = new Set();
     const tierLevelLimit = Memory.ModeCombatDefend ? 1 : Infinity;
 

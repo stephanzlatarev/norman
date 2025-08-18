@@ -19,4 +19,4 @@ It will:
 ### Enemy army assessment
 
 Constantly monitors military units tracking units in fog of war.
-Raises `EnemyArmyIsSuperior` when enemy capacity for offense is at least 50% stronger than our capacity for defense.
+Raises `LevelEnemyArmySuperiority` as the ratio between enemy army and own army.

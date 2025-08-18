@@ -3,6 +3,8 @@ import { ActiveCount, Depot, Memory, Score, TotalCount, VisibleCount } from "./i
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
 
+const WAVE_STARTER_ENEMY_ARMY_LEVEL = 0.5;
+
 export const ENEMY_RUSH_NOT_EXPECTED = 0;
 export const ENEMY_RUSH_MODERATE_LEVEL = 1;
 export const ENEMY_RUSH_HIGH_LEVEL = 2;
@@ -40,7 +42,7 @@ export default function() {
   }
 
   if (level != Memory.LevelEnemyRush) {
-    console.log("Enemy rush level:", Memory.LevelEnemyRush);
+    console.log("Enemy rush level changes from", Memory.LevelEnemyRush, "to", level);
     Memory.LevelEnemyRush = level;
   }
 }
@@ -103,7 +105,7 @@ function isExpectingEnemyWaves() {
 }
 
 function didWaveStart() {
-  return Memory.EnemyArmyIsSuperior && isDamageTaken();
+  return (Memory.LevelEnemyArmySuperiority > WAVE_STARTER_ENEMY_ARMY_LEVEL) && isDamageTaken();
 }
 
 function didWaveEnd() {
