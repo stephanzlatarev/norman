@@ -38,6 +38,7 @@ export default class BuildFacilitiesMission extends Mission {
         this.job = null;
       } else {
         // This build job is still in progress
+        this.job.priority = Priority[this.job.output.name];
         return;
       }
     }
