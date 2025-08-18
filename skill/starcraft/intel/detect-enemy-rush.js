@@ -1,9 +1,7 @@
 import { ActiveCount, Depot, Memory, Score, TotalCount, VisibleCount } from "./imports.js";
 
-const LOOPS_PER_SECOND = 22.4;
-const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
-
 const WAVE_STARTER_ENEMY_ARMY_LEVEL = 0.5;
+const ALERT_YELLOW = 4;
 
 export const ENEMY_RUSH_NOT_EXPECTED = 0;
 export const ENEMY_RUSH_MODERATE_LEVEL = 1;
@@ -53,7 +51,6 @@ let valueArmyAtWaveStart = 0;
 let killedValueArmyAtWaveStart = 0;
 let lostValueArmyAtWaveStart = 0;
 let valueArmyAtMoveOut = 0;
-let loopsWithoutDamageTaken = 0;
 
 function isExpectingEnemyWaves() {
   if (!fireZones) {
@@ -61,51 +58,42 @@ function isExpectingEnemyWaves() {
   }
 
   if (isInWave) {
-    if (didWaveEnd()) {
-      const enemyArmyValue = Score.killedValueArmy - killedValueArmyAtWaveStart;
-      const lost = Score.lostValueArmy - lostValueArmyAtWaveStart;
+    const enemyArmyValue = Score.killedValueArmy - killedValueArmyAtWaveStart;
 
-      // Expect next wave to be 50% stronger than the previous one
-      // Then add 20% on top to have stronger army before moving out
-      valueArmyAtMoveOut = enemyArmyValue * 1.5 * 1.2;
+    // Expect next wave to be stronger than the previous one and add some value on top so that our army is even stronger
+    // If the enemy army is extra strong early in the game, their economy is military focused and next wave may be stronger than usual.
+    valueArmyAtMoveOut = (enemyArmyValue > 1000) ? enemyArmyValue * 3 : enemyArmyValue * 2;
+
+    if (didWaveEnd()) {
       isInWave = false;
 
-      console.log("Enemy wave ended.", "Own losses:", lost, "Enemy losses:", enemyArmyValue);
-    } else {
-      if (isDamageTaken()) {
-        loopsWithoutDamageTaken = 0;
-      } else {
-        loopsWithoutDamageTaken++;
-      }
-
-      if (loopsWithoutDamageTaken > LOOPS_PER_MINUTE) {
-        // No enemy attacks for a minute. Ready to move out
-        isInWave = false;
-
-        console.log("Enemy wave ended. No damage taken for a minute.");
-        return false;
-      }
+      console.log("Enemy wave ended.",
+        "Own losses:", (Score.lostValueArmy - lostValueArmyAtWaveStart),
+        "Enemy losses:", enemyArmyValue,
+        "Move out army value:", valueArmyAtMoveOut
+      );
     }
   } else if (didWaveStart()) {
     isInWave = true;
 
     valueArmyAtWaveStart = Score.currentValueArmy;
-    valueArmyAtMoveOut = valueArmyAtWaveStart * 1.5 * 1.2;
+    valueArmyAtMoveOut = Math.min(valueArmyAtWaveStart * 2, 5000);
     killedValueArmyAtWaveStart = Score.killedValueArmy;
     lostValueArmyAtWaveStart = Score.lostValueArmy;
-    loopsWithoutDamageTaken = 0;
 
     console.log("Enemy wave started.");
-  } else if (Score.currentValueArmy > valueArmyAtMoveOut) {
-    // We have enough army to move out
-    return false;
   }
 
-  return true;
+  return (Score.currentValueArmy < valueArmyAtMoveOut);
 }
 
 function didWaveStart() {
-  return (Memory.LevelEnemyArmySuperiority > WAVE_STARTER_ENEMY_ARMY_LEVEL) && isDamageTaken();
+  if (
+    (Memory.LevelEnemyArmySuperiority > WAVE_STARTER_ENEMY_ARMY_LEVEL) ||
+    (Depot.home.alertLevel >= ALERT_YELLOW)
+  ) {
+    return isDamageTaken();
+  }
 }
 
 function didWaveEnd() {
