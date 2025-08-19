@@ -14,11 +14,18 @@ export const ENEMY_RUSH_EXTREME_LEVEL = 3;
 // When enemy has invested in warriors and warrior production, we expect enemy waves
 // When enemy has invested in economy and static defense, we don't expect enemy expansion
 let enemyPhotonCannons = 0;
+let enemyZerglings = 0;
 
 export default function() {
   let level = ENEMY_RUSH_NOT_EXPECTED;
 
   enemyPhotonCannons = Math.max(VisibleCount.PhotonCannon, enemyPhotonCannons);
+  enemyZerglings = Math.max(VisibleCount.Zergling, enemyZerglings);
+
+  if ((enemyZerglings >= 20) && !Memory.OpportunityToUseOracle) {
+    console.log("Raise opportunity to use Oracle");
+    Memory.OpportunityToUseOracle = true;
+  }
 
   if ((Memory.LevelEnemyRush >= 3) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3))) {
     // Extreme enemy rush is still expected

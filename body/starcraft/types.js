@@ -157,6 +157,11 @@ function parseWeapons(unit) {
     attackAir = 6 * 4;
     damageAir = 10 * 4 / GAME_LOOPS_PER_SECOND;
     rangeAir = 6;
+  } else if (unit.name === "Oracle") {
+    attackGround = 15;
+    damageGround = 24.4 / GAME_LOOPS_PER_SECOND;
+    rangeGround = 4;
+    weaponCooldown = 0.61 * GAME_LOOPS_PER_SECOND;
   } else if (unit.name === "Sentry") {
     attackGround = 6;
     damageGround = 8.4 / GAME_LOOPS_PER_SECOND;

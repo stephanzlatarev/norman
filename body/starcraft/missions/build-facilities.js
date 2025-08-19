@@ -9,7 +9,7 @@ import Limit from "../memo/limit.js";
 import Priority from "../memo/priority.js";
 import Resources from "../memo/resources.js";
 
-const DEFAULT_FACILITIES = ["Gateway", "Forge"];
+const DEFAULT_FACILITIES = ["Stargate", "Gateway", "Forge"];
 const SPECIAL_FACILITIES_DEFAULT = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil", "RoboticsBay", "DarkShrine"];
 const SPECIAL_FACILITIES_ROBOBAY = ["Gateway", "CyberneticsCore", "RoboticsFacility", "RoboticsBay", "Forge", "TwilightCouncil", "DarkShrine"];
 

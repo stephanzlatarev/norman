@@ -97,18 +97,40 @@ function doOneBaseDefense() {
   }
 
   if (Memory.ModeCombatDefend && Memory.FlagSiegeDefense) {
-    Priority.RoboticsFacility = 100;
-    Priority.RoboticsBay = 100;
-    Limit.Colossus = 5;
-    Limit.RoboticsBay = 1;
-
-    if (TotalCount.RoboticsBay && (TotalCount.Colossus < Limit.Colossus)) {
-      Priority.Colossus = 95;
-      Priority.Immortal = 0;
-      Limit.Immortal = TotalCount.Immortal; // TODO: Fix build-warrior job to remove unassigned conflicting jobs with lower priority for the same facility type
-    } else {
+    if (Memory.OpportunityToUseOracle) {
       Priority.Colossus = 0;
-      Priority.Immortal = 95;
+      Priority.Immortal = 0;
+      Priority.RoboticsFacility = 0;
+      Priority.RoboticsBay = 0;
+      Limit.Colossus = TotalCount.Colossus;
+      Limit.Immortal = TotalCount.Immortal;
+      Limit.RoboticsBay = TotalCount.RoboticsBay;
+      Limit.RoboticsFacility = TotalCount.RoboticsFacility;
+
+      Limit.Oracle = 3;
+      Limit.Stargate = 1;
+
+      if (TotalCount.Stalker >= 6) {
+        Priority.Oracle = 100;
+        Priority.Stargate = 100;
+      } else {
+        Priority.Oracle = 0;
+        Priority.Stargate = 0;
+      }
+    } else {
+      Priority.RoboticsFacility = 100;
+      Priority.RoboticsBay = 100;
+      Limit.Colossus = 5;
+      Limit.RoboticsBay = 1;
+
+      if (TotalCount.RoboticsBay && (TotalCount.Colossus < Limit.Colossus)) {
+        Priority.Colossus = 95;
+        Priority.Immortal = 0;
+        Limit.Immortal = TotalCount.Immortal; // TODO: Fix build-warrior job to remove unassigned conflicting jobs with lower priority for the same facility type
+      } else {
+        Priority.Colossus = 0;
+        Priority.Immortal = 95;
+      }
     }
   } else {
     Priority.RoboticsBay = 0;

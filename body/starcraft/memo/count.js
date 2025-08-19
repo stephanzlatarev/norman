@@ -14,6 +14,7 @@ export const ActiveCount = {
   Immortal: 0,
   Nexus: 0,
   Observer: 0,
+  Oracle: 0,
   Probe: 0,
   Pylon: 0,
   RoboticsBay: 0,

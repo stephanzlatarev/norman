@@ -197,6 +197,10 @@ function syncUnit(units, unit, type, zombies, me) {
     if (image.type.isBuilding) {
       image.boost = getBoostPercentage(unit);
     }
+
+    if (image.type.name === "Oracle") {
+      image.isPulsarBeamOn = isPulsarBeamOn(unit);
+    }
   } else if (image.type.isMinerals) {
     if (!unit.mineralContents) {
       image.isActive = false;
@@ -300,6 +304,14 @@ function isCarryingVespene(unit) {
     if (buffId === 273) return true;
     if (buffId === 274) return true;
     if (buffId === 275) return true;
+  }
+
+  return false;
+}
+
+function isPulsarBeamOn(unit) {
+  for (const buffId of unit.buffIds) {
+    if (buffId === 99) return true;
   }
 
   return false;

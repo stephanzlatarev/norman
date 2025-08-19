@@ -1,0 +1,5 @@
+# Auto behavior of Oracle
+
+name: Auto Oracle
+brain: auto-oracle.js
+type: javascript
