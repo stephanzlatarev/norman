@@ -1,9 +1,9 @@
 import { Depot, Job, Order, TotalCount } from "./imports.js";
 
 const MAX_WORKER_DEFENDERS_NO_WALL = 12;
-const MAX_WORKER_DEFENDERS_ON_WALL = 2;
+const MAX_WORKER_DEFENDERS_ON_WALL = 3;
 const MAX_WORKER_FLANKERS_NO_WALL = 4;
-const MAX_WORKER_FLANKERS_ON_WALL = 2;
+const MAX_WORKER_FLANKERS_ON_WALL = 3;
 
 const jobs = new Map();
 
