@@ -22,6 +22,7 @@ let proxy;
 let forge;
 let isMissionComplete;
 
+// TODO: Now that we wall the home base, change the mission to neutralize proxy only when behind the wall
 export default class NeutralizeProxiesMission extends Mission {
 
   run() {
@@ -219,11 +220,11 @@ function findProxy() {
   }
 
   if (
-    (workers.length && pylons.length) ||
-    (workers.length && buildings.length) ||
-    (pylons.length && cannons.length) ||
-    (pylons.length && buildings.length) ||
-    (cannons.length || warriors.length)
+    (workers.length && pylons.length) ||           // Probe builds a pylon
+    (workers.length && buildings.length) ||        // SCV builds a bunker, or probe builds a gateway
+    (pylons.length && cannons.length) ||           // Pylon powers a cannon
+    (pylons.length && buildings.length) ||         // Pylon powers a gateway
+    (proxy && (cannons.length || warriors.length)) // Remember proxy when cannons are still not neutralized
   ) {
     return new Proxy(isHome, workers, pylons, cannons, warriors);
   }
