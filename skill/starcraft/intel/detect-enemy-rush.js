@@ -2,6 +2,7 @@ import { ActiveCount, Depot, Memory, Score, TotalCount, VisibleCount } from "./i
 
 const WAVE_STARTER_ENEMY_ARMY_LEVEL = 0.5;
 const ALERT_YELLOW = 4;
+const MAX_MOVE_OUT_ARMY_VALUE = 5000;
 
 export const ENEMY_RUSH_NOT_EXPECTED = 0;
 export const ENEMY_RUSH_MODERATE_LEVEL = 1;
@@ -62,7 +63,7 @@ function isExpectingEnemyWaves() {
 
     // Expect next wave to be stronger than the previous one and add some value on top so that our army is even stronger
     // If the enemy army is extra strong early in the game, their economy is military focused and next wave may be stronger than usual.
-    valueArmyAtMoveOut = (enemyArmyValue > 1000) ? enemyArmyValue * 3 : enemyArmyValue * 2;
+    valueArmyAtMoveOut = Math.min((enemyArmyValue > 1000) ? enemyArmyValue * 4 : enemyArmyValue * 2, MAX_MOVE_OUT_ARMY_VALUE);
 
     if (didWaveEnd()) {
       isInWave = false;
@@ -77,7 +78,7 @@ function isExpectingEnemyWaves() {
     isInWave = true;
 
     valueArmyAtWaveStart = Score.currentValueArmy;
-    valueArmyAtMoveOut = Math.min(valueArmyAtWaveStart * 2, 5000);
+    valueArmyAtMoveOut = Math.min(valueArmyAtWaveStart * 2, MAX_MOVE_OUT_ARMY_VALUE);
     killedValueArmyAtWaveStart = Score.killedValueArmy;
     lostValueArmyAtWaveStart = Score.lostValueArmy;
 
