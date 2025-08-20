@@ -249,7 +249,7 @@ export default class Fight extends Job {
         Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
         this.attackMoveForward = false;
       }
-    } else if (shouldLeaveTarget(warrior, this.station, target)) {
+    } else if (shouldLeaveTarget(warrior, this.battle, this.station, target)) {
       Order.move(warrior, this.station);
       this.attackMoveForward = false;
     } else {
@@ -374,8 +374,9 @@ function shouldMoveToCoolDown(warrior) {
   return (warrior.weapon.cooldown > 3) && (warrior.weapon.cooldown < warrior.type.weaponCooldown - 3);
 }
 
-function shouldLeaveTarget(warrior, station, target) {
+function shouldLeaveTarget(warrior, battle, station, target) {
   if (!station.isHoldStation) return false;
+  if (battle.zone !== station.zone) return false;
   if (!target.type.movementSpeed) return false;
   if ((warrior.zone === station.zone) && warrior.cell.isPlot) return false;
 
