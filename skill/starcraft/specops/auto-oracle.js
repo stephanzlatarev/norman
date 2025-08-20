@@ -1,7 +1,11 @@
 import { ActiveCount, Depot, Order, Units, Zone } from "./imports.js";
 
+const currentTargets = new Set();
+
 export default function() {
   if (ActiveCount.Oracle === 0) return;
+
+  currentTargets.clear();
 
   for (const unit of Units.warriors().values()) {
     if (unit.type.name === "Oracle") controlOracle(unit);
@@ -13,10 +17,11 @@ function controlOracle(oracle) {
 
   if (oracle.order.abilityId === 23) return;
 
-  const target = findWorkerInZone(oracle.zone) || findLightWarriorInZone(oracle.zone)
-    || findTargetWorker() || findTargetLightWarrior();
+  const target = findClosestTargetInZone(oracle, isWorker) || findClosestTargetInZone(oracle, isLightWarrior) || findTargetWorker() || findTargetLightWarrior();
 
   if (target) {
+    currentTargets.add(target);
+
     if (calculateSquaredDistance(oracle.body, target.body) < 16) {
       if (oracle.isPulsarBeamOn) {
         Order.attack(oracle, target);
@@ -36,33 +41,51 @@ function controlOracle(oracle) {
 }
 
 function areAirShootingEnemiesInZone(zone) {
-  for (const enemy of zone.enemies) {
-    if (enemy.type.damageAir) {
+  for (const threat of zone.threats) {
+    if (threat.type.damageAir) {
       return true;
     }
   }
 }
 
-function findWorkerInZone(zone) {
+function isLightWarrior(unit) {
+  return unit.type.name === "Zergling";
+}
+
+function isWorker(unit) {
+  return unit.type.isWorker;
+}
+
+function findAnyTargetInZone(zone, filter) {
   for (const unit of zone.enemies) {
-    if (unit.type.isWorker) {
+    if (filter(unit) && !currentTargets.has(unit)) {
       return unit;
     }
   }
 }
 
-function findLightWarriorInZone(zone) {
-  for (const unit of zone.enemies) {
-    if (unit.type.name === "Zergling") {
-      return unit;
+function findClosestTargetInZone(oracle, filter) {
+  let closestTarget = null;
+  let closestDistance = Infinity;
+
+  for (const unit of oracle.zone.enemies) {
+    if (filter(unit) && !currentTargets.has(unit)) {
+      const distance = calculateSquaredDistance(unit.body, oracle.body);
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestTarget = unit;
+      }
     }
   }
+
+  return closestTarget;
 }
 
 function findTargetWorker() {
   for (const zone of Zone.list()) {
-    if (!areAirShootingEnemiesInZone(zone)) {
-      const worker = findWorkerInZone(zone);
+    if (zone.enemies.size && !areAirShootingEnemiesInZone(zone)) {
+      const worker = findAnyTargetInZone(zone, isWorker);
       if (worker) return worker;
     }
   }
@@ -70,8 +93,8 @@ function findTargetWorker() {
 
 function findTargetLightWarrior() {
   for (const zone of Zone.list()) {
-    if (!areAirShootingEnemiesInZone(zone)) {
-      const warrior = findLightWarriorInZone(zone);
+    if (zone.enemies.size && !areAirShootingEnemiesInZone(zone)) {
+      const warrior = findAnyTargetInZone(zone, isLightWarrior);
       if (warrior) return warrior;
     }
   }
