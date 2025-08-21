@@ -56,13 +56,14 @@ function addStationsAroundWall(wall, stations, fighters) {
 
 function addStationsAroundRally(zone, stations, fighters) {
   const rally = zone.rally;
+  const plot = zone.plot || new Set();
   const taken = new Set(stations);
   const traversed = new Set();
 
   let addCount = fighters.length - stations.length;
   let wave = new Set([rally]);
 
-  if (!taken.has(rally) && !zone.plot.has(rally)) {
+  if (!taken.has(rally) && !plot.has(rally)) {
     stations.push(rally);
     rally.isHoldStation = false;
     taken.add(rally);
@@ -75,7 +76,7 @@ function addStationsAroundRally(zone, stations, fighters) {
     for (const cell of wave) {
       traversed.add(cell);
 
-      if (!taken.has(cell) && !zone.plot.has(cell)) {
+      if (!taken.has(cell) && !plot.has(cell)) {
         stations.push(cell);
         cell.isHoldStation = false;
         taken.add(cell);
@@ -85,7 +86,7 @@ function addStationsAroundRally(zone, stations, fighters) {
       }
 
       for (const neighbor of cell.neighbors) {
-        if ((neighbor.zone === rally.zone) && neighbor.isPath && !neighbor.isObstacle && !traversed.has(neighbor)) {
+        if ((neighbor.zone === zone) && neighbor.isPath && !neighbor.isObstacle && !traversed.has(neighbor)) {
           next.add(neighbor);
         }
       }
