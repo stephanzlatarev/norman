@@ -5,7 +5,7 @@ export default function() {
 
   setBaseLimit();
 
-  if ((Memory.LimitBase < previousLimitBase) && !Memory.FlagSecureFirstExpansion) {
+  if ((Memory.LimitBase < previousLimitBase) && !Memory.FlagSecureAntreZone) {
     cancelExposedConstructions();
   }
 
@@ -25,7 +25,7 @@ function setBaseLimit() {
     Memory.LimitBase = Depot.list().length;
   }
 
-  Memory.FlagSecureFirstExpansion = ((ActiveCount.Nexus === 1) && (Memory.LimitBase === 2));
+  Memory.FlagSecureAntreZone = ((ActiveCount.Nexus === 1) && (Memory.LimitBase === 2));
 }
 
 function cancelExposedConstructions() {

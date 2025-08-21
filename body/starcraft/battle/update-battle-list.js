@@ -9,13 +9,11 @@ import { TotalCount } from "../memo/count.js";
 const RALLY_MIN_RADIUS = 4;
 const MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK = 1.5;
 
-let firstExpansionZone;
-
 export default function() {
   const battles = new Set();
 
-  if (Memory.FlagSecureFirstExpansion) {
-    listBattleInExpansionZone(battles);
+  if (Memory.FlagSecureAntreZone && Depot.antre) {
+    listBattleInAntreZone(battles);
   } else if (Memory.LevelEnemyArmySuperiority < MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK) {
     listBattlesInRedZones(battles);
   }
@@ -82,28 +80,14 @@ function listBattlesInRedZones(battles) {
   }
 }
 
-function listBattleInExpansionZone(battles) {
-  if (!firstExpansionZone) firstExpansionZone = findFirstExpansionZone();
+function listBattleInAntreZone(battles) {
+  const battle = findBattle(Depot.antre) || new Battle(Depot.antre);
 
-  const battle = findBattle(firstExpansionZone) || new Battle(firstExpansionZone);
+  battle.front = new Set([Depot.antre]);
+  battle.zones = new Set([...Depot.antre.range.zones]);
 
-  battle.front = new Set([firstExpansionZone]);
-  battle.zones = new Set([...firstExpansionZone.range.zones]);
-
-  battle.move(firstExpansionZone);
+  battle.move(Depot.antre);
   battles.add(battle);
-}
-
-function findFirstExpansionZone() {
-  for (const tier of Tiers) {
-    for (const zone of tier.zones) {
-      if (zone.isDepot && (zone !== Depot.home)) {
-        return zone;
-      }
-    }
-  }
-
-  return Depot.home;
 }
 
 function findFrontBaseZone() {

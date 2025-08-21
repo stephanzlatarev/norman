@@ -25,7 +25,7 @@ export default function() {
 }
 
 function shouldWallBase() {
-  return Memory.ModeCombatDefend && !Memory.FlagSecureFirstExpansion;
+  return Memory.ModeCombatDefend && !Memory.FlagSecureAntreZone;
 }
 
 function findWallKeeperType() {

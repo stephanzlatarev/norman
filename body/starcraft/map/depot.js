@@ -16,6 +16,7 @@ export default class Depot extends Zone {
   // The depot building of this zone
   depot = null;
 
+  plot = new Set();
   minerals = new Set();
   vespene = new Set();
   extractors = new Set();
@@ -25,6 +26,12 @@ export default class Depot extends Zone {
 
     this.x = cell.x + 0.5;
     this.y = cell.y + 0.5;
+
+    for (let x = cell.x - 2; x <= cell.x + 2; x++) {
+      for (let y = cell.y - 2; y <= cell.y + 2; y++) {
+        this.plot.add(Board.cell(x, y));
+      }
+    }
 
     for (const resource of resources) {
       const dx = resource.body.x - cell.x;

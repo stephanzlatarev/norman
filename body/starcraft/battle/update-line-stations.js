@@ -9,7 +9,7 @@ export default function(battle) {
       if (wall) {
         addStationsAroundWall(wall, line.stations, line.fighters);
       } else {
-        addStationsAroundRally(line.zone.rally, line.stations, line.fighters);
+        addStationsAroundRally(line.zone, line.stations, line.fighters);
       }
     } else if (line.fighters.length < line.stations.length) {
       removeStations(line.stations, line.fighters);
@@ -54,14 +54,15 @@ function addStationsAroundWall(wall, stations, fighters) {
   }
 }
 
-function addStationsAroundRally(rally, stations, fighters) {
+function addStationsAroundRally(zone, stations, fighters) {
+  const rally = zone.rally;
   const taken = new Set(stations);
   const traversed = new Set();
 
   let addCount = fighters.length - stations.length;
   let wave = new Set([rally]);
 
-  if (!taken.has(rally)) {
+  if (!taken.has(rally) && !zone.plot.has(rally)) {
     stations.push(rally);
     rally.isHoldStation = false;
     taken.add(rally);
@@ -74,7 +75,7 @@ function addStationsAroundRally(rally, stations, fighters) {
     for (const cell of wave) {
       traversed.add(cell);
 
-      if (!taken.has(cell)) {
+      if (!taken.has(cell) && !zone.plot.has(cell)) {
         stations.push(cell);
         cell.isHoldStation = false;
         taken.add(cell);
