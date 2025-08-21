@@ -32,6 +32,13 @@ export default class BuildExpansionsMission extends Mission {
     }
 
     if (this.job) {
+      if (Memory.FlagSecureFirstExpansion && (TotalCount.Nexus <= 2) && !this.job.isFailed && !this.job.isDone) {
+        this.job.priority = 100;
+
+        // Continue with the job regardless of zone alert levels
+        return;
+      }
+
       // Make sure the job is of the right priority
       this.job.priority = Priority.Nexus;
 

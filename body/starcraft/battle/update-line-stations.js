@@ -2,10 +2,10 @@ import Board from "../map/board.js";
 import Depot from "../map/depot.js";
 
 export default function(battle) {
-  const wall = getWall(battle);
-
   for (const line of battle.lines) {
     if (line.fighters.length > line.stations.length) {
+      const wall = getWall(line.zone);
+
       if (wall) {
         addStationsAroundWall(wall, line.stations, line.fighters);
       } else {
@@ -17,15 +17,11 @@ export default function(battle) {
   }
 }
 
-function getWall(battle) {
-  if (battle.lines.length !== 1) return;
-
-  for (const zone of battle.zones) {
-    if (zone === Depot.home) {
-      for (const site of zone.sites) {
-        if (site.isWall && site.wall.length) {
-          return site.wall[0];
-        }
+function getWall(zone) {
+  if (zone === Depot.home) {
+    for (const site of zone.sites) {
+      if (site.isWall && site.wall.length) {
+        return site.wall[0];
       }
     }
   }

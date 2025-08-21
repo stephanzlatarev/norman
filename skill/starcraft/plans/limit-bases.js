@@ -5,7 +5,7 @@ export default function() {
 
   setBaseLimit();
 
-  if (Memory.LimitBase < previousLimitBase) {
+  if ((Memory.LimitBase < previousLimitBase) && !Memory.FlagSecureFirstExpansion) {
     cancelExposedConstructions();
   }
 
@@ -14,13 +14,20 @@ export default function() {
 function setBaseLimit() {
   if (Memory.LevelEnemyRush) {
     // Don't expand if we expect an enemy rush
-    Memory.LimitBase = 1;
+
+    if (ActiveCount.Oracle >= 2) { // TODO: Improve with more intel
+      Memory.LimitBase = 2;
+    } else {
+      Memory.LimitBase = 1;
+    }
   } else if ((ActiveCount.Nexus === 1) && (Memory.LevelEnemyArmySuperiority > 1)) {
     // Don't start first expansion before we have army to defend it
     Memory.LimitBase = 1;
   } else {
     Memory.LimitBase = Depot.list().length;
   }
+
+  Memory.FlagSecureFirstExpansion = ((ActiveCount.Nexus === 1) && (Memory.LimitBase === 2));
 }
 
 function cancelExposedConstructions() {

@@ -9,67 +9,101 @@ import { TotalCount } from "../memo/count.js";
 const RALLY_MIN_RADIUS = 4;
 const MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK = 1.5;
 
+let firstExpansionZone;
+
 export default function() {
   const battles = new Set();
-  const canFightBattles = (Memory.LevelEnemyArmySuperiority < MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK);
 
-  if (canFightBattles) {
-    const traversed = new Set();
-    const tierLevelLimit = Memory.ModeCombatDefend ? 1 : Infinity;
+  if (Memory.FlagSecureFirstExpansion) {
+    listBattleInExpansionZone(battles);
+  } else if (Memory.LevelEnemyArmySuperiority < MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK) {
+    listBattlesInRedZones(battles);
+  }
 
-    for (const tier of Tiers) {
-      if (tier.level > tierLevelLimit) break;
+  if (!battles.size) {
+    listDefaultBattle(battles);
+  }
 
-      const zones = orderBattleZones(tier.zones);
+  return battles;
+}
 
-      for (const zone of zones) {
-        if (traversed.has(zone)) continue;
+function listDefaultBattle(battles) {
+  let battleZone = Depot.home;
 
-        if (zone.alertLevel === ALERT_RED) {
-          const battle = findBattle(zone) || new Battle(zone);
-          const { zones, front } = findBattleZones(zone);
+  if (Memory.ModeCombatDefend) {
+    battleZone = findFrontBaseZone();
+  } else if (Enemy.base && !Enemy.base.warriors.size) {
+    battleZone = Enemy.base;
+  }
 
-          battle.front = front;
-          battle.zones = zones;
+  const battle = findBattle(battleZone) || new Battle(battleZone);
 
-          battle.move(zone);
-          battles.add(battle);
+  if (!battle.front.size) {
+    battle.front.add(battleZone);
+  }
 
-          for (const zone of battle.zones) {
-            traversed.add(zone);
-          }
+  if (battleZone !== Enemy.base) {
+    // Add all zones in range to the battle so that defenders can attack them
+    for (const zone of battleZone.range.zones) {
+      battle.zones.add(zone);
+    }
+  }
+
+  battles.add(battle);
+}
+
+function listBattlesInRedZones(battles) {
+  const traversed = new Set();
+  const tierLevelLimit = Memory.ModeCombatDefend ? 1 : Infinity;
+
+  for (const tier of Tiers) {
+    if (tier.level > tierLevelLimit) break;
+
+    const zones = orderBattleZones(tier.zones);
+
+    for (const zone of zones) {
+      if (traversed.has(zone)) continue;
+
+      if (zone.alertLevel === ALERT_RED) {
+        const battle = findBattle(zone) || new Battle(zone);
+        const { zones, front } = findBattleZones(zone);
+
+        battle.front = front;
+        battle.zones = zones;
+
+        battle.move(zone);
+        battles.add(battle);
+
+        for (const zone of battle.zones) {
+          traversed.add(zone);
         }
       }
     }
   }
+}
 
-  if (!battles.size) {
-    let battleZone = Depot.home;
+function listBattleInExpansionZone(battles) {
+  if (!firstExpansionZone) firstExpansionZone = findFirstExpansionZone();
 
-    if (Memory.ModeCombatDefend) {
-      battleZone = findFrontBaseZone();
-    } else if (Enemy.base && !Enemy.base.warriors.size) {
-      battleZone = Enemy.base;
-    }
+  const battle = findBattle(firstExpansionZone) || new Battle(firstExpansionZone);
 
-    const battle = findBattle(battleZone) || new Battle(battleZone);
+  battle.front = new Set([firstExpansionZone]);
+  battle.zones = new Set([...firstExpansionZone.range.zones]);
 
-    if (!battle.front.size) {
-      battle.front.add(battleZone);
-    }
+  battle.move(firstExpansionZone);
+  battles.add(battle);
+}
 
-    if (battleZone !== Enemy.base) {
-      // Add all zones in range to the battle so that defenders can attack them
-      for (const zone of battleZone.range.zones) {
-        battle.zones.add(zone);
+function findFirstExpansionZone() {
+  for (const tier of Tiers) {
+    for (const zone of tier.zones) {
+      if (zone.isDepot && (zone !== Depot.home)) {
+        return zone;
       }
     }
-
-    battles.clear();
-    battles.add(battle);
   }
 
-  return battles;
+  return Depot.home;
 }
 
 function findFrontBaseZone() {
