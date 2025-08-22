@@ -1,4 +1,4 @@
-import { ActiveCount, Depot, Memory, Types } from "../imports.js";
+import { ActiveCount, Battle, Depot, Memory, Types } from "../imports.js";
 import WallFielder from "./wall-fielder.js";
 import WallKeeper from "./wall-keeper.js";
 import calculateRampVisionLevels from "./ramp-vision.js";
@@ -25,7 +25,17 @@ export default function() {
 }
 
 function shouldWallBase() {
-  return Memory.ModeCombatDefend && !Memory.FlagSecureAntreZone;
+  if (!Memory.ModeCombatDefend) return false;
+  if (Memory.FlagSecureAntreZone) return false;
+
+  // Wall the base only if the battle frontline is the home base
+  for (const battle of Battle.list()) {
+    if (battle.zone !== Depot.home) return false;
+    if (battle.front.size !== 1) return false;
+    if (!battle.front.has(Depot.home)) return false;
+  }
+
+  return true;
 }
 
 function findWallKeeperType() {
