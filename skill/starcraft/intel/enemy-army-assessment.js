@@ -32,7 +32,7 @@ export default function() {
   const enemyStrength = enemyHealth * enemyDamage;
   const currentLevel = warriorStrength ? (enemyStrength / warriorStrength) : Infinity;
 
-  if (previousLevel && (Math.round(previousLevel) != Math.round(currentLevel))) {
+  if (previousLevel && (Math.round(previousLevel * 10) != Math.round(currentLevel * 10))) {
     console.log("Level of enemy army superiority changes from", previousLevel, "to", currentLevel);
   }
 
