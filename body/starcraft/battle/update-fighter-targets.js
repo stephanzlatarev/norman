@@ -35,7 +35,6 @@ class TargetMatrix {
     const groundWarriors = new Set();
     const airRangeWarriors = new Set();
     const groundRangeWarriors = new Set();
-    const secondaryTargets = [];
 
     for (const fighter of battle.fighters) {
       const warrior = fighter.assignee;
@@ -52,16 +51,10 @@ class TargetMatrix {
         if (!isValidTarget(threat)) continue;
 
         // Treat the enemy warriors that are in the battle zone and those that have range over my warriors as primary targets
-        if ((zone === battle.zone) || isEnemyWarriorAbleToAttack(threat, groundWarriors)) {
+        if ((zone === battle.zone) || isEnemyWarriorAbleToAttack(battle.zone, threat, groundWarriors)) {
           this.primaryTargets.push(threat);
-        } else {
-          secondaryTargets.push(threat);
         }
       }
-    }
-
-    if (!this.primaryTargets.length) {
-      this.primaryTargets = secondaryTargets;
     }
 
     for (const target of this.primaryTargets) {
@@ -139,13 +132,14 @@ function isValidTarget(target) {
   return true;
 }
 
-function isEnemyWarriorAbleToAttack(enemy, groundWarriors) {
+function isEnemyWarriorAbleToAttack(battleZone, enemy, groundWarriors) {
   if (enemy.type.rangeGround < 1) return false;
 
   const groundRange = enemy.type.rangeGround + enemy.body.r + 1; // Use 1 for body radius of my warriors to reduce calculations
   const squareGroundRange = groundRange * groundRange;
 
   for (const warrior of groundWarriors) {
+    if (warrior.zone !== battleZone) continue;
     if (calculateSquareDistance(enemy.body, warrior.body) <= squareGroundRange) return true;
   }
 }
