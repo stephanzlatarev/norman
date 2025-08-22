@@ -18,7 +18,7 @@ function setBaseLimit() {
   } else if (Memory.LevelEnemyRush) {
     // Don't expand if we expect an enemy rush
     Memory.LimitBase = 1;
-  } else if ((ActiveCount.Nexus === 1) && (Memory.LevelEnemyArmySuperiority > 1)) {
+  } else if ((ActiveCount.Nexus === 1) && (Memory.LevelEnemyArmySuperiority > 2)) {
     // Don't start first expansion before we have army to defend it
     Memory.LimitBase = 1;
   } else {
