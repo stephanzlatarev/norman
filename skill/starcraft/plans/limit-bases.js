@@ -1,13 +1,13 @@
 import { ActiveCount, Depot, Memory, Order, Units } from "./imports.js";
 
 export default function() {
-  const previousLimitBase = Memory.LimitBase;
+  // const previousLimitBase = Memory.LimitBase;
 
   setBaseLimit();
 
-  if ((Memory.LimitBase < previousLimitBase) && !Memory.FlagSecureAntreZone) {
-    cancelExposedConstructions();
-  }
+  // if ((Memory.LimitBase < previousLimitBase) && !Memory.FlagSecureAntreZone) {
+  //   cancelExposedConstructions();
+  // }
 
 }
 
