@@ -5,6 +5,7 @@ import Types from "../../../body/starcraft/types.js";
 import Units from "../../../body/starcraft/units.js";
 import Battle from "../../../body/starcraft/battle/battle.js";
 import Depot from "../../../body/starcraft/map/depot.js";
+import Tiers from "../../../body/starcraft/map/tier.js";
 import Zone from "../../../body/starcraft/map/zone.js";
 import { ActiveCount, TotalCount } from "../../../body/starcraft/memo/count.js";
 import Resources from "../../../body/starcraft/memo/resources.js";
@@ -13,6 +14,6 @@ export {
   Memory,
   Job, Order, Types, Units,
   Battle, // TODO: Replace this with memory flags
-  Depot, Zone,
+  Depot, Tiers, Zone,
   ActiveCount, TotalCount, Resources,
 };

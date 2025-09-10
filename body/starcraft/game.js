@@ -5,6 +5,7 @@ import Order from "./order.js";
 import scheduleJobs from "./schedule.js";
 import Types from "./types.js";
 import Units from "./units.js";
+import Board from "./map/board.js";
 import Depot from "./map/depot.js";
 import { createMap, syncMap } from "./map/sync.js";
 import countUnits from "./memo/count.js";
@@ -12,6 +13,7 @@ import countEncounters from "./memo/encounters.js";
 import Enemy from "./memo/enemy.js";
 import Resources from "./memo/resources.js";
 import Score from "./memo/score.js";
+import Zone from "./map/zone.js";
 
 const LOOPS_PER_STEP = 1;
 const LOOPS_PER_SECOND = 22.4;
@@ -83,6 +85,16 @@ export default class Game {
 
     countUnits(this.observation, this.me.race);
     countEncounters();
+
+    for (const zone of Zone.list()) {
+      zone.clearEffects();
+    }
+    for (const effect of this.observation.rawData.effects) {
+      for (const pos of effect.pos) {
+        const zone = Board.zone(pos.x, pos.y);
+        if (zone) zone.addEffect({ x: pos.x, y: pos.y, effect: effect.effectId, owner: effect.owner, radius: effect.radius });
+      }
+    }
 
     for (const job of Job.list()) {
       if (job.assignee && !job.assignee.isAlive) {

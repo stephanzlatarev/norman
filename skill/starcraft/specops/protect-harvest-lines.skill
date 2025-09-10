@@ -1,0 +1,5 @@
+# Protect harvest lines from enemy attacks
+
+name: Protect harvest lines
+brain: protect-harvest-lines.js
+type: javascript

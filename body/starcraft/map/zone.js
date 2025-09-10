@@ -31,6 +31,9 @@ export default class Zone extends Pin {
   enemies = new Set();
   threats = new Set();
 
+  // Effects
+  effects = new Set();
+
   // Navigation
   neighbors = new Set();
   corridors = new Map();
@@ -121,6 +124,14 @@ export default class Zone extends Pin {
     }
 
     this.r = Math.ceil(Math.sqrt(squareRadius));
+  }
+
+  addEffect(effect) {
+    this.effects.add(effect);
+  }
+
+  clearEffects() {
+    this.effects.clear();
   }
 
   addUnit(unit) {
