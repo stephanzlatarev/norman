@@ -14,12 +14,14 @@ export const ENEMY_RUSH_EXTREME_LEVEL = 3;
 // When enemy has invested in warriors and warrior production, we expect enemy waves
 // When enemy has invested in economy and static defense, we don't expect enemy expansion
 let enemyPhotonCannons = 0;
+let enemyReapers = 0;
 let enemyZerglings = 0;
 
 export default function() {
   let level = ENEMY_RUSH_NOT_EXPECTED;
 
   enemyPhotonCannons = Math.max(VisibleCount.PhotonCannon, enemyPhotonCannons);
+  enemyReapers = Math.max(VisibleCount.Reaper, enemyReapers);
   enemyZerglings = Math.max(VisibleCount.Zergling, enemyZerglings);
 
   if ((enemyZerglings >= 20) && !Memory.OpportunityToUseOracle) {
@@ -33,6 +35,9 @@ export default function() {
   } else if ((TotalCount.Assimilator <= 1) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3)) && areZerglingsApproaching()) {
     // Extreme enemy rush is now expected
     level = ENEMY_RUSH_EXTREME_LEVEL;
+  } else if (enemyReapers >= 2) {
+    // Reapers can jump in my home base so walling it off is not effective. They remove the threat of a rush.
+    level = ENEMY_RUSH_NOT_EXPECTED;
   } else if ((ActiveCount.Nexus === 1) && isExpectingEnemyWaves()) {
     level = ENEMY_RUSH_HIGH_LEVEL;
   } else if (Memory.FlagSiegeDefense || Memory.MilestoneMaxArmy) {
