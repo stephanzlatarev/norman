@@ -38,13 +38,16 @@ export default function() {
   } else if (enemyReapers >= 2) {
     // Reapers can jump in my home base so walling it off is not effective. They remove the threat of a rush.
     level = ENEMY_RUSH_NOT_EXPECTED;
+  } else if (enemyPhotonCannons > 1) {
+    // Photon Cannons are a big investment. They remove the threat of a rush that can be defended with static defense.
+    level = ENEMY_RUSH_NOT_EXPECTED;
   } else if ((ActiveCount.Nexus === 1) && isExpectingEnemyWaves()) {
     level = ENEMY_RUSH_HIGH_LEVEL;
   } else if (Memory.FlagSiegeDefense || Memory.MilestoneMaxArmy) {
     level = ENEMY_RUSH_NOT_EXPECTED;
   } else if (Memory.DetectedEnemyProxy || Memory.DetectedEnemyHoard) {
     level = ENEMY_RUSH_HIGH_LEVEL;
-  } else if (Memory.DetectedEnemyDefensiveStance || (enemyPhotonCannons > 3)) {
+  } else if (Memory.DetectedEnemyDefensiveStance) {
     // TODO: Improve this by checking enemy investments
     level = ENEMY_RUSH_NOT_EXPECTED;
   } else if (!Memory.DetectedEnemyExpansion) {
