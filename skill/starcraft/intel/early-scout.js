@@ -291,8 +291,11 @@ class EarlyScout extends Job {
   goMonitorEnemyExpansions() {
     const agent = this.assignee;
 
-    if ((agent.zone === Enemy.base) || isAttacked(agent) || this.isInEnemyWarriorsRange()) {
-      // Retreat to home base
+    if (agent.zone === Depot.home) {
+      console.log("Early scout retires after being pushed back to home base.");
+      this.close(true);
+    } else if ((agent.zone === Enemy.base) || isAttacked(agent) || this.isInEnemyWarriorsRange()) {
+      // Pull back to home base
       orderSlip(agent);
     } else if (!this.hasDetectedEnemyWarriors) {
       this.transition(this.goAttackEnemyWorker);
