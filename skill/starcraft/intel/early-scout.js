@@ -29,8 +29,10 @@ class EarlyScout extends Job {
 
   hasDetectedEnemyExpansion = false;
   hasDetectedEnemyWarriors = false;
+  hasDetectedEnemyWallOff = false;
 
   homeWallSite = null;
+  enemyBaseRamp = null;
   enemyExpansionZone = null;
   enemyHarvestLine = null;
   mode = null;
@@ -40,6 +42,7 @@ class EarlyScout extends Job {
     super("Probe");
 
     this.homeWallSite = homeWallSite;
+    this.enemyBaseRamp = getEnemyBaseRamp();
     this.enemyExpansionZone = enemyExpansionZone;
     this.enemyHarvestLine = new HarvestLine(enemyExpansionZone);
     this.priority = 100;
@@ -75,11 +78,16 @@ class EarlyScout extends Job {
       this.hasDetectedEnemyExpansion = true;
     }
 
-    if (!this.hasDetectedEnemyWarriors && this.isInEnemyWarriorsRange()) {
+    if (!this.hasDetectedEnemyWallOff && !this.hasDetectedEnemyWarriors && this.isInEnemyWarriorsRange()) {
       console.log("Early scout transitions to monitoring enemy expansions.");
       this.hasDetectedEnemyWarriors = true;
 
       this.transition(this.goMonitorEnemyExpansions);
+    }
+
+    if (!this.hasDetectedEnemyWallOff && isEnemyBaseWalledOff(agent, this.enemyBaseRamp)) {
+      console.log("Early scout detected enemy wall off.");
+      this.hasDetectedEnemyWallOff = true;
     }
 
     this.act();
@@ -179,7 +187,16 @@ class EarlyScout extends Job {
       this.transition(this.goBlockExpansion);
     } else if (this.assignee.zone !== this.enemyExpansionZone) {
       // The agent is still away from the enemy expansion zone, so mineral walk to the expansion to avoid being blocked by enemy units
-      orderSlip(this.assignee);
+      if (isAtOrBehindEnemyBaseRamp(this.assignee, this.enemyBaseRamp)) {
+        if (this.hasDetectedEnemyWallOff || !this.enemyBaseRamp.size) {
+          return this.transition(this.goCircleEnemyBase);
+        } else if (!isInVisibilityRangeOfEnemyBaseRamp(this.assignee, this.enemyBaseRamp)) {
+          // Approach the ramp to get vision over it
+          return orderMove(this.assignee, [...this.enemyBaseRamp][0]);
+        }
+      }
+
+      orderSlip(this.assignee, this.enemyExpansionZone);
     } else if (isSlipping(this.assignee) || isEnemyWorkerClose(this.assignee)) {
       // An enemy worker is following the agent, so move to the expansion
       orderMove(this.assignee, this.enemyExpansionZone);
@@ -189,6 +206,20 @@ class EarlyScout extends Job {
     } else {
       // The agent just entered the expansion zone, so stop to keep close to it
       orderStop(this.assignee);
+    }
+  }
+
+  goCircleEnemyBase() {
+    if (!this.enemyBaseCirclePath) this.enemyBaseCirclePath = findEnemyBaseCirclePath();
+
+    const cell = findClosestCell(this.assignee.body, this.enemyBaseCirclePath);
+    const index = this.enemyBaseCirclePath.indexOf(cell);
+    const path = [...this.enemyBaseCirclePath.slice(index), ...this.enemyBaseCirclePath.slice(0, index)];
+
+    for (const target of path) {
+      if (!isInRange(this.assignee.body, target, 5)) {
+        return orderMove(this.assignee, target);
+      }
     }
   }
 
@@ -387,6 +418,94 @@ function getEnemyExpansionZone() {
   }
 }
 
+function findEnemyBaseCirclePath() {
+  const border = new Set(Enemy.base.border);
+  const path = [];
+
+  let cell = { x: 0, y: 0 };
+
+  while (border.size) {
+    const next = findClosestCell(cell, border);
+    path.push(next);
+
+    border.delete(next);
+    for (const one of border) {
+      if (isInRange(next, one, 4)) {
+        border.delete(one);
+      }
+    }
+
+    cell = next;
+  }
+
+  return path;
+}
+
+function getEnemyBaseRamp() {
+  const zones = [Enemy.base, ...Enemy.base.neighbors];
+  const candidates = [];
+  let anchor = 0;
+
+  for (const zone of zones) {
+    for (const cell of zone.border) {
+      for (const neighbor of cell.neighbors) {
+        if (neighbor.isPath && !neighbor.isPlot) {
+          if (!anchor || (zone.tier.level > anchor.zone.tier.level)) anchor = cell;
+
+          candidates.push(cell);
+          break;
+        }
+      }
+    }
+  }
+
+  const ramp = new Set([anchor]);
+  let goon = true;
+
+  while (goon) {
+    goon = false;
+
+    for (const cell of candidates) {
+      if (ramp.has(cell)) continue;
+
+      for (const neighbor of cell.neighbors) {
+        if (ramp.has(neighbor)) {
+          ramp.add(cell);
+          goon = true;
+          break;
+        }
+      }
+    }
+  }
+
+  return ramp;
+}
+
+function isAtOrBehindEnemyBaseRamp(agent, ramp) {
+  for (const cell of ramp) {
+    return (agent.zone.tier.level >= cell.zone.tier.level);
+  }
+}
+
+function isInVisibilityRangeOfEnemyBaseRamp(agent, ramp) {
+  for (const cell of ramp) {
+    if (!isInRange(agent.body, cell, agent.type.sightRange - 2)) return false;
+  }
+
+  return true;
+}
+
+function isEnemyBaseWalledOff(agent, ramp) {
+  // The agent must have visiblity over the ramp to determine if it is walled off
+  if (!isAtOrBehindEnemyBaseRamp(agent, ramp)) return false;
+
+  for (const cell of ramp) {
+    if (cell.isPath) return false;
+  }
+
+  return true;
+}
+
 function areEnemyWorkersInZone(zone) {
   for (const enemy of zone.enemies) {
     if (enemy.type.isWorker) {
@@ -483,6 +602,22 @@ function findPylonPlot(base) {
   }
 }
 
+function findClosestCell(pos, cells) {
+  let closestSquareDistance = Infinity;
+  let closestCell = null;
+
+  for (const cell of cells) {
+    const sd = squareDistance(cell, pos);
+
+    if (sd < closestSquareDistance) {
+      closestSquareDistance = sd;
+      closestCell = cell;
+    }
+  }
+
+  return closestCell;
+}
+
 function isAttacked(agent) {
   return (agent.armor.shield < agent.armor.shieldMax);
 }
@@ -528,11 +663,11 @@ function orderStop(agent) {
   }
 }
 
-function orderSlip(agent) {
+function orderSlip(agent, zone) {
   if (!agent || !agent.order || !agent.body) return;
 
   if (agent.order.abilityId !== 298) {
-    new Order(agent, 298, [...Depot.home.minerals][0]).accept(true);
+    new Order(agent, 298, [...(zone || Depot.home).minerals][0]).accept(true);
   }
 }
 

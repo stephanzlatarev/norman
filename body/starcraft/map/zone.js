@@ -254,6 +254,7 @@ export function createZones() {
   mergeCloseZonesIntoDepotZones();
   expandZonesWithUnclaimedGroundCells();
   expandZonesWithNonGroundCells();
+  correctBorderAroundResources();
   nameZones();
   identifyNeighboringZones();
   identifyRanges();
@@ -473,12 +474,24 @@ function expandZonesWithNonGroundCells() {
           neighbor.zone = cell.zone;
           neighbor.zone.cells.add(neighbor);
 
+          if (neighbor.isResource) neighbor.zone.ground.add(neighbor);
+
           next.add(neighbor);
         }
       }
     }
 
     wave = next;
+  }
+}
+
+function correctBorderAroundResources() {
+  for (const zone of zones) {
+    for (const cell of zone.border) {
+      if (isSurroundedBySameZoneGround(zone.ground, cell)) {
+        zone.border.delete(cell);
+      }
+    }
   }
 }
 

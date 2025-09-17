@@ -147,6 +147,7 @@ class Cell {
     this.isPath = isPath;
     this.isPlot = isPlot;
     this.isObstacle = false;
+    this.isResource = false;
 
     this.edges = [];
     this.neighbors = [];
@@ -159,7 +160,7 @@ class Cell {
   }
 
   isObstructed() {
-    return !this.isPlot || !this.isPath || this.isObstacle;
+    return !this.isPlot || !this.isPath || this.isObstacle || this.isResource;
   }
 
 }
@@ -171,7 +172,7 @@ function ignoreInitialBuildings(cells) {
     const top = Math.round(building.body.y - building.body.r);
     const bottom = Math.round(building.body.y + building.body.r) - 1;
 
-    markCells(cells, left, top, right, bottom, true, true, false);
+    markCells(cells, left, top, right, bottom, true, true, false, false);
   }
 
   for (const building of Units.enemies().values()) {
@@ -182,7 +183,7 @@ function ignoreInitialBuildings(cells) {
     const top = Math.round(building.body.y - building.body.r);
     const bottom = Math.round(building.body.y + building.body.r) - 1;
 
-    markCells(cells, left, top, right, bottom, true, true, false);
+    markCells(cells, left, top, right, bottom, true, true, false, false);
   }
 
   for (const unit of Units.resources().values()) {
@@ -190,9 +191,9 @@ function ignoreInitialBuildings(cells) {
     const y = Math.floor(unit.body.y);
 
     if (unit.type.isMinerals) {
-      markCells(cells, x - 1, y, x, y, false, false, true);
+      markCells(cells, x - 1, y, x, y, false, false, true, true);
     } else if (unit.type.isVespene) {
-      markCells(cells, x - 1, y - 1, x + 1, y + 1, false, false, true);
+      markCells(cells, x - 1, y - 1, x + 1, y + 1, false, false, true, true);
     }
   }
 
@@ -202,11 +203,11 @@ function ignoreInitialBuildings(cells) {
     const top = Math.round(obstacle.body.y - obstacle.body.r);
     const bottom = Math.round(obstacle.body.y + obstacle.body.r) - 1;
 
-    markCells(cells, left, top, right, bottom, false, false, true);
+    markCells(cells, left, top, right, bottom, false, false, true, false);
   }
 }
 
-function markCells(cells, left, top, right, bottom, isPath, isPlot, isObstacle) {
+function markCells(cells, left, top, right, bottom, isPath, isPlot, isObstacle, isResource) {
   for (let y = top; y <= bottom; y++) {
     for (let x = left; x <= right; x++) {
       const cell = cells[y][x];
@@ -215,6 +216,7 @@ function markCells(cells, left, top, right, bottom, isPath, isPlot, isObstacle) 
         cell.isPath = isPath;
         cell.isPlot = isPlot;
         cell.isObstacle = isObstacle;
+        cell.isResource = isResource;
 
         ground.add(cell);
       }
