@@ -482,6 +482,9 @@ function getEnemyBaseRamp() {
 }
 
 function isAtOrBehindEnemyBaseRamp(agent, ramp) {
+  if (!agent.zone || !agent.zone.tier) console.log("DEBUG: No tier Probe:", agent.tag, "zone:", agent.zone ? agent.zone.name : "-");
+  if (!agent.zone || !agent.zone.tier) return false;
+
   for (const cell of ramp) {
     return (agent.zone.tier.level >= cell.zone.tier.level);
   }
@@ -549,6 +552,7 @@ function findEnemyWorkerClosestToEnemyExpansion(expansion) {
     if (!unit.type.isWorker) continue;
 
     // Ignore units that scout us
+    if (!unit.zone || !unit.zone.tier) continue;
     if (unit.zone.tier.level < expansion.tier.level) continue;
 
     const isBuilding = isEnemyWorkerBuildingStructures(unit);
