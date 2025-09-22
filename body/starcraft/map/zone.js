@@ -722,8 +722,11 @@ function areZoneIndirectlyReachable(start, end) {
 }
 
 function identifyRanges() {
-  // Identiify fire range
+  // Identify fire range
   for (const zone of zones) {
+    zone.range.fire.add(zone);
+    zone.range.zones.add(zone);
+
     for (const other of zones) {
       if ((zone !== other) && areZonesInFireRange(zone, other)) {
         zone.range.fire.add(other);

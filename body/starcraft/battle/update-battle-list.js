@@ -42,7 +42,7 @@ function listDefaultBattle(battles) {
 
   if (battleZone !== Enemy.base) {
     // Add all zones in range to the battle so that defenders can attack them
-    for (const zone of battleZone.range.zones) {
+    for (const zone of battleZone.range.fire) {
       battle.zones.add(zone);
     }
   }
@@ -84,7 +84,7 @@ function listBattleInAntreZone(battles) {
   const battle = findBattle(Depot.antre) || new Battle(Depot.antre);
 
   battle.front = new Set([Depot.antre]);
-  battle.zones = new Set([...Depot.antre.range.zones]);
+  battle.zones = new Set([...Depot.antre.range.fire]);
 
   battle.move(Depot.antre);
   battles.add(battle);
@@ -142,11 +142,11 @@ function findBattleZones(zone) {
         if (traversed.has(neighbor)) continue;
 
         if ((neighbor.alertLevel === ALERT_YELLOW) && (neighbor.r >= RALLY_MIN_RADIUS)) {
-          zones.add(neighbor);
+          if (zone.range.fire.has(neighbor)) zones.add(neighbor);
 
           if (!isFrontLocked) front.add(neighbor);
         } else if (neighbor.alertLevel >= ALERT_YELLOW) {
-          zones.add(neighbor);
+          if (zone.range.fire.has(neighbor)) zones.add(neighbor);
           next.add(neighbor);
         } else if (!isFrontLocked) {
           front.add(neighbor);

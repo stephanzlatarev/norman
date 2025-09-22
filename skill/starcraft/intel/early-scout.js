@@ -103,7 +103,7 @@ class EarlyScout extends Job {
     const agent = this.assignee;
 
     if (agent && agent.zone) {
-      for (const zone of agent.zone.range.zones) {
+      for (const zone of agent.zone.range.fire) {
         for (const enemy of zone.threats) {
           if (enemy.type.isWorker) continue;
           if (!enemy.type.isWarrior) continue;
