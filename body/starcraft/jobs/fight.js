@@ -195,16 +195,7 @@ export default class Fight extends Job {
     if (warrior.armor.shield < warrior.armor.shieldMax) return true;
 
     // Check if the warrior is in the fire range of the target.
-    const squareDistance = calculateSquareDistance(warrior.body, target.body);
-    if (warrior.body.isGround && target.type.rangeGround) {
-      const squareFireRange = target.type.rangeGround * target.type.rangeGround;
-
-      return (squareDistance <= squareFireRange);
-    } else if (warrior.body.isFlying && warrior.type.rangeAir) {
-      const squareFireRange = target.type.rangeAir * target.type.rangeAir;
-
-      return (squareDistance <= squareFireRange);
-    }
+    return isInFireRange(target, warrior);
   }
 
   goAttack() {
@@ -219,6 +210,7 @@ export default class Fight extends Job {
         // Move closer to see the target so that warrior can attack it
         Order.move(warrior, target.body);
       }
+      this.attackMoveForward = false;
     } else if (shouldRegenerateShields(warrior, this.battle, this.station)) {
       // Regenerate shields
       Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
@@ -251,6 +243,9 @@ export default class Fight extends Job {
       }
     } else if (shouldLeaveTarget(warrior, this.battle, this.station, target)) {
       Order.move(warrior, this.station);
+      this.attackMoveForward = false;
+    } else if (!isInFireRange(warrior, target)) {
+      Order.move(warrior, target.body);
       this.attackMoveForward = false;
     } else {
       Order.attack(warrior, target);
@@ -403,6 +398,20 @@ function shouldRegenerateShields(warrior, battle, station) {
   }
 
   return !warrior.hasRegeneratedShields;
+}
+
+// Check if the target is in the fire range of the warrior.
+function isInFireRange(warrior, target) {
+  const squareDistance = calculateSquareDistance(warrior.body, target.body);
+  let squareFireRange = 0;
+
+  if (target.body.isGround && warrior.type.rangeGround) {
+    squareFireRange = warrior.type.rangeGround * warrior.type.rangeGround;
+  } else if (target.body.isFlying && warrior.type.rangeAir) {
+    squareFireRange = warrior.type.rangeAir * warrior.type.rangeAir;
+  }
+
+  return (squareDistance <= squareFireRange);
 }
 
 function isClose(a, b, distance) {
