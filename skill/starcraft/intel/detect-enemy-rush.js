@@ -38,9 +38,9 @@ export default function() {
   } else if (enemyReapers >= 2) {
     // Reapers can jump in my home base so walling it off is not effective. They remove the threat of a rush.
     level = ENEMY_RUSH_NOT_EXPECTED;
-  } else if (enemyPhotonCannons > 1) {
+  } else if (!Memory.FlagSiegeDefense && (enemyPhotonCannons > 1)) {
     // Photon Cannons are a big investment. They remove the threat of a rush that can be defended with static defense.
-    level = ENEMY_RUSH_NOT_EXPECTED;
+    level = arePhotonCannonsClose() ? ENEMY_RUSH_HIGH_LEVEL : ENEMY_RUSH_NOT_EXPECTED;
   } else if ((ActiveCount.Nexus === 1) && isExpectingEnemyWaves()) {
     level = ENEMY_RUSH_HIGH_LEVEL;
   } else if (Memory.FlagSiegeDefense || Memory.MilestoneMaxArmy) {
@@ -140,4 +140,14 @@ function areZerglingsApproaching() {
   if (VisibleCount.Zergling < 4) return false;
   // TODO: Consider the position of the zerglings. If they are still in the enemy base, don't assume they are approaching.
   return true;
+}
+
+function arePhotonCannonsClose() {
+  for (const zone of Depot.home.range.fire) {
+    for (const enemy of zone.enemies) {
+      if (enemy.type.name === "PhotonCannon") {
+        return true;
+      }
+    }
+  }
 }
