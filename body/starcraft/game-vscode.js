@@ -188,7 +188,7 @@ function traceThreats(spheres) {
 
 function traceZones(shapes) {
   const color = "black";
-  const add = (shape) => shapes.push(JSON.stringify(shape));
+  const add = (shape) => shapes.push({ text: JSON.stringify(shape) });
 
   for (const zone of Zone.list()) {
     const rallyx = zone.isDepot ? zone.rally.x + 0.5 : zone.rally.x;
