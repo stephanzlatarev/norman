@@ -6,6 +6,7 @@ import Resources from "../memo/resources.js";
 
 const KITING_RANGE = 2;
 const KITING_WARRIORS = new Set(["Stalker"]);
+const STALKING_BUFFER_RANGE = 1.2;
 const REASSIGNABLE_WARRIORS = new Set(["Sentry"]);
 const SQUARE_DISTANCE_BLOCKED_PATH = 1000 * 1000;
 
@@ -195,16 +196,7 @@ export default class Fight extends Job {
     if (warrior.armor.shield < warrior.armor.shieldMax) return true;
 
     // Check if the warrior is in the fire range of the target.
-    const squareDistance = calculateSquareDistance(warrior.body, target.body);
-    if (warrior.body.isGround && target.type.rangeGround) {
-      const squareFireRange = target.type.rangeGround * target.type.rangeGround;
-
-      return (squareDistance <= squareFireRange);
-    } else if (warrior.body.isFlying && warrior.type.rangeAir) {
-      const squareFireRange = target.type.rangeAir * target.type.rangeAir;
-
-      return (squareDistance <= squareFireRange);
-    }
+    return isInFireRange(target, warrior, STALKING_BUFFER_RANGE);
   }
 
   goAttack() {
@@ -403,6 +395,23 @@ function shouldRegenerateShields(warrior, battle, station) {
   }
 
   return !warrior.hasRegeneratedShields;
+}
+
+// Check if the target is in the fire range of the warrior.
+function isInFireRange(warrior, target, bufferRange = 0) {
+  if (target.body.isGround && warrior.type.rangeGround) {
+    return isInRange(warrior, target, warrior.type.rangeGround + bufferRange);
+  } else if (target.body.isFlying && warrior.type.rangeAir) {
+    return isInRange(warrior, target, warrior.type.rangeAir + bufferRange);
+  }
+}
+
+function isInRange(warrior, target, range) {
+  const squareDistance = calculateSquareDistance(warrior.body, target.body);
+  const totalRange = warrior.body.r + range + target.body.r;
+  const squareRange = totalRange * totalRange;
+
+  return (squareDistance <= squareRange);
 }
 
 function isClose(a, b, distance) {
