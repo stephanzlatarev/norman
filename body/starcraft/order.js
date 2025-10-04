@@ -1,6 +1,6 @@
 import Resources from "./memo/resources.js";
 
-const orders = [];
+const orders = new Map();
 
 const STATUS_DEAD = -1;
 const STATUS_EMPTY = -2;
@@ -55,7 +55,7 @@ export default class Order {
       subject.todo = this;
       this.unit = subject;
 
-      orders.push(this);
+      addOrder(this);
     }
 
     this.ability = ability;
@@ -86,7 +86,7 @@ export default class Order {
     this.isAccepted = false;
     this.isRejected = false;
 
-    if (orders.indexOf(this) < 0) orders.push(this);;
+    addOrder(this);
 
     return this;
   }
@@ -187,11 +187,7 @@ export default class Order {
   }
 
   remove() {
-    const index = orders.indexOf(this);
-
-    if (index >= 0) {
-      orders.splice(index, 1);
-    }
+    orders.delete(this.unit.tag);
 
     if (this.unit.todo === this) {
       this.unit.todo = null;
@@ -213,7 +209,7 @@ export default class Order {
   }
 
   static list() {
-    return orders;
+    return orders.values();
   }
 
   static attack(unit, target) {
@@ -259,6 +255,17 @@ export default class Order {
     }
   }
 
+}
+
+function addOrder(order) {
+  const previous = orders.get(order.unit.tag);
+
+  if (previous) {
+    log("INFO: Overwrite", previous.toString());
+    previous.abort();
+  }
+
+  orders.set(order.unit.tag, order);
 }
 
 function log(...line) {
