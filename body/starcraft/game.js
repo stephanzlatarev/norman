@@ -171,6 +171,9 @@ export default class Game {
         for (let i = 0; i < response.result.length; i++) {
           orders[i].result(response.result[i]);
         }
+
+        console.log("Executed", actions.length, "orders:", JSON.stringify(actions));
+        console.log("Received", response.result.length, "results:", JSON.stringify(response.result));
       } catch (error) {
         console.log("ERROR: Failed to execute", actions.length, "orders");
         console.log(JSON.stringify(actions));
