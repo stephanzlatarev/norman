@@ -165,6 +165,11 @@ export default class Game {
     }
 
     if (actions.length) {
+      if (actions.length > 48) {
+        console.log("WARNING: Reducing orders from", actions.length, "to 48");
+        actions.length = 48;
+      }
+
       try {
         const response = await this.client.action({ actions: actions });
 
