@@ -165,9 +165,9 @@ export default class Game {
     }
 
     if (actions.length) {
-      if (actions.length > 48) {
-        console.log("WARNING: Reducing orders from", actions.length, "to 48");
-        actions.length = 48;
+      if (actions.length > 99) {
+        console.log("WARNING: Reducing orders from", actions.length, "to 99. Skipping:", JSON.stringify(actions.slice(99)));
+        actions.length = 99;
       }
 
       try {
