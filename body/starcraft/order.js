@@ -180,7 +180,7 @@ export default class Order {
 
       // This order is removed from to-be-issued list in memory
       this.remove();
-    } else if (Resources.loop > this.isIssued + 1) {
+    } else if (Resources.loop > this.timeIssued + 1) {
       // It's normal in a multi-player game that the order is picked up in the second game loop after it's issued. Anything beyond that will mean the the order may need to be retried
       log("INFO: Waiting for unit to accept", this.toString(), "while busy with", JSON.stringify(this.unit.order));
     }
