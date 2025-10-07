@@ -178,7 +178,10 @@ export default class Game {
         }
 
         console.log("Executed", String(actions.length).padStart(3, "0"), "orders:", JSON.stringify(actions));
-        console.log("Received", String(response.result.length).padStart(3, "0"), "results:", JSON.stringify(response.result));
+
+        if ((response.result.length !== actions.length) || (response.result.some(code => (code !== 1)))) {
+          console.log("Received", String(response.result.length).padStart(3, "0"), "results:", JSON.stringify(response.result));
+        }
       } catch (error) {
         console.log("ERROR: Failed to execute", actions.length, "orders");
         console.log(JSON.stringify(actions));
