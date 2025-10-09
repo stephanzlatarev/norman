@@ -110,7 +110,7 @@ function closeJobs(zone) {
 function pickDepotZone(zone) {
   for (const tier of Tiers) {
     for (const one of tier.zones) {
-      if ((one !== zone) && one.minerals.size) return one;
+      if ((one !== zone) && one.isDepot && one.minerals.size) return one;
     }
   }
 }
