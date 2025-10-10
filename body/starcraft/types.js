@@ -157,6 +157,14 @@ function parseWeapons(unit) {
     attackAir = 6 * 4;
     damageAir = 10 * 4 / GAME_LOOPS_PER_SECOND;
     rangeAir = 6;
+  } else if (unit.name === "Carrier") {
+    // With 8 interceptors
+    attackGround = 40;
+    damageGround = 37.6 / GAME_LOOPS_PER_SECOND;
+    rangeGround = 12;
+    attackAir = 40;
+    damageAir = 37.6 / GAME_LOOPS_PER_SECOND;
+    rangeAir = 12;
   } else if (unit.name === "Oracle") {
     attackGround = 15;
     damageGround = 24.4 / GAME_LOOPS_PER_SECOND;
