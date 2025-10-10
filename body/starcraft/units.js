@@ -164,6 +164,7 @@ function syncUnit(units, unit, type, zombies, me) {
   image.buildProgress = unit.buildProgress;
   image.isActive = (unit.buildProgress >= 1) && (unit.isPowered || !image.type.needsPower);
   image.order = unit.orders.length ? { ...unit.orders[0], queue: unit.orders.length } : { abilityId: 0, queue: 0 };
+  image.queue = (unit.orders.length > 1) ? unit.orders : null;
   image.rally = (unit.rallyTargets && unit.rallyTargets.length) ? unit.rallyTargets[0].point : null;
   image.direction = unit.facing;
   image.energy = unit.energy;

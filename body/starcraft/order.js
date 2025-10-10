@@ -213,20 +213,35 @@ export default class Order {
   }
 
   static attack(unit, target) {
-    if (!unit || !target) return;
-    if (!unit.type.damageGround && !unit.type.damageAir) return;
+    if (!unit) return;
+
+    // If the unit cannot attack then stop it so that it doesn't carry previous orders
+    if (!target) return Order.stop(unit);
+    if (!unit.type.damageGround && !unit.type.damageAir) return Order.stop(unit);
+
+    // If there's the order is already pending then don't issue a new one
     if (unit.todo && (unit.todo.ability === 23) && (unit.todo.target === target)) return unit.todo;
 
-    if ((unit.order.abilityId !== 23) || (unit.order.targetUnitTag !== target.tag)) {
-      return new Order(unit, 23, target);
+    if (unit.order.abilityId === 23) {
+      if (target.tag) {
+        if (unit.order.targetUnitTag && (unit.order.targetUnitTag === target.tag)) return;
+      } else if (target.x && target.y) {
+        if (unit.order.targetUnitTag) return; // On a-move the unit targets the nearest enemy
+        if (unit.order.targetWorldSpacePos && isSamePosition(unit.order.targetWorldSpacePos, target)) return;
+      }
     }
+
+    return new Order(unit, 23, target);
   }
 
   static MOVE_CLOSE_TO = 0b0001;
   static MOVE_NEAR_BY  = 0b0010;
 
   static move(unit, target, options) {
-    if (!unit || !unit.order || !target) return;
+    if (!unit || !unit.order) return;
+
+    // If the unit cannot attack then stop it so that it doesn't carry previous orders
+    if (!target) return Order.stop(unit);
 
     const pos = target.body ? target.body : target;
 
@@ -241,7 +256,7 @@ export default class Order {
     if (!unit.order.abilityId && isClose(unit.body, pos, distance)) return;
 
     if ((unit.order.abilityId !== 16) || !unit.order.targetWorldSpacePos || !isSamePosition(unit.order.targetWorldSpacePos, pos)) {
-      return new Order(unit, 16, { x: pos.x, y: pos.y }).accept(true);
+      return new Order(unit, 16, { x: pos.x, y: pos.y });
     }
   }
 
@@ -282,7 +297,7 @@ function checkIsAccepted(order) {
   if (actual.abilityId !== order.ability) return false;
 
   // Basic attack command which doesn't aim at an enemy unit will aim at the nearest enemy regardless of the target location
-  if ((order.ability === 23) && !order.target.tag) return true;
+  if ((order.ability === 23) && !order.target.tag && actual.targetUnitTag) return true;
 
   if (actual.targetUnitTag && (actual.targetUnitTag !== order.target.tag)) return false;
   if (actual.targetWorldSpacePos && !isSamePosition(actual.targetWorldSpacePos, order.target)) return false;

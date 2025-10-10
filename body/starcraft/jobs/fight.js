@@ -95,7 +95,7 @@ export default class Fight extends Job {
         this.goAttack();
       } else {
         this.details = getDetails(this, "charge");
-        new Order(warrior, 23, (this.station.zone === this.battle.zone) ? this.station : this.battle.zone.rally).accept(true);
+        Order.attack(warrior, (this.station.zone === this.battle.zone) ? this.station : this.battle.zone.rally);
       }
 
       if (REASSIGNABLE_WARRIORS.has(warrior.type.name)) {
@@ -211,6 +211,9 @@ export default class Fight extends Job {
         // Move closer to see the target so that warrior can attack it
         Order.move(warrior, target.body);
       }
+    } else if (warrior.queue) {
+      console.log("WARNING: Warrior", warrior.type.name, warrior.nick, this.details, "has queued orders:", JSON.stringify(warrior.queue));
+      Order.stop(warrior);
     } else if (shouldRegenerateShields(warrior, this.battle, this.station)) {
       // Regenerate shields
       Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
