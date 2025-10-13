@@ -7,11 +7,13 @@ import { VisibleCount } from "../memo/encounters.js";
 
 const PROXY_TIERS = 4;
 const CANNON_ATTACKERS = 6;
+const NEXUS_ATTACKERS = 8;
 const PYLON_ATTACKERS = 6;
 const WORKER_ATTACKERS_MANY = 3;
 const WORKER_ATTACKERS_ONE = 1;
 
 const TYPE_CANNON = "PhotonCannon";
+const TYPE_NEXUS = "Nexus";
 
 const zones = new Set();
 const neutralizeJobs = new Set();
@@ -48,6 +50,7 @@ export default class NeutralizeProxiesMission extends Mission {
         openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS_MANY, home);
         openNeutralizeJobs(99, proxy.pylons, PYLON_ATTACKERS, home);
         openNeutralizeJobs(98, proxy.cannons, CANNON_ATTACKERS, home);
+        openNeutralizeJobs(97, proxy.nexuses, NEXUS_ATTACKERS, home);
       } else if (!proxy.warriors.length) {
         // When the proxy is not defended yet then attack any workers. Don't stop harvest to destroy the structures
         openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS_ONE);
@@ -72,11 +75,12 @@ export default class NeutralizeProxiesMission extends Mission {
 
 class Proxy {
 
-  constructor(isHome, workers, pylons, cannons, warriors) {
+  constructor(isHome, workers, pylons, cannons, nexuses, warriors) {
     this.isHome = isHome;
     this.workers = workers;
     this.pylons = pylons;
     this.cannons = cannons;
+    this.nexuses = nexuses;
     this.warriors = warriors;
   }
 
@@ -195,6 +199,7 @@ function findProxy() {
   let isHome = false;
   const buildings = [];
   const cannons = [];
+  const nexuses = [];
   const pylons = [];
   const warriors = [];
   const workers = [];
@@ -215,18 +220,20 @@ function findProxy() {
         buildings.push(enemy);
 
         if (enemy.type.name === TYPE_CANNON) cannons.push(enemy);
+        if (enemy.type.name === TYPE_NEXUS) nexuses.push(enemy);
       }
     }
   }
 
   if (
+    (isHome && nexuses.length) ||                  // Enemy nexus in our home base
     (workers.length && pylons.length) ||           // Probe builds a pylon
     (workers.length && buildings.length) ||        // SCV builds a bunker, or probe builds a gateway
     (pylons.length && cannons.length) ||           // Pylon powers a cannon
     (pylons.length && buildings.length) ||         // Pylon powers a gateway
     (proxy && (cannons.length || warriors.length)) // Remember proxy when cannons are still not neutralized
   ) {
-    return new Proxy(isHome, workers, pylons, cannons, warriors);
+    return new Proxy(isHome, workers, pylons, cannons, nexuses, warriors);
   }
 }
 
