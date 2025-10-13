@@ -121,7 +121,13 @@ export default class Fight extends Job {
         this.goMarch();
       } else {
         this.details = getDetails(this, "station");
-        Order.move(warrior, this.station, (this.battle.mode !== Battle.MODE_STAND) ? Order.MOVE_CLOSE_TO : Order.MOVE_NEAR_BY);
+
+        if (this.battle.mode === Battle.MODE_STAND) {
+          // There are no enemies nearby. Move to the station ready to leave room for buildings
+          Order.move(warrior, this.station, Order.MOVE_NEAR_BY);
+        } else {
+          Order.hold(warrior, this.station);
+        }
       }
 
       this.isBusy = false;
@@ -211,9 +217,6 @@ export default class Fight extends Job {
         // Move closer to see the target so that warrior can attack it
         Order.move(warrior, target.body);
       }
-    } else if (warrior.queue) {
-      console.log("WARNING: Warrior", warrior.type.name, warrior.nick, this.details, "has queued orders:", JSON.stringify(warrior.queue));
-      Order.stop(warrior);
     } else if (shouldRegenerateShields(warrior, this.battle, this.station)) {
       // Regenerate shields
       Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);

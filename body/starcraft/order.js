@@ -260,6 +260,27 @@ export default class Order {
     }
   }
 
+  static hold(unit, target) {
+    if (!unit || !unit.order || !unit.body) return;
+    if (!target) return;
+
+    if (isExactPosition(unit.body, target)) {
+      if (unit.order.abilityId === 23) return;
+      if (unit.weapon && !unit.weapon.cooldown) {
+        const target = getWeakestTargetInFireRange(unit);
+
+        if (target) {
+          return Order.attack(unit, target);
+        }
+      }
+
+      if (unit.order.abilityId === 18) return;
+      return new Order(unit, 18);
+    } else if ((unit.order.abilityId !== 16) || !unit.order.targetWorldSpacePos || !isExactPosition(unit.order.targetWorldSpacePos, target)) {
+      return Order.move(unit, target);
+    }
+  }
+
   static stop(unit) {
     if (!unit) return;
     if (!unit.isAlive) return;
@@ -305,6 +326,10 @@ function checkIsAccepted(order) {
   return true;
 }
 
+function isExactPosition(a, b) {
+  return (Math.abs(a.x - b.x) <= 0.1) && (Math.abs(a.y - b.y) <= 0.1);
+}
+
 function isSamePosition(a, b) {
   const bx = b.body ? b.body.x : b.x;
   const by = b.body ? b.body.y : b.y;
@@ -314,6 +339,42 @@ function isSamePosition(a, b) {
 
 function isClose(a, b, span) {
   return (Math.abs(a.x - b.x) <= span) && (Math.abs(a.y - b.y) <= span);
+}
+
+function calculateSquareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+}
+
+function getWeakestTargetInFireRange(warrior) {
+  if (!warrior || !warrior.zone) return false;
+
+  let weakestTarget = null;
+
+  for (const enemy of warrior.zone.enemies) {
+    if (!isInFireRange(warrior, enemy)) continue;
+
+    if (!weakestTarget || (enemy.armor.total < weakestTarget.armor.total)) {
+      weakestTarget = enemy;
+    }
+  }
+
+  return weakestTarget;
+}
+
+function isInFireRange(warrior, target, bufferRange = 0) {
+  if (target.body.isGround && warrior.type.rangeGround) {
+    return isInRange(warrior, target, warrior.type.rangeGround + bufferRange);
+  } else if (target.body.isFlying && warrior.type.rangeAir) {
+    return isInRange(warrior, target, warrior.type.rangeAir + bufferRange);
+  }
+}
+
+function isInRange(warrior, target, range) {
+  const squareDistance = calculateSquareDistance(warrior.body, target.body);
+  const totalRange = warrior.body.r + range + target.body.r;
+  const squareRange = totalRange * totalRange;
+
+  return (squareDistance <= squareRange);
 }
 
 function targetToString(target) {

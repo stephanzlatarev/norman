@@ -18,8 +18,8 @@ export default class WallKeeper extends Job {
 
     if (!warrior.isAlive) return this.close(false);
 
-    if (areEnemiesApproaching()) {
-      orderHold(warrior, this.wall);
+    if (this.wall && areEnemiesApproaching()) {
+      Order.hold(warrior, { x: this.wall.x + 0.5, y: this.wall.y + 0.5 });
       this.isHoldingPoisiton = true;
     } else {
       orderMove(warrior, this.rally, this.isHoldingPoisiton);
@@ -47,20 +47,6 @@ function areEnemiesApproaching() {
   }
 }
 
-function orderHold(warrior, cell) {
-  if (!warrior || !warrior.order || !warrior.body || !cell) return;
-
-  const pos = { x: cell.x + 0.5, y: cell.y + 0.5 };
-  if ((warrior.order.abilityId === 18) && isExactPosition(warrior.body, pos)) return;
-  if ((warrior.order.abilityId === 23) && isSamePosition(warrior.body, pos)) return;
-
-  if (!warrior.weapon.cooldown && isAttacked(warrior)) {
-    new Order(warrior, 23, pos).accept(true);
-  } else if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isSamePosition(warrior.order.targetWorldSpacePos, pos)) {
-    new Order(warrior, 16, pos).queue(18);
-  }
-}
-
 function orderMove(warrior, pos, force) {
   if (!warrior || !warrior.order || !warrior.body || !pos) return;
   if (!force && !warrior.order.abilityId && isNearPosition(warrior.body, pos)) return;
@@ -68,16 +54,6 @@ function orderMove(warrior, pos, force) {
   if ((warrior.order.abilityId !== 16) || !warrior.order.targetWorldSpacePos || !isSamePosition(warrior.order.targetWorldSpacePos, pos)) {
     new Order(warrior, 16, pos);
   }
-}
-
-function isAttacked(warrior) {
-  for (const enemy of Depot.home.enemies) {
-    if (isSamePosition(warrior.body, enemy.body)) return true;
-  }
-}
-
-function isExactPosition(a, b) {
-  return (Math.abs(a.x - b.x) <= 0.1) && (Math.abs(a.y - b.y) <= 0.1);
 }
 
 function isSamePosition(a, b) {
