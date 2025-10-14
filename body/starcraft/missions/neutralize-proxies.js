@@ -8,7 +8,7 @@ import { VisibleCount } from "../memo/encounters.js";
 
 const PROXY_TIERS = 4;
 const CANNON_ATTACKERS = 6;
-const NEXUS_ATTACKERS = 12;
+const NEXUS_ATTACKERS = 9;
 const PYLON_ATTACKERS = 6;
 const WORKER_ATTACKERS_MANY = 3;
 const WORKER_ATTACKERS_ONE = 1;
