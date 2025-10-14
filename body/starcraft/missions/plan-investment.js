@@ -315,6 +315,9 @@ function calculateLimitAssimilator() {
   if (Memory.LevelEnemyRush >= 3) {
     // Expecting extreme enemy rush on minerals-only economy
     return 1;
+  } else if (Memory.FlagEnemyProxyNexus) {
+    // Dealing with enemy proxy nexus
+    return 1;
   }
 
   let limit = 0;
