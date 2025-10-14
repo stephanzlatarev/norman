@@ -45,6 +45,11 @@ function areEnemiesApproaching() {
   for (const zone of Depot.home.range.fire) {
     if (zone.enemies.size) return true;
   }
+
+  // If any warrior is attacking, block the wall gate so that it doesn't exit
+  for (const warrior of Depot.home.warriors) {
+    if ((warrior.order.abilityId === 23) && warrior.order.targetUnitTag) return true;
+  }
 }
 
 function orderMove(warrior, pos, force) {
