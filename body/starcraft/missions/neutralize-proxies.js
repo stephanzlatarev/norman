@@ -1,3 +1,4 @@
+import Memory from "../../../code/memory.js";
 import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
@@ -7,10 +8,12 @@ import { VisibleCount } from "../memo/encounters.js";
 
 const PROXY_TIERS = 4;
 const CANNON_ATTACKERS = 6;
-const NEXUS_ATTACKERS = 8;
+const NEXUS_ATTACKERS = 12;
 const PYLON_ATTACKERS = 6;
 const WORKER_ATTACKERS_MANY = 3;
 const WORKER_ATTACKERS_ONE = 1;
+
+const PROXY_NEXUS_PROGRESS_THRESHOLD = 0.53;
 
 const TYPE_CANNON = "PhotonCannon";
 const TYPE_NEXUS = "Nexus";
@@ -32,7 +35,7 @@ export default class NeutralizeProxiesMission extends Mission {
     if (!home || !zones.size) findHomeAndProxyZones();
     if (!zones.size) return;
 
-    if (ActiveCount.Zealot + ActiveCount.Stalker > 2) {
+    if (!Memory.FlagEnemyProxyNexus && (ActiveCount.Zealot + ActiveCount.Stalker > 2)) {
       isMissionComplete = true;
       return;
     }
@@ -44,13 +47,21 @@ export default class NeutralizeProxiesMission extends Mission {
     proxy = findProxy();
 
     if (proxy) {
+      Memory.FlagEnemyProxyNexus = (proxy.isHome && proxy.nexuses.length);
 
-      if (proxy.isHome) {
+      if (Memory.FlagEnemyProxyNexus) {
+        // When enemy uses a proxy nexus in our base then they intend to recall probes and zealots to it
+        const proxyNexus = proxy.nexuses[0];
+
+        // Wait until the time when our workers will kill the nexus just before it completes to block the enemy resources and buy time
+        if (proxyNexus.buildProgress >= PROXY_NEXUS_PROGRESS_THRESHOLD) {
+          openNeutralizeJobs(100, proxy.nexuses, NEXUS_ATTACKERS, home);
+        }
+      } else if (proxy.isHome) {
         // When the proxy is in our base then we should attempt to neutralize it at all cost
         openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS_MANY, home);
         openNeutralizeJobs(99, proxy.pylons, PYLON_ATTACKERS, home);
         openNeutralizeJobs(98, proxy.cannons, CANNON_ATTACKERS, home);
-        openNeutralizeJobs(97, proxy.nexuses, NEXUS_ATTACKERS, home);
       } else if (!proxy.warriors.length) {
         // When the proxy is not defended yet then attack any workers. Don't stop harvest to destroy the structures
         openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS_ONE);
@@ -63,6 +74,7 @@ export default class NeutralizeProxiesMission extends Mission {
       }
 
     } else {
+      Memory.FlagEnemyProxyNexus = false;
       closeAllNeutralizeJobs();
 
       if (forge && !patrolJob) {
