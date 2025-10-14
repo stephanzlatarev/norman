@@ -276,7 +276,18 @@ export default class Order {
 
       if (unit.order.abilityId === 18) return;
       return new Order(unit, 18);
-    } else if ((unit.order.abilityId !== 16) || !unit.order.targetWorldSpacePos || !isExactPosition(unit.order.targetWorldSpacePos, target)) {
+    }
+
+    // If there are enemy warriors in fire range they may block the path. So attack them if weapons are ready
+    if (unit.weapon && !unit.weapon.cooldown) {
+      const target = getWeakestTargetInFireRange(unit);
+
+      if (target) {
+        return Order.attack(unit, target);
+      }
+    }
+
+    if ((unit.order.abilityId !== 16) || !unit.order.targetWorldSpacePos || !isExactPosition(unit.order.targetWorldSpacePos, target)) {
       return Order.move(unit, target);
     }
   }
