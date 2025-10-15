@@ -288,7 +288,7 @@ export default class Order {
     }
 
     if ((unit.order.abilityId !== 16) || !unit.order.targetWorldSpacePos || !isExactPosition(unit.order.targetWorldSpacePos, target)) {
-      return Order.move(unit, target);
+      return new Order(unit, 16, { x: target.x, y: target.y });
     }
   }
 
