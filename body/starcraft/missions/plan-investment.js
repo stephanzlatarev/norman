@@ -51,7 +51,7 @@ function doStartUp() {
 function doOneBaseDefense() {
   Limit.Immortal = Infinity;
   Limit.Stalker = Infinity;
-  Limit.Probe = (Memory.LevelEnemyRush >= 3) ? 19 : 26;
+  Limit.Probe = (Memory.LevelEnemyRush >= 2) ? 23 : 26;
   Limit.Observer = 1;
   Limit.Sentry = 2;
   Limit.DarkTemplar = 0;
@@ -88,7 +88,15 @@ function doOneBaseDefense() {
     Limit.ShieldBattery = 0;
   }
 
-  if (Memory.LevelEnemyRush) {
+  if (Memory.LevelEnemyRush >= 3) {
+    Priority.Zealot = 95;
+    Limit.Zealot = 10;
+
+    if ((TotalCount.Zealot >= 4) && ActiveCount.CyberneticsCore && (Resources.minerals >= 125) && (Resources.vespene >= 50)) {
+      // We can and should build a Stalker right now
+      Priority.Stalker = 100;
+    }
+  } else if (Memory.LevelEnemyRush) {
     Priority.Zealot = 95;
     Limit.Zealot = 1;
   } else {
@@ -312,11 +320,8 @@ function calculateLimitAssimilator() {
     }
   }
 
-  if (Memory.LevelEnemyRush >= 3) {
-    // Expecting extreme enemy rush on minerals-only economy
-    return 1;
-  } else if (Memory.FlagEnemyProxyNexus) {
-    // Dealing with enemy proxy nexus
+  if (Memory.LevelEnemyRush >= 2) {
+    // Expecting enemy rush on minerals-only economy
     return 1;
   }
 

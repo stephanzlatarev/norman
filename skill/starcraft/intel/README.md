@@ -5,9 +5,9 @@ Intel skills collect data about the enemy to inform strategic military and produ
 Monitors enemy army for the first 5 minutes for signs of rush or timing attack.
 Raises `LevelEnemyRush` when suspecting an enemy attack with large army:
 * 0 - Enemy rush is not expected
-* 1 - Moderate enemy rush on two-base economy
-* 2 - All-in enemy rush on one-base economy
-* 3 - Extreme enemy rush on mineral-only economy
+* 1 - Moderate enemy rush on one-base economy
+* 2 - All-in enemy rush on mineral-only economy
+* 3 - Extreme enemy rush with melee units and workers
 
 ### Early scout
 
