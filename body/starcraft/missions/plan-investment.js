@@ -90,11 +90,28 @@ function doOneBaseDefense() {
 
   if (Memory.LevelEnemyRush >= 3) {
     Priority.Zealot = 95;
-    Limit.Zealot = 10;
+    Limit.Zealot = 2;
 
-    if ((TotalCount.Zealot >= 4) && ActiveCount.CyberneticsCore && (Resources.minerals >= 125) && (Resources.vespene >= 50)) {
-      // We can and should build a Stalker right now
-      Priority.Stalker = 100;
+    if (ActiveCount.CyberneticsCore) {
+      if ((TotalCount.Zealot >= 1) && !TotalCount.Sentry) {
+        Priority.Sentry = 100;
+      } else if (TotalCount.Zealot >= 2) {
+
+        // If we have too much minerals and not enough gas, then build Zealots
+        if ((Resources.minerals >= 225) && (Resources.vespene < 50)) {
+          Limit.Zealot = TotalCount.Zealot + 1;
+        } else {
+          Priority.Stalker = 100;
+        }
+      }
+
+      const activeWarriors = ActiveCount.Stalker + ActiveCount.Sentry + ActiveCount.Zealot;
+      const totalWarriors = TotalCount.Stalker + TotalCount.Sentry + TotalCount.Zealot;
+      const trainingWarriors = totalWarriors - activeWarriors;
+
+      if (trainingWarriors >= ActiveCount.Gateway) {
+        Limit.Gateway = 3;
+      }
     }
   } else if (Memory.LevelEnemyRush) {
     Priority.Zealot = 95;
