@@ -7,7 +7,7 @@ const MAX_MOVE_OUT_ARMY_VALUE = 5000;
 export const ENEMY_RUSH_NOT_EXPECTED = 0;
 export const ENEMY_RUSH_MODERATE_LEVEL = 1;
 export const ENEMY_RUSH_HIGH_LEVEL = 2;     // Enemy is expected to attack with one-base mineral-based economy
-export const ENEMY_RUSH_EXTREME_LEVEL = 3;  // Enemy is expected to attack with melee units and workers
+export const ENEMY_RUSH_EXTREME_LEVEL = 3;  // Enemy is expected to attack with melee units and workers before our home base is properly walled off
 
 // TODO: Improve this by keeping track of all enemy investments
 // When enemy has lower investment in economy than us, we expect enemy rush
@@ -35,11 +35,11 @@ export default function() {
   } else if (Memory.FlagEnemyProxyNexus) {
     // Enemy rush with melee units and workers is now expected
     level = ENEMY_RUSH_EXTREME_LEVEL;
+  } else if ((TotalCount.Assimilator <= 1) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3)) && areZerglingsApproaching()) {
+    // Enemy rush with very early zerglings is now expected
+    level = ENEMY_RUSH_EXTREME_LEVEL;
   } else if ((Memory.LevelEnemyRush === ENEMY_RUSH_HIGH_LEVEL) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3))) {
     // Enemy rush on one-base economy is still expected
-    level = ENEMY_RUSH_HIGH_LEVEL;
-  } else if ((TotalCount.Assimilator <= 1) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3)) && areZerglingsApproaching()) {
-    // Enemy rush on one-base economy is now expected
     level = ENEMY_RUSH_HIGH_LEVEL;
   } else if (enemyReapers >= 2) {
     // Reapers can jump in my home base so walling it off is not effective. They remove the threat of a rush.

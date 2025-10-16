@@ -320,7 +320,7 @@ function calculateLimitAssimilator() {
     }
   }
 
-  if (Memory.LevelEnemyRush >= 2) {
+  if (Memory.LevelEnemyRush >= 3) {
     // Expecting enemy rush on minerals-only economy
     return 1;
   }
