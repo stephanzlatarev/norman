@@ -5,7 +5,6 @@ const BUSY_DISTANCE = 2;
 const PUSH_DISTANCE = 1.5;
 
 const MODE_IDLE = "idle";
-const MODE_PUSH = "push";
 const MODE_PUSHING = "pushing";
 const MODE_PACKING = "packing";
 const MODE_REAPING = "reaping";
@@ -141,13 +140,13 @@ export default class HarvestMinerals extends Job {
 
       if (worker.isCarryingHarvest) {
         if (shouldPush(worker, path.xaxis, path.boost, path.store)) {
-          this.mode = pushToDepot(worker, this.mode, path.store, this.target, this.zone.depot);
+          this.mode = pushToDepot(worker, path.store, this.zone.depot, this.target);
         } else {
           this.mode = returnHarvest(worker);
         }
       } else {
         if (shouldPush(worker, path.xaxis, path.boost, path.harvest)) {
-          this.mode = pushToResource(worker, this.mode, path.harvest, this.target);
+          this.mode = pushToResource(worker, path.harvest, this.target);
         } else {
           this.mode = harvestResource(worker, this.target);
 
@@ -176,13 +175,13 @@ function order(worker, ability, target) {
   }
 }
 
-function pushToResource(worker, mode, harvestPoint, resource) {
+function pushToResource(worker, harvestPoint, resource) {
   if ((worker.order.abilityId === 16) && isSamePoint(worker.order.targetWorldSpacePos, harvestPoint)) return MODE_PUSHING;
-  if ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === resource.tag) && (mode === MODE_PUSHING)) return MODE_PUSHING;
+  if ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === resource.tag)) return MODE_PUSHING;
 
   order(worker, 16, harvestPoint).queue(298, resource);
 
-  return MODE_PUSH;
+  return MODE_PUSHING;
 }
 
 function harvestResource(worker, resource) {
@@ -193,13 +192,13 @@ function harvestResource(worker, resource) {
   return MODE_REAPING;
 }
 
-function pushToDepot(worker, mode, storePoint, resource, nexus) {
+function pushToDepot(worker, storePoint, nexus, resource) {
   if ((worker.order.abilityId === 16) && isSamePoint(worker.order.targetWorldSpacePos, storePoint)) return MODE_PUSHING;
-  if ((worker.order.abilityId === 299) && (worker.order.targetUnitTag === nexus.tag) && (mode === MODE_PUSHING)) return MODE_PUSHING;
+  if ((worker.order.abilityId === 299) && (worker.order.targetUnitTag === nexus.tag)) return MODE_PUSHING;
 
   order(worker, 16, storePoint).queue(1, nexus).queue(1, resource);
 
-  return MODE_PUSH;
+  return MODE_PUSHING;
 }
 
 function returnHarvest(worker) {
