@@ -1,4 +1,4 @@
-import { Depot, Job, Order } from "../imports.js";
+import { Depot, Job, Memory, Order } from "../imports.js";
 
 export default class WallKeeper extends Job {
 
@@ -18,7 +18,7 @@ export default class WallKeeper extends Job {
 
     if (!warrior.isAlive) return this.close(false);
 
-    if (this.wall && areEnemiesApproaching()) {
+    if (this.wall && shouldBlockWall()) {
       Order.hold(warrior, { x: this.wall.x + 0.5, y: this.wall.y + 0.5 });
       this.isHoldingPoisiton = true;
     } else {
@@ -39,9 +39,15 @@ export default class WallKeeper extends Job {
 
 }
 
-function areEnemiesApproaching() {
+function shouldBlockWall() {
+  // While siege defense is active, always block the wall. Our warriors need to stay behind the walls.
+  // TODO: Check if some of our warriors are outside the wall and allow the wall to open for them to get back in.
+  if (Memory.DeploymentOutreach === Memory.DeploymentOutreachSiegeDefense) return true;
+
+  // If any enemy is already inside the base, block the wall so that other enemies can't get in
   if (Depot.home.enemies.size) return true;
 
+  // If any enemy is in firing range, block the wall
   for (const zone of Depot.home.range.fire) {
     if (zone.enemies.size) return true;
   }

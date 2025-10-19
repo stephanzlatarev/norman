@@ -1,7 +1,7 @@
 The strategy of playing StarCraft II is as follows:
 
 1. Continuously determine the deployment outreach based on our economy strength and the percieved balance between own and enemy forces
-    - siege defense - overwhelming enemy attack is imminent; defend the largest defendable perimeter with all warriors behind walls; abandon exposed outposts if necessary.
+    - siege defense - overwhelming enemy attack is imminent; defend the largest defendable perimeter with all warriors behind walls; abandon exposed outposts if necessary; only workers and hallucinations scout outside walls.
     - normal defense - station warriors in economy perimeter and watch approaches
     - expand defense - secure the next outpost with the intent to build a new base
     - probing attack - test enemy lines for weaknesses and keep main army ready to return to defense
