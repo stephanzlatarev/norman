@@ -170,10 +170,6 @@ function traceMemory(texts) {
   if (Memory.LevelEnemyRush) texts.push("Level Enemy Rush: " + Memory.LevelEnemyRush);
   if (Memory.LevelEnemyArmySuperiority) texts.push("Level Enemy Army Superiority: " + Memory.LevelEnemyArmySuperiority);
 
-  if (Memory.ModeCombatAttack) texts.push("Mode Combat Attack");
-  if (Memory.ModeCombatCharge) texts.push("Mode Combat Charge");
-  if (Memory.ModeCombatDefend) texts.push("Mode Combat Defend");
-
   texts.push("");
 }
 

@@ -35,7 +35,7 @@ export default function(battle) {
     // This is the case when preparing for defence or making an ambush
     mode = Battle.MODE_RALLY;
   } else if (battle.lines.length) {
-    if (Memory.ModeCombatCharge && isPrimaryBattle(battle)) {
+    if ((Memory.DeploymentOutreach >= Memory.DeploymentOutreachFullOffense) && isPrimaryBattle(battle)) {
       mode = maxoutTransition(battle);
     } else {
       mode = normalTransition(battle);

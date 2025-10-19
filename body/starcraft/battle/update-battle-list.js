@@ -26,7 +26,7 @@ export default function() {
 function listDefaultBattle(battles) {
   let battleZone = Depot.home;
 
-  if (Memory.ModeCombatDefend) {
+  if (Memory.DeploymentOutreach <= Memory.DeploymentOutreachProbingAttack) {
     battleZone = findFrontBaseZone();
   } else if (Enemy.base && !Enemy.base.warriors.size) {
     battleZone = Enemy.base;
@@ -50,7 +50,7 @@ function listDefaultBattle(battles) {
 
 function listBattlesInRedZones(battles) {
   const traversed = new Set();
-  const tierLevelLimit = Memory.ModeCombatDefend ? 1 : Infinity;
+  const tierLevelLimit = (Memory.DeploymentOutreach <= Memory.DeploymentOutreachNormalDefense) ? 1 : Infinity;
 
   for (const tier of Tiers) {
     if (tier.level > tierLevelLimit) break;

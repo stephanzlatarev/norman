@@ -142,7 +142,7 @@ function selectSentry() {
 
   let energyThreshold = COST_HALLUCINATION;
 
-  if (Memory.ModeCombatDefend) {
+  if (Memory.DeploymentOutreach <= Memory.DeploymentOutreachSiegeDefense) {
     energyThreshold += COST_FORCE_FIELD;
   } else if (VisibleCount.Warrior) {
     energyThreshold += COST_GUARDIAN_SHIELD;

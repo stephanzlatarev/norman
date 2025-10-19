@@ -25,7 +25,7 @@ export default function() {
 }
 
 function shouldWallBase() {
-  if (!Memory.ModeCombatDefend) return false;
+  if (Memory.DeploymentOutreach > Memory.DeploymentOutreachNormalDefense) return false;
   if (Memory.FlagEnemyProxyNexus) return false;
 
   // Wall the base only if the battle frontline is the home base

@@ -75,7 +75,7 @@ function doOneBaseDefense() {
   Priority.RoboticsFacility = (TotalCount.Stalker >= 6) ? 85 : 70;
   Priority.Nexus = 0;
 
-  if (Memory.ModeCombatDefend) {
+  if (Memory.DeploymentOutreach <= Memory.DeploymentOutreachNormalDefense) {
     Priority.ShieldBattery = 100;
     Limit.ShieldBattery = (TotalCount.Stalker + TotalCount.Zealot >= 1) ? 1 : 0;
 
@@ -121,7 +121,7 @@ function doOneBaseDefense() {
     Limit.Zealot = 0;
   }
 
-  if (Memory.ModeCombatDefend && Memory.FlagSiegeDefense) {
+  if ((Memory.DeploymentOutreach <= Memory.DeploymentOutreachNormalDefense) && Memory.FlagSiegeDefense) {
     if (Memory.OpportunityToUseOracle) {
       Priority.Colossus = 0;
       Priority.Immortal = 0;
@@ -204,7 +204,7 @@ function doGroundArmyMaxOut() {
   Limit.Gateway = calculateLimitGateway();
   Limit.RoboticsFacility = (TotalCount.Nexus > 1) ? 1 : 0;
 
-  if (Memory.ModeCombatDefend) {
+  if (Memory.DeploymentOutreach <= Memory.DeploymentOutreachNormalDefense) {
     Priority.RoboticsBay = 100;
     Priority.ShieldBattery = 100;
     Limit.RoboticsBay = 1;
