@@ -159,6 +159,7 @@ function traceMemory(texts) {
   if (Memory.MilestoneBasicMilitary) texts.push("Milestone Basic Military");
   if (Memory.MilestoneMaxArmy) texts.push("Milestone Max Army");
 
+  if (Memory.DeploymentOutreach) texts.push("Deployment Outreach: " + Memory.DeploymentOutreach);
   if (Memory.LimitBase) texts.push("Limit Base: " + Memory.LimitBase);
 
   if (Memory.FlagSiegeDefense) texts.push("Flag Siege Defense");

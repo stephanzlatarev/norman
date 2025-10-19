@@ -1,0 +1,5 @@
+# Determines the deployment outreach
+
+name: Determine deployment outreach
+brain: deployment-outreach.js
+type: javascript
