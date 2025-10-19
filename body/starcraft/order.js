@@ -60,6 +60,10 @@ export default class Order {
 
     this.ability = ability;
     this.target = target;
+
+    if (!this.unit) throw new Error("Order to no unit");
+    if (!this.unit.tag) throw new Error("Order to unit without tag");
+    if (!this.ability) throw new Error("Order without command");
   }
 
   expect(output) {
@@ -69,6 +73,8 @@ export default class Order {
   }
 
   replace(ability, target) {
+    if (!ability) throw new Error("Order without command");
+
     this.ability = ability;
     this.target = target;
 
@@ -85,6 +91,10 @@ export default class Order {
     this.isIssued = false;
     this.isAccepted = false;
     this.isRejected = false;
+
+    if (this.unit.activeOrder === this) {
+      this.unit.activeOrder = null;
+    }
 
     addOrder(this);
 
@@ -112,7 +122,7 @@ export default class Order {
       }
     }
 
-    if (this.unit && this.unit.isAlive && this.ability) {
+    if (this.unit.isAlive && this.ability) {
       if (!this.unit.tag) {
         log("ERROR: Unit", this.unit.type ? this.unit.type.name : "-", this.unit.nick, "has no tag");
       } else if (this.target) {
@@ -143,6 +153,10 @@ export default class Order {
     this.isAccepted = false;
     this.isRejected = true;
 
+    if (this.unit.activeOrder === this) {
+      this.unit.activeOrder = null;
+    }
+
     this.remove();
   }
 
@@ -156,13 +170,13 @@ export default class Order {
       this.isAccepted = false;
       this.remove();
 
-      if (this.unit && this.unit.isAlive && this.ability) log("ERROR:", this.toString(), ">>", status);
+      if (this.unit.isAlive) log("ERROR:", this.toString(), ">>", status);
     }
   }
 
   // Check if the order is accepted and if so then remove it.
   check() {
-    if (this.unit && !this.unit.isAlive) this.result(STATUS_DEAD);
+    if (!this.unit.isAlive) this.result(STATUS_DEAD);
     if (!this.isIssued) return;
     if (this.isAccepted) return;
 
@@ -173,10 +187,7 @@ export default class Order {
     }
 
     if (this.isAccepted) {
-      // This order moves from the unit's todo list to its active order list
-      if (this.unit.todo === this) {
-        this.unit.todo = null;
-      }
+      this.unit.activeOrder = this;
 
       // This order is removed from to-be-issued list in memory
       this.remove();
@@ -194,11 +205,28 @@ export default class Order {
     }
   }
 
-  toString() {
-    if (!this.unit) return "Order to no unit";
-    if (!this.unit.tag) return "Order to unit without tag";
-    if (!this.ability) return "Order without command";
+  equals(order) {
+    if (!this || !order) return false;
 
+    // The command must be the same
+    if (!this.ability || !order.ability) return false;
+
+    // Both orders must be with no targets
+    if (!this.target && !order.target) return true;
+
+    // Otherwise, both targets must be exactly the same
+    if (!this.target || !order.target) return false;
+
+    if (this.target.tag) {
+      return (this.target.tag === order.target.tag);
+    } else if (this.target.x && this.target.y) {
+      return isSamePosition(this.target, order.target);
+    }
+
+    return (this.target === order.target);
+  }
+
+  toString() {
     return [
       "Order #" + this.id,
       this.unit.type.name, this.unit.nick,
@@ -220,7 +248,8 @@ export default class Order {
     if (!unit.type.damageGround && !unit.type.damageAir) return Order.stop(unit);
 
     // If there's the order is already pending then don't issue a new one
-    if (unit.todo && (unit.todo.ability === 23) && (unit.todo.target === target)) return unit.todo;
+    if (unit.todo && unit.todo.equals({ ability: 23, target })) return unit.todo;
+    if (unit.activeOrder && unit.activeOrder.equals({ ability: 23, target })) return unit.activeOrder;
 
     if (unit.order.abilityId === 23) {
       if (target.tag) {
@@ -245,7 +274,7 @@ export default class Order {
 
     const pos = target.body ? target.body : target;
 
-    if (unit.todo && (unit.todo.ability === 16) && isSamePosition(unit.todo.target, pos)) return unit.todo;
+    if (unit.todo && unit.todo.equals({ ability: 16, target: pos })) return unit.todo;
 
     let distance = 1;
     if (options & Order.MOVE_CLOSE_TO) {
@@ -298,7 +327,7 @@ export default class Order {
     if (unit.todo && (unit.todo.ability === 3665)) return unit.todo;
 
     if (unit.order.abilityId) {
-      return new Order(unit, 3665).accept(true);
+      return new Order(unit, 3665);
     }
   }
 
@@ -322,8 +351,16 @@ function log(...line) {
 function checkIsAccepted(order) {
   const actual = order.unit.order;
 
-  // Move command will be complete when the unit reaches the target position
-  if (!actual.abilityId && (order.ability === 16) && isSamePosition(order.unit.body, order.target)) return true;
+  if (!actual.abilityId) {
+    // Move command will be complete when the unit reaches the target position
+    if ((order.ability === 16) && isSamePosition(order.unit.body, order.target)) return true;
+
+    // A-move command will be complete when the unit reaches the target position and there's no enemy in sight
+    if ((order.ability === 23) && isSamePosition(order.unit.body, order.target) && !order.unit.zone.enemies.size) return true;
+
+    // Stop command will be complete when the unit is idle
+    if (order.ability === 3665) return true;
+  }
 
   // In all other cases we expect the actual order to be for the requested ability
   if (actual.abilityId !== order.ability) return false;
