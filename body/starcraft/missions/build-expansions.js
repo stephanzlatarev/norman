@@ -32,14 +32,6 @@ export default class BuildExpansionsMission extends Mission {
     }
 
     if (this.job) {
-      if (Memory.FlagSecureAntreZone && (TotalCount.Nexus <= 2) && !this.job.isFailed && !this.job.isDone) {
-        this.job.target = Depot.antre;
-        this.job.priority = 100;
-
-        // Continue with the job regardless of zone alert levels
-        return;
-      }
-
       // Make sure the job is of the right priority
       this.job.priority = Priority.Nexus;
 
@@ -127,8 +119,6 @@ function shouldNotBuildNexus() {
 }
 
 function findDepot() {
-  if (Memory.FlagSecureAntreZone && Depot.antre) return Depot.antre;
-
   const traversed = new Set();
   const options = new Set();
   let wave = new Set();

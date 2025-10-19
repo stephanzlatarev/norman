@@ -12,9 +12,7 @@ const MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK = 1.5;
 export default function() {
   const battles = new Set();
 
-  if (Memory.FlagSecureAntreZone && Depot.antre) {
-    listBattleInAntreZone(battles);
-  } else if (Memory.LevelEnemyArmySuperiority < MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK) {
+  if (Memory.LevelEnemyArmySuperiority < MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK) {
     listBattlesInRedZones(battles);
   }
 
@@ -78,16 +76,6 @@ function listBattlesInRedZones(battles) {
       }
     }
   }
-}
-
-function listBattleInAntreZone(battles) {
-  const battle = findBattle(Depot.antre) || new Battle(Depot.antre);
-
-  battle.front = new Set([Depot.antre]);
-  battle.zones = new Set([...Depot.antre.range.zones]);
-
-  battle.move(Depot.antre);
-  battles.add(battle);
 }
 
 function findFrontBaseZone() {

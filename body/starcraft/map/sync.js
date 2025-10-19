@@ -3,7 +3,7 @@ import { syncAlerts } from "./alert.js";
 import { createDepots } from "./depot.js";
 import { createRoutes, syncRoutes } from "./route.js";
 import { createSites } from "./site.js";
-import { syncTiers, findAntre } from "./tier.js";
+import { syncTiers } from "./tier.js";
 import { createZones } from "./zone.js";
 
 export function createMap(gameInfo) {
@@ -18,7 +18,6 @@ export function createMap(gameInfo) {
   syncAlerts();
   createRoutes();
   syncTiers();
-  findAntre();
 
   console.log("Board created in", Date.now() - time, "ms");
 }

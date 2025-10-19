@@ -59,16 +59,4 @@ export function syncTiers(force) {
   }
 }
 
-export function findAntre() {
-  for (const tier of tiers) {
-    for (const zone of tier.zones) {
-      if (zone.isDepot && (zone !== Depot.home)) {
-        Depot.antre = zone;
-
-        return Depot.antre;
-      }
-    }
-  }
-}
-
 export default tiers;
