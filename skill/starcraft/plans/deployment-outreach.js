@@ -38,6 +38,10 @@ const LEVELS = [
   // 4 - Test enemy lines for weaknesses and keep main army ready to return to defense
   {
     name: "DeploymentOutreachProbingAttack",
+    blockers: [
+      // When our army is weaker than the enemy, then focus on defense
+      { condition: () => (Memory.LevelEnemyArmySuperiority > 1), reason: "Enemy army is stronger than ours" },
+    ],
   },
 
   // 5 - Create multi-pronged attacks on weakest enemy zones with the intent to build forces and upgrade technology
