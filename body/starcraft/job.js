@@ -121,15 +121,21 @@ export default class Job {
   }
 
   abort() {
-    if (this.assignee && this.assignee.todo && (this.assignee.todo !== this.order)) {
-      this.assignee.todo.abort();
+    const unit = this.assignee;
+
+    if (unit && unit.todo && (unit.todo !== this.order)) {
+      unit.todo.abort();
     }
 
     if (this.order) {
       this.order.abort();
     }
 
-    Order.stop(this.assignee);
+    // Check for the unit tag because the job might be assigned to a progress tracker
+    // TODO: Think of better way to handle progress trackers. Fake units is not ideal
+    if (unit && unit.tag) {
+      Order.stop(unit);
+    }
 
     this.close(false);
   }
