@@ -1,5 +1,6 @@
 import Board from "./board.js";
 import { syncAlerts } from "./alert.js";
+import { syncBases } from "./base.js";
 import { createDepots } from "./depot.js";
 import { createRoutes, syncRoutes } from "./route.js";
 import { createSites } from "./site.js";
@@ -25,6 +26,7 @@ export function createMap(gameInfo) {
 export function syncMap(gameInfo) {
   Board.sync(gameInfo);
 
+  syncBases();
   syncAlerts();
   syncRoutes();
   syncTiers();

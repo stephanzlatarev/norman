@@ -1,0 +1,5 @@
+# Selects the next expansion location
+
+name: Select expo
+brain: select-expo.js
+type: javascript

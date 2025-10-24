@@ -2,11 +2,10 @@ import Memory from "../../code/memory.js";
 import Game from "./game.js";
 import Job from "./job.js";
 import Battle from "./battle/battle.js";
-import { ALERT_WHITE } from "./map/alert.js";
-import Board from "./map/board.js";
+import Area from "./map/area.js";
+import Base from "./map/base.js";
+import Depot from "./map/depot.js";
 import Zone from "./map/zone.js";
-
-const SHOW_SITES = false;
 
 export default class VscodeGame extends Game {
 
@@ -46,8 +45,6 @@ const Color = {
   Purple: { r: 200, g: 0, b: 200 },
   Unknown: { r: 100, g: 100, b: 100 },
 };
-const ALERT_COLOR = [Color.Unknown, Color.Blue, Color.Green, Color.White, Color.Yellow, Color.Orange, Color.Pink, Color.Red];
-const zoneShapes = new Map();
 
 async function trace(client) {
   const lines = [];
@@ -55,30 +52,20 @@ async function trace(client) {
   const shapes = [];
   const spheres = [];
 
-  traceAlertLevels(shapes);
-  traceBattles(lines, text);
+  traceDepots(shapes);
+  traceAreas(shapes);
   traceThreats(spheres);
-  traceZones(shapes);
+  traceBattles(text);
   traceMemory(text);
   traceJobs(text);
 
   for (let row = 0; row < text.length; row++) text[row] = { text: text[row], virtualPos: { x: 0, y: row } };
-  for (const shape of shapes) text.push(shape);
+  for (const shape of shapes) text.push({ text: JSON.stringify(shape) });
 
   await client.debug({ debug: [{ draw: { lines, text, spheres } }] });
 }
 
-function traceAlertLevels(shapes) {
-  for (const zone of Zone.list()) {
-    if (zone.alertLevel === ALERT_WHITE) continue;
-    if (!ALERT_COLOR[zone.alertLevel]) continue;
-
-    const color = ALERT_COLOR[zone.alertLevel];
-    shapes.push({ text: JSON.stringify({ shape: "polygon", points: getZoneShape(zone), color: `rgb(${color.r}, ${color.g}, ${color.b})` }) });
-  }
-}
-
-function traceBattles(lines, texts) {
+function traceBattles(texts) {
   const battles = Battle.list().sort((a, b) => (b.priority - a.priority));
 
   texts.push("Tier Zone Recruit/Rallied Mode  Frontline");
@@ -93,14 +80,6 @@ function traceBattles(lines, texts) {
     text.push(battle.lines.map(line => line.zone.name).join(" "));
 
     texts.push(text.join(" "));
-
-    const zonep = { x: zone.x, y: zone.y };
-    for (const one of battle.zones) {
-      lines.push({ line: { p0: { x: one.x, y: one.y }, p1: zonep }, color: Color.Red });
-    }
-    for (const one of battle.front) {
-      lines.push({ line: { p0: { x: one.x, y: one.y }, p1: zonep }, color: Color.Yellow });
-    }
   }
 
   texts.push("");
@@ -183,60 +162,27 @@ function traceThreats(spheres) {
   }
 }
 
-function traceZones(shapes) {
-  const color = "black";
-  const add = (shape) => shapes.push({ text: JSON.stringify(shape) });
-
-  for (const zone of Zone.list()) {
-    const rallyx = zone.isDepot ? zone.rally.x + 0.5 : zone.rally.x;
-    const rallyy = zone.isDepot ? zone.rally.y + 0.5 : zone.rally.y;
-    const radius = zone.isDepot ? 3.5 : 1.2;
-
-    add({ shape: "circle", x: rallyx, y: rallyy, r: 1.2, color });
-
-    for (const neighbor of zone.neighbors) {
-      const neighborrallyx = neighbor.isDepot ? neighbor.rally.x + 0.5 : neighbor.rally.x;
-      const neighborrallyy = neighbor.isDepot ? neighbor.rally.y + 0.5 : neighbor.rally.y;
-
-      add({ shape: "line", x1: rallyx, y1: rallyy, x2: neighborrallyx, y2: neighborrallyy, color });
-    }
-
-    if (zone.isDepot) {
-      add({ shape: "circle", x: Math.floor(zone.x) + 0.5, y: Math.floor(zone.y) + 0.5, r: radius, color });
-      add({ shape: "circle", x: zone.harvestRally.x + 0.5, y: zone.harvestRally.y + 0.5, r: 0.5, color });
-    }
-
-    if (SHOW_SITES && zone.sites) {
-      for (const site of zone.sites) {
-        shapes.push({ shape: "circle", x: site.x, y: site.y, r: 0.2, color: "red" });
-
-        for (const type of ["pylon", "battery", "small", "medium", "wall"]) {
-          for (const plot of site[type]) {
-            let x, y, r, color;
-
-            if (type === "wall") {
-              x = plot.x + 0.5;
-              y = plot.y + 0.5;
-              r = 0.4;
-              color = "green";
-            } else if (type === "medium") {
-              x = plot.x + 0.5;
-              y = plot.y + 0.5;
-              r = 1.4;
-              color = "purple";
-            } else {
-              x = plot.x;
-              y = plot.y;
-              r = 0.9;
-              color = (type === "battery") ? "orange" : "blue";
-            }
-
-            shapes.push({ shape: "circle", x, y, r, color });
-          }
-        }
-      }
-    }
+function traceDepots(shapes) {
+  for (const depot of Depot.list()) {
+    shapes.push({ shape: "circle", x: Math.floor(depot.x) + 0.5, y: Math.floor(depot.y) + 0.5, r: 3.5, color: "black" });
   }
+
+  if (Base.expo) {
+    shapes.push({ shape: "circle", x: Base.expo.x, y: Base.expo.y, r: 3.5, color: "blue" });
+  }
+}
+
+function traceAreas(shapes) {
+  for (const area of Area.list()) {
+    shapes.push({ shape: "circle", x: area.x, y: area.y, r: area.r, color: areaColorName(area) });
+  }
+}
+
+function areaColorName(area) {
+  if (area.isBase) return "blue";
+  if (area.isOutpost) return "green";
+  if (area.isArmy) return "yellow";
+  return "gray";
 }
 
 function threeletter(tab, text) {
@@ -269,83 +215,4 @@ function balanceText(balance) {
   }
 
   return balance.toFixed(5);
-}
-
-function getZoneShape(zone) {
-  let shape = zoneShapes.get(zone);
-
-  if (!shape) {
-    shape = createZoneShape(zone);
-    zoneShapes.set(zone, shape);
-  }
-
-  return shape;
-}
-
-function createZoneShape(zone) {
-  const shape = [];
-
-  let start = zone.cell;
-  let next = start;
-  let ahead;
-  let left;
-  let direction = { x: 0, y: 1 };
-  let leftside = { x: -1, y: 0 };
-
-  // Find starting edge cell
-  while (next && (next.zone === zone)) {
-    start = next;
-    next = cell(next.x + direction.x, next.y + direction.y);
-  }
-
-  // Orient around the starting edge cell
-  next = start;
-  ahead = cell(start.x + direction.x, start.y + direction.y);
-  left = cell(start.x + leftside.x, start.y + leftside.y);
-  while ((left && (left.zone === zone)) || !ahead || (ahead.zone !== zone)) {
-    turn(direction, +1);
-    turn(leftside, +1);
-
-    ahead = cell(start.x + direction.x, start.y + direction.y);
-    left = cell(start.x + leftside.x, start.y + leftside.y);
-  }
-
-  // Follow left edge of zone
-  do {
-    ahead = cell(next.x + direction.x, next.y + direction.y);
-
-    if (ahead && (ahead.zone === zone)) {
-      // The cell ahead is still in the zone so it's part of the contour
-      next = ahead;
-      left = cell(next.x + leftside.x, next.y + leftside.y);
-
-      if (left && (left.zone === zone)) {
-        // Left of new next cell is in the zone so let's turn left
-        turn(direction, -1);
-        turn(leftside, -1);
-      }
-
-      shape.push(next.x, next.y);
-    } else {
-      // The cell ahead is outside the zone so let's not step ahead but turn right
-      turn(direction, +1);
-      turn(leftside, +1);
-    }
-  } while (next !== start);
-
-  return shape;
-}
-
-function cell(x, y) {
-  const row = Board.cells[y];
-
-  return row ? row[x] : null;
-}
-
-function turn(direction, angle) {
-  const x = direction.x;
-  const y = direction.y;
-
-  direction.x = y ? y * +angle : 0;
-  direction.y = x ? x * -angle : 0;
 }
