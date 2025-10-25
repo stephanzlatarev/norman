@@ -1,6 +1,6 @@
+import Memory from "../../../code/memory.js";
 import Mission from "../mission.js";
 import Build from "../jobs/build.js";
-import Base from "../map/base.js";
 import Priority from "../memo/priority.js";
 
 export default class BuildExpansionsMission extends Mission {
@@ -12,7 +12,7 @@ export default class BuildExpansionsMission extends Mission {
       // Make sure the job is of the right priority
       this.job.priority = Priority.Nexus;
 
-      if (!Base.expo) {
+      if (!Memory.PinNextExpansionX || !Memory.PinNextExpansionY) {
         this.job.close(true);
         this.job = null;
         return;
@@ -24,8 +24,8 @@ export default class BuildExpansionsMission extends Mission {
       }
     }
 
-    if (Base.expo) {
-      this.job = new Build("Nexus", Base.expo);
+    if (Memory.PinNextExpansionX && Memory.PinNextExpansionY) {
+      this.job = new Build("Nexus", { x: Memory.PinNextExpansionX, y: Memory.PinNextExpansionY });
     }
   }
 

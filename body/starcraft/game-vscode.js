@@ -54,6 +54,7 @@ async function trace(client) {
 
   traceDepots(shapes);
   traceAreas(shapes);
+  tracePins(shapes);
   traceThreats(spheres);
   traceBattles(text);
   traceMemory(text);
@@ -166,15 +167,17 @@ function traceDepots(shapes) {
   for (const depot of Depot.list()) {
     shapes.push({ shape: "circle", x: Math.floor(depot.x) + 0.5, y: Math.floor(depot.y) + 0.5, r: 3.5, color: "black" });
   }
-
-  if (Base.expo) {
-    shapes.push({ shape: "circle", x: Base.expo.x, y: Base.expo.y, r: 3.5, color: "blue" });
-  }
 }
 
 function traceAreas(shapes) {
   for (const area of Area.list()) {
-    shapes.push({ shape: "circle", x: area.x, y: area.y, r: area.r, color: areaColorName(area) });
+    shapes.push({ shape: "circle", x: area.x + 0.5, y: area.y + 0.5, r: area.r, color: areaColorName(area) });
+  }
+}
+
+function tracePins(shapes) {
+  if (Memory.PinNextExpansionX && Memory.PinNextExpansionY) {
+    shapes.push({ shape: "circle", x: Memory.PinNextExpansionX, y: Memory.PinNextExpansionY, r: 3.5, color: "blue" });
   }
 }
 

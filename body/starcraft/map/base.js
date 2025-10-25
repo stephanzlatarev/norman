@@ -6,12 +6,6 @@ const bases = new Map();
 
 export default class Base extends Area {
 
-  // Home base is our first owned depot area
-  static home = null;
-
-  // Expo base is the next depot area to expand to
-  static expo = null;
-
   isBase = true;
 
   corners = [];

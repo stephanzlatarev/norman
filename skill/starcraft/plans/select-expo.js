@@ -1,27 +1,47 @@
-import { Base, Depot, Memory } from "./imports.js";
-
-let areThereMoreExpansionLocations = true;
+import { Base, Depot, Memory, TotalCount } from "./imports.js";
 
 export default function() {
-  if (!areThereMoreExpansionLocations) {
-    // There are no more expansion locations
-    Base.expo = null;
-  } else if (Memory.DeploymentOutreach < Memory.DeploymentOutreachExpandDefense) {
-    // We don't want to expand at this moment
-    Base.expo = null;
-  } else if (!Base.expo || Base.expo.depot) {
-    Base.expo = findNextExpo();
+  if (shouldFindNextExpansionLocation()) {
+    const pin = findNextExpansionLocation();
 
-    if (Base.expo) {
-      console.log("Next expansion location is", Base.expo.name);
-    } else {
-      console.log("There are no more expansion locations!");
-      areThereMoreExpansionLocations = false;
+    setNextExpansionLocationPin(pin);
+
+    if (pin) {
+      console.log("Next expansion location is", pin.toString());
     }
   }
 }
 
-function findNextExpo() {
+function setNextExpansionLocationPin(pin) {
+  Memory.PinNextExpansionX = pin?.x;
+  Memory.PinNextExpansionY = pin?.y;
+}
+
+function shouldFindNextExpansionLocation() {
+  // Check if there are more expansion locations
+  if (TotalCount.Nexus >= Depot.list().length) return false;
+
+  // Check if we want to expand at this moment
+  if (Memory.DeploymentOutreach < Memory.DeploymentOutreachExpandDefense) return false;
+
+  const pinx = Memory.PinNextExpansionX;
+  const piny = Memory.PinNextExpansionY;
+
+  // Check if there's no pin
+  if (!pinx || !piny) return true;
+
+  for (const depot of Depot.list()) {
+    if ((depot.x === pinx) && (depot.y === piny)) {
+      // If the pin points to a depot, check if it's occupied
+      return !!depot.depot;
+    }
+  }
+
+  // Otherwise, we need to find a new pin
+  return true;
+}
+
+function findNextExpansionLocation() {
   const depots = Depot.list().filter(depot => !depot.depot);
 
   let bestDistance = Infinity;
