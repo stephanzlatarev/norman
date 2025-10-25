@@ -40,24 +40,32 @@ const LEVELS = [
     name: "DeploymentOutreachProbingAttack",
     blockers: [
       // When our army is weaker than the enemy, then focus on defense
-      { condition: () => (Memory.LevelEnemyArmySuperiority > 1), reason: "Enemy army is stronger than ours" },
+      { condition: () => (Memory.LevelEnemyArmySuperiority > 1.5), reason: "Enemy army is stronger than ours" },
     ],
   },
 
   // 5 - Create multi-pronged attacks on weakest enemy zones with the intent to build forces and upgrade technology
   {
     name: "DeploymentOutreachNormalOffense",
+    blockers: [
+      // When our army is weaker than the enemy, then focus on probing attacks
+      { condition: () => (Memory.LevelEnemyArmySuperiority > 1), reason: "Enemy army is stronger than ours" },
+    ],
   },
 
   // 6 - Create aggressive attacks with the intent to rotate forces into more powerful army composition
   {
     name: "DeploymentOutreachFullOffense",
+    enablers: [
+      { condition: () => Memory.MilestoneMaxArmy, reason: "Army is maxed out" },
+    ],
     blockers: [
       { condition: () => !Memory.MilestoneMaxArmy, reason: "Army is yet to max out" },
     ],
   },
 
 ];
+const LEVELS_WITH_ENABLERS = LEVELS.filter(level => (level.enablers && level.enablers.length)).reverse();
 
 // Set levels according to their position in the array
 for (let level = 0; level < LEVELS.length; level++) {
@@ -82,10 +90,24 @@ export default function() {
   }
 }
 
+function getEnabledDeploymentOutreach() {
+  for (const one of LEVELS_WITH_ENABLERS) {
+    for (const enabler of one.enablers) {
+      if (enabler.condition()) {
+        return { level: one.level, condition: enabler.reason };
+      }
+    }
+  }
+}
+
 function selectDeploymentOutreach() {
-  for (const one of LEVELS) {
-    // Check for blockers unless any enabler makes them irrelevant
-    if (one.blockers && (!one.enablers || !one.enablers.length || !one.enablers.some(enabler => enabler.condition()))) {
+  const enabledOutreach = getEnabledDeploymentOutreach();
+  const enabledOutreachLevel = enabledOutreach ? enabledOutreach.level : 0;
+
+  for (let level = enabledOutreachLevel + 1; level < LEVELS.length; level++) {
+    const one = LEVELS[level];
+
+    if (one.blockers) {
       for (const blocker of one.blockers) {
         if (blocker.condition()) {
           return { level: one.level - 1, condition: blocker.reason };
@@ -93,7 +115,6 @@ function selectDeploymentOutreach() {
       }
     }
 
-    // Check for triggers
     if (one.triggers) {
       for (const trigger of one.triggers) {
         if (trigger.condition()) {
@@ -103,5 +124,5 @@ function selectDeploymentOutreach() {
     }
   }
 
-  return { level: Memory.DeploymentOutreachFullOffense, condition: "All in" };
+  return enabledOutreach || { level: Memory.DeploymentOutreachFullOffense, condition: "All in" };
 }

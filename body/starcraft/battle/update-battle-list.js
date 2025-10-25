@@ -7,43 +7,126 @@ import { ALERT_RED, ALERT_YELLOW } from "../map/alert.js";
 import { TotalCount } from "../memo/count.js";
 
 const RALLY_MIN_RADIUS = 4;
-const MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK = 1.5;
+
+const BATTLE_LIST = [
+  null,
+  listSiegeDefenseBattles,
+  listNormalDefenseBattles,
+  listExpandDefenseBattles,
+  listProbingAttackBattles,
+  listNormalOffenseBattles,
+  listFullOffenseBattles,
+];
 
 export default function() {
   const battles = new Set();
+  const enlist = BATTLE_LIST[Math.floor(Memory.DeploymentOutreach)];
 
-  if (Memory.LevelEnemyArmySuperiority < MIN_ENEMY_ARMY_LEVEL_TO_FALLBACK) {
-    listBattlesInRedZones(battles);
-  }
-
-  if (!battles.size) {
-    listDefaultBattle(battles);
+  if (enlist) {
+    enlist(battles);
   }
 
   return battles;
 }
 
-function listDefaultBattle(battles) {
-  let battleZone = Depot.home;
+// Defend the largest defendable perimeter with all warriors behind walls.
+function listSiegeDefenseBattles(battles) {
+  // TODO: Currently only defends home base. Make it identify the largest defendable perimeter.
+  listSiegeBattle(battles, Depot.home);
+}
 
-  if (Memory.DeploymentOutreach <= Memory.DeploymentOutreachProbingAttack) {
-    battleZone = findFrontBaseZone();
-  } else if (Enemy.base && !Enemy.base.warriors.size) {
-    battleZone = Enemy.base;
-  }
+// Station warriors in economy perimeter
+function listNormalDefenseBattles(battles) {
+  listDefenseBattles(battles);
+}
 
+// Secure the next expansion location. Battle our way to it if necessary.
+function listExpandDefenseBattles(battles) {
+  listDefenseBattles(battles);
+}
+
+// Test enemy lines for weaknesses and keep main army ready to return to defense
+function listProbingAttackBattles(battles) {
+  listOffenseBattles(battles);
+}
+
+// Create multi-pronged attacks on weakest enemy zones
+function listNormalOffenseBattles(battles) {
+  listOffenseBattles(battles);
+}
+
+// Create aggressive attacks
+function listFullOffenseBattles(battles) {
+  listOffenseBattles(battles);
+}
+
+function listSiegeBattle(battles, battleZone) {
   const battle = findBattle(battleZone) || new Battle(battleZone);
 
+  // Set the front line to the battle zone
+  if ((battle.front.size !== 1) || !battle.front.has(battleZone)) {
+    battle.front.clear();
+    battle.front.add(battleZone);
+  }
+
+  // Add all zones in range to the battle so that defenders can attack them
+  for (const zone of battleZone.range.zones) {
+    battle.zones.add(zone);
+  }
+
+  // TODO: Set the battle lines here
+
+  battles.add(battle);
+}
+
+function listDefenseBattles(battles) {
+  listBattlesInRedZones(battles);
+
+  if (!battles.size) {
+    listDefenseBattle(battles, findFrontBaseZone());
+  }
+}
+
+function listDefenseBattle(battles, battleZone) {
+  const battle = findBattle(battleZone) || new Battle(battleZone);
+
+  // Set the front line to the battle zone
   if (!battle.front.size) {
     battle.front.add(battleZone);
   }
 
-  if (battleZone !== Enemy.base) {
-    // Add all zones in range to the battle so that defenders can attack them
-    for (const zone of battleZone.range.zones) {
-      battle.zones.add(zone);
-    }
+  // Add all zones in range to the battle so that defenders can attack them
+  for (const zone of battleZone.range.zones) {
+    battle.zones.add(zone);
   }
+
+  // TODO: Set the battle lines here
+
+  battles.add(battle);
+}
+
+function listOffenseBattles(battles) {
+  listBattlesInRedZones(battles);
+
+  if (!battles.size) {
+    listOffenseBattle(battles, Enemy.base);
+  }
+}
+
+function listOffenseBattle(battles, battleZone) {
+  const battle = findBattle(battleZone) || new Battle(battleZone);
+
+  // Set the front line to the battle zone
+  if (!battle.front.size) {
+    battle.front.add(battleZone);
+  }
+
+  // Add all zones in range to the battle so that warriors can attack them
+  for (const zone of battleZone.range.zones) {
+    battle.zones.add(zone);
+  }
+
+  // TODO: Set the battle lines here
 
   battles.add(battle);
 }
