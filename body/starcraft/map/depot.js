@@ -203,10 +203,18 @@ function populateDepotCoordinates(coordinates, resource) {
       vespene.push(getCoordinatesKey(x, resource.body.y - 7));
       vespene.push(getCoordinatesKey(x, resource.body.y + 7));
     }
-    for (let y = resource.body.y - 6; y <= resource.body.y + 6; y++) {
+    for (let y = resource.body.y - 7; y <= resource.body.y + 7; y++) {
       vespene.push(getCoordinatesKey(resource.body.x - 7, y));
       vespene.push(getCoordinatesKey(resource.body.x + 7, y));
     }
+    vespene.push(getCoordinatesKey(resource.body.x - 6, resource.body.y - 5));
+    vespene.push(getCoordinatesKey(resource.body.x - 6, resource.body.y + 5));
+    vespene.push(getCoordinatesKey(resource.body.x + 6, resource.body.y - 5));
+    vespene.push(getCoordinatesKey(resource.body.x + 6, resource.body.y + 5));
+    vespene.push(getCoordinatesKey(resource.body.x - 5, resource.body.y - 6));
+    vespene.push(getCoordinatesKey(resource.body.x - 5, resource.body.y + 6));
+    vespene.push(getCoordinatesKey(resource.body.x + 5, resource.body.y - 6));
+    vespene.push(getCoordinatesKey(resource.body.x + 5, resource.body.y + 6));
   }
 
   addToDepotCoordinates(resource, coordinates, "normalMinerals", normalMinerals);
