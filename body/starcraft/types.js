@@ -69,6 +69,7 @@ class Types {
       type.isMinerals = !!unit.hasMinerals;
       type.isVespene = !!unit.hasVespene && !unit.race;
       type.isRich = (type.isMinerals || type.isVespene) && (unit.name.indexOf("Rich") >= 0);
+      type.isCocoon = (unit.name.indexOf("Cocoon") >= 0) || (unit.name.indexOf("Egg") >= 0);
 
       type.supplyProvided = unit.foodProvided;
       type.needsPower = (unit.race === RACE_PROTOSS) && isBuilding && !IS_DEPOT[unit.name] && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name];
