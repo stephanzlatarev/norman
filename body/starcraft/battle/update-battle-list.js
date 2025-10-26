@@ -217,7 +217,10 @@ function findBattleZones(zone) {
           if (!isFrontLocked) front.add(neighbor);
         } else if (neighbor.alertLevel >= ALERT_YELLOW) {
           zones.add(neighbor);
-          next.add(neighbor);
+
+          if (neighbor.tier.level <= zone.tier.level + 2) {
+            next.add(neighbor);
+          }
         } else if (!isFrontLocked) {
           front.add(neighbor);
         }
