@@ -6,19 +6,19 @@ export default function(battle) {
   const hasDetector = battle.detector && battle.detector.assignee;
 
   if (isAssault && !hasDetector) {
-    if (ignoreInvisibleThreats(battle.zone)) {
-      traceBattle(battle, "cleared invisible threats");
+    if (ignoreInvisibleMobileThreats(battle.zone)) {
+      traceBattle(battle, "cleared invisible mobile threats");
     }
   }
 }
 
-function ignoreInvisibleThreats(zone) {
+function ignoreInvisibleMobileThreats(zone) {
   const threats = zone.threats;
   const visible = zone.enemies;
   const count = threats.size;
 
   for (const threat of threats) {
-    if (!visible.has(threat)) {
+    if (threat.type.movementSpeed && !visible.has(threat)) {
       threats.delete(threat);
     }
   }
