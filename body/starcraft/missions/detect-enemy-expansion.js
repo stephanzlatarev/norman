@@ -12,6 +12,11 @@ export default class DetectEnemyExpansionMission extends Mission {
     for (const enemy of Units.enemies().values()) {
       if (enemy.type.isDepot && enemy.zone) {
         this.enemyDepotZones.add(enemy.zone);
+
+        // Check if this is a Command Center to be flying to an expansion
+        if ((enemy.cell !== enemy.cell.zone.cell) && (enemy.type.name === "CommandCenter")) {
+          this.enemyDepotZones.add(enemy.cell);
+        }
       }
     }
 
