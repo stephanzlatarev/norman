@@ -150,7 +150,7 @@ function areZerglingsApproaching() {
 
 function arePhotonCannonsClose() {
   for (const zone of Depot.home.range.fire) {
-    for (const enemy of zone.enemies) {
+    for (const enemy of zone.threats) {
       if (enemy.type.name === "PhotonCannon") {
         return true;
       }
