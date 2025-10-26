@@ -63,7 +63,7 @@ class EarlyScout extends Job {
       return this.close(false);
     }
 
-    if (Memory.LevelEnemyRush >= 2) {
+    if (Memory.LevelEnemyRush >= 3) {
       if (agent.zone === Depot.home) {
         console.log("Early scout retires due to extreme enemy rush.");
 
