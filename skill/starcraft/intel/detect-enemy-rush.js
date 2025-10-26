@@ -38,7 +38,7 @@ export default function() {
   } else if ((TotalCount.Assimilator <= 1) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3)) && areZerglingsApproaching()) {
     // Enemy rush with very early zerglings is now expected
     level = ENEMY_RUSH_EXTREME_LEVEL;
-  } else if ((Memory.LevelEnemyRush === ENEMY_RUSH_HIGH_LEVEL) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3))) {
+  } else if ((Memory.LevelEnemyRush === ENEMY_RUSH_HIGH_LEVEL) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3) || (Memory.LevelEnemyArmySuperiority > 2))) {
     // Enemy rush on one-base economy is still expected
     level = ENEMY_RUSH_HIGH_LEVEL;
   } else if (enemyReapers >= 2) {
@@ -48,7 +48,8 @@ export default function() {
     // Photon Cannons are a big investment. They remove the threat of a rush that can be defended with static defense.
     level = arePhotonCannonsClose() ? ENEMY_RUSH_MODERATE_LEVEL : ENEMY_RUSH_NOT_EXPECTED;
   } else if ((ActiveCount.Nexus === 1) && isExpectingEnemyWaves()) {
-    level = ENEMY_RUSH_MODERATE_LEVEL;
+    // Enemy rush on one-base economy is expected. If we're already expecting harder rush then don't lower the level.
+    level = Math.max(ENEMY_RUSH_MODERATE_LEVEL, Memory.LevelEnemyRush);
   } else if (Memory.FlagSiegeDefense || Memory.MilestoneMaxArmy) {
     level = ENEMY_RUSH_NOT_EXPECTED;
   } else if (Memory.DetectedEnemyProxy || Memory.DetectedEnemyHoard) {
