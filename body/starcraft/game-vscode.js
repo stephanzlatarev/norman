@@ -52,11 +52,12 @@ async function trace(client) {
   const shapes = [];
   const spheres = [];
 
+  traceZones(shapes);
   traceDepots(shapes);
   traceAreas(shapes);
   tracePins(shapes);
   traceThreats(spheres);
-  traceBattles(text);
+  traceBattles(lines, text);
   traceMemory(text);
   traceJobs(text);
 
@@ -66,7 +67,7 @@ async function trace(client) {
   await client.debug({ debug: [{ draw: { lines, text, spheres } }] });
 }
 
-function traceBattles(texts) {
+function traceBattles(lines, texts) {
   const battles = Battle.list().sort((a, b) => (b.priority - a.priority));
 
   texts.push("Tier Zone Recruit/Rallied Mode  Frontline");
@@ -81,6 +82,14 @@ function traceBattles(texts) {
     text.push(battle.lines.map(line => line.zone.name).join(" "));
 
     texts.push(text.join(" "));
+
+    const zonep = { x: zone.x, y: zone.y };
+    for (const one of battle.zones) {
+      lines.push({ line: { p0: { x: one.x, y: one.y }, p1: zonep }, color: Color.Red });
+    }
+    for (const one of battle.front) {
+      lines.push({ line: { p0: { x: one.x, y: one.y }, p1: zonep }, color: Color.Yellow });
+    }
   }
 
   texts.push("");
@@ -159,6 +168,16 @@ function traceThreats(spheres) {
       if (!zone.enemies.has(threat)) {
         spheres.push({ p: { x: threat.body.x, y: threat.body.y, z: 0 }, r: threat.body.r + 0.3, color: Color.Red });
       }
+    }
+  }
+}
+
+function traceZones(shapes) {
+  for (const zone of Zone.list()) {
+    shapes.push({ shape: "circle", x: zone.x, y: zone.y, r: 1.2, color: "black" });
+
+    for (const one of zone.neighbors) {
+      shapes.push({ shape: "line", x1: zone.x, y1: zone.y, x2: one.x, y2: one.y, color: "black" });
     }
   }
 }
