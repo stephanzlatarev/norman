@@ -37,12 +37,12 @@ function listSiegeDefenseBattles(battles) {
 
 // Station warriors in economy perimeter
 function listNormalDefenseBattles(battles) {
-  listDefenseBattles(battles);
+  listDefenseBattles(battles, 1);
 }
 
 // Secure the next expansion location. Battle our way to it if necessary.
 function listExpandDefenseBattles(battles) {
-  listDefenseBattles(battles);
+  listDefenseBattles(battles, 2);
 }
 
 // Test enemy lines for weaknesses and keep main army ready to return to defense
@@ -79,8 +79,8 @@ function listSiegeBattle(battles, battleZone) {
   battles.add(battle);
 }
 
-function listDefenseBattles(battles) {
-  listBattlesInRedZones(battles);
+function listDefenseBattles(battles, tierLevelLimit) {
+  listBattlesInRedZones(battles, tierLevelLimit);
 
   if (!battles.size) {
     listDefenseBattle(battles, findFrontBaseZone());
@@ -106,7 +106,7 @@ function listDefenseBattle(battles, battleZone) {
 }
 
 function listOffenseBattles(battles) {
-  listBattlesInRedZones(battles);
+  listBattlesInRedZones(battles, Infinity);
 
   if (!battles.size) {
     listOffenseBattle(battles, Enemy.base);
@@ -131,9 +131,8 @@ function listOffenseBattle(battles, battleZone) {
   battles.add(battle);
 }
 
-function listBattlesInRedZones(battles) {
+function listBattlesInRedZones(battles, tierLevelLimit) {
   const traversed = new Set();
-  const tierLevelLimit = (Memory.DeploymentOutreach <= Memory.DeploymentOutreachNormalDefense) ? 1 : Infinity;
 
   for (const tier of Tiers) {
     if (tier.level > tierLevelLimit) break;
@@ -239,9 +238,21 @@ function findBattleZones(zone) {
     // The lowest tier zone becomes the front line
     let approach = zone;
 
-    for (const neighbor of zone.neighbors) {
-      if (neighbor.tier.level < zone.tier.level) {
-        approach = neighbor;
+    for (const one of zone.neighbors) {
+      if (one.tier.level < approach.tier.level) {
+        approach = one;
+      }
+    }
+
+    front.clear();
+    front.add(approach);
+  } else {
+    // The lowest tier zones become the front line
+    let approach = zone;
+
+    for (const one of front) {
+      if (one.tier.level < approach.tier.level) {
+        approach = one;
       }
     }
 
