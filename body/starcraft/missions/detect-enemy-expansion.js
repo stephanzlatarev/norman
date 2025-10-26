@@ -1,4 +1,5 @@
 import Memory from "../../../code/memory.js";
+import Enemy from "../memo/enemy.js";
 import Mission from "../mission.js";
 import Units from "../units.js";
 
@@ -8,6 +9,9 @@ export default class DetectEnemyExpansionMission extends Mission {
 
   run() {
     if (Memory.DetectedEnemyExpansion) return;
+
+    // Expect the first enemy base
+    this.enemyDepotZones.add(Enemy.base);
 
     for (const enemy of Units.enemies().values()) {
       if (enemy.type.isDepot && enemy.zone) {
