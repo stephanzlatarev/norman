@@ -199,6 +199,14 @@ function parseWeapons(unit) {
     rangeAir = 9;
     attackAir = 10;
     damageAir = 10 / GAME_LOOPS_PER_SECOND;
+  } else if ((unit.name === "WidowMine") || (unit.name === "WidowMineBurrowed")) {
+    // Sentinel Missiles
+    attackGround = 160;
+    damageGround = 160 / 29 / GAME_LOOPS_PER_SECOND;
+    rangeGround = 5;
+    attackAir = 160;
+    damageAir = 160 / 29 / GAME_LOOPS_PER_SECOND;
+    rangeAir = 5;
   }
 
   weaponCooldown = Math.max(weaponCooldown, 0);
