@@ -19,7 +19,6 @@ export default class SupplyBlockedMission extends Mission {
 }
 
 function isSupplyBlocked() {
-    if (Resources.supplyUsed >= 196) return true;
     if (Resources.supply >= 4) return false;
     if (TotalCount.Pylon > ActiveCount.Pylon) return false;
 
