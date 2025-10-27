@@ -9,7 +9,7 @@ import Resources from "./memo/resources.js";
 export default function() {
   const jobs = Array.from(Job.list().values());
   const started = jobs.filter(job => !!job.assignee);
-  const pending = jobs.filter(job => !job.assignee).sort(prioritizeJobs);
+  const pending = jobs.filter(job => !job.assignee).sort((a, b) => (b.priority - a.priority));
   const accountedOrders = new Set();
 
   // Account for resources required for outstanding orders
@@ -104,10 +104,6 @@ function accountForProduction(product) {
   if (product.foodRequired) Resources.supply -= product.foodRequired;
   if (product.mineralCost) Resources.minerals -= product.mineralCost;
   if (product.vespeneCost) Resources.vespene -= product.vespeneCost;
-}
-
-function prioritizeJobs(a, b) {
-  return b.priority - a.priority;
 }
 
 function findCandidate(job) {

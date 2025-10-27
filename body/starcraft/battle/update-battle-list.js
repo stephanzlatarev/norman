@@ -180,12 +180,15 @@ function findFrontBaseZone() {
 }
 
 function orderBattleZones(zones) {
-  return [...zones].sort(function(a, b) {
-    if (a.workers.size !== b.workers.size) return b.workers.size - a.workers.size;
-    if (a.buildings.size !== b.buildings.size) return b.buildings.size - a.buildings.size;
-    if (a.warriors.size !== b.warriors.size) return b.warriors.size - a.warriors.size;
-    return a.cell.id - b.cell.id;
-  });
+  for (const zone of zones) {
+    zone.battleZonePriority = (zone.workers.size * 100000)
+      + (zone.buildings.size * 10000) +
+      + (zone.warriors.size * 1000) +
+      + zone.cell.y * 100
+      + zone.cell.x;
+  }
+
+  return [...zones].sort((a, b) => (b.battleZonePriority - a.battleZonePriority));
 }
 
 function findBattle(zone) {

@@ -536,9 +536,10 @@ function nameZones() {
 }
 
 function orderZonesBySizeAndPosition(a, b) {
-  if (b.r !== a.r) return b.r - a.r;
-  if (b.y !== a.y) return a.y - b.y;
-  return a.x - b.x;
+  const ordera = (a.r * 1000000) + (a.y * 1000) + a.x;
+  const orderb = (b.r * 1000000) + (b.y * 1000) + b.x;
+
+  return ordera - orderb;
 }
 
 function identifyNeighboringZones() {
