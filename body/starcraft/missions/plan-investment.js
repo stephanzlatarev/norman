@@ -51,7 +51,7 @@ function doStartUp() {
 function doOneBaseDefense() {
   Limit.Immortal = Infinity;
   Limit.Stalker = Infinity;
-  Limit.Probe = (Memory.LevelEnemyRush >= 2) ? 23 : 26;
+  Limit.Probe = 26;
   Limit.Observer = 1;
   Limit.Sentry = 2;
   Limit.DarkTemplar = 0;
@@ -91,6 +91,7 @@ function doOneBaseDefense() {
   if (Memory.LevelEnemyRush >= 3) {
     Priority.Zealot = 95;
     Limit.Zealot = 2;
+    Limit.Probe = 23;
 
     if (ActiveCount.CyberneticsCore) {
       if ((TotalCount.Zealot >= 1) && !TotalCount.Sentry) {
@@ -102,6 +103,7 @@ function doOneBaseDefense() {
           Limit.Zealot = TotalCount.Zealot + 1;
         } else {
           Priority.Stalker = 100;
+          Limit.Probe = 26;
         }
       }
 
