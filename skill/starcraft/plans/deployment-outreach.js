@@ -1,30 +1,30 @@
-import { ActiveCount, Memory } from "./imports.js";
+import { ActiveCount, Memory, MemoryLabel } from "./imports.js";
 
 const LEVELS = [
 
-  // 0 - Not a valid outreach level
-  { name: "DeploymentOutreachNone" },
+  // Start level
+  { name: "DeploymentOutreachStarter", label: "Starter" },
 
-  // 1 - Overwhelming enemy attack is imminent. Defend the largest defendable perimeter with all warriors behind walls. Abandon exposed outposts if necessary.
+  // Overwhelming enemy attack is imminent. Defend the largest defendable perimeter with all warriors behind walls. Abandon exposed outposts if necessary.
   {
-    name: "DeploymentOutreachSiegeDefense",
+    name: "DeploymentOutreachSiegeDefense", label: "Siege Defense",
     triggers: [
       { condition: () => (Memory.LevelEnemyRush >= 2), reason: "Early enemy rush is expected" },
     ],
   },
 
-  // 2 - Station warriors in economy perimeter and watch approaches
+  // Station warriors in economy perimeter and watch approaches
   {
-    name: "DeploymentOutreachNormalDefense",
+    name: "DeploymentOutreachNormalDefense", label: "Normal Defense",
     triggers: [
       // When we don't have the army to defend an expansion, then don't start it
       { condition: () => (Memory.LevelEnemyArmySuperiority > 2), reason: "Army cannot defend new expansion" },
     ]
   },
 
-  // 3 - Secure the next outpost with the intent to build a new base
+  // Secure the next outpost with the intent to build a new base
   {
-    name: "DeploymentOutreachExpandDefense",
+    name: "DeploymentOutreachExpandDefense", label: "Expand Defense",
     enablers: [
       // When we are attacked by zerglings but we have oracles ready, then secure the expansion. TODO: Add check that we're attacked by zerglings
       { condition: () => (ActiveCount.Oracle >= 2), reason: "Oracles ready to secure expansion against zerglings" },
@@ -35,27 +35,27 @@ const LEVELS = [
     ],
   },
 
-  // 4 - Test enemy lines for weaknesses and keep main army ready to return to defense
+  // Test enemy lines for weaknesses and keep main army ready to return to defense
   {
-    name: "DeploymentOutreachProbingAttack",
+    name: "DeploymentOutreachProbingAttack", label: "Probing Attack",
     blockers: [
       // When our army is weaker than the enemy, then focus on defense
       { condition: () => (Memory.LevelEnemyArmySuperiority > 1.5), reason: "Enemy army is stronger than ours" },
     ],
   },
 
-  // 5 - Create multi-pronged attacks on weakest enemy zones with the intent to build forces and upgrade technology
+  // Create multi-pronged attacks on weakest enemy zones with the intent to build forces and upgrade technology
   {
-    name: "DeploymentOutreachNormalOffense",
+    name: "DeploymentOutreachNormalOffense", label: "Normal Offense",
     blockers: [
       // When our army is weaker than the enemy, then focus on probing attacks
       { condition: () => (Memory.LevelEnemyArmySuperiority > 1), reason: "Enemy army is stronger than ours" },
     ],
   },
 
-  // 6 - Create aggressive attacks with the intent to rotate forces into more powerful army composition
+  // Create aggressive attacks with the intent to rotate forces into more powerful army composition
   {
-    name: "DeploymentOutreachFullOffense",
+    name: "DeploymentOutreachFullOffense", label: "Full Offense",
     enablers: [
       { condition: () => Memory.MilestoneMaxArmy, reason: "Army is maxed out" },
     ],
@@ -67,25 +67,28 @@ const LEVELS = [
 ];
 const LEVELS_WITH_ENABLERS = LEVELS.filter(level => (level.enablers && level.enablers.length)).reverse();
 
+function label(level, label) {
+  return MemoryLabel("DeploymentOutreach", level, label);
+}
+
 // Set levels according to their position in the array
 for (let level = 0; level < LEVELS.length; level++) {
   const one = LEVELS[level];
 
   one.level = level;
   Memory[one.name] = level;
+  label(level, one.label);
 }
 
-const LABELS = LEVELS.map(level => level.name);
-
 // Start the game with siege defense
-Memory.DeploymentOutreach = Memory.DeploymentOutreachSiegeDefense;
-console.log(`Deployment outreach is set to ${LABELS[Memory.DeploymentOutreach]} (${Memory.DeploymentOutreach})`);
+Memory.DeploymentOutreach = 0;
+console.log(`Deployment outreach is set to ${label(Memory.DeploymentOutreach)}`);
 
 export default function() {
   const { level, condition } = selectDeploymentOutreach()
 
   if (level !== Memory.DeploymentOutreach) {
-    console.log(`Deployment outreach changes from ${LABELS[Memory.DeploymentOutreach]} (${Memory.DeploymentOutreach}) to ${LABELS[level]} (${level}): ${condition}`);
+    console.log(`Deployment outreach changes from ${label(Memory.DeploymentOutreach)} to ${label(level)}: ${condition}`);
     Memory.DeploymentOutreach = level;
   }
 }

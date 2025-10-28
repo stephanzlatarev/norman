@@ -1,9 +1,9 @@
 import Memory from "../../code/memory.js";
+import { label as MemoryLabel } from "../../code/memory.js";
 import Game from "./game.js";
 import Job from "./job.js";
 import Battle from "./battle/battle.js";
 import Area from "./map/area.js";
-import Base from "./map/base.js";
 import Depot from "./map/depot.js";
 import Zone from "./map/zone.js";
 
@@ -148,7 +148,7 @@ function traceMemory(texts) {
   if (Memory.MilestoneBasicMilitary) texts.push("Milestone Basic Military");
   if (Memory.MilestoneMaxArmy) texts.push("Milestone Max Army");
 
-  if (Memory.DeploymentOutreach) texts.push("Deployment Outreach: " + Memory.DeploymentOutreach);
+  if (Memory.DeploymentOutreach) texts.push("Deployment Outreach: " + MemoryLabel("DeploymentOutreach", Memory.DeploymentOutreach));
   if (Memory.LimitBase) texts.push("Limit Base: " + Memory.LimitBase);
 
   if (Memory.FlagSiegeDefense) texts.push("Flag Siege Defense");
