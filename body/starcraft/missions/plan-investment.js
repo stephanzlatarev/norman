@@ -218,7 +218,7 @@ function doGroundArmyMaxOut() {
     Limit.ShieldBattery = 0;
   }
 
-  if (TotalCount.Gateway < 3) {
+  if ((TotalCount.Gateway < 3) || (TotalCount.Nexus <= 1)) {
     Limit.Forge = 0;
   } else if (!ActiveCount.Forge) {
     Limit.Forge = 1;
