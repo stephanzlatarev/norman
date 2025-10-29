@@ -48,11 +48,9 @@ function findNextExpansionLocation() {
   let expo = null;
 
   for (const depot of depots) {
-    let distance = 0;
-
-    for (const base of Base.list()) {
-      distance += findShortestDistance(base, depot);
-    }
+    const groundDistance = depot.distance.get(Depot.home);
+    const airDistance = calculateDistance(depot, Depot.home);
+    const distance = groundDistance + groundDistance + airDistance;
 
     if (distance < bestDistance) {
       bestDistance = distance;
@@ -63,16 +61,9 @@ function findNextExpansionLocation() {
   return expo;
 }
 
-function findShortestDistance(base, zone) {
-  let shortest = Infinity;
+function calculateDistance(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
 
-  for (const corner of base.corners) {
-    const distance = corner.distanceTo(zone);
-
-    if (distance < shortest) {
-      shortest = distance;
-    }
-  }
-
-  return shortest;
+  return Math.sqrt(dx * dx + dy * dy);
 }

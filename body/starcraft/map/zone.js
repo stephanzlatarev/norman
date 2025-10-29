@@ -37,6 +37,7 @@ export default class Zone extends Pin {
   // Navigation
   neighbors = new Set();
   corridors = new Map();
+  distance = new Map(); // Ground distance to all other zones
   range = { zones: new Set(), fire: new Set(), front: new Set() };
 
   constructor(cell) {
@@ -257,6 +258,7 @@ export function createZones() {
   correctBorderAroundResources();
   nameZones();
   identifyNeighboringZones();
+  calculateGroundDistanceBetweenZones();
   identifyRanges();
 }
 
@@ -719,6 +721,44 @@ function areZoneIndirectlyReachable(start, end) {
     }
 
     wave = next;
+  }
+}
+
+function calculateGroundDistanceBetweenZones() {
+  for (const zone of zones) {
+    let wave = new Set([zone]);
+
+    zone.distance.set(zone, 0);
+
+    while (wave.size) {
+      const next = new Set();
+
+      for (const one of wave) {
+        const distanceToOne = zone.distance.get(one);
+
+        for (const corridor of one.corridors.values()) {
+          const other = (corridor.start === one) ? corridor.end : corridor.start;
+          const distanceToOther = distanceToOne + corridor.length;
+          const knownDistanceToOther = zone.distance.get(other);
+
+          if (!knownDistanceToOther || (distanceToOther < knownDistanceToOther)) {
+            zone.distance.set(other, distanceToOther);
+            next.add(other);
+          }
+        }
+      }
+
+      wave = next;
+    }
+  }
+
+  for (const zone of zones) {
+    for (const other of zones) {
+      if (other === zone) continue;
+      if (zone.distance.has(other)) continue;
+
+      zone.distance.set(other, Infinity);
+    }
   }
 }
 
