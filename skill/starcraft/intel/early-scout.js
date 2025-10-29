@@ -48,6 +48,14 @@ class EarlyScout extends Job {
     this.priority = 100;
 
     this.transition(this.goScoutExpansion);
+
+    Memory.FlagJobEarlyScout = true;
+  }
+  
+  close(outcome) {
+    super.close(outcome);
+
+    Memory.FlagJobEarlyScout = false;
   }
 
   accepts(unit) {

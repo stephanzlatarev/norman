@@ -51,7 +51,7 @@ function doStartUp() {
 function doOneBaseDefense() {
   Limit.Immortal = Infinity;
   Limit.Stalker = Infinity;
-  Limit.Probe = 26;
+  Limit.Probe = 26 + Memory.FlagJobEarlyScout;
   Limit.Observer = 1;
   Limit.Sentry = 2;
   Limit.DarkTemplar = 0;
