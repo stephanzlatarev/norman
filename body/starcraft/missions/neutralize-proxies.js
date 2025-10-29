@@ -120,11 +120,7 @@ class Neutralize extends Job {
       if (isSamePosition(probe.body, target.body)) {
         target.zone.threats.delete(target);
 
-        if (probe.zone === home) {
-          return this.close(true);
-        } else {
-          return Order.move(probe, home);
-        }
+        return this.close(true);
       } else {
         return Order.move(probe, target.body);
       }
