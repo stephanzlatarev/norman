@@ -112,3 +112,22 @@ Coordinate battles and harassment missions with aggression levels depending on t
 
 - Maintain an ordered list of battles by priority. Battles may be front attacks with may combat units or harrassment missions with a few specialists.
 - Assign the required warriors to the battles by priority. Direct battles according to the balance between deployed own forces and anticipated enemy forces.
+
+# Key performance indicators
+
+### A0 Reach max worker count as early as possible with less losses than the opponent
+
+Build workers constantly until income of 5000 resources/minute. Expand in time to utilize workers. Position our forces properly to secure all expansions.
+
+#### A1 Saturate home base with 26 workers as early as possible
+
+Build workers constantly. Chronoboost them before first Gateway becomes active.
+
+#### A2 Make a secure first expansion as early as possible
+
+Scouting gives us information about early enemy attacks. We should have enough forces to not die while expanding.
+Build workers with distance mining in advance of the nexus.
+
+### B0 Reach maxed out army with less losses than the opponent
+
+Produce warriors of desired army composition constantly. Engage in winable fights only, until maxed out.
