@@ -1,4 +1,4 @@
-import { Depot, Units, TotalCount } from "./imports.js";
+import { Depot, Limit, Units, TotalCount } from "./imports.js";
 import WaitOnSite from "./job-wait-on-site.js";
 
 let jobWaitOnShieldBatterySite = null;
@@ -13,7 +13,7 @@ export default function() {
   if (jobWaitOnShieldBatterySite && TotalCount.ShieldBattery) cleanJobWaitOnShieldBatterySite();
   if (TotalCount.CyberneticsCore && !cybercore) cybercore = findCyberCore();
 
-  if (!TotalCount.ShieldBattery && cybercore && (cybercore.buildProgress > 0.82)) {
+  if (Limit.ShieldBattery && !TotalCount.ShieldBattery && cybercore && (cybercore.buildProgress > 0.82)) {
     buildShieldBattery();
   }
 }

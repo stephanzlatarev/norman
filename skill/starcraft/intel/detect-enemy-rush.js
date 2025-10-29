@@ -57,7 +57,7 @@ export default function() {
   } else if (Memory.DetectedEnemyDefensiveStance) {
     // TODO: Improve this by checking enemy investments
     level = ENEMY_RUSH_NOT_EXPECTED;
-  } else if (!Memory.DetectedEnemyExpansion) {
+  } else if (!Memory.DetectedEnemyExpansion && ((TotalCount.Nexus > 1) || Memory.FlagHarvesterCapacity)) {
     // TODO: Add Crawler case = enemy expansion without vespene
     level = ENEMY_RUSH_MODERATE_LEVEL;
   }

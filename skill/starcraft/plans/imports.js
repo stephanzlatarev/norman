@@ -5,10 +5,11 @@ import Units from "../../../body/starcraft/units.js";
 import Base from "../../../body/starcraft/map/base.js";
 import Depot from "../../../body/starcraft/map/depot.js";
 import { ActiveCount, TotalCount } from "../../../body/starcraft/memo/count.js";
+import Limit from "../../../body/starcraft/memo/limit.js";
 
 export {
   Memory, MemoryLabel,
   Order, Units,
   Base, Depot,
-  ActiveCount, TotalCount,
+  ActiveCount, Limit, TotalCount,
 };

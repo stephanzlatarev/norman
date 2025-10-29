@@ -8,6 +8,7 @@ import { ALERT_WHITE } from "../../../body/starcraft/map/alert.js";
 import Board from "../../../body/starcraft/map/board.js";
 import Depot from "../../../body/starcraft/map/depot.js";
 import { ActiveCount, TotalCount } from "../../../body/starcraft/memo/count.js";
+import Limit from "../../../body/starcraft/memo/limit.js";
 import Resources from "../../../body/starcraft/memo/resources.js";
 
 export {
@@ -15,5 +16,5 @@ export {
   Job, Order, Types, Units,
   Build,
   Board, Depot, ALERT_WHITE,
-  ActiveCount, TotalCount, Resources
+  ActiveCount, Limit, TotalCount, Resources
 };

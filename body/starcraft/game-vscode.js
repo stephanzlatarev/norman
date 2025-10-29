@@ -6,6 +6,8 @@ import Battle from "./battle/battle.js";
 import Area from "./map/area.js";
 import Depot from "./map/depot.js";
 import Zone from "./map/zone.js";
+import { ActiveCount, TotalCount } from "./memo/count.js";
+import Limit from "./memo/limit.js";
 
 export default class VscodeGame extends Game {
 
@@ -142,6 +144,9 @@ function displayJobList(texts, jobs) {
 }
 
 function traceMemory(texts) {
+  texts.push("Workers: " + ActiveCount.Probe + " / " + TotalCount.Probe + " / " + Limit.Probe);
+
+  if (Memory.FlagHarvesterCapacity) texts.push("Flag Harvester Capacity");
   if (Memory.FlagSupplyBlocked) texts.push("Flag Supply Blocked");
 
   if (Memory.MilestoneBasicEconomy) texts.push("Milestone Basic Economy");

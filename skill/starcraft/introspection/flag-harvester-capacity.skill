@@ -1,0 +1,5 @@
+# Raises flag when the time to reach harvester capacity is less than the time to increase harvester capacity
+
+name: Flag harvester capacity
+brain: flag-harvester-capacity.js
+type: javascript

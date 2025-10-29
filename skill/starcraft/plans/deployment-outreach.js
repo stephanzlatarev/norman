@@ -3,7 +3,12 @@ import { ActiveCount, Memory, MemoryLabel } from "./imports.js";
 const LEVELS = [
 
   // Start level
-  { name: "DeploymentOutreachStarter", label: "Starter" },
+  {
+    name: "DeploymentOutreachStarter", label: "Starter",
+    triggers: [
+      { condition: () => (Memory.LevelEnemyArmySuperiority === Infinity), reason: "We don't have army yet" },
+    ],
+  },
 
   // Overwhelming enemy attack is imminent. Defend the largest defendable perimeter with all warriors behind walls. Abandon exposed outposts if necessary.
   {
@@ -29,9 +34,9 @@ const LEVELS = [
       // When we are attacked by zerglings but we have oracles ready, then secure the expansion. TODO: Add check that we're attacked by zerglings
       { condition: () => (ActiveCount.Oracle >= 2), reason: "Oracles ready to secure expansion against zerglings" },
     ],
-    blockers: [
+    triggers: [
       // When we expect an enemy rush, then build defenses without expanding
-      { condition: () => (Memory.LevelEnemyRush > 0), reason: "Normal enemy rush is expected" },
+      { condition: () => (Memory.LevelEnemyRush >= 1), reason: "Normal enemy rush is expected" },
     ],
   },
 
@@ -107,7 +112,7 @@ function selectDeploymentOutreach() {
   const enabledOutreach = getEnabledDeploymentOutreach();
   const enabledOutreachLevel = enabledOutreach ? enabledOutreach.level : 0;
 
-  for (let level = enabledOutreachLevel + 1; level < LEVELS.length; level++) {
+  for (let level = enabledOutreachLevel; level < LEVELS.length; level++) {
     const one = LEVELS[level];
 
     if (one.blockers) {
