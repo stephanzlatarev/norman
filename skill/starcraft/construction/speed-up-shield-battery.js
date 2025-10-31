@@ -1,4 +1,4 @@
-import { Depot, Limit, Units, TotalCount } from "./imports.js";
+import { Depot, Limit, Memory, Units, TotalCount } from "./imports.js";
 import WaitOnSite from "./job-wait-on-site.js";
 
 let jobWaitOnShieldBatterySite = null;
@@ -13,7 +13,7 @@ export default function() {
   if (jobWaitOnShieldBatterySite && TotalCount.ShieldBattery) cleanJobWaitOnShieldBatterySite();
   if (TotalCount.CyberneticsCore && !cybercore) cybercore = findCyberCore();
 
-  if (Limit.ShieldBattery && !TotalCount.ShieldBattery && cybercore && (cybercore.buildProgress > 0.82)) {
+  if (Limit.ShieldBattery && !TotalCount.ShieldBattery && isTimeToBuildShieldBattery()) {
     buildShieldBattery();
   }
 }
@@ -48,6 +48,17 @@ function cleanJobWaitOnShieldBatterySite() {
   }
 }
 
+function isTimeToBuildShieldBattery() {
+  if (!cybercore) return false;
+
+  if (Memory.LevelEnemyRush >= 3) {
+    // When preparing for potential enemy zealot rush, body block the shield battery plot immediately to prevent enemy from blocking our wall
+    return true;
+  } else {
+    return (cybercore.buildProgress > 0.82);
+  }
+}
+
 function buildShieldBattery() {
   if (jobWaitOnShieldBatterySite) return;
 
@@ -73,10 +84,11 @@ function selectRally() {
   if (site) {
     const batterypos = site.battery[0];
     const wallpos = site.wall[0];
+    const step = (Memory.LevelEnemyRush >= 3) ? 0.2 : 0.8;
 
     return {
-      x : batterypos.x + ((wallpos.x >= batterypos.x) ? 0.8 : -0.8),
-      y : batterypos.y + ((wallpos.y >= batterypos.y) ? -0.8 : 0.8),
+      x : batterypos.x + ((wallpos.x >= batterypos.x) ? step : -step),
+      y : batterypos.y + ((wallpos.y >= batterypos.y) ? -step : step),
     };
   }
 }

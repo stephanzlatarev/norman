@@ -9,7 +9,6 @@ export default class WallKeeper extends Job {
     this.priority = 100;
 
     this.rally = wallSite;
-    this.wall = wallSite.wall[0];
   }
 
   // Order 6=Cheer, 7=Dance
@@ -18,8 +17,9 @@ export default class WallKeeper extends Job {
 
     if (!warrior.isAlive) return this.close(false);
 
-    if (this.wall && shouldBlockWall()) {
-      Order.hold(warrior, { x: this.wall.x + 0.5, y: this.wall.y + 0.5 });
+    if (this.rally && shouldBlockWall()) {
+      const wy = this.rally.y + this.rally.dy - 0.5;
+      Order.hold(warrior, { x: this.rally.x, y: wy });
       this.isHoldingPoisiton = true;
     } else {
       orderMove(warrior, this.rally, this.isHoldingPoisiton);
