@@ -18,7 +18,7 @@ export default class WallKeeper extends Job {
     if (!warrior.isAlive) return this.close(false);
 
     if (this.rally && shouldBlockWall()) {
-      const wy = this.rally.y + this.rally.dy - 0.5;
+      const wy = (this.rally.dy > 0) ? this.rally.y + 1.5 : this.rally.y - 1.5;
       Order.hold(warrior, { x: this.rally.x, y: wy });
       this.isHoldingPoisiton = true;
     } else {
