@@ -35,7 +35,6 @@ class EarlyScout extends Job {
   enemyBaseRamp = null;
   enemyExpansionZone = null;
   enemyHarvestLine = null;
-  mode = null;
   pylon = null;
 
   constructor(homeWallSite, enemyExpansionZone) {
@@ -56,6 +55,7 @@ class EarlyScout extends Job {
     super.close(outcome);
 
     Memory.FlagJobEarlyScout = false;
+    Memory.EarlyScoutMode = false;
   }
 
   accepts(unit) {
@@ -71,7 +71,7 @@ class EarlyScout extends Job {
       return this.close(false);
     }
 
-    if (Memory.LevelEnemyRush >= 3) {
+    if ((Memory.LevelEnemyRush >= 3) && (Memory.EarlyScoutMode !== MODE_KILL)) {
       if (agent.zone === Depot.home) {
         console.log("Early scout retires due to extreme enemy rush.");
 
@@ -145,14 +145,14 @@ class EarlyScout extends Job {
         return this.transition(this.goMonitorEnemyExpansions);
       } else {
         // Enemy worker fights back
-        this.mode = MODE_DAMAGE;
+        Memory.EarlyScoutMode = MODE_DAMAGE;
         this.target = null;
 
         return this.transition(this.goGuardExpansion);
       }
     }
 
-    if (this.mode === MODE_KILL) {
+    if (Memory.EarlyScoutMode === MODE_KILL) {
       // Kill as many enemy workers as possible
       if (!this.target || !this.target.isAlive) {
         this.target = findEnemyWorkerToKill(this.assignee);
@@ -162,7 +162,7 @@ class EarlyScout extends Job {
         return orderAttack(this.assignee, this.target);
       }
     } else if (this.target && this.target.isAlive && isDamaged(this.target)) {
-      this.mode = MODE_KILL;
+      Memory.EarlyScoutMode = MODE_KILL;
 
       return orderAttack(this.assignee, this.target);
     } else {
@@ -173,8 +173,8 @@ class EarlyScout extends Job {
         if (!this.hasDetectedEnemyExpansion && (this.enemyHarvestLine.distance(target.body) > 0.5) && !isEnemyWorkerBuildingStructures(target)) {
           // The enemy worker is outside the harvest zone, presumably going to build an expansion
           return this.transition(this.goGuardExpansion);
-        } else if (!this.mode && isDamaged(target)) {
-          this.mode = MODE_KILL;
+        } else if (!Memory.EarlyScoutMode && isDamaged(target)) {
+          Memory.EarlyScoutMode = MODE_KILL;
         }
 
         this.target = target;
@@ -643,7 +643,8 @@ function isAlmostDead(agent) {
 }
 
 function isDamaged(unit) {
-  return (unit.armor.shield + unit.armor.health < unit.armor.shieldMax + unit.armor.healthMax);
+  // Check if our early scout struck the enemy worker at least twice
+  return (unit.armor.shield + unit.armor.health <= unit.armor.shieldMax + unit.armor.healthMax - 10);
 }
 
 function isSlipping(agent) {

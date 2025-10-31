@@ -36,6 +36,9 @@ export default function() {
   } else if ((Memory.LevelEnemyRush === ENEMY_RUSH_EXTREME_LEVEL) && (!ActiveCount.ShieldBattery || (ActiveCount.Zealot + ActiveCount.Stalker < 8))) {
     // Enemy rush with melee units and workers is still expected
     level = ENEMY_RUSH_EXTREME_LEVEL;
+  } else if ((Memory.EarlyScoutMode === 1) && !Memory.FlagSiegeDefense) {
+    // Early scout is killing enemy workers. This damages enemy economy but makes us blind to enemy rushes. Prepare for extreme rush just in case.
+    level = ENEMY_RUSH_EXTREME_LEVEL;
   } else if (Memory.FlagEnemyProxyNexus) {
     // Enemy rush with melee units and workers is now expected
     level = ENEMY_RUSH_EXTREME_LEVEL;
