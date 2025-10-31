@@ -101,7 +101,7 @@ function isEnemyExpandingHarvestPerimeter() {
   if (enemyExpandingHarvestPerimeter) return true;
 
   for (const unit of Units.enemies().values()) {
-    if (unit.isCarryingMinerals && (unit.zone !== Enemy.base)) {
+    if (unit.isCarryingMinerals && (unit.zone !== Enemy.base) && isEnemyBase(unit.zone)) {
       console.log("Detected enemy harvests expansion:", unit.zone.name);
       enemyExpandingHarvestPerimeter = true;
       break;
@@ -109,6 +109,17 @@ function isEnemyExpandingHarvestPerimeter() {
   }
 
   return enemyExpandingHarvestPerimeter;
+}
+
+function isEnemyBase(zone) {
+  if (!zone) return false;
+  if (!zone.isDepot) return false;
+
+  for (const building of zone.threats) {
+    if (building.type.isDepot) return true;
+  }
+
+  return false;
 }
 
 function isEnemyStructureDefensive(type, count) {
