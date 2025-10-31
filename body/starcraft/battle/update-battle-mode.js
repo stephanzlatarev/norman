@@ -207,6 +207,8 @@ function areMarchingFightersInFireRange(battle) {
 
     const warrior = fighter.assignee;
 
+    if (fighter.target && isInFireRange(warrior, fighter.target)) return true;
+
     if (!enemies) enemies = getGroundHittingEnemiesOrDummies(battle);
 
     for (const enemy of enemies) {
