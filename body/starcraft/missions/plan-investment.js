@@ -94,9 +94,9 @@ function doOneBaseDefense() {
     Limit.Probe = 23;
 
     if (ActiveCount.CyberneticsCore) {
-      if ((TotalCount.Zealot >= 1) && !TotalCount.Sentry) {
+      if ((TotalCount.Zealot >= 1) && !TotalCount.Sentry && !VisibleCount.Zealot) {
         Priority.Sentry = 100;
-      } else if (TotalCount.Zealot >= 2) {
+      } else if ((TotalCount.Zealot >= 2) && (TotalCount.Zealot >= VisibleCount.Zealot)) {
 
         // If we have too much minerals and not enough gas, then build Zealots
         if ((Resources.minerals >= 225) && (Resources.vespene < 50)) {
@@ -105,6 +105,9 @@ function doOneBaseDefense() {
           Priority.Stalker = 100;
           Limit.Probe = 26;
         }
+      } else {
+        // We need more Zealots to defend against the rush
+        Limit.Zealot = Infinity;
       }
 
       const activeWarriors = ActiveCount.Stalker + ActiveCount.Sentry + ActiveCount.Zealot;
@@ -114,6 +117,9 @@ function doOneBaseDefense() {
       if (trainingWarriors >= ActiveCount.Gateway) {
         Limit.Gateway = 3;
       }
+    } else if (VisibleCount.Zealot) {
+      // We need more Zealots to defend against the zealot rush
+      Limit.Zealot = Infinity;
     }
   } else if (Memory.LevelEnemyRush) {
     Priority.Zealot = 95;

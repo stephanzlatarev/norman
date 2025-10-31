@@ -14,6 +14,8 @@ export const ENEMY_RUSH_EXTREME_LEVEL = 3;  // Enemy is expected to attack with 
 // When enemy has lower investment in economy than us, we expect enemy rush
 // When enemy has invested in warriors and warrior production, we expect enemy waves
 // When enemy has invested in economy and static defense, we don't expect enemy expansion
+let enemyGateway = 0;
+let enemyNexus = 0;
 let enemyPhotonCannons = 0;
 let enemyReapers = 0;
 let enemyZerglings = 0;
@@ -21,6 +23,8 @@ let enemyZerglings = 0;
 export default function() {
   let level = ENEMY_RUSH_NOT_EXPECTED;
 
+  enemyGateway = Math.max(VisibleCount.Gateway, enemyGateway);
+  enemyNexus = Math.max(VisibleCount.Nexus, enemyNexus);
   enemyPhotonCannons = Math.max(VisibleCount.PhotonCannon, enemyPhotonCannons);
   enemyReapers = Math.max(VisibleCount.Reaper, enemyReapers);
   enemyZerglings = Math.max(VisibleCount.Zergling, enemyZerglings);
@@ -41,6 +45,9 @@ export default function() {
     level = ENEMY_RUSH_EXTREME_LEVEL;
   } else if (Memory.FlagEnemyProxyNexus) {
     // Enemy rush with melee units and workers is now expected
+    level = ENEMY_RUSH_EXTREME_LEVEL;
+  } else if (TotalCount.CyberneticsCore && enemyNexus && !enemyGateway) {
+    // Enemy proxy gateway with zealot rush is now expected
     level = ENEMY_RUSH_EXTREME_LEVEL;
   } else if ((TotalCount.Assimilator <= 1) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3)) && areZerglingsApproaching()) {
     // Enemy rush with very early zerglings is now expected

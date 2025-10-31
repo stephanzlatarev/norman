@@ -49,6 +49,7 @@ class Types {
 
       type.id = unit.unitId;
       type.name = unit.name;
+      type.race = unit.race;
 
       type.attackGround = weapons.attackGround;
       type.attackAir = weapons.attackAir;

@@ -1,4 +1,6 @@
-import { Memory, Job, Order, Types, Units, Board, Depot, ActiveCount, Enemy, Resources } from "./imports.js";
+import { Memory, Job, Order, Types, Units, Board, Depot, ActiveCount, Enemy, Resources, TotalCount, VisibleCount } from "./imports.js";
+
+const RACE_PROTOSS = 3;
 
 let agent = null;
 let job = null;
@@ -132,10 +134,29 @@ class EarlyScout extends Job {
   }
 
   goApproachEnemyBase() {
-    if (findEnemyWorkerClosestToEnemyExpansion(this.enemyExpansionZone)) {
+    const enemy = findEnemyWorkerClosestToEnemyExpansion(this.enemyExpansionZone);
+
+    if (!enemy) {
+      // Go closer to the enemy base to find enemy workers
+      orderMove(this.assignee, Enemy.base.harvestRally);
+    } else if (enemy.type.race === RACE_PROTOSS) {
+      // Enemy is Protoss, so we're more concerned about proxy rushes than expansions
+      this.transition(this.goSearchForEnemyGateway);
+    } else {
+      this.transition(this.goAttackEnemyWorker);
+    }
+  }
+
+  goSearchForEnemyGateway() {
+    if (VisibleCount.Gateway) {
+      // The enemy Gateway has been found. Stop searching for it and continue with the scouting agenda
+      this.transition(this.goAttackEnemyWorker);
+    } else if (TotalCount.CyberneticsCore) {
+      // The gateway should be there by this time. Stop searching for it and assume proxies
       this.transition(this.goAttackEnemyWorker);
     } else {
-      orderMove(this.assignee, Enemy.base.harvestRally);
+      // Circle around the base (without transitioning to that stage) while looking for the Gateway
+      this.goCircleEnemyBase();
     }
   }
 
