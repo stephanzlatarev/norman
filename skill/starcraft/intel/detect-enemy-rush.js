@@ -1,8 +1,9 @@
-import { ActiveCount, Depot, Memory, Score, TotalCount, VisibleCount } from "./imports.js";
+import { ActiveCount, Depot, Enemy, Memory, Score, TotalCount, Units, VisibleCount } from "./imports.js";
 
 const WAVE_STARTER_ENEMY_ARMY_LEVEL = 0.5;
 const ALERT_YELLOW = 4;
 const MAX_MOVE_OUT_ARMY_VALUE = 5000;
+const TIER_DEFENSIVE = 8;
 
 export const ENEMY_RUSH_NOT_EXPECTED = 0;
 export const ENEMY_RUSH_MODERATE_LEVEL = 1;
@@ -29,7 +30,10 @@ export default function() {
     Memory.OpportunityToUseOracle = true;
   }
 
-  if ((Memory.LevelEnemyRush === ENEMY_RUSH_EXTREME_LEVEL) && (!ActiveCount.ShieldBattery || (ActiveCount.Zealot + ActiveCount.Stalker < 8))) {
+  if (isEnemyExpandingHarvestPerimeter() || isEnemyDefending()) {
+    // Lower the expected enemy rush level
+    level = (Memory.LevelEnemyRush >= ENEMY_RUSH_MODERATE_LEVEL) ? ENEMY_RUSH_MODERATE_LEVEL : ENEMY_RUSH_NOT_EXPECTED;
+  } else if ((Memory.LevelEnemyRush === ENEMY_RUSH_EXTREME_LEVEL) && (!ActiveCount.ShieldBattery || (ActiveCount.Zealot + ActiveCount.Stalker < 8))) {
     // Enemy rush with melee units and workers is still expected
     level = ENEMY_RUSH_EXTREME_LEVEL;
   } else if (Memory.FlagEnemyProxyNexus) {
@@ -54,9 +58,6 @@ export default function() {
     level = ENEMY_RUSH_NOT_EXPECTED;
   } else if (Memory.DetectedEnemyProxy || Memory.DetectedEnemyHoard) {
     level = ENEMY_RUSH_HIGH_LEVEL;
-  } else if (Memory.DetectedEnemyDefensiveStance) {
-    // TODO: Improve this by checking enemy investments
-    level = ENEMY_RUSH_NOT_EXPECTED;
   } else if (!Memory.DetectedEnemyExpansion && ((TotalCount.Nexus > 1) || Memory.FlagHarvesterCapacity)) {
     // TODO: Add Crawler case = enemy expansion without vespene
     level = ENEMY_RUSH_MODERATE_LEVEL;
@@ -66,6 +67,49 @@ export default function() {
     console.log("Enemy rush level changes from", Memory.LevelEnemyRush, "to", level);
     Memory.LevelEnemyRush = level;
   }
+}
+
+let enemyDefense;
+
+function isEnemyDefending() {
+  if (enemyDefense) return true;
+
+  if (isEnemyStructureDefensive("Bunker", VisibleCount.Bunker)) {
+    console.log("Detected enemy defensive stance: Bunker");
+    enemyDefense = true;
+  } else if (isEnemyStructureDefensive("PhotonCannon", VisibleCount.PhotonCannon)) {
+    console.log("Detected enemy defensive stance: Photon Cannon");
+    enemyDefense = true;
+  }
+
+  return enemyDefense;
+}
+
+let enemyExpandingHarvestPerimeter = false;
+
+function isEnemyExpandingHarvestPerimeter() {
+  if (enemyExpandingHarvestPerimeter) return true;
+
+  for (const unit of Units.enemies().values()) {
+    if (unit.isCarryingMinerals && (unit.zone !== Enemy.base)) {
+      console.log("Detected enemy harvests expansion:", unit.zone.name);
+      enemyExpandingHarvestPerimeter = true;
+      break;
+    }
+  }
+
+  return enemyExpandingHarvestPerimeter;
+}
+
+function isEnemyStructureDefensive(type, count) {
+  if (!count) return false;
+
+  for (const unit of Units.enemies().values()) {
+    if (!unit.zone) continue;
+    if ((unit.type.name === type) && (unit.zone.tier.level > TIER_DEFENSIVE)) return true;
+  }
+
+  return false;
 }
 
 let fireZones;

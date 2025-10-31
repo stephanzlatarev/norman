@@ -158,7 +158,6 @@ function traceMemory(texts) {
 
   if (Memory.FlagSiegeDefense) texts.push("Flag Siege Defense");
   if (Memory.DetectedEnemyExpansion) texts.push("Detected Enemy Expansion");
-  if (Memory.DetectedEnemyDefensiveStance) texts.push("Detected Enemy Defensive Stance");
   if (Memory.DetectedEnemyHoard) texts.push("Detected Enemy Hoard");
   if (Memory.DetectedEnemyProxy) texts.push("Detected Enemy Proxy");
   if (Memory.LevelEnemyRush) texts.push("Level Enemy Rush: " + Memory.LevelEnemyRush);
