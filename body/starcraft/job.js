@@ -28,6 +28,9 @@ export default class Job {
   // The target location or unit of the job, if any
   target;
 
+  // This is the unit designated for the job before actual assignment
+  designee;
+
   // This is the unit assigned to execute the job
   assignee;
 
@@ -64,6 +67,16 @@ export default class Job {
   // Called during job scheduling with the unit to be assigned as arguments. The job may reject a unit if it doesn't meet special criteria.
   accepts() {
     return true;
+  }
+
+  designate(unit) {
+    if (unit && (unit !== this.designee)) {
+      log(unit.type.name, unit.nick, "designated to job", this.details);
+
+      this.designee = unit;
+
+      unit.job = { isBusy: true, details: "Designated to job " + this.details };
+    }
   }
 
   // Assigns the given unit to the job.

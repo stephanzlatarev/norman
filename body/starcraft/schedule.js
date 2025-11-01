@@ -9,7 +9,6 @@ import Resources from "./memo/resources.js";
 export default function() {
   const jobs = Array.from(Job.list().values());
   const started = jobs.filter(job => !!job.assignee);
-  const pending = jobs.filter(job => !job.assignee).sort((a, b) => (b.priority - a.priority));
   const accountedOrders = new Set();
 
   // Account for resources required for outstanding orders
@@ -39,6 +38,7 @@ export default function() {
   }
 
   // Start and execute as many pending jobs as possible by their priority
+  const pending = jobs.filter(job => !job.assignee).sort((a, b) => (b.priority - a.priority));
   let blockPriority = 0;
   let blockSupply = false;
   let blockMinerals = false;
@@ -107,6 +107,8 @@ function accountForProduction(product) {
 }
 
 function findCandidate(job) {
+  if (job.designee && job.designee.isAlive) return job.designee;
+
   const profile = job.agent;
   const priority = job.priority;
 

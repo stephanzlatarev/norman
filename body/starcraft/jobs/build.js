@@ -8,7 +8,9 @@ const PROGRESS = { type: { name: "Progress" }, nick: "tracker", body: {}, isAliv
 
 export default class Build extends Job {
 
-  isAproaching = false;
+  isBuildJob = true;
+
+  isApproaching = false;
 
   progress;
 
@@ -46,15 +48,15 @@ export default class Build extends Job {
       if ((this.assignee.zone !== this.target) && this.target.isDepot && this.target.minerals.size) {
         this.order = new Order(this.assignee, 298, [...this.target.minerals][0]).expect(this.output);
         this.order.isCompound = true;
-        this.isAproaching = true;
+        this.isApproaching = true;
       } else {
         this.order = new Order(this.assignee, this.output.abilityId, this.target).expect(this.output);
       }
-    } else if (this.isAproaching) {
+    } else if (this.isApproaching) {
       if (isWorkerCloseToDepot(this.assignee, this.target)) {
         this.order.replace(this.output.abilityId, this.target).expect(this.output);
         this.order.isCompound = false;
-        this.isAproaching = false;
+        this.isApproaching = false;
       }
     } else if (this.order.isRejected) {
       this.close(false);
