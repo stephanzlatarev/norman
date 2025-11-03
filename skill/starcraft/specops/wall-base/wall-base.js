@@ -1,11 +1,13 @@
 import { ActiveCount, Battle, Depot, Memory, Types } from "../imports.js";
 import WallFielder from "./wall-fielder.js";
 import WallKeeper from "./wall-keeper.js";
+import WallShielder from "./wall-shielder.js";
 import calculateRampVisionLevels from "./ramp-vision.js";
 
 let wallSite;
 let wallFielderJob;
 let wallKeeperJob;
+let wallShielderJobs = new Set();
 
 export default function() {
   if (!Depot.home) return;
@@ -21,6 +23,7 @@ export default function() {
   if (wallSite) {
     maintainWallKeeperJob();
     maintainWallFielderJob();
+    maintainWallShielderJobs();
   }
 }
 
@@ -36,6 +39,15 @@ function shouldWallBase() {
   }
 
   return true;
+}
+
+
+function shouldShieldWall() {
+  if (!wallKeeperJob) return false;
+
+  for (const enemy of Depot.home.enemies.values()) {
+    if (enemy.type.rangeGround < 1) return true;
+  }
 }
 
 function findWallKeeperType() {
@@ -85,5 +97,31 @@ function maintainWallFielderJob() {
 
   if (shouldWallBase()) {
     wallFielderJob = new WallFielder(wallSite);
+  }
+}
+
+function maintainWallShielderJobs() {
+  if (shouldShieldWall()) {
+    let addShielder = !wallShielderJobs.size;
+
+    for (const job of wallShielderJobs) {
+      if (job.isDone || job.isFailed) {
+        wallShielderJobs.delete(job);
+
+        addShielder = true;
+      } else if (job.isRequestingBackup && (wallShielderJobs.size < 2)) {
+        addShielder = true;
+      }
+    }
+
+    if (addShielder) {
+      wallShielderJobs.add(new WallShielder(wallSite));
+    }
+  } else {
+    for (const job of wallShielderJobs) {
+      job.close(true);
+    }
+
+    wallShielderJobs.clear();
   }
 }
