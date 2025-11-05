@@ -37,12 +37,28 @@ function listSiegeDefenseBattles(battles) {
 
 // Station warriors in economy perimeter
 function listNormalDefenseBattles(battles) {
-  listDefenseBattles(battles, 1);
+  listBattlesInRedZones(battles, 1);
+
+  if (!battles.size) {
+    listDefenseBattle(battles, findFrontBaseZone());
+  }
 }
 
 // Secure the next expansion location. Battle our way to it if necessary.
 function listExpandDefenseBattles(battles) {
-  listDefenseBattles(battles, 2);
+  const coveredZones = listBattlesInRedZones(battles, 2);
+  const expansion = getBuildingExpansionZone(coveredZones) || getNextExpansionZone(coveredZones);
+
+  if (expansion) {
+    listDefenseBattle(battles, expansion);
+  }
+
+  for (const battle of battles) {
+    if ((battle.front.size !== 1) || !battle.front.has(battle.zone)) {
+      battle.front.clear();
+      battle.front.add(battle.zone);
+    }
+  }
 }
 
 // Test enemy lines for weaknesses and keep main army ready to return to defense
@@ -63,6 +79,8 @@ function listFullOffenseBattles(battles) {
 function listSiegeBattle(battles, battleZone) {
   const battle = findBattle(battleZone) || new Battle(battleZone);
 
+  battle.move(battleZone);
+
   // Set the front line to the battle zone
   if ((battle.front.size !== 1) || !battle.front.has(battleZone)) {
     battle.front.clear();
@@ -79,28 +97,17 @@ function listSiegeBattle(battles, battleZone) {
   battles.add(battle);
 }
 
-function listDefenseBattles(battles, tierLevelLimit) {
-  listBattlesInRedZones(battles, tierLevelLimit);
-
-  if (!battles.size) {
-    listDefenseBattle(battles, findFrontBaseZone());
-  }
-}
-
 function listDefenseBattle(battles, battleZone) {
   const battle = findBattle(battleZone) || new Battle(battleZone);
 
-  // Set the front line to the battle zone
-  if (!battle.front.size) {
-    battle.front.add(battleZone);
-  }
+  battle.move(battleZone);
+  battle.front.clear();
+  battle.front.add(battleZone);
 
   // Add all zones in range to the battle so that defenders can attack them
   for (const zone of battleZone.range.zones) {
     battle.zones.add(zone);
   }
-
-  // TODO: Set the battle lines here
 
   battles.add(battle);
 }
@@ -116,17 +123,14 @@ function listOffenseBattles(battles) {
 function listOffenseBattle(battles, battleZone) {
   const battle = findBattle(battleZone) || new Battle(battleZone);
 
-  // Set the front line to the battle zone
-  if (!battle.front.size) {
-    battle.front.add(battleZone);
-  }
+  battle.move(battleZone);
+  battle.front.clear();
+  battle.front.add(battleZone);
 
   // Add all zones in range to the battle so that warriors can attack them
   for (const zone of battleZone.range.zones) {
     battle.zones.add(zone);
   }
-
-  // TODO: Set the battle lines here
 
   battles.add(battle);
 }
@@ -158,6 +162,8 @@ function listBattlesInRedZones(battles, tierLevelLimit) {
       }
     }
   }
+
+  return traversed;
 }
 
 function findFrontBaseZone() {
@@ -177,6 +183,29 @@ function findFrontBaseZone() {
   }
 
   return frontThreatened || frontSecure || Depot.home;
+}
+
+function getBuildingExpansionZone(excludedZones) {
+  for (const depot of Depot.list()) {
+    if (depot.depot && !depot.depot.isActive && !excludedZones.has(depot)) {
+      return depot;
+    }
+  }
+}
+
+function getNextExpansionZone(excludedZones) {
+  const pinx = Memory.PinNextExpansionX;
+  const piny = Memory.PinNextExpansionY;
+
+  if (pinx && piny) {
+    for (const depot of Depot.list()) {
+      if ((depot.x === pinx) && (depot.y === piny)) {
+        if (excludedZones.has(depot)) return;
+
+        return depot;
+      }
+    }
+  }
 }
 
 function orderBattleZones(zones) {

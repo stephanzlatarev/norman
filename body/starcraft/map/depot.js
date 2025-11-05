@@ -27,8 +27,8 @@ export default class Depot extends Zone {
     this.x = cell.x + 0.5;
     this.y = cell.y + 0.5;
 
-    for (let x = cell.x - 2; x <= cell.x + 2; x++) {
-      for (let y = cell.y - 2; y <= cell.y + 2; y++) {
+    for (let x = cell.x - 3; x <= cell.x + 3; x++) {
+      for (let y = cell.y - 3; y <= cell.y + 3; y++) {
         this.plot.add(Board.cell(x, y));
       }
     }

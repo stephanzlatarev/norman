@@ -22,7 +22,7 @@ function shouldFindNextExpansionLocation() {
   if (TotalCount.Nexus >= Depot.list().length) return false;
 
   // Check if we want to expand at this moment
-  if (TotalCount.Nexus < Limit.Nexus) return false;
+  if (TotalCount.Nexus >= Limit.Nexus) return false;
 
   const pinx = Memory.PinNextExpansionX;
   const piny = Memory.PinNextExpansionY;
