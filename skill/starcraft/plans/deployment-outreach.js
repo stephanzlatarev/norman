@@ -6,7 +6,7 @@ const LEVELS = [
   {
     name: "DeploymentOutreachStarter", label: "Starter",
     triggers: [
-      { condition: () => (Memory.LevelEnemyArmySuperiority === Infinity), reason: "We don't have army yet" },
+      { condition: () => !Memory.MilestoneFirstMilitary, reason: "We don't have army yet" },
     ],
   },
 

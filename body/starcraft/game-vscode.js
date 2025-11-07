@@ -150,8 +150,14 @@ function traceMemory(texts) {
   if (Memory.FlagSupplyBlocked) texts.push("Flag Supply Blocked");
 
   if (Memory.MilestoneBasicEconomy) texts.push("Milestone Basic Economy");
-  if (Memory.MilestoneBasicMilitary) texts.push("Milestone Basic Military");
-  if (Memory.MilestoneMaxArmy) texts.push("Milestone Max Army");
+
+  if (Memory.MilestoneMaxArmy) {
+    texts.push("Milestone Max Army");
+  } else if (Memory.MilestoneBasicMilitary) {
+    texts.push("Milestone Basic Military");
+  } else if (Memory.MilestoneFirstMilitary) {
+    texts.push("Milestone First Military");
+  }
 
   if (Memory.DeploymentOutreach) texts.push("Deployment Outreach: " + MemoryLabel("DeploymentOutreach", Memory.DeploymentOutreach));
   if (Memory.LimitBase) texts.push("Limit Base: " + Memory.LimitBase);

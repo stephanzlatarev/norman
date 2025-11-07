@@ -1,5 +1,0 @@
-# Raises milestone flag when army is maxed out
-
-name: Milestone max army
-brain: milestone-max-army.js
-type: javascript

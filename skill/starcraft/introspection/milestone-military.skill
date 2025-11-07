@@ -1,0 +1,5 @@
+# Raises milestone flags for army progression
+
+name: Military milestones
+brain: milestone-military.js
+type: javascript
