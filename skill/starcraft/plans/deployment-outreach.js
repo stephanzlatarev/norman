@@ -1,4 +1,4 @@
-import { ActiveCount, Memory, MemoryLabel } from "./imports.js";
+import { ActiveCount, Battle, Memory, MemoryLabel } from "./imports.js";
 
 const LEVELS = [
 
@@ -22,6 +22,9 @@ const LEVELS = [
   {
     name: "DeploymentOutreachNormalDefense", label: "Normal Defense",
     triggers: [
+      // During heavy battles in our bases, focus on defense
+      { condition: areFightingBattlesInOurBases, reason: "Fighting battles in our bases" },
+
       // When we don't have the army to defend an expansion, then don't start it
       { condition: () => (Memory.LevelEnemyArmySuperiority > 2), reason: "Army cannot defend new expansion" },
     ]
@@ -133,4 +136,12 @@ function selectDeploymentOutreach() {
   }
 
   return enabledOutreach || { level: Memory.DeploymentOutreachFullOffense, condition: "All in" };
+}
+
+function areFightingBattlesInOurBases() {
+  for (const battle of Battle.list()) {
+    if (battle.zone.depot && battle.zone.depot.isActive && (battle.zone.enemies.size >= 5)) {
+      return true;
+    }
+  }
 }

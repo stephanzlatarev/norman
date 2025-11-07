@@ -2,6 +2,7 @@ import Memory from "../../../code/memory.js";
 import { label as MemoryLabel } from "../../../code/memory.js";
 import Order from "../../../body/starcraft/order.js";
 import Units from "../../../body/starcraft/units.js";
+import Battle from "../../../body/starcraft/battle/battle.js";
 import Base from "../../../body/starcraft/map/base.js";
 import Depot from "../../../body/starcraft/map/depot.js";
 import { ActiveCount, TotalCount } from "../../../body/starcraft/memo/count.js";
@@ -10,6 +11,7 @@ import Limit from "../../../body/starcraft/memo/limit.js";
 export {
   Memory, MemoryLabel,
   Order, Units,
+  Battle,
   Base, Depot,
   ActiveCount, Limit, TotalCount,
 };
