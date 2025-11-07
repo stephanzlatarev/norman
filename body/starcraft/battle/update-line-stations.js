@@ -85,9 +85,9 @@ function addStationsAroundRally(zone, stations, fighters) {
         if (addCount <= 0) break;
       }
 
-      for (const neighbor of cell.neighbors) {
-        if ((neighbor.zone === zone) && neighbor.isPath && !neighbor.isObstacle && !traversed.has(neighbor)) {
-          next.add(neighbor);
+      for (const one of cell.rim) {
+        if ((one.zone === zone) && one.isPath && !one.isObstacle && !traversed.has(one)) {
+          next.add(one);
         }
       }
     }

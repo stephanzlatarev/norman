@@ -433,13 +433,13 @@ function getEnemyExpansionZone() {
     for (const cell of wave) {
       traversed.add(cell);
 
-      for (const neighbor of cell.neighbors) {
-        if (!neighbor.isPath) continue;
-        if (traversed.has(neighbor)) continue;
+      for (const one of cell.rim) {
+        if (!one.isPath) continue;
+        if (traversed.has(one)) continue;
 
-        if ((neighbor.zone !== Enemy.base) && neighbor.zone.isDepot) return neighbor.zone;
+        if ((one.zone !== Enemy.base) && one.zone.isDepot) return one.zone;
 
-        next.add(neighbor);
+        next.add(one);
       }
     }
 
@@ -477,8 +477,8 @@ function getEnemyBaseRamp() {
 
   for (const zone of zones) {
     for (const cell of zone.border) {
-      for (const neighbor of cell.neighbors) {
-        if (neighbor.isPath && !neighbor.isPlot) {
+      for (const one of cell.rim) {
+        if (one.isPath && !one.isPlot) {
           if (!anchor || (zone.tier.level > anchor.zone.tier.level)) anchor = cell;
 
           candidates.push(cell);
@@ -497,8 +497,8 @@ function getEnemyBaseRamp() {
     for (const cell of candidates) {
       if (ramp.has(cell)) continue;
 
-      for (const neighbor of cell.neighbors) {
-        if (ramp.has(neighbor)) {
+      for (const one of cell.rim) {
+        if (ramp.has(one)) {
           ramp.add(cell);
           goon = true;
           break;

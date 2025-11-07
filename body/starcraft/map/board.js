@@ -51,7 +51,7 @@ class Board {
     }
 
     ignoreInitialBuildings(this.cells);
-    identifyNeighbors(this, this.cells);
+    identifyRims(this, this.cells);
   }
 
   sync(gameInfo) {
@@ -150,7 +150,7 @@ class Cell {
     this.isResource = false;
 
     this.edges = [];
-    this.neighbors = [];
+    this.rim = [];
 
     this.zone = null;
   }
@@ -224,7 +224,7 @@ function markCells(cells, left, top, right, bottom, isPath, isPlot, isObstacle, 
   }
 }
 
-function identifyNeighbors(board, cells) {
+function identifyRims(board, cells) {
   for (let y = board.top; y <= board.bottom; y++) {
     for (let x = board.left; x < board.right; x++) {
       const cell = cells[y][x];
@@ -234,7 +234,7 @@ function identifyNeighbors(board, cells) {
 
         if (neighbor.isOn) {
           cell.edges.push(neighbor);
-          cell.neighbors.push(neighbor);
+          cell.rim.push(neighbor);
         }
       }
 
@@ -242,7 +242,7 @@ function identifyNeighbors(board, cells) {
         const neighbor = cells[y + one.dy][x + one.dx];
 
         if (neighbor.isOn) {
-          cell.neighbors.push(neighbor);
+          cell.rim.push(neighbor);
         }
       }
     }
