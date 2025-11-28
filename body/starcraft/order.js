@@ -1,4 +1,5 @@
 import Resources from "./memo/resources.js";
+import log from "./trace/orders.js";
 
 const orders = new Map();
 
@@ -274,6 +275,7 @@ export default class Order {
 
     const pos = target.body ? target.body : target;
 
+    if (!pos.x || !pos.y) return Order.stop(unit);
     if (unit.todo && unit.todo.equals({ ability: 16, target: pos })) return unit.todo;
 
     let distance = 1;
@@ -342,10 +344,6 @@ function addOrder(order) {
   }
 
   orders.set(order.unit.tag, order);
-}
-
-function log(...line) {
-  console.log(...line);
 }
 
 function checkIsAccepted(order) {
