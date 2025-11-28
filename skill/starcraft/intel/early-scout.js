@@ -34,7 +34,7 @@ class EarlyScout extends Job {
   hasDetectedEnemyWallOff = false;
 
   homeWallSite = null;
-  enemyBaseRamp = null;
+  enemyWallSite = null;
   enemyExpansionZone = null;
   enemyHarvestLine = null;
   pylon = null;
@@ -43,7 +43,7 @@ class EarlyScout extends Job {
     super("Probe");
 
     this.homeWallSite = homeWallSite;
-    this.enemyBaseRamp = getEnemyBaseRamp();
+    this.enemyWallSite = getEnemyWallSite();
     this.enemyExpansionZone = enemyExpansionZone;
     this.enemyHarvestLine = new HarvestLine(enemyExpansionZone);
     this.priority = 100;
@@ -95,7 +95,7 @@ class EarlyScout extends Job {
       this.transition(this.goMonitorEnemyExpansions);
     }
 
-    if (!this.hasDetectedEnemyWallOff && isEnemyBaseWalledOff(agent, this.enemyBaseRamp)) {
+    if (!this.hasDetectedEnemyWallOff && isEnemyBaseWalledOff(agent, this.enemyWallSite)) {
       console.log("Early scout detected enemy wall off.");
       this.hasDetectedEnemyWallOff = true;
     }
@@ -113,8 +113,8 @@ class EarlyScout extends Job {
     const agent = this.assignee;
 
     if (agent && agent.zone) {
-      for (const zone of agent.zone.range.zones) {
-        for (const enemy of zone.threats) {
+      for (const sector of agent.zone.horizon) {
+        for (const enemy of sector.threats) {
           if (enemy.type.isWorker) continue;
           if (!enemy.type.isWarrior) continue;
           if (!enemy.type.rangeGround) continue;
@@ -216,12 +216,12 @@ class EarlyScout extends Job {
       this.transition(this.goBlockExpansion);
     } else if (this.assignee.zone !== this.enemyExpansionZone) {
       // The agent is still away from the enemy expansion zone, so mineral walk to the expansion to avoid being blocked by enemy units
-      if (isAtOrBehindEnemyBaseRamp(this.assignee, this.enemyBaseRamp)) {
-        if (this.hasDetectedEnemyWallOff || !this.enemyBaseRamp.size) {
+      if (isAtOrBehindEnemyWallSite(this.assignee, this.enemyWallSite)) {
+        if (this.hasDetectedEnemyWallOff || !this.enemyWallSite.size) {
           return this.transition(this.goCircleEnemyBase);
-        } else if (!isInVisibilityRangeOfEnemyBaseRamp(this.assignee, this.enemyBaseRamp)) {
+        } else if (!isInVisibilityRangeOfEnemyWallSite(this.assignee, this.enemyWallSite)) {
           // Approach the ramp to get vision over it
-          return orderMove(this.assignee, [...this.enemyBaseRamp][0]);
+          return orderMove(this.assignee, [...this.enemyWallSite][0]);
         }
       }
 
@@ -470,56 +470,56 @@ function findEnemyBaseCirclePath() {
   return path;
 }
 
-function getEnemyBaseRamp() {
-  const zones = [Enemy.base, ...Enemy.base.neighbors];
-  const candidates = [];
-  let anchor = 0;
+function getEnemyRampZone() {
+  const traversed = new Set([Enemy.base]);
+  let wave = new Set([Enemy.base]);
 
-  for (const zone of zones) {
-    for (const cell of zone.border) {
-      for (const one of cell.rim) {
-        if (one.isPath && !one.isPlot) {
-          if (!anchor || (zone.tier.level > anchor.zone.tier.level)) anchor = cell;
+  while (wave.size) {
+    const next = new Set();
 
-          candidates.push(cell);
-          break;
+    for (const zone of wave) {
+      for (const [neighbor, corridor] of zone.exits) {
+        if (corridor.via.isRamp) return corridor.via;
+
+        if (!traversed.has(neighbor)) {
+          traversed.add(neighbor);
+          next.add(neighbor);
         }
       }
     }
+
+    wave = next;
   }
-
-  const ramp = new Set([anchor]);
-  let goon = true;
-
-  while (goon) {
-    goon = false;
-
-    for (const cell of candidates) {
-      if (ramp.has(cell)) continue;
-
-      for (const one of cell.rim) {
-        if (ramp.has(one)) {
-          ramp.add(cell);
-          goon = true;
-          break;
-        }
-      }
-    }
-  }
-
-  return ramp;
 }
 
-function isAtOrBehindEnemyBaseRamp(agent, ramp) {
-  if (!agent.zone || !agent.zone.tier) console.log("DEBUG: No tier Probe:", agent.tag, "zone:", agent.zone ? agent.zone.name : "-");
-  if (!agent.zone || !agent.zone.tier) return false;
+function getEnemyWallSite() {
+  const zone = getEnemyRampZone();
+  if (!zone) return;
+
+  const site = new Set();
+
+  for (const cell of zone.cells) {
+    if (cell.isPlot) continue;
+
+    for (const one of cell.rim) {
+      if (one.isPlot && (one.z >= zone.z)) {
+        site.add(one);
+      }
+    }
+  }
+
+  return site;
+}
+
+function isAtOrBehindEnemyWallSite(agent, ramp) {
+  if (!agent.zone || !agent.zone.perimeterLevel) return false;
 
   for (const cell of ramp) {
-    return (agent.zone.tier.level >= cell.zone.tier.level);
+    return (agent.zone.perimeterLevel >= cell.zone.perimeterLevel);
   }
 }
 
-function isInVisibilityRangeOfEnemyBaseRamp(agent, ramp) {
+function isInVisibilityRangeOfEnemyWallSite(agent, ramp) {
   for (const cell of ramp) {
     if (!isInRange(agent.body, cell, agent.type.sightRange - 2)) return false;
   }
@@ -529,7 +529,7 @@ function isInVisibilityRangeOfEnemyBaseRamp(agent, ramp) {
 
 function isEnemyBaseWalledOff(agent, ramp) {
   // The agent must have visiblity over the ramp to determine if it is walled off
-  if (!isAtOrBehindEnemyBaseRamp(agent, ramp)) return false;
+  if (!isAtOrBehindEnemyWallSite(agent, ramp)) return false;
 
   for (const cell of ramp) {
     if (cell.isPath) return false;
@@ -581,8 +581,9 @@ function findEnemyWorkerClosestToEnemyExpansion(expansion) {
     if (!unit.type.isWorker) continue;
 
     // Ignore units that scout us
-    if (!unit.zone || !unit.zone.tier) continue;
-    if (unit.zone.tier.level < expansion.tier.level) continue;
+    if (!unit.zone) continue;
+    if (!unit.zone.perimeterLevel) continue;
+    if (unit.zone.perimeterLevel < expansion.perimeterLevel) continue;
 
     const isBuilding = isEnemyWorkerBuildingStructures(unit);
     if (closestIsBuilding && !isBuilding) continue;

@@ -3,14 +3,12 @@ const ALL_WARRIORS = ["Colossus", "Immortal", "Sentry", "Stalker", "Zealot"];
 const GROUND_HITTING_WARRIORS = ["Colossus", "Immortal", "Zealot"];
 
 export default function(battle) {
-  if (battle.lines.length) {
-    hireIdleWarriorsInBattleZone(battle, isAirBattle(battle));
-  }
+  hireIdleWarriorsInBattleZone(battle, isAirBattle(battle));
 }
 
 function isAirBattle(battle) {
-  for (const zone of battle.zones) {
-    for (const threat of zone.threats) {
+  for (const sector of battle.sectors) {
+    for (const threat of sector.threats) {
       if (threat.body.isGround) {
         // There's at least this one ground enemy unit, so the battle is not only in the air
         return false;
@@ -22,8 +20,8 @@ function isAirBattle(battle) {
 }
 
 function hireIdleWarriorsInBattleZone(battle, isAirBattle) {
-  for (const zone of battle.zones) {
-    for (const warrior of zone.warriors) {
+  for (const sector of battle.sectors) {
+    for (const warrior of sector.warriors) {
       if (!warrior.isAlive) continue;
       if (warrior.job && (warrior.job.battle === battle)) continue;
       if (warrior.job && (warrior.job.priority >= battle.priority)) continue;

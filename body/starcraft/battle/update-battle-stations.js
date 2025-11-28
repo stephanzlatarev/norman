@@ -2,18 +2,16 @@ import Board from "../map/board.js";
 import Depot from "../map/depot.js";
 
 export default function(battle) {
-  for (const line of battle.lines) {
-    if (line.fighters.length > line.stations.length) {
-      const wall = getWall(line.zone);
+  if (battle.fighters.length > battle.stations.length) {
+    const wall = getWall(battle.front) || getWall(battle.rally);
 
-      if (wall) {
-        addStationsAroundWall(wall, line.stations, line.fighters);
-      } else {
-        addStationsAroundRally(line.zone, line.stations, line.fighters);
-      }
-    } else if (line.fighters.length < line.stations.length) {
-      removeStations(line.stations, line.fighters);
+    if (wall) {
+      addStationsAroundWall(wall, battle.stations, battle.fighters);
+    } else {
+      addStationsAroundRally(battle.rally, battle.stations, battle.fighters);
     }
+  } else if (battle.fighters.length < battle.stations.length) {
+    removeStations(battle.stations, battle.fighters);
   }
 }
 

@@ -2,6 +2,7 @@ import Memory from "../../../code/memory.js";
 import Battle from "./battle.js";
 import Depot from "../map/depot.js";
 import { ALERT_YELLOW } from "../map/alert.js";
+import { PERIMETER_BLUE, PERIMETER_GREEN } from "../map/perimeter.js";
 
 const ATTACK_BALANCE = 1.6;
 const RETREAT_BALANCE = 1.0;
@@ -16,7 +17,7 @@ const IS_STRONG_ENEMY = {
 };
 
 /*
-Battles start in WATCH mode. When there are no battle lines they go back to WATCH mode.
+Battles start in WATCH mode.
 
 # While building the army
 While battle balance is not sufficient for attacking, the battle is in RALLY mode.
@@ -31,24 +32,22 @@ The other battles will behave as while building the army.
 export default function(battle) {
   let mode = Battle.MODE_WATCH;
 
-  if (battle.zone.alertLevel <= ALERT_YELLOW) {
+  if (battle.front.alertLevel <= ALERT_YELLOW) {
     // This is the case when preparing for defence or making an ambush
     mode = Battle.MODE_RALLY;
-  } else if (battle.lines.length) {
-    if ((Memory.DeploymentOutreach >= Memory.DeploymentOutreachFullOffense) && isPrimaryBattle(battle)) {
-      mode = maxoutTransition(battle);
-    } else {
-      mode = normalTransition(battle);
-    }
+  } else if ((Memory.DeploymentOutreach >= Memory.DeploymentOutreachFullOffense) && isPrimaryBattle(battle)) {
+    mode = maxoutTransition(battle);
+  } else {
+    mode = normalTransition(battle);
   }
 
-  if ((mode === Battle.MODE_MARCH) && ((battle.zone.tier.level === 1) || areMarchingFightersInFireRange(battle))) {
+  if ((mode === Battle.MODE_MARCH) && ((battle.front.perimeterLevel <= PERIMETER_BLUE) || areMarchingFightersInFireRange(battle))) {
     mode = Battle.MODE_FIGHT;
   }
 
   // TODO: Re-examine matches with Apidae before enabling
   // Stalkers clamped on ramp and only 2-3 were attacking while the rest couldn't reach the targets.
-  // if ((mode === Battle.MODE_FIGHT) && shouldWearEnemies(battle.zone)) {
+  // if ((mode === Battle.MODE_FIGHT) && shouldWearEnemies(battle.front)) {
   //   mode = Battle.MODE_WEAR;
   // }
 
@@ -77,8 +76,8 @@ function normalTransition(battle) {
   }
 
   // Check if we are defending our bases
-  if (battle.zone.tier.level === 1) {
-    if ((battle.deployedBalance >= DEFEND_BALANCE) || (battle.zone == Depot.home) || areEnoughFightersRallied(battle)) {
+  if (battle.front.perimeterLevel <= PERIMETER_BLUE) {
+    if ((battle.deployedBalance >= DEFEND_BALANCE) || (battle.front == Depot.home) || areEnoughFightersRallied(battle)) {
       return Battle.MODE_FIGHT;
     } else {
       return Battle.MODE_RALLY;
@@ -86,8 +85,8 @@ function normalTransition(battle) {
   }
 
   // Check if we are defending the approaches to our bases
-  if (battle.zone.tier.level === 2) {
-    if ((battle.deployedBalance >= RETREAT_BALANCE) || isFrontlineAtHomeBase(battle)) {
+  if (battle.front.perimeterLevel <= PERIMETER_GREEN) {
+    if ((battle.deployedBalance >= RETREAT_BALANCE) || (battle.front === Depot.home)) {
       return Battle.MODE_FIGHT;
     } else {
       return Battle.MODE_RALLY;
@@ -143,7 +142,7 @@ function areEnoughFightersRallied(battle) {
     const warrior = fighter.assignee;
 
     if (warrior && warrior.isAlive) {
-      if (battle.zones.has(warrior.zone)) {
+      if (battle.sectors.has(warrior.sector)) {
         deployed++;
       } else {
         rallying++;
@@ -156,14 +155,6 @@ function areEnoughFightersRallied(battle) {
   return (deployed > 20) || (deployed > rallying * 4);
 }
 
-function isFrontlineAtHomeBase(battle) {
-  for (const line of battle.lines) {
-    if (line.zone === Depot.home) {
-      return true;
-    }
-  }
-}
-
 function isSmallFight(battle) {
   let warriorCount = 0;
   let enemyCount = 0;
@@ -171,13 +162,13 @@ function isSmallFight(battle) {
   for (const fighter of battle.fighters) {
     const warrior = fighter.assignee;
 
-    if (warrior && warrior.isAlive && battle.zones.has(warrior.zone)) {
+    if (warrior && warrior.isAlive && battle.sectors.has(warrior.sector)) {
       warriorCount++;
     }
   }
 
-  for (const one of battle.zones) {
-    for (const enemy of one.threats) {
+  for (const sector of battle.sectors) {
+    for (const enemy of sector.threats) {
       if (IS_STRONG_ENEMY[enemy.type.name]) return false;
 
       if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
@@ -225,8 +216,8 @@ function getGroundHittingEnemiesOrDummies(battle) {
   const hitters = new Set();
   const dummies = new Set();
 
-  for (const zone of battle.zones) {
-    for (const threat of zone.threats) {
+  for (const sector of battle.sectors) {
+    for (const threat of sector.threats) {
       if (threat.type.damageGround) {
         hitters.add(threat);
       } else {

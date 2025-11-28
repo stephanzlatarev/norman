@@ -44,26 +44,13 @@ function shouldFindNextExpansionLocation() {
 function findNextExpansionLocation() {
   const depots = Depot.list().filter(depot => !depot.depot);
 
-  let bestDistance = Infinity;
   let expo = null;
 
   for (const depot of depots) {
-    const groundDistance = depot.distance.get(Depot.home);
-    const airDistance = calculateDistance(depot, Depot.home);
-    const distance = groundDistance + groundDistance + airDistance;
-
-    if (distance < bestDistance) {
-      bestDistance = distance;
+    if (!expo || (depot.perimeterLevel < expo.perimeterLevel)) {
       expo = depot;
     }
   }
 
   return expo;
-}
-
-function calculateDistance(a, b) {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-
-  return Math.sqrt(dx * dx + dy * dy);
 }

@@ -31,11 +31,10 @@ function shouldWallBase() {
   if (Memory.DeploymentOutreach > Memory.DeploymentOutreachNormalDefense) return false;
   if (Memory.FlagEnemyProxyNexus) return false;
 
-  // Wall the base only if the battle frontline is the home base
+  // Wall the base only if the only battle is at the home base
   for (const battle of Battle.list()) {
-    if (battle.zone !== Depot.home) return false;
-    if (battle.front.size !== 1) return false;
-    if (!battle.front.has(Depot.home)) return false;
+    if (battle.front !== Depot.home) return false;
+    if (battle.rally !== Depot.home) return false;
   }
 
   return true;

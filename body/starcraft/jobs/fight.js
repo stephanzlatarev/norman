@@ -1,7 +1,6 @@
 import Job from "../job.js";
 import Order from "../order.js";
 import Battle from "../battle/battle.js";
-import { getHopZone } from "../map/route.js";
 import Resources from "../memo/resources.js";
 
 const KITING_RANGE = 2;
@@ -18,17 +17,17 @@ export default class Fight extends Job {
     this.battle = battle;
     this.zone = station.zone;
     this.station = station;
-    this.summary = "Fight " + battle.zone.name;
+    this.summary = "Fight " + battle.front.name;
     this.details = this.summary;
     this.isBusy = false;
-    this.hopping = false;
+    this.isDeploying = false;
 
     battle.fighters.push(this);
   }
 
   updateBattle(battle) {
     this.battle = battle;
-    this.summary = "Fight " + battle.zone.name;
+    this.summary = "Fight " + battle.front.name;
     this.details = this.summary;
   }
 
@@ -37,39 +36,6 @@ export default class Fight extends Job {
       this.zone = station.zone;
       this.station = station;
     }
-  }
-
-  accepts(unit) {
-    if (!unit.zone || !this.battle.lines.length) {
-      return false;
-    } else if (this.battle.zones.has(unit.zone)) {
-      // If already in the battle zone, the warrior must be closest to this fight's station's battle line rather than any other battle line
-      const closestDistance = calculateSquareDistance(unit.body, this.zone);
-
-      for (const line of this.battle.lines) {
-        if (this.zone === line.zone) continue;
-        if (calculateSquareDistance(unit.body, line.zone) < closestDistance) return false;
-      }
-    }
-
-    return true;
-  }
-  
-  distance(unit) {
-    if (this.zone && unit && this.battle && !this.battle.hasRallyPoints()) {
-      return calculateSquareDistance(unit.body, this.zone);
-    }
-
-    const distance = super.distance(unit);
-
-    if ((distance === Infinity) && (this.priority === 100)) {
-      // Priority 100 means this is the focus battle.
-      // All warriors must be considered for this battle.
-      // Add 1000 to the distance to make sure warriors with safe path are prioritized.
-      return SQUARE_DISTANCE_BLOCKED_PATH + calculateSquareDistance(unit.body, this.zone);
-    }
-
-    return distance;
   }
 
   execute() {
@@ -85,7 +51,7 @@ export default class Fight extends Job {
     }
 
     const isAttacking = (warrior && target && warrior.order && (warrior.order.targetUnitTag === target.tag));
-    const isDeployed = this.battle.zones.has(warrior.zone);
+    const isDeployed = this.battle.sectors.has(warrior.sector);
 
     if ((isDeployed || isAttacking) && this.shouldAttack()) {
       // Attack
@@ -95,7 +61,7 @@ export default class Fight extends Job {
         this.goAttack();
       } else {
         this.details = getDetails(this, "charge");
-        Order.attack(warrior, (this.station.zone === this.battle.zone) ? this.station : this.battle.zone.rally);
+        Order.attack(warrior, (this.station.zone === this.battle.front) ? this.station : this.battle.front.rally);
       }
 
       if (REASSIGNABLE_WARRIORS.has(warrior.type.name)) {
@@ -104,7 +70,7 @@ export default class Fight extends Job {
         this.isBusy = isAttacking;
       }
 
-      this.hopping = false;
+      this.isDeploying = false;
     } else if (isDeployed) {
       // Deployed but shouldn't attack yet
 
@@ -114,7 +80,7 @@ export default class Fight extends Job {
           Order.attack(warrior, target);
         } else {
           this.details = getDetails(this, "stalk");
-          this.goStalk();
+          Order.move(warrior, this.station);
         }
       } else if (this.shouldMarch()) {
         this.details = getDetails(this, "march");
@@ -131,12 +97,13 @@ export default class Fight extends Job {
       }
 
       this.isBusy = false;
-      this.hopping = false;
+      this.isDeploying = false;
     } else {
       this.details = getDetails(this, "deploy");
       this.goDeploy();
 
       this.isBusy = false;
+      this.isDeploying = true;
     }
   }
 
@@ -186,7 +153,7 @@ export default class Fight extends Job {
   }
 
   shouldMarch() {
-    return this.assignee && (this.battle.mode === Battle.MODE_MARCH) && (this.target || (this.assignee.zone !== this.battle.zone));
+    return this.assignee && (this.battle.mode === Battle.MODE_MARCH) && (this.target || (this.assignee.zone !== this.battle.front));
   }
 
   // Warrior should keep distance if it entered the fire range of the enemy or its shields are not full
@@ -260,22 +227,10 @@ export default class Fight extends Job {
     const warrior = this.assignee;
     const station = this.station;
 
-    // Make sure pecularities in the map don't make the warrior hop back and forth between two zones
-    // When the warrior starts a hop to another zone, it should reach it before changing course
-    if (this.hopping && (this.hopping.to === station.zone) && (warrior.zone !== this.hopping.via) && (this.hopping.via.alertLevel <= this.hopping.alertLevel)) {
-      this.details += " hopping to " + this.hopping.to.name + " via " + this.hopping.via.name;
-      return Order.move(warrior, this.hopping.via, Order.MOVE_CLOSE_TO);
-    }
+    // TODO: Calculate safe path and use this.isDeploying to hop through zones.
+    // TODO: Recalculate if zones changed alert level.
 
-    const hop = getHopZone(warrior.cell, station);
-
-    if (hop) {
-      this.hopping = { via: hop, to: station.zone, alertLevel: hop.alertLevel };
-      Order.move(warrior, hop.rally, Order.MOVE_CLOSE_TO);
-    } else {
-      this.hopping = false;
-      Order.move(warrior, station, Order.MOVE_CLOSE_TO);
-    }
+    Order.move(warrior, station, Order.MOVE_CLOSE_TO);
   }
 
   goMarch() {
@@ -309,36 +264,7 @@ export default class Fight extends Job {
       // Make sure the spread movement is counted as marching
       marching.isMarching = true;
 
-      Order.move(warrior, this.target || this.battle.zone.rally);
-    }
-  }
-
-  // The warrior should go outside of fire range and stay there.
-  // The logic here assumes the closest neighbor is outside fire range or at least
-  goStalk() {
-    const warrior = this.assignee;
-    const target = this.target;
-    const zone = warrior.zone;
-    const wt = Math.sqrt(calculateSquareDistance(warrior.body, target.body));
-
-    let safestNeighbor;
-    let safestRatio = Infinity;
-
-    for (const neighbor of zone.range.front) {
-      const nt = Math.sqrt(calculateSquareDistance(target.body, neighbor));
-      if (nt < 6) continue; // Avoid division by zero but also don't consider neighbors within fire range of enemy 
-
-      const nw = Math.sqrt(calculateSquareDistance(warrior.body, neighbor));
-      const ratio = (nw + wt) / nt;
-
-      if (ratio < safestRatio) {
-        safestNeighbor = neighbor;
-        safestRatio = ratio;
-      }
-    }
-
-    if (safestNeighbor) {
-      Order.move(warrior, safestNeighbor);
+      Order.move(warrior, this.target || this.battle.front.rally);
     }
   }
 
@@ -356,7 +282,7 @@ export default class Fight extends Job {
 }
 
 function getDetails(fight, mode) {
-  const details = ["Fight", fight.zone.name, ">", fight.battle.zone.name];
+  const details = ["Fight", fight.zone.name, ">", fight.battle.front.name];
   const target = fight.target;
 
   if (target) {
@@ -374,7 +300,7 @@ function shouldMoveToCoolDown(warrior) {
 
 function shouldLeaveTarget(warrior, battle, station, target) {
   if (!station.isHoldStation) return false;
-  if (battle.zone !== station.zone) return false;
+  if (battle.front !== station.zone) return false;
   if (!target.type.movementSpeed) return false;
   if ((warrior.zone === station.zone) && warrior.cell.isPlot) return false;
 

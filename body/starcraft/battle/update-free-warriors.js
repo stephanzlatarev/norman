@@ -9,27 +9,24 @@ export default function() {
     if (warrior.job) continue;
     if (warrior.order.abilityId) continue;
 
-    Order.move(warrior, getClosestFrontlineZone(warrior));
+    Order.move(warrior, getClosestBattleRally(warrior));
   }
 }
 
-function getClosestFrontlineZone(warrior) {
-  let closestZone;
+function getClosestBattleRally(warrior) {
+  let closestRally;
   let closestDistance = Infinity;
 
   for (const battle of Battle.list()) {
-    for (const line of battle.lines) {
-      const zone = line.zone;
-      const distance = calculateSquareDistance(warrior.body, zone);
+    const distance = calculateSquareDistance(warrior.body, battle.rally);
 
-      if (distance < closestDistance) {
-        closestZone = zone;
-        closestDistance = distance;
-      }
+    if (distance < closestDistance) {
+      closestRally = battle.rally;
+      closestDistance = distance;
     }
   }
 
-  return closestZone;
+  return closestRally;
 }
 
 function calculateSquareDistance(a, b) {

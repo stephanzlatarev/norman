@@ -87,8 +87,8 @@ function findWallRamp() {
     }
   }
 
-  for (const zone of Depot.home.range.fire) {
-    for (const cell of zone.cells) {
+  for (const sector of Depot.home.horizon) {
+    for (const cell of sector.cells) {
       if (cell.rampVisionLevel >= 0) {
         ramp.push(cell);
       }
@@ -115,21 +115,19 @@ function findForceFieldPoints(ramp) {
 function isDefending() {
   if (Depot.home.enemies.size) return true;
 
-  for (const zone of Depot.home.range.fire) {
-    if (zone.enemies.size) return true;
+  for (const sector of Depot.home.horizon) {
+    if (sector.enemies.size) return true;
   }
 }
 
 function selectForceFieldPoint() {
   let countAt0 = 0;
   let countAt2 = 0;
-  let countAt4 = Depot.home.enemies.size;
+  let countAt4 = 0;
 
-  for (const zone of Depot.home.range.fire) {
-    if (zone === Depot.home) continue;
-
-    for (const enemy of zone.enemies) {
-      if (enemy.cell.rampVisionLevel >= 4) {
+  for (const sector of Depot.home.horizon) {
+    for (const enemy of sector.enemies) {
+      if ((enemy.zone === Depot.home) || (enemy.cell.rampVisionLevel >= 4)) {
         countAt4++;
         countAt2++;
         countAt0++;

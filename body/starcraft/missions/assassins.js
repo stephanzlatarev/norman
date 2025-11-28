@@ -58,6 +58,7 @@ function escapeZone(assassin, zone) {
   let bestDistance;
   let bestHasDetection;
 
+  // TODO: Use zone exits instead of neighbors.
   for (const neighbor of zone.neighbors) {
     const distance = calculateSquareDistance(assassin.body, neighbor);
 

@@ -2,7 +2,7 @@ import Mission from "../mission.js";
 import Build from "../jobs/build.js";
 import { ALERT_YELLOW } from "../map/alert.js";
 import Board from "../map/board.js";
-import Tiers from "../map/tier.js";
+import Zone from "../map/zone.js";
 import Resources from "../memo/resources.js";
 
 const AVOID_LOOPS = 20 * 22.4; // 20 seconds
@@ -25,15 +25,14 @@ export default class SpendBankMission extends Mission {
       }
     }
 
-    // Ensure tiers are calculated
-    if (!Tiers.length) return;
-
     // Check if bank is not full yet
     if (Resources.supplyUsed < 195) return;
     if (Resources.minerals < 800) return;
 
+    const zone = findZone();
+
     // Building photon cannons is the first priority
-    const plotForCannon = findCannonPlot();
+    const plotForCannon = findCannonPlot(zone);
 
     if (plotForCannon) {
       this.job = new Build("PhotonCannon", plotForCannon);
@@ -42,7 +41,7 @@ export default class SpendBankMission extends Mission {
     }
 
     // Building pylons is the second priority
-    const plotForPylon = findPylonPlot();
+    const plotForPylon = findPylonPlot(zone);
 
     if (plotForPylon) {
       this.job = new Build("Pylon", plotForPylon);
@@ -52,33 +51,39 @@ export default class SpendBankMission extends Mission {
 
 }
 
-function findPylonPlot() {
-  for (const tier of Tiers) {
-    for (const zone of tier.zones) {
-      if (!zone.isDepot && (zone.alertLevel <= ALERT_YELLOW) && !shouldAvoidZone(zone) && isPlotFree(zone.rally)) {
-        return zone.rally;
-      }
+function findZone() {
+  let best = null;
+
+  for (const zone of Zone.list()) {
+    if (zone.isDepot) continue;
+    if (zone.alertLevel > ALERT_YELLOW) continue;
+    if (zone.buildings.size > 3) continue;
+    if (shouldAvoidZone(zone)) continue;
+
+    if (!best || (zone.permieterLevel < best.permieterLevel)) {
+      best = zone;
     }
+  }
+
+  return best;
+}
+
+function findPylonPlot(zone) {
+  if (!zone.isDepot && (zone.alertLevel <= ALERT_YELLOW) && !shouldAvoidZone(zone) && isPlotFree(zone.rally)) {
+    return zone.rally;
   }
 }
 
-function findCannonPlot() {
-  for (const tier of Tiers) {
-    for (const zone of tier.zones) {
-      if (zone.alertLevel > ALERT_YELLOW) continue;
-      if (zone.buildings.size > 1) continue;
-      if (shouldAvoidZone(zone)) continue;
-      if (!isZonePowered(zone)) continue;
+function findCannonPlot(zone) {
+  if (!isZonePowered(zone)) return;
 
-      const top = { x: zone.rally.x, y: zone.rally.y - 2 };
+  const top = { x: zone.rally.x, y: zone.rally.y - 2 };
 
-      if (isPlotFree(top)) return top;
+  if (isPlotFree(top)) return top;
 
-      const bottom = { x: zone.rally.x, y: zone.rally.y + 2 };
+  const bottom = { x: zone.rally.x, y: zone.rally.y + 2 };
 
-      if (isPlotFree(bottom)) return bottom;
-    }
-  }
+  if (isPlotFree(bottom)) return bottom;
 }
 
 function isZonePowered(zone) {

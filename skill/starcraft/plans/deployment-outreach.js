@@ -140,7 +140,7 @@ function selectDeploymentOutreach() {
 
 function areFightingBattlesInOurBases() {
   for (const battle of Battle.list()) {
-    if (battle.zone.depot && battle.zone.depot.isActive && (battle.zone.enemies.size >= 5)) {
+    if (battle.front.depot && battle.front.depot.isActive && (battle.front.enemies.size >= 5)) {
       return true;
     }
   }

@@ -223,8 +223,12 @@ function addToZone(image) {
 
     image.cell = cell;
 
-    if (cell.zone && cell.zone.cell) { // TODO: Make sure all zones have a central cell and remove "&& cell.zone.cell" part of the condition here
+    cell.sector.addUnit(image);
+
+    if (cell.zone) {
       cell.zone.addUnit(image);
+    } else if (image.zone) {
+      image.zone.removeUnit(image);
     }
   }
 }
@@ -234,9 +238,8 @@ function removeImage(image, group, tag) {
     image.isAlive = false;
     group.delete(tag);
 
-    if (image.zone) {
-      image.zone.removeUnit(image);
-    }
+    if (image.sector) image.sector.removeUnit(image);
+    if (image.zone) image.zone.removeUnit(image);
   }
 }
 

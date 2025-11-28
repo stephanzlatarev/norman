@@ -1,6 +1,5 @@
 import Order from "./order.js";
 import Types from "./types.js";
-import { getHopDistance } from "./map/route.js";
 import Priority from "./memo/priority.js";
 
 const jobs = new Set();
@@ -115,9 +114,7 @@ export default class Job {
     if (!unit) return Infinity;
     if (!this.zone) return 0;
 
-    if (unit.body.isGround) return getHopDistance(unit.cell, this.zone.cell);
-
-    return 0;
+    return Math.abs(unit.body.x - this.zone.x) + Math.abs(unit.body.y - this.zone.y);
   }
 
   // Executes one step of the job.

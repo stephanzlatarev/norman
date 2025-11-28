@@ -12,6 +12,9 @@ export default class Battle {
   static MODE_WATCH = "watch";
   static MODE_WEAR = "wear";
 
+  front; // The target zone of the battle
+  rally; // The rally zone of the battle
+
   enemyHealth = 0;
   enemyStrength = 0;
   recruitedStrength = 0;
@@ -22,37 +25,40 @@ export default class Battle {
   pastmode = Battle.MODE_WATCH;
   mode = Battle.MODE_WATCH;
 
-  lines = [];
-  front = new Set();
-  zones = new Set();
+  sectors = new Set();
+  stations = [];
 
   detector;
   fighters;
 
-  constructor(zone) {
-    this.zone = zone;
-    this.zones.add(zone);
-    this.priority = 100 - zone.tier.level;
-
+  constructor(priority, front, rally) {
     this.detector = null;
     this.fighters = [];
 
-    battles.push(this);
+    this.move(priority, front, rally);
 
+    battles.push(this);
     traceBattle(this, "begins");
   }
 
-  hasRallyPoints() {
-    return !this.lines || (this.lines.length !== 1) || (this.lines[0] !== this.zone);
-  }
+  move(priority, front, rally) {
+    rally = rally || front;
 
-  move(zone) {
-    if (this.zone !== zone) {
-      traceBattle(this, "moves to " + zone.name);
+    if ((this.front !== front) || (this.rally !== rally)) {
+      if (this.front) traceBattle(this, "moves to " + rally.name + " -> " + front.name);
 
-      this.zone = zone;
-      this.zones.add(zone);
-      this.priority = 100 - zone.tier.level;
+      this.front = front;
+      this.rally = rally;
+      this.priority = priority;
+
+      this.sectors.clear();
+      for (const sector of this.front.horizon) {
+        this.sectors.add(sector);
+      }
+      for (const sector of this.rally.horizon) {
+        this.sectors.add(sector);
+      }
+      // TODO: Connect sectors between front and rally
 
       if (this.detector) {
         this.detector.updateBattle(this);
@@ -62,6 +68,8 @@ export default class Battle {
         fighter.updateBattle(this);
       }
     }
+
+    return this;
   }
 
   go(mode) {

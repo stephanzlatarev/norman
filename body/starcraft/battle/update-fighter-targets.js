@@ -45,13 +45,13 @@ class TargetMatrix {
       this.warriorToFightJob.set(warrior, fighter);
     }
 
-    for (const zone of battle.zones) {
-      for (const threat of zone.threats) {
+    for (const sector of battle.sectors) {
+      for (const threat of sector.threats) {
         if (!threat.type.isWarrior) continue;
         if (!isValidTarget(threat)) continue;
 
         // Treat the enemy warriors that are in the battle zone and those that have range over my warriors as primary targets
-        if ((zone === battle.zone) || isEnemyWarriorAbleToAttack(battle.zone, threat, groundWarriors)) {
+        if ((threat.zone === battle.front) || isEnemyWarriorAbleToAttack(battle.front, threat, groundWarriors)) {
           this.primaryTargets.push(threat);
         }
       }
@@ -134,14 +134,14 @@ function isValidTarget(target) {
   return true;
 }
 
-function isEnemyWarriorAbleToAttack(battleZone, enemy, groundWarriors) {
+function isEnemyWarriorAbleToAttack(zone, enemy, groundWarriors) {
   if (enemy.type.rangeGround < 1) return false;
 
   const groundRange = enemy.type.rangeGround + enemy.body.r + 1; // Use 1 for body radius of my warriors to reduce calculations
   const squareGroundRange = groundRange * groundRange;
 
   for (const warrior of groundWarriors) {
-    if (warrior.zone !== battleZone) continue;
+    if (warrior.zone !== zone) continue;
     if (calculateSquareDistance(enemy.body, warrior.body) <= squareGroundRange) return true;
   }
 }
@@ -182,7 +182,7 @@ function assignRemainingWarriors(battle, matrix) {
     const warrior = fighter.assignee;
 
     if (warrior && !matrix.isWarriorAssigned(warrior)) {
-      fighter.target = getClosestVisibleTarget(warrior, matrix.primaryTargets) || getClosestVisibleTarget(warrior, battle.zone.threats);
+      fighter.target = getClosestVisibleTarget(warrior, matrix.primaryTargets) || getClosestVisibleTarget(warrior, battle.front.threats);
     }
   }
 }
@@ -192,15 +192,15 @@ function setKiteTargets(battle) {
     const warrior = fighter.assignee;
 
     if (warrior) {
-      fighter.target = getPrimaryThreat(warrior, battle.zone.threats) ||
+      fighter.target = getPrimaryThreat(warrior, battle.front.threats) ||
         getClosestVisibleTarget(warrior, warrior.zone.threats) ||
-        getClosestVisibleTarget(warrior, battle.zone.threats);
+        getClosestVisibleTarget(warrior, battle.front.threats);
 
       if (!fighter.target) {
         const targets = [];
 
-        for (const zone of battle.zones) {
-          targets.push(...zone.threats);
+        for (const sector of battle.sectors) {
+          targets.push(...sector.threats);
         }
 
         fighter.target = getClosestVisibleTarget(warrior, targets);

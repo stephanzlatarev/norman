@@ -14,8 +14,8 @@ function calculateEnemyStrength(battle) {
   let armyHealth = 0;
   let totalHealth = 0;
 
-  for (const one of battle.zones) {
-    for (const enemy of one.threats) {
+  for (const sector of battle.sectors) {
+    for (const enemy of sector.threats) {
       totalHealth += enemy.armor.total;
 
       if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
@@ -49,7 +49,7 @@ function calculateWarriorStrength(battle, isDeployed) {
     const warrior = fighter.assignee;
 
     if (!warrior || !warrior.isAlive) continue;
-    if (isDeployed && !battle.zones.has(warrior.zone)) continue;
+    if (isDeployed && !battle.sectors.has(warrior.sector)) continue;
 
     warriorDamage += warrior.type.damageGround;
     warriorHealth += warrior.armor.total;

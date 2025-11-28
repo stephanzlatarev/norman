@@ -36,18 +36,15 @@ export default function() {
 export function traceBattle(battle, event) {
   const trace = [];
 
-  trace.push("[battle]", battle.zone.name);
+  trace.push("[battle]", battle.front.name);
 
   if (event) trace.push(event);
 
-  trace.push("tier:", battle.zone.tier.level);
-  trace.push("zones:", [...battle.zones].map(zone => zone.name).join());
+  trace.push("perimeter:", battle.front.perimeterLevel);
+  trace.push("rally:", battle.rally.name);
+  trace.push("sectors:", [...battle.sectors].map(sector => sector.name).join());
   trace.push("balance:", battle.deployedBalance.toFixed(2), "/", battle.recruitedBalance.toFixed(2));
   trace.push("mode:", battle.mode);
-
-  trace.push("front:", [...battle.front].map(zone => zone.name).join());
-  trace.push("lines:");
-  traceLines(trace, battle);
 
   trace.push("detector:");
   traceDetector(trace, battle.detector);
@@ -59,39 +56,6 @@ export function traceBattle(battle, event) {
   traceThreats(trace, battle);
 
   console.log(trace.join(" "));
-}
-
-function traceLines(trace, battle) {
-  const lines = new Set();
-
-  for (const line of battle.lines) {
-    let count = 0;
-
-    for (const fighter of battle.fighters) {
-      if (fighter.zone === line.zone) {
-        count++;
-      }
-    }
-
-    trace.push(line.zone.name, count, "/", line.fighters.length);
-    lines.add(line.zone);
-  }
-
-  const inactive = new Map();
-
-  for (const fighter of battle.fighters) {
-    if (!lines.has(fighter.zone)) {
-      increment(inactive, fighter.zone.name);
-    }
-  }
-
-  if (inactive.size) {
-    trace.push("|");
-
-    for (const [zone, count] of inactive) {
-      trace.push(zone, count);
-    }
-  }
 }
 
 function traceDetector(trace, detector) {
@@ -113,7 +77,7 @@ function traceFighters(trace, battle) {
     if (fighter.assignee) {
       increment(count, fighter.assignee.zone.name);
 
-      if (battle.zones.has(fighter.assignee.zone)) {
+      if (battle.sectors.has(fighter.assignee.sector)) {
         deploy.add(fighter.assignee.zone.name);
       } else {
         rally.add(fighter.assignee.zone.name);
@@ -159,7 +123,7 @@ function traceFighters(trace, battle) {
 function traceThreats(trace, battle) {
   const threats = new Map();
 
-  for (const one of battle.zones) {
+  for (const one of battle.sectors) {
     for (const enemy of one.threats) {
       increment(threats, enemy.type.name);
     }
@@ -198,13 +162,13 @@ function traceWarriorAssignments() {
   }
 }
 
-function isWarriorDeployed(zone, fight) {
-  if (!zone) return "?";
+function isWarriorDeployed(sector, fight) {
+  if (!sector) return "?";
   if (!fight) return "-";
   if (!fight.battle) return "no battle";
-  if (!fight.battle.zones) return "no battle zones";
+  if (!fight.battle.sectors) return "no battle sectors";
 
-  return fight.battle.zones.has(zone) ? "yes" : "no";
+  return fight.battle.sectors.has(sector) ? "yes" : "no";
 }
 
 function getWarriorTarget(fight) {

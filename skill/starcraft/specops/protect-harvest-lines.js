@@ -1,4 +1,4 @@
-import { Depot, Job, Order, Tiers } from "./imports.js";
+import { Depot, Job, Order } from "./imports.js";
 
 const jobs = new Set();
 
@@ -77,10 +77,9 @@ function countJobs(zone) {
 
 function openJobs(zone) {
   const neighbor = pickDepotZone(zone);
-  if (!neighbor) return;
+  if (!neighbor || !neighbor.minerals.size) return;
 
   const minerals = [...neighbor.minerals];
-  if (!minerals.length) return;
 
   for (const job of Job.list()) {
     if (jobs.has(job)) continue;
@@ -108,9 +107,7 @@ function closeJobs(zone) {
 }
 
 function pickDepotZone(zone) {
-  for (const tier of Tiers) {
-    for (const one of tier.zones) {
-      if ((one !== zone) && one.isDepot && one.minerals.size) return one;
-    }
+  for (const one of Depot.list()) {
+    if ((one !== zone) && one.isDepot && one.minerals.size) return one;
   }
 }

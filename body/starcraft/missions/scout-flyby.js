@@ -15,7 +15,7 @@ const COST_HALLUCINATION = 75;
 const TWO_MINUTES = 22.4 * 60 * 2;
 
 // TODO: Maintain up to 2 hallucinated phoenixes at a time for better map coverage
-// TODO: Create scouts when visible enemies are only at tier 2 or higher
+// TODO: Create scouts when visible enemies are only outside our perimeter
 // TODO: Maneuver the scout in zones where there are enemies that can shoot air
 export default class ScoutFlyby extends Mission {
 

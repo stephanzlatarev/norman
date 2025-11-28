@@ -48,8 +48,8 @@ function shouldBlockWall() {
   if (Depot.home.enemies.size) return true;
 
   // If any enemy is in firing range, block the wall
-  for (const zone of Depot.home.range.fire) {
-    if (zone.enemies.size) return true;
+  for (const sector of Depot.home.horizon) {
+    if (sector.enemies.size) return true;
   }
 
   // If any warrior is attacking, block the wall gate so that it doesn't exit

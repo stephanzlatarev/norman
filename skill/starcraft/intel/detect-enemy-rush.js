@@ -3,7 +3,7 @@ import { ActiveCount, Depot, Enemy, Memory, Score, TotalCount, Units, VisibleCou
 const WAVE_STARTER_ENEMY_ARMY_LEVEL = 0.5;
 const ALERT_YELLOW = 4;
 const MAX_MOVE_OUT_ARMY_VALUE = 5000;
-const TIER_DEFENSIVE = 8;
+const PERIMETER_RED = 5;
 
 export const ENEMY_RUSH_NOT_EXPECTED = 0;
 export const ENEMY_RUSH_MODERATE_LEVEL = 1;
@@ -127,13 +127,12 @@ function isEnemyStructureDefensive(type, count) {
 
   for (const unit of Units.enemies().values()) {
     if (!unit.zone) continue;
-    if ((unit.type.name === type) && (unit.zone.tier.level > TIER_DEFENSIVE)) return true;
+    if ((unit.type.name === type) && (unit.zone.permieterLevel >= PERIMETER_RED)) return true;
   }
 
   return false;
 }
 
-let fireZones;
 let isInWave = false;
 let valueArmyAtWaveStart = 0;
 let killedValueArmyAtWaveStart = 0;
@@ -141,10 +140,6 @@ let lostValueArmyAtWaveStart = 0;
 let valueArmyAtMoveOut = 0;
 
 function isExpectingEnemyWaves() {
-  if (!fireZones) {
-    fireZones = [Depot.home, ...Depot.home.range.fire];
-  }
-
   if (isInWave) {
     const enemyArmyValue = Score.killedValueArmy - killedValueArmyAtWaveStart;
 
@@ -187,22 +182,22 @@ function didWaveStart() {
 function didWaveEnd() {
   let enemyCount = 0;
 
-  for (const zone of fireZones) {
-    enemyCount += zone.enemies.size;
+  for (const sector of Depot.home.horizon) {
+    enemyCount += sector.enemies.size;
   }
 
   return !enemyCount;
 }
 
 function isDamageTaken() {
-  for (const zone of fireZones) {
-    for (const building of zone.buildings) {
+  for (const sector of Depot.home.horizon) {
+    for (const building of sector.buildings) {
       if (building.isHit) return true;
     }
-    for (const warrior of zone.warriors) {
+    for (const warrior of sector.warriors) {
       if (warrior.isHit) return true;
     }
-    for (const worker of zone.workers) {
+    for (const worker of sector.workers) {
       if (worker.isHit) return true;
     }
   }
@@ -215,8 +210,8 @@ function areZerglingsApproaching() {
 }
 
 function arePhotonCannonsClose() {
-  for (const zone of Depot.home.range.fire) {
-    for (const enemy of zone.threats) {
+  for (const sector of Depot.home.horizon) {
+    for (const enemy of sector.threats) {
       if (enemy.type.name === "PhotonCannon") {
         return true;
       }

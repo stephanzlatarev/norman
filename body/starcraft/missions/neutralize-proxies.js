@@ -2,11 +2,10 @@ import Memory from "../../../code/memory.js";
 import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
-import Tiers from "../map/tier.js";
+import Depot from "../map/depot.js";
 import { ActiveCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
 
-const PROXY_TIERS = 4;
 const CANNON_ATTACKERS = 6;
 const NEXUS_ATTACKERS = 9;
 const PYLON_ATTACKERS = 6;
@@ -18,7 +17,6 @@ const PROXY_NEXUS_PROGRESS_THRESHOLD = 0.53;
 const TYPE_CANNON = "PhotonCannon";
 const TYPE_NEXUS = "Nexus";
 
-const zones = new Set();
 const neutralizeJobs = new Set();
 let patrolJob = null;
 
@@ -32,8 +30,6 @@ export default class NeutralizeProxiesMission extends Mission {
 
   run() {
     if (isMissionComplete) return;
-    if (!home || !zones.size) findHomeAndProxyZones();
-    if (!zones.size) return;
 
     if (!Memory.FlagEnemyProxyNexus && (ActiveCount.Zealot + ActiveCount.Stalker > 2)) {
       isMissionComplete = true;
@@ -167,14 +163,14 @@ class Patrol extends Job {
 
   getNextZone() {
     if (!this.route.length) {
-      for (const zone of zones) {
+      for (const zone of Depot.home.neighbors) {
         if (!zone.buildings.size) {
           this.route.push(zone);
         }
       }
 
       if (!this.route.length) {
-        this.route = [...zones];
+        this.route = [...Depot.home.neighbors];
       }
     }
 
@@ -189,20 +185,6 @@ class Patrol extends Job {
 
 }
 
-function findHomeAndProxyZones() {
-  if ((Tiers.length < PROXY_TIERS) || !Tiers[0].zones.size) return;
-
-  for (let i = 0; i < PROXY_TIERS; i++) {
-    for (const zone of Tiers[i].zones) {
-      zones.add(zone);
-
-      if (!home && zone.depot) {
-        home = zone;
-      }
-    }
-  }
-}
-
 function findProxy() {
   let isHome = false;
   const buildings = [];
@@ -212,7 +194,7 @@ function findProxy() {
   const warriors = [];
   const workers = [];
 
-  for (const zone of zones) {
+  for (const zone of Depot.home.neighbors) {
     for (const enemy of zone.threats) {
       if (zone === home) isHome = true;
 

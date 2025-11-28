@@ -6,7 +6,7 @@ export default function(battle) {
   const hasDetector = battle.detector && battle.detector.assignee;
 
   if (isAssault && !hasDetector) {
-    if (ignoreInvisibleMobileThreats(battle.zone)) {
+    if (ignoreInvisibleMobileThreats(battle.front)) {
       traceBattle(battle, "cleared invisible mobile threats");
     }
   }
