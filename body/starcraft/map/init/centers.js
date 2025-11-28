@@ -5,7 +5,9 @@ export function setCenter(cluster) {
 
   if (cluster.x && cluster.y) {
     center = Board.cell(cluster.x, cluster.y);
-  } else {
+  }
+
+  if (!center) {
     let sumx = 0;
     let sumy = 0;
     let count = 0;
@@ -18,7 +20,8 @@ export function setCenter(cluster) {
 
     const x = sumx / count;
     const y = sumy / count;
-    let center = Board.cell(x, y);
+
+    center = Board.cell(x, y);
 
     if (cluster.cells.has(center)) {
       cluster.setCenter(x, y);

@@ -1,6 +1,6 @@
-import Board from "./board.js";
-import Depot from "./depot.js";
-import Zone from "./zone.js";
+import Board from "../board.js";
+import Depot from "../depot.js";
+import Zone from "../zone.js";
 
 const WALL_PLOT = [
   "???    ",

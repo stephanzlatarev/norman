@@ -1,3 +1,4 @@
+import { findBorder } from "./borders.js";
 
 const HALL_RADIUS_MIN = 6;
 const HALL_CELLS_MIN = 2 * HALL_RADIUS_MIN * HALL_RADIUS_MIN + 4 * HALL_RADIUS_MIN + 1;
@@ -58,14 +59,8 @@ function getMargins(cells) {
   const space = new Set(cells);
   const margins = [];
 
-  let wave = new Set();
-
   // The first wave consist of all cells in the space that border with cells outside the space
-  for (const cell of space) {
-    if (isBorderCell(cell, space)) {
-      wave.add(cell);
-    }
-  }
+  let wave = new Set(findBorder(space));
 
   // Get wave by wave of cells that border the previous wave
   while (wave.size) {
@@ -89,14 +84,6 @@ function getMargins(cells) {
   }
 
   return margins;
-}
-
-function isBorderCell(cell, space) {
-  if (cell.rim.size < 8) return true;
-
-  for (const one of cell.rim) {
-    if (!space.has(one)) return true;
-  }
 }
 
 function getLevelArea(cell, level, cells) {

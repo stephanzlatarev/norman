@@ -1,22 +1,24 @@
 import Board from "../board.js";
 import Cluster from "./cluster.js";
+import { setBorder } from "./borders.js";
 import { setCenter } from "./centers.js";
 import { separateCurtains } from "./curtains.js";
 import { separateCurtainDepots, separateGroundDepots } from "./depots.js";
-import { validateGround } from "./grounds.js";
+import { addSkirt, validateGround } from "./grounds.js";
 import { separateHalls } from "./halls.js";
 import { separateTerrainHeights } from "./heights.js";
 import { expandHomebase } from "./homebase.js";
 import { separateIslands } from "./islands.js";
 import { initNames } from "./names.js";
+import { initNeighbors } from "./neighbors.js";
 import { dissolvePatches } from "./patches.js";
-import { initSectors, separateSectors } from "./sectors.js";
+import { initSectors } from "./sectors.js";
 import { validateRamp } from "./ramps.js";
+import { createSites } from "./sites.js";
 import { adjustCellsToUnits, getStartLocation } from "./units.js";
+import { createZones } from "./zones.js";
 
 export default function(gameInfo) {
-  const time = Date.now();
-
   Board.create(gameInfo);
 
   initSectors();
@@ -36,58 +38,15 @@ export default function(gameInfo) {
   processClusters(clusters, expandHomebase, isHomebase);
   processClusters(clusters, separateIslands, cluster => cluster.isGround);
   processClusters(clusters, separateHalls, cluster => cluster.isGround);
-  processClusters(clusters, separateSectors, cluster => cluster.isAir);
+  for (const one of clusters) if (one.isAir) clusters.delete(one);
   processClusters(clusters, setCenter, cluster => !cluster.isPatch);
   dissolvePatches(clusters);
+  processClusters(clusters, setBorder);
+  processClusters(clusters, addSkirt);
+  initNeighbors(clusters);
   initNames(clusters);
-
-  const elapsed = Date.now() - time;
-  console.log(`Map created in ${elapsed} ms`);
-
-  // WIP: BEGIN TRACING
-  const chooseColor = (cluster) => {
-    const a = Math.floor(Math.random() * 150);
-    const b = Math.floor(Math.random() * 150);
-    if (cluster.isAir) return "red"; //`rgb(255,${a},${b})`;
-    if (cluster.isDepot) return `rgb(${a},255,255)`;
-    if (cluster.isGround) return `rgb(${a},255,${b})`;
-    if (cluster.isCurtain) return `rgb(${a},${b},255)`;
-    if (cluster.isRamp) return `rgb(${a},${b},255)`;
-    if (cluster.isPatch) return `rgb(255,255,${b})`;
-    return "rgb(255,255,255)";
-  };
-  const isBorder = function(cell) {
-    for (const one of cell.rim) {
-      if (one.color !== cell.color) {
-        return true;
-      }
-    }
-  };
-  for (const cluster of clusters) {
-    let color = chooseColor(cluster);
-    for (const cell of cluster.cells) {
-      cell.color = color;
-    }
-    if (cluster.x && cluster.y) {
-      Board.cell(cluster.x, cluster.y).pin = { x: cluster.x, y: cluster.y };
-    }
-  }
-  for (const cluster of clusters) {
-    for (const cell of cluster.cells) {
-      cell.isBorder = isBorder(cell);
-    }
-  }
-
-  console.log("Total clusters:", clusters.size);
-  console.log(" -   Depots:", [...clusters].filter(c => c.isDepot).length);
-  console.log(" -  Grounds:", [...clusters].filter(c => c.isGround).length);
-  console.log(" -    Ramps:", [...clusters].filter(c => c.isRamp).length);
-  console.log(" -      Air:", [...clusters].filter(c => c.isAir).length);
-  console.log(" - Curtains:", [...clusters].filter(c => c.isCurtain).length);
-  console.log(" -  Patches:", [...clusters].filter(c => c.isPatch).length);
-  console.log(" -    Empty:", [...clusters].filter(c => c.isEmpty).length);
-  // WIP: END TRACING
-
+  createZones(clusters);
+  createSites();
 }
 
 function processClusters(clusters, transform, filter) {

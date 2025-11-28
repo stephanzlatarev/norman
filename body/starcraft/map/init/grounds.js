@@ -25,3 +25,16 @@ function findAirCluster(clusters) {
     if (cluster.isAir) return cluster;
   }
 }
+
+// Ground clusters get a skirt of air cells around them to allow ground units to move without leaving ground zones
+export function addSkirt(cluster) {
+  if (cluster.isAir) return;
+
+  for (const cell of cluster.border) {
+    for (const neighbor of cell.rim) {
+      if (neighbor.cluster.isAir) {
+        cluster.add(neighbor);
+      }
+    }
+  }
+}

@@ -5,15 +5,15 @@ import Order from "./order.js";
 import scheduleJobs from "./schedule.js";
 import Types from "./types.js";
 import Units from "./units.js";
-import Board from "./map/board.js";
+import initMap from "./map/init/init.js";
+import syncMap from "./map/sync/sync.js"
 import Depot from "./map/depot.js";
-import { createMap, syncMap } from "./map/sync.js";
 import countUnits from "./memo/count.js";
 import countEncounters from "./memo/encounters.js";
 import Enemy from "./memo/enemy.js";
 import Resources from "./memo/resources.js";
 import Score from "./memo/score.js";
-import Zone from "./map/zone.js";
+import log from "./trace/orders.js";
 
 const LOOPS_PER_STEP = 1;
 const LOOPS_PER_SECOND = 22.4;
@@ -43,7 +43,7 @@ export default class Game {
     Resources.sync(this.observation);
     Score.sync(this.observation);
 
-    createMap(gameInfo);
+    initMap(gameInfo);
 
     for (const location of gameInfo.startRaw.startLocations) {
       const base = [...Depot.list()].find(depot => ((depot.x === location.x) && (depot.y === location.y)));
@@ -77,7 +77,7 @@ export default class Game {
 
     this.observation = observation.observation;
 
-    syncMap(gameInfo);
+    syncMap(gameInfo, this.observation);
 
     Resources.sync(this.observation);
     Score.sync(this.observation);
@@ -86,19 +86,9 @@ export default class Game {
     countUnits(this.observation, this.me.race);
     countEncounters();
 
-    for (const zone of Zone.list()) {
-      zone.clearEffects();
-    }
-    for (const effect of this.observation.rawData.effects) {
-      for (const pos of effect.pos) {
-        const zone = Board.zone(pos.x, pos.y);
-        if (zone) zone.addEffect({ x: pos.x, y: pos.y, effect: effect.effectId, owner: effect.owner, radius: effect.radius });
-      }
-    }
-
     for (const job of Job.list()) {
       if (job.assignee && !job.assignee.isAlive) {
-        console.log(job.assignee.type.name, job.assignee.nick, "died on job", job.details);
+        log(job.assignee.type.name, job.assignee.nick, "died on job", job.details);
         job.close(false);
       }
     }
@@ -121,7 +111,7 @@ export default class Game {
 
     for (const job of Job.list()) {
       if (job.order && job.order.isAccepted && job.assignee && !job.assignee.order.abilityId) {
-        console.log("WARNING! Unit", job.assignee.type.name, job.assignee.nick, "idle on job", job.details);
+        log("WARNING! Unit", job.assignee.type.name, job.assignee.nick, "idle on job", job.details);
         job.close(false);
       }
     }
@@ -166,7 +156,7 @@ export default class Game {
 
     if (actions.length) {
       // if (actions.length > 99) {
-      //   console.log("WARNING: Reducing orders from", actions.length, "to 99. Skipping:", JSON.stringify(actions.slice(99)));
+      //   log("WARNING: Reducing orders from", actions.length, "to 99. Skipping:", JSON.stringify(actions.slice(99)));
       //   actions.length = 99;
       // }
 
@@ -177,10 +167,10 @@ export default class Game {
           orders[i].result(response.result[i]);
         }
 
-        console.log("Executed", String(actions.length).padStart(3, "0"), "orders:", JSON.stringify(actions));
+        log("Executed", String(actions.length).padStart(3, "0"), "orders:", JSON.stringify(actions));
 
         if ((response.result.length !== actions.length) || (response.result.some(code => (code !== 1)))) {
-          console.log("Received", String(response.result.length).padStart(3, "0"), "results:", JSON.stringify(response.result));
+          log("Received", String(response.result.length).padStart(3, "0"), "results:", JSON.stringify(response.result));
         }
       } catch (error) {
         console.log("ERROR: Failed to execute", actions.length, "orders");
