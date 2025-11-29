@@ -28,20 +28,30 @@ export function syncAlerts() {
     }
   }
 
-  // Set alert levels for zones according to the alert levels of their sectors
+  // Set alert levels for zones according to units present
   for (const zone of Zone.list()) {
     if (!zone.isDepot && !zone.isHall) continue;
 
-    let level = ALERT_WHITE;
+    if (zone.threats.size) {
+      zone.alertLevel = ALERT_RED;
+    } else if (zone.warriors.size) {
+      zone.alertLevel = ALERT_BLUE;
+    } else if (zone.buildings.size) {
+      zone.alertLevel = ALERT_GREEN;
+    } else {
+      zone.alertLevel = ALERT_WHITE;
+    }
+  }
+
+  // Increase alert level for zones based on neighboring sectors
+  for (const zone of Zone.list()) {
+    if (zone.alertLevel >= ALERT_YELLOW) continue;
 
     for (const sector of zone.sectors) {
-      if (sector.alertLevel > ALERT_WHITE) {
-        level = Math.max(sector.alertLevel, level);
-      } else if (sector.alertLevel < ALERT_WHITE) {
-        level = Math.min(sector.alertLevel, level);
+      if (sector.alertLevel >= ALERT_YELLOW) {
+        zone.alertLevel = ALERT_YELLOW;
+        break;
       }
     }
-
-    zone.alertLevel = level;
   }
 }
