@@ -1,3 +1,4 @@
+import Memory from "../../../code/memory.js";
 
 class Resources {
 
@@ -15,6 +16,8 @@ class Resources {
     this.supplyLimit = observation.playerCommon.foodCap;
     this.supplyUsed = observation.playerCommon.foodUsed;
     this.supply = (this.supplyLimit > this.supplyUsed) ? this.supplyLimit - this.supplyUsed : 0;
+
+    Memory.Loop = this.loop;
   }
 
 }
