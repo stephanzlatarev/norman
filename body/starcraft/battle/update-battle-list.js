@@ -2,6 +2,7 @@ import Memory from "../../../code/memory.js";
 import Battle from "./battle.js";
 import Enemy from "../memo/enemy.js";
 import Depot from "../map/depot.js";
+import Zone from "../map/zone.js";
 import { ALERT_RED, ALERT_YELLOW } from "../map/alert.js";
 import { PERIMETER_GREEN } from "../map/perimeter.js";
 import { TotalCount } from "../memo/count.js";
@@ -48,11 +49,13 @@ function listNormalDefenseBattles(battles) {
 function listExpandDefenseBattles(battles) {
   listBattlesInRedZones(battles, PERIMETER_GREEN);
 
-  const expansion = getBuildingExpansionZone() || getNextExpansionZone();
+  if (!battles.size) {
+    const expansion = getBuildingExpansionZone() || getNextExpansionZone();
 
-  if (expansion) {
-    // TODO: Select rally zone within our perimeter
-    battles.add(getBattle(MAX_BATTLE_PRIORITY, expansion));
+    if (expansion) {
+      // TODO: Select rally zone within our perimeter
+      battles.add(getBattle(MAX_BATTLE_PRIORITY, expansion));
+    }
   }
 }
 
@@ -81,20 +84,46 @@ function listOffenseBattles(battles) {
 }
 
 function listBattlesInRedZones(battles, perimeterLevelLimit) {
-  const zones = [];
-
-  for (const zone of Depot.list()) {
-    if (zone.perimeterLevel > perimeterLevelLimit) continue;
-    if (zone.alertLevel < ALERT_RED) continue;
-
-    zones.push(zone);
-  }
-
+  const hotspots = [];
   let priority = MAX_BATTLE_PRIORITY - 1;
 
-  for (const zone of zones) {
-    battles.add(getBattle(priority--, zone));
+  for (const zone of Zone.list()) {
+    if (!zone.isDepot && !zone.isHall) continue;
+
+    if (!zone.perimeterLevel) continue;
+    if (zone.perimeterLevel > perimeterLevelLimit) continue;
+
+    if (!zone.alertLevel) continue;
+    if (zone.alertLevel < ALERT_RED) continue;
+
+    const rally = findRallyZone(zone);
+
+    if (rally) hotspots.push({ zone, rally });
   }
+
+  hotspots.sort((a, b) => (a.zone.perimeterLevel - b.zone.perimeterLevel));
+
+  for (const one of hotspots) {
+    battles.add(getBattle(priority--, one.zone, one.rally));
+  }
+}
+
+function findRallyZone(zone) {
+  let rally;
+
+  for (const [neighbor, corridor] of zone.exits) {
+    if (!corridor.via.isPassage) continue;
+    if (!neighbor.perimeterLevel) continue;
+
+    if (!neighbor.alertLevel) continue;
+    if (neighbor.alertLevel >= ALERT_RED) continue;
+
+    if (!rally || (neighbor.perimeterLevel < rally.perimeterLevel)) {
+      rally = neighbor;
+    }
+  }
+
+  return rally;
 }
 
 function findFrontBaseZone() {
