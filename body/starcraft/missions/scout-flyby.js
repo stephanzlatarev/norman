@@ -122,7 +122,7 @@ class Flyby extends Job {
     // Check if hallucination expired
     if (!scout.isAlive) return this.close(true);
 
-    // Update last scout time for all zones
+    // Update last scout time for the zone the scout is in
     if (scout.zone) {
       scout.zone.lastScoutTime = Resources.loop;
     }
@@ -157,7 +157,6 @@ function selectSentry() {
 }
 
 function getTarget(scout) {
-  if (!scout.zone) return;
   if (Enemy.base && !Enemy.base.lastScoutTime) return Enemy.base;
 
   let bestTarget;

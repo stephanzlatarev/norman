@@ -5,6 +5,7 @@ import Types from "../../../body/starcraft/types.js";
 import Units from "../../../body/starcraft/units.js";
 import Board from "../../../body/starcraft/map/board.js";
 import Depot from "../../../body/starcraft/map/depot.js";
+import Sector from "../../../body/starcraft/map/sector.js";
 import Zone from "../../../body/starcraft/map/zone.js";
 import { ActiveCount, TotalCount } from "../../../body/starcraft/memo/count.js";
 import { VisibleCount } from "../../../body/starcraft/memo/encounters.js";
@@ -15,6 +16,6 @@ import Score from "../../../body/starcraft/memo/score.js";
 export {
   Memory,
   Job, Order, Types, Units,
-  Board, Depot, Zone,
+  Board, Depot, Sector, Zone,
   ActiveCount, TotalCount, VisibleCount, Enemy, Resources, Score,
 };

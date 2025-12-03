@@ -32,7 +32,7 @@ export function syncAlerts() {
   for (const zone of Zone.list()) {
     if (!zone.isDepot && !zone.isHall) continue;
 
-    if (zone.threats.size) {
+    if (zone.threats().size) {
       zone.alertLevel = ALERT_RED;
     } else if (zone.warriors.size) {
       zone.alertLevel = ALERT_BLUE;

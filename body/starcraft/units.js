@@ -60,7 +60,8 @@ class Units {
         if (!image) { group = hallucinations; image = hallucinations.get(tag); }
 
         if (image) {
-          if (image.zone) image.zone.threats.delete(image);
+          image.sector.clearThreat(image);
+
           removeImage(image, group, tag);
         }
       }
@@ -212,25 +213,23 @@ function syncUnit(units, unit, type, zombies, me) {
     }
   }
 
-  addToZone(image);
-
-  return image;
-}
-
-function addToZone(image) {
-  if (Board.cells && image) {
+  if (Board.cells) {
     const cell = Board.cell(image.body.x, image.body.y);
 
     image.cell = cell;
 
     cell.sector.addUnit(image);
+    image.sector = cell.sector;
 
     if (cell.zone) {
       cell.zone.addUnit(image);
+      image.zone = cell.zone;
     } else if (image.zone) {
       image.zone.removeUnit(image);
     }
   }
+
+  return image;
 }
 
 function removeImage(image, group, tag) {
@@ -238,8 +237,12 @@ function removeImage(image, group, tag) {
     image.isAlive = false;
     group.delete(tag);
 
-    if (image.sector) image.sector.removeUnit(image);
-    if (image.zone) image.zone.removeUnit(image);
+    image.sector.removeUnit(image);
+
+    if (image.zone) {
+      image.zone.removeUnit(image);
+      image.zone = null;
+    }
   }
 }
 

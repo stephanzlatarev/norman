@@ -18,7 +18,7 @@ class Scan {
         if (zone.buildings.size) {
           if (!this.inner.depots.has(zone)) changed = true;
           this.inner.depots.add(zone);
-        } else if (zone.threats.size && hasEnemyBuildings(zone)) {
+        } else if (hasEnemyBuildings(zone)) {
           if (!this.enemy.depots.has(zone)) changed = true;
           this.enemy.depots.add(zone);
         }
@@ -26,7 +26,7 @@ class Scan {
         if (zone.buildings.size) {
           if (!this.inner.production.has(zone)) changed = true;
           this.inner.production.add(zone);
-        } else if (zone.threats.size && hasEnemyBuildings(zone)) {
+        } else if (hasEnemyBuildings(zone)) {
           if (!this.enemy.production.has(zone)) changed = true;
           this.enemy.production.add(zone);
         }
@@ -49,10 +49,14 @@ class Scan {
 }
 
 function hasEnemyBuildings(zone) {
-  for (const unit of zone.threats) {
-    // TODO: Exclude offensive unit types like photon cannons and bunkers
-    if (unit.type.isBuilding) {
-      return true;
+  for (const sector of zone.sectors) {
+    for (const unit of sector.threats) {
+      if (unit.zone !== zone) continue;
+
+      // TODO: Exclude offensive unit types like photon cannons and bunkers
+      if (unit.type.isBuilding) {
+        return true;
+      }
     }
   }
 }

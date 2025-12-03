@@ -3,6 +3,7 @@ import Mission from "../mission.js";
 import Order from "../order.js";
 import Units from "../units.js";
 import Depot from "../map/depot.js";
+import { PERIMETER_RED } from "../map/perimeter.js";
 import { ActiveCount } from "../memo/count.js";
 import Enemy from "../memo/enemy.js";
 
@@ -48,8 +49,10 @@ class Assassin extends Job {
 }
 
 function isZoneWithDetection(zone) {
-  for (const enemy of zone.threats) {
-    if (enemy.type.isDetector) return true;
+  for (const sector of zone.sectors) {
+    for (const enemy of sector.threats) {
+      if (enemy.type.isDetector) return true;
+    }
   }
 }
 
@@ -103,7 +106,7 @@ function seekZone(assassin) {
   let bestDistance = Infinity;
 
   for (const zone of Depot.list()) {
-    if (!zone.threats.size) continue;
+    if (zone.perimeterLevel < PERIMETER_RED) continue;
     if (isZoneWithDetection(zone)) continue;
 
     const distance = calculateSquareDistance(assassin.body, zone);

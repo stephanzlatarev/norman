@@ -41,9 +41,11 @@ function controlOracle(oracle) {
 }
 
 function areAirShootingEnemiesInZone(zone) {
-  for (const threat of zone.threats) {
-    if (threat.type.damageAir) {
-      return true;
+  for (const sector of zone.sectors) {
+    for (const threat of sector.threats) {
+      if (threat.type.damageAir) {
+        return true;
+      }
     }
   }
 }

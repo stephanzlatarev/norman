@@ -53,8 +53,6 @@ export function traceBattle(battle, event) {
   traceFighters(trace, battle);
 
   trace.push("threats:");
-  traceThreats(trace, [battle.front]);
-  trace.push("|");
   traceThreats(trace, battle.sectors);
 
   console.log(trace.join(" "));
@@ -122,11 +120,11 @@ function traceFighters(trace, battle) {
   }
 }
 
-function traceThreats(trace, spaces) {
+function traceThreats(trace, sectors) {
   const threats = new Map();
 
-  for (const one of spaces) {
-    for (const enemy of one.threats) {
+  for (const sector of sectors) {
+    for (const enemy of sector.threats) {
       increment(threats, enemy.type.name);
     }
   }

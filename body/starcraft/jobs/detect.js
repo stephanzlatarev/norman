@@ -30,16 +30,15 @@ export default class Detect extends Job {
   execute() {
     const observer = this.assignee;
     const mode = this.battle.mode;
-    const threats = this.zone.threats;
     const isBattleInAttackMode = (mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_MARCH) || (mode === Battle.MODE_SMASH) || (mode === Battle.MODE_WEAR);
 
-    clearDetectedThreats(observer, threats);
-    if (observer.sector) clearDetectedThreats(observer, observer.sector.threats);
-    if (observer.zone && (observer.zone !== this.zone)) clearDetectedThreats(observer, observer.zone.threats);
+    clearDetectedThreats(observer);
 
-    if ((observer.armor.shield >= observer.armor.shieldMax) && threats.size && !this.zone.enemies.size) {
+    const invisibleThreat = findClosestInvisibleThreat(observer, this.battle.sectors);
+
+    if ((observer.armor.shield >= observer.armor.shieldMax) && invisibleThreat) {
       // All threats may be outside sight range, so the observer may need to get into their fire range if necessary. That's why do it on full shield.
-      this.target = findClosestInvisibleThreat(observer, threats);
+      this.target = invisibleThreat;
     } else if ((observer.armor.shield < this.shield) || isInEnemyFireRange(this.battle, observer)) {
       this.target = getRetreatPoint(observer, this.battle);
     } else if (!this.battle.sectors.has(observer.sector)) {
@@ -48,11 +47,11 @@ export default class Detect extends Job {
       this.target = this.battle.front;
     } else if (!shouldChangeTarget(observer, this.target, this.loopsInDirection, this.battle)) {
       // Should not change target
-    } else if (isBattleInAttackMode) {
-      this.target = selectTargetInAttackMode(observer, this.battle, this.target);
+    } else if (invisibleThreat) {
+      this.target = invisibleThreat;
       this.loopsInDirection = 0;
     } else {
-      this.target = selectTargetInRallyMode(observer, this.battle, this.target);
+      this.target = selectObserveDirection(this.battle, this.target);
       this.loopsInDirection = 0;
     }
 
@@ -74,10 +73,12 @@ export default class Detect extends Job {
   }
 }
 
-function clearDetectedThreats(observer, threats) {
-  for (const threat of threats) {
-    if ((threat.lastSeen < observer.lastSeen) && isInSight(observer, threat.body)) {
-      threats.delete(threat);
+function clearDetectedThreats(observer) {
+  for (const sector of [observer.sector, ...observer.sector.neighbors]) {
+    for (const threat of sector.threats) {
+      if (isInSight(observer, threat.body)) {
+        sector.clearThreat(threat);
+      }
     }
   }
 }
@@ -91,13 +92,10 @@ function shouldChangeTarget(observer, target, loopsInDirection, battle) {
   return false;
 }
 
-function selectTargetInAttackMode(observer, battle, previousTarget) {
+function selectObserveDirection(battle, previousTarget) {
   if (!previousTarget) return battle.front;
 
-  const invisibleThreat = findClosestInvisibleThreat(observer, battle.front.threats, battle.front.enemies, previousTarget);
-  if (invisibleThreat) return invisibleThreat;
-
-  // Alternate between enemy warriors and battle zone
+  // Alternate between observing nearby sectors and observing the battle front
   if (previousTarget !== battle.front) return battle.front;
 
   let candidates;
@@ -111,23 +109,20 @@ function selectTargetInAttackMode(observer, battle, previousTarget) {
   return candidates[Math.floor(candidates.length * Math.random())];
 }
 
-function selectTargetInRallyMode(observer, battle, previousTarget) {
-  return selectTargetInAttackMode(observer, battle, previousTarget);
-}
-
-function findClosestInvisibleThreat(observer, threats, visible, exclude) {
+function findClosestInvisibleThreat(observer, sectors) {
   let closestThreat;
   let closestDistance = Infinity;
 
-  for (const threat of threats) {
-    if (exclude && (threat === exclude)) continue;
-    if (visible && visible.has(threat)) continue;
+  for (const sector of sectors) {
+    for (const threat of sector.threats) {
+      if (sector.enemies.has(threat)) continue;
 
-    const distance = calculateSquareDistance(observer.body, threat.body);
+      const distance = calculateSquareDistance(observer.body, threat.body);
 
-    if (distance < closestDistance) {
-      closestThreat = threat;
-      closestDistance = distance;
+      if (distance < closestDistance) {
+        closestThreat = threat;
+        closestDistance = distance;
+      }
     }
   }
 
@@ -191,9 +186,11 @@ function isInEnemyFireRange(battle, observer) {
 function isTargetValid(battle, target) {
   if (target === battle.front) {
     return true;
-  } else if (target.tag) {
+  } else if (target.sector) {
     // A unit target is valid only if it is a threat but is not visible
-    return battle.front.threats.has(target) && !battle.front.enemies.has(target);
+    const sector = target.sector;
+
+    return sector.threats.has(target) && !sector.enemies.has(target);
   }
 
   return battle.sectors.has(target);

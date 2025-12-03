@@ -180,14 +180,6 @@ function isSmallFight(battle) {
   return (enemyCount <= 3) && (warriorCount > enemyCount);
 }
 
-function shouldWearEnemies(zone) {
-  for (const threat of zone.threats) {
-    if (threat.type.movementSpeed > 0) return false;
-  }
-
-  return true;
-}
-
 // TODO: Use target matrix for battle
 function areMarchingFightersInFireRange(battle) {
   let enemies;

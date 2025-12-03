@@ -1,6 +1,6 @@
 import Memory from "../../../code/memory.js";
 import Mission from "../mission.js";
-import Zone from "../map/zone.js";
+import Sector from "../map/sector.js";
 import Resources from "../memo/resources.js";
 import { ActiveCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
@@ -60,8 +60,8 @@ function isEnemyHoardingProduction() {
 
   let count = 0;
 
-  for (const zone of Zone.list()) {
-    for (const threat of zone.threats) {
+  for (const sector of Sector.list()) {
+    for (const threat of sector.threats) {
       if (IS_PRODUCING_WARRIORS[threat.type.name]) {
         count++;
       }
@@ -82,8 +82,8 @@ function isEnemyHoardingWarriors() {
 
   let supply = 0;
 
-  for (const zone of Zone.list()) {
-    for (const threat of zone.threats) {
+  for (const sector of Sector.list()) {
+    for (const threat of sector.threats) {
       if (threat.type.isWarrior && !threat.type.isWorker) {
         supply += threat.type.foodRequired;
       }

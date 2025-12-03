@@ -1,4 +1,4 @@
-import { Memory, Zone } from "./imports.js";
+import { Memory, Sector } from "./imports.js";
 
 export default function() {
   const previousLevel = Memory.LevelEnemyArmySuperiority;
@@ -8,8 +8,8 @@ export default function() {
   let warriorDamage = 0;
   let warriorHealth = 0;
 
-  for (const zone of Zone.list()) {
-    for (const warrior of zone.warriors) {
+  for (const sector of Sector.list()) {
+    for (const warrior of sector.warriors) {
       if (!warrior.isAlive) continue;
       if (!warrior.type.movementSpeed) continue;
       if (warrior.type.isWorker) continue;
@@ -18,7 +18,7 @@ export default function() {
       warriorHealth += warrior.armor.total;
     }
 
-    for (const threat of zone.threats) {
+    for (const threat of sector.threats) {
       if (!threat.type.movementSpeed) continue;
       if (!threat.type.isWarrior) continue;
       if (threat.type.isWorker) continue;

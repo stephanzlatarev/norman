@@ -6,22 +6,23 @@ export default function(battle) {
   const hasDetector = battle.detector && battle.detector.assignee;
 
   if (isAssault && !hasDetector) {
-    if (ignoreInvisibleMobileThreats(battle.front)) {
+    if (ignoreInvisibleMobileThreats(battle)) {
       traceBattle(battle, "cleared invisible mobile threats");
     }
   }
 }
 
-function ignoreInvisibleMobileThreats(zone) {
-  const threats = zone.threats;
-  const visible = zone.enemies;
-  const count = threats.size;
+function ignoreInvisibleMobileThreats(battle) {
+  let cleared = false;
 
-  for (const threat of threats) {
-    if (threat.type.movementSpeed && !visible.has(threat)) {
-      threats.delete(threat);
+  for (const sector of battle.sectors) {
+    for (const threat of sector.threats) {
+      if (threat.type.movementSpeed && !sector.enemies.has(threat)) {
+        sector.clearThreat(threat);
+        cleared = true;
+      }
     }
   }
 
-  return (threats.size !== count);
+  return cleared;
 }

@@ -23,6 +23,7 @@ export default function(battle) {
 **/
 class TargetMatrix {
 
+  allTargets = [];
   primaryTargets = [];
   targetsInRange = [];
   targetToWarriors = new Map();
@@ -49,6 +50,8 @@ class TargetMatrix {
       for (const threat of sector.threats) {
         if (!threat.type.isWarrior) continue;
         if (!isValidTarget(threat)) continue;
+
+        this.allTargets.push(threat);
 
         // Treat the enemy warriors that are in the battle zone and those that have range over my warriors as primary targets
         if ((threat.zone === battle.front) || isEnemyWarriorAbleToAttack(battle.front, threat, groundWarriors)) {
@@ -182,7 +185,7 @@ function assignRemainingWarriors(battle, matrix) {
     const warrior = fighter.assignee;
 
     if (warrior && !matrix.isWarriorAssigned(warrior)) {
-      fighter.target = getClosestVisibleTarget(warrior, matrix.primaryTargets) || getClosestVisibleTarget(warrior, battle.front.threats);
+      fighter.target = getClosestVisibleTarget(warrior, matrix.primaryTargets) || getClosestVisibleTarget(warrior, matrix.allTargets);
     }
   }
 }
@@ -192,19 +195,13 @@ function setKiteTargets(battle) {
     const warrior = fighter.assignee;
 
     if (warrior) {
-      fighter.target = getPrimaryThreat(warrior, battle.front.threats) ||
-        getClosestVisibleTarget(warrior, warrior.zone.threats) ||
-        getClosestVisibleTarget(warrior, battle.front.threats);
+      const targets = [];
 
-      if (!fighter.target) {
-        const targets = [];
-
-        for (const sector of battle.sectors) {
-          targets.push(...sector.threats);
-        }
-
-        fighter.target = getClosestVisibleTarget(warrior, targets);
+      for (const sector of battle.sectors) {
+        targets.push(...sector.threats);
       }
+
+      fighter.target = getClosestVisibleTarget(warrior, targets);
     }
   }
 }
@@ -224,29 +221,6 @@ function getClosestVisibleTarget(warrior, targets) {
     if (distance < closestDistance) {
       closestTarget = target;
       closestDistance = distance;
-    }
-  }
-
-  return closestTarget;
-}
-
-function getPrimaryThreat(warrior, targets) {
-  let closestTarget;
-  let closestDistance = Infinity;
-
-  for (const target of targets) {
-    if (warrior.body.isGround && !target.type.damageGround) continue;
-    if (warrior.body.isFlying && !target.type.damageAir) continue;
-
-    const range = warrior.body.isGround ? target.type.rangeGround : target.type.rangeAir;
-    const squareRange = range * range;
-    const squareDistance = calculateSquareDistance(warrior.body, target.body);
-
-    if (squareDistance >= squareRange) continue;
-
-    if (squareDistance < closestDistance) {
-      closestTarget = target;
-      closestDistance = squareDistance;
     }
   }
 

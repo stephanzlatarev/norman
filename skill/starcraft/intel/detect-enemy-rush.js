@@ -115,8 +115,11 @@ function isEnemyBase(zone) {
   if (!zone) return false;
   if (!zone.isDepot) return false;
 
-  for (const building of zone.threats) {
-    if (building.type.isDepot) return true;
+  for (const sector of zone.sectors) {
+    for (const building of sector.threats) {
+      if (building.zone !== zone) continue;
+      if (building.type.isDepot) return true;
+    }
   }
 
   return false;
