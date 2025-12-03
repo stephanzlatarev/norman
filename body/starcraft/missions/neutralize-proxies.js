@@ -20,7 +20,6 @@ const TYPE_NEXUS = "Nexus";
 const neutralizeJobs = new Set();
 let patrolJob = null;
 
-let home;
 let proxy;
 let forge;
 let isMissionComplete;
@@ -30,6 +29,7 @@ export default class NeutralizeProxiesMission extends Mission {
 
   run() {
     if (isMissionComplete) return;
+    if (!Depot.home) return;
 
     if (!Memory.FlagEnemyProxyNexus && (ActiveCount.Zealot + ActiveCount.Stalker > 2)) {
       isMissionComplete = true;
@@ -51,13 +51,13 @@ export default class NeutralizeProxiesMission extends Mission {
 
         // Wait until the time when our workers will kill the nexus just before it completes to block the enemy resources and buy time
         if (proxyNexus.buildProgress >= PROXY_NEXUS_PROGRESS_THRESHOLD) {
-          openNeutralizeJobs(100, proxy.nexuses, NEXUS_ATTACKERS, home);
+          openNeutralizeJobs(100, proxy.nexuses, NEXUS_ATTACKERS, Depot.home);
         }
       } else if (proxy.isHome) {
         // When the proxy is in our base then we should attempt to neutralize it at all cost
-        openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS_MANY, home);
-        openNeutralizeJobs(99, proxy.pylons, PYLON_ATTACKERS, home);
-        openNeutralizeJobs(98, proxy.cannons, CANNON_ATTACKERS, home);
+        openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS_MANY, Depot.home);
+        openNeutralizeJobs(99, proxy.pylons, PYLON_ATTACKERS, Depot.home);
+        openNeutralizeJobs(98, proxy.cannons, CANNON_ATTACKERS, Depot.home);
       } else if (!proxy.warriors.length) {
         // When the proxy is not defended yet then attack any workers. Don't stop harvest to destroy the structures
         openNeutralizeJobs(100, proxy.workers, WORKER_ATTACKERS_ONE);
@@ -99,7 +99,7 @@ class Neutralize extends Job {
   constructor(target, priority) {
     super("Probe", null, target);
 
-    this.zone = home;
+    this.zone = Depot.home;
     this.target = target;
     this.priority = priority;
   }
@@ -128,7 +128,7 @@ class Neutralize extends Job {
   close(outcome) {
     super.close(outcome);
 
-    Order.move(this.assignee, home);
+    Order.move(this.assignee, Depot.home);
   }
 
 }
@@ -140,7 +140,7 @@ class Patrol extends Job {
   constructor() {
     super("Probe");
 
-    this.zone = home;
+    this.zone = Depot.home;
     this.priority = 100;
   }
 
@@ -180,7 +180,7 @@ class Patrol extends Job {
   close(outcome) {
     super.close(outcome);
 
-    Order.move(this.assignee, home);
+    Order.move(this.assignee, Depot.home);
   }
 
 }
@@ -196,7 +196,7 @@ function findProxy() {
 
   for (const sector of Depot.home.horizon) {
     for (const enemy of sector.threats) {
-      if (enemy.zone === home) isHome = true;
+      if (enemy.zone === Depot.home) isHome = true;
 
       if (enemy.type.isWorker) {
         workers.push(enemy);
