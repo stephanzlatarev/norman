@@ -92,10 +92,28 @@ class Curtain extends Zone {
   isCurtain = true;
   isPassage = false;
 
+  minerals = new Set();
+
   constructor(name, center, cells, isPassage) {
     super(name, center, cells);
 
     this.isPassage = isPassage;
+  }
+
+  addUnit(unit) {
+    super.addUnit(unit);
+
+    if (unit.type.isMinerals) {
+      this.minerals.add(unit);
+    }
+  }
+
+  removeUnit(unit) {
+    super.removeUnit(unit);
+
+    if (unit.type.isMinerals) {
+      this.minerals.delete(unit);
+    }
   }
 
 }

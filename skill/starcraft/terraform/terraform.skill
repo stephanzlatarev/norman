@@ -1,0 +1,5 @@
+# Terraform
+
+name: Terraform
+brain: terraform.js
+type: javascript
