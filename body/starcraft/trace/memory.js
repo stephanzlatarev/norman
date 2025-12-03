@@ -11,7 +11,9 @@ export default function(texts) {
 
   if (Memory.MilestoneBasicEconomy) texts.push("Milestone Basic Economy");
 
-  if (Memory.MilestoneMaxArmy) {
+  if (Memory.FlagMaxEnemy) {
+    texts.push("Flag Max Army");
+  } else if (Memory.MilestoneMaxArmy) {
     texts.push("Milestone Max Army");
   } else if (Memory.MilestoneBasicMilitary) {
     texts.push("Milestone Basic Military");
