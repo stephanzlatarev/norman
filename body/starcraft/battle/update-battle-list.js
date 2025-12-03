@@ -4,7 +4,7 @@ import Enemy from "../memo/enemy.js";
 import Depot from "../map/depot.js";
 import Zone from "../map/zone.js";
 import { ALERT_RED, ALERT_YELLOW } from "../map/alert.js";
-import { PERIMETER_GREEN } from "../map/perimeter.js";
+import { PERIMETER_GREEN, PERIMETER_WHITE } from "../map/perimeter.js";
 import { TotalCount } from "../memo/count.js";
 
 const MAX_BATTLE_PRIORITY = 90;
@@ -33,7 +33,7 @@ export default function() {
 // Defend the largest defendable perimeter with all warriors behind walls.
 function listSiegeDefenseBattles(battles) {
   // TODO: Currently only defends home base. Make it identify the largest defendable perimeter.
-  battles.add(getBattle(MAX_BATTLE_PRIORITY, Depot.home));
+  battles.add(getBattle(Battle.list(), MAX_BATTLE_PRIORITY, Depot.home));
 }
 
 // Station warriors in economy perimeter
@@ -41,7 +41,7 @@ function listNormalDefenseBattles(battles) {
   listBattlesInRedZones(battles, PERIMETER_GREEN);
 
   if (!battles.size) {
-    battles.add(getBattle(MAX_BATTLE_PRIORITY, findFrontBaseZone()));
+    battles.add(getBattle(Battle.list(), MAX_BATTLE_PRIORITY, findFrontBaseZone()));
   }
 }
 
@@ -54,7 +54,7 @@ function listExpandDefenseBattles(battles) {
 
     if (expansion) {
       // TODO: Select rally zone within our perimeter
-      battles.add(getBattle(MAX_BATTLE_PRIORITY, expansion));
+      battles.add(getBattle(Battle.list(), MAX_BATTLE_PRIORITY, expansion));
     }
   }
 }
@@ -77,15 +77,14 @@ function listFullOffenseBattles(battles) {
 function listOffenseBattles(battles) {
   listBattlesInRedZones(battles, Infinity);
 
-  if (!battles.size) {
+  if (!battles.size && Enemy.base) {
     // TODO: Select rally zone to the enemy base
-    battles.add(getBattle(MAX_BATTLE_PRIORITY, Enemy.base));
+    battles.add(getBattle(Battle.list(), MAX_BATTLE_PRIORITY, Enemy.base));
   }
 }
 
 function listBattlesInRedZones(battles, perimeterLevelLimit) {
   const hotspots = [];
-  let priority = MAX_BATTLE_PRIORITY - 1;
 
   for (const zone of Zone.list()) {
     if (!zone.isDepot && !zone.isHall) continue;
@@ -103,24 +102,50 @@ function listBattlesInRedZones(battles, perimeterLevelLimit) {
 
   hotspots.sort((a, b) => (a.zone.perimeterLevel - b.zone.perimeterLevel));
 
+  const taken = new Set();
+  const candidates = new Set(Battle.list());
+  let priority = MAX_BATTLE_PRIORITY - 1;
+
+  for (const one of hotspots) one.priority = priority--;
+
   for (const one of hotspots) {
-    battles.add(getBattle(priority--, one.zone, one.rally));
+    const battle = findBattle(candidates, one.zone);
+
+    if (battle) {
+      battles.add(battle.move(one.priority, one.zone, one.rally));
+      candidates.delete(battle);
+      taken.add(one);
+    }
+  }
+
+  for (const one of hotspots) {
+    if (!taken.has(one)) {
+      battles.add(getBattle(candidates, one.priority, one.zone, one.rally));
+    }
   }
 }
 
 function findRallyZone(zone) {
-  let rally;
+  if (zone.perimeterLevel && (zone.perimeterLevel < PERIMETER_GREEN)) {
+    // The zone is inside our defendable perimeter
+    return zone;
+  }
 
+  let rally = zone;
+
+  // The rally zone is the exit closest to our perimeter
   for (const [neighbor, corridor] of zone.exits) {
     if (!corridor.via.isPassage) continue;
     if (!neighbor.perimeterLevel) continue;
 
-    if (!neighbor.alertLevel) continue;
-    if (neighbor.alertLevel >= ALERT_RED) continue;
-
-    if (!rally || (neighbor.perimeterLevel < rally.perimeterLevel)) {
+    if (neighbor.perimeterLevel < rally.perimeterLevel) {
       rally = neighbor;
     }
+  }
+
+  if (zone.perimeterLevel && (zone.perimeterLevel >= PERIMETER_WHITE)) {
+    // When outside our perimeter, the rally zone must not be a hotspot itself
+    if (!rally.alertLevel || (rally.alertLevel >= ALERT_RED)) return;
   }
 
   return rally;
@@ -166,16 +191,22 @@ function getNextExpansionZone() {
   }
 }
 
-function getBattle(priority, front, rally) {
-  for (const battle of Battle.list()) {
+function findBattle(list, front) {
+  for (const battle of list) {
+    if (battle.front === front) return battle;
+  }
+}
+
+function getBattle(list, priority, front, rally) {
+  for (const battle of list) {
     if (battle.front === front) return battle.move(priority, front, rally);
   }
 
-  for (const battle of Battle.list()) {
+  for (const battle of list) {
     if (battle.front.neighbors.has(front)) return battle.move(priority, front, rally);
   }
 
-  for (const battle of Battle.list()) {
+  for (const battle of list) {
     if (battle.rally === front) return battle.move(priority, front, rally);
   }
 

@@ -15,11 +15,12 @@ const Color = {
 export default function(lines, texts) {
   const battles = Battle.list().sort((a, b) => (b.priority - a.priority));
 
-  texts.push("Front Mode  Rally Recruit Deployed Detector");
+  texts.push("Prio Front Mode  Rally Recruit Deployed Detector");
 
   for (const battle of battles) {
     const text = [];
 
+    text.push(battle.priority, " ");
     text.push(battle.front.name, " ");
     text.push(battle.mode);
     text.push(battle.rally.name, " ");

@@ -4,7 +4,7 @@ import { Depot, Enemy } from "./imports.js";
 export default function(exclude) {
   const enemy = [...Scan.enemy.depots, ...Scan.enemy.production];
 
-  if (!enemy.length && !exclude.has(Enemy.base)) enemy.push(Enemy.base);
+  if (!enemy.length && Enemy.base && !exclude.has(Enemy.base)) enemy.push(Enemy.base);
 
   return enemy
     .filter(zone => !exclude.has(zone))

@@ -2,6 +2,18 @@ import Board from "../map/board.js";
 import Depot from "../map/depot.js";
 
 export default function(battle) {
+  const stations = new Set();
+
+  for (const station of battle.stations) {
+    if (station.zone === battle.rally) {
+      stations.add(station);
+    }
+  }
+
+  if (battle.stations.length !== stations.size) {
+    battle.stations = [...stations];
+  }
+
   if (battle.fighters.length > battle.stations.length) {
     const wall = getWall(battle.front) || getWall(battle.rally);
 

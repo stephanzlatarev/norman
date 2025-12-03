@@ -48,10 +48,11 @@ class TargetMatrix {
 
     for (const sector of battle.sectors) {
       for (const threat of sector.threats) {
-        if (!threat.type.isWarrior) continue;
         if (!isValidTarget(threat)) continue;
 
         this.allTargets.push(threat);
+
+        if (!threat.type.isWarrior) continue;
 
         // Treat the enemy warriors that are in the battle zone and those that have range over my warriors as primary targets
         if ((threat.zone === battle.front) || isEnemyWarriorAbleToAttack(battle.front, threat, groundWarriors)) {

@@ -76,7 +76,7 @@ export default class Detect extends Job {
 function clearDetectedThreats(observer) {
   for (const sector of [observer.sector, ...observer.sector.neighbors]) {
     for (const threat of sector.threats) {
-      if (isInSight(observer, threat.body)) {
+      if (!sector.enemies.has(threat) && isInSight(observer, threat.body)) {
         sector.clearThreat(threat);
       }
     }

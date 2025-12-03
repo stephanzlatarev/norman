@@ -241,7 +241,6 @@ function removeImage(image, group, tag) {
 
     if (image.zone) {
       image.zone.removeUnit(image);
-      image.zone = null;
     }
   }
 }

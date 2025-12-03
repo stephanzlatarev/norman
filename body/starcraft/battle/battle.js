@@ -49,7 +49,6 @@ export default class Battle {
 
       this.front = front;
       this.rally = rally;
-      this.priority = priority;
 
       this.sectors.clear();
       for (const sector of this.front.horizon) {
@@ -68,6 +67,8 @@ export default class Battle {
         fighter.updateBattle(this);
       }
     }
+
+    this.priority = priority;
 
     return this;
   }
