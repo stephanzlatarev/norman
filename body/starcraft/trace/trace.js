@@ -1,8 +1,10 @@
 import traceBattles from "./battles.js";
+import traceBorders from "./borders.js";
 import traceJobs from "./jobs.js";
 import traceMemory from "./memory.js";
 import tracePerimeter from "./perimeter.js";
 import tracePins from "./pins.js";
+import traceRoutes from "./routes.js";
 import traceThreats from "./threats.js";
 import traceZones from "./zones.js";
 
@@ -12,6 +14,8 @@ export default async function(client) {
   const shapes = [];
   const spheres = [];
 
+  traceBorders(shapes);
+  traceRoutes(shapes);
   tracePerimeter(shapes);
   traceZones(shapes);
   tracePins(shapes);
