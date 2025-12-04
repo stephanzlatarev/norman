@@ -78,8 +78,16 @@ export function separateCurtainDepots(cluster) {
       const blocked = twin ? getBlockBounds(one, twin) : null;
       const depot = expandDepot(x, y, space, blocked);
 
+      if (isValidDepotCurtain(curtain, depot)) {
+        depots.push(cluster.derive(curtain).setCurtain());
+      } else {
+        for (const cell of curtain) {
+          depot.add(cell);
+          cell.isCurtain = false;
+        }
+      }
+
       depots.push(cluster.derive(depot).setDepot().setCenter(x, y));
-      depots.push(cluster.derive(curtain).setCurtain());
     }
   }
 
@@ -119,13 +127,36 @@ function getSpaceCurtain(curtain, space) {
 
   for (const cell of curtain) {
     for (const one of cell.rim) {
-      if (!curtain.has(one) && !space.has(one)) {
+      if (one.z && !curtain.has(one) && !space.has(one)) {
         spaceCurtain.add(one);
       }
     }
   }
 
   return spaceCurtain;
+}
+
+// Curtain is valid when it separates the depot and other ground
+function isValidDepotCurtain(curtain, depot) {
+  // Check if it has curtain cells
+  let hasCurtainCells = false;
+  for (const cell of curtain) {
+    if (cell.isResource || !cell.isPlot) {
+      hasCurtainCells = true;
+      break;
+    }
+  }
+  if (!hasCurtainCells) return false;
+
+  // Check if it separates other ground
+  for (const cell of curtain) {
+    for (const one of cell.rim) {
+      if (!one.z) continue;
+      if (curtain.has(one)) continue;
+
+      if (!depot.has(one)) return true;
+    }
+  }
 }
 
 export function separateGroundDepots(cluster) {

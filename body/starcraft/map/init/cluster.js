@@ -25,6 +25,7 @@ export default class Cluster {
 
       if (!cell.cluster.cells.size) {
         cell.cluster.empty();
+        cell.isEmpty = true;
       }
     }
 

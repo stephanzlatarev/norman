@@ -27,13 +27,15 @@ export function createZones(clusters) {
   for (const [cluster, zone] of zones.entries()) {
     if (!cluster.isDepot && !cluster.isGround) continue;
 
-    for (const neighbor of cluster.neighbors) {
-      zone.neighbors.add(zones.get(neighbor));
-    }
-
     for (const [neighbor, corridor] of cluster.exits) {
+      const neighborZone = zones.get(neighbor);
+
       corridor.via = zones.get(corridor.via);
-      zone.exits.set(zones.get(neighbor), corridor);
+      zone.exits.set(neighborZone, corridor);
+
+      if ((corridor.via === neighborZone) || corridor.via.isPassage) {
+        zone.neighbors.add(neighborZone);
+      }
     }
   }
 }
