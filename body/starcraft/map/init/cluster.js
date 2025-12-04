@@ -91,7 +91,7 @@ export default class Cluster {
     return this;
   }
 
-  setCurtain() {
+  setCurtain(isMineralCurtain) {
     if (this.isEmpty) return this;
 
     this.isAir = false;
@@ -100,6 +100,8 @@ export default class Cluster {
     this.isGround = false;
     this.isRamp = false;
     this.isPatch = false;
+
+    this.isMineralCurtain = !!isMineralCurtain;
 
     return this;
   }

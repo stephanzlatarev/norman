@@ -79,7 +79,7 @@ export function separateCurtainDepots(cluster) {
       const depot = expandDepot(x, y, space, blocked);
 
       depots.push(cluster.derive(depot).setDepot().setCenter(x, y));
-      depots.push(cluster.derive(curtain).setCurtain());
+      depots.push(cluster.derive(curtain).setCurtain(true));
     }
   }
 

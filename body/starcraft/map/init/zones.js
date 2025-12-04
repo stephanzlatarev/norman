@@ -78,7 +78,9 @@ function createDepotZone(cluster, depots, resources) {
 }
 
 function createCurtainZone(cluster) {
-  return new Curtain(cluster.name, cluster.center, cluster.cells, false);
+  const isPassage = !cluster.isMineralCurtain && ![...cluster.cells].some(cell => cell.isResource);
+
+  return new Curtain(cluster.name, cluster.center, cluster.cells, isPassage);
 }
 
 function createHallZone(cluster) {
