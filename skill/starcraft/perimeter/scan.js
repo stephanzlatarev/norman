@@ -14,6 +14,8 @@ class Scan {
     let changed = false;
 
     for (const zone of Zone.list()) {
+      if (!zone.isDepot && !zone.isHall) continue;
+
       if (zone.isDepot) {
         if (zone.buildings.size) {
           if (!this.inner.depots.has(zone)) changed = true;

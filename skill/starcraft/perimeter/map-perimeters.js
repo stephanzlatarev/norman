@@ -28,7 +28,7 @@ export default function() {
 
   // Ensure perimeter levels for the corridors in the perimeter
   for (const zone of perimeter) {
-    if (!zone.isDepot || !zone.isHall) continue;
+    if (!zone.isDepot && !zone.isHall) continue;
 
     for (const [neighbor, corridor] of zone.exits) {
       if (corridor.via === zone) continue;
