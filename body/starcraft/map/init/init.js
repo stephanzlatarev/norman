@@ -2,7 +2,7 @@ import Board from "../board.js";
 import Cluster from "./cluster.js";
 import { setBorder } from "./borders.js";
 import { setCenter } from "./centers.js";
-import { separateCurtains } from "./curtains.js";
+import { dissolveInvalidCurtains, separateCurtains } from "./curtains.js";
 import { separateCurtainDepots, separateGroundDepots } from "./depots.js";
 import { addSkirt, validateGround } from "./grounds.js";
 import { separateHalls } from "./halls.js";
@@ -40,11 +40,12 @@ export default function(gameInfo) {
   processClusters(clusters, separateHalls, cluster => cluster.isGround);
   for (const one of clusters) if (one.isAir) clusters.delete(one);
   processClusters(clusters, setCenter, cluster => !cluster.isPatch);
+  dissolveInvalidCurtains(clusters);
   dissolvePatches(clusters);
   processClusters(clusters, setBorder);
-  processClusters(clusters, addSkirt);
   initNeighbors(clusters);
   initNames(clusters);
+  processClusters(clusters, addSkirt);
   createZones(clusters);
   createSites();
 }

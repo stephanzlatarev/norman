@@ -152,3 +152,30 @@ function isCurtainEnd(cell, cells) {
     if (!one.isPath && !cells.has(one)) return true;
   }
 }
+
+export function dissolveInvalidCurtains(clusters) {
+  for (const cluster of clusters) {
+    if (!cluster.isCurtain) continue;
+    if (isValidCurtain(cluster.cells)) continue;
+
+    cluster.setPatch();
+  }
+}
+
+// Curtain is valid when it separates at least two grounds
+function isValidCurtain(curtain) {
+  const grounds = new Set();
+
+  for (const cell of curtain) {
+    for (const one of cell.rim) {
+      if (!one.z) continue;            // This is air
+      if (curtain.has(one)) continue;  // This is the curtain
+
+      if (one.cluster.isDepot || one.cluster.isGround || one.cluster.isPatch) {
+        grounds.add(one.cluster);
+      }
+
+      if (grounds.size >= 2) return true;
+    }
+  }
+}
