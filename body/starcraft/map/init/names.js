@@ -4,6 +4,7 @@ const NAME_SUFFIX = "αβγδ";
 export function initNames(clusters) {
   const types = {
     A: new Map(), // Air
+    C: new Map(), // Curtain
     D: new Map(), // Depot
     G: new Map(), // Ground
     R: new Map(), // Ramp
@@ -17,6 +18,8 @@ export function initNames(clusters) {
     let groups;
     if (cluster.isAir) {
       groups = types.A;
+    } else if (cluster.isCurtain) {
+      groups = types.C;
     } else if (cluster.isDepot) {
       groups = types.D;
     } else if (cluster.isGround) {
