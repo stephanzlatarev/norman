@@ -1,6 +1,6 @@
 import Memory from "../../../code/memory.js";
+import traceAlerts from "./alerts.js";
 import traceBattles from "./battles.js";
-import traceBorders from "./borders.js";
 import traceJobs from "./jobs.js";
 import traceMemory from "./memory.js";
 import tracePerimeter from "./perimeter.js";
@@ -18,10 +18,10 @@ export default async function(client, chat) {
   const shapes = [];
   const toggles = updateToggles(chat);
 
-  if (Memory.ShowZones) traceBorders(shapes);
+  if (Memory.ShowZones) traceZones(shapes);
   if (Memory.ShowPerimeter) tracePerimeter(shapes);
   if (Memory.ShowRoutes) traceRoutes(shapes);
-  if (Memory.ShowAlerts) traceZones(shapes);
+  if (Memory.ShowAlerts) traceAlerts(shapes);
   if (Memory.ShowPins) tracePins(shapes);
   if (Memory.ShowBattles) traceBattles(shapes, text);
   if (Memory.ShowThreats) traceThreats(shapes);
