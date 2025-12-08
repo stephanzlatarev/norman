@@ -25,8 +25,8 @@ export default class VscodeGame extends Game {
   }
 
   async step() {
-    await trace(this.client);
     await super.step();
+    await trace(this.client, this.chat);
   }
 
 }

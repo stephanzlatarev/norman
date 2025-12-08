@@ -20,11 +20,17 @@ export function initSectors() {
   }
 
   // Create the sectors
-  for (let col = 0, x = Board.left + colsize / 2; col < 10; col++, x += colsize) {
-    for (let row = 0, y = Board.top + rowsize / 2; row < 10; row++, y += rowsize) {
+  for (let col = 0, x = Board.left; col < 10; col++, x += colsize) {
+    for (let row = 0, y = Board.top; row < 10; row++, y += rowsize) {
       const sector = new Sector(row, col);
-      sector.x = Math.floor(x);
-      sector.y = Math.floor(y);
+      sector.x = Math.floor(x + colsize / 2);
+      sector.y = Math.floor(y + rowsize / 2);
+      sector.bounds = {
+        left: Math.floor(x),
+        top: Math.floor(y),
+        right: Math.ceil(x + colsize),
+        bottom: Math.ceil(y + rowsize),
+      };
       sectors.set(row * 10 + col, sector);
     }
   }

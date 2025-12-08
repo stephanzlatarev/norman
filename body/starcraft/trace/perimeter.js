@@ -1,39 +1,35 @@
 import { PERIMETER_BLUE, PERIMETER_GREEN, PERIMETER_WHITE, PERIMETER_YELLOW, PERIMETER_RED } from "../map/perimeter.js";
 import Zone from "../map/zone.js";
 
-let show = false;
-
 export default function(shapes) {
-  if (!show) return;
+  const sectors = new Set();
 
-  for (const zone of Zone.list()) {
+  for (const zone of Zone.list().sort((a, b) => ((b.perimeterLevel || 0) - (a.perimeterLevel || 0)))) {
     const color = getColor(zone);
-    const radius = getRadius(zone);
 
-    shapes.push({ shape: "circle", x: zone.x, y: zone.y, r: radius, color: color });
+    if (color) {
+      for (const sector of zone.sectors) {
+        if (!sectors.has(sector)) {
+          shapes.push({ shape: "sector", row: sector.row, col: sector.col, color });
+          sectors.add(sector);
+        }
+      }
+    }
   }
 }
 
 function getColor(zone) {
-  let color = "black";
-
   if (zone.perimeterLevel >= PERIMETER_RED) {
-    color = "red";
+    return "red";
   } else if (zone.perimeterLevel >= PERIMETER_YELLOW) {
-    color = "yellow";
+    return "yellow";
   } else if (zone.perimeterLevel >= PERIMETER_WHITE) {
-    color = "white";
+    return null;
   } else if (zone.perimeterLevel >= PERIMETER_GREEN) {
-    color = "green";
+    return "green";
   } else if (zone.perimeterLevel >= PERIMETER_BLUE) {
-    color = "blue";
+    return "blue";
+  } else {
+    return "black";
   }
-
-  return color;
-}
-
-function getRadius(zone) {
-  if (zone.isDepot) return 10;
-  if (zone.isHall) return 5;
-  return 2;
 }

@@ -76,6 +76,7 @@ export default class Game {
     const observation = await this.client.observation();
 
     this.observation = observation.observation;
+    this.chat = observation.chat;
 
     syncMap(gameInfo, this.observation);
 

@@ -1,8 +1,6 @@
 import Board from "../map/board.js";
 import Zone from "../map/zone.js";
 
-let show = false;
-
 const Colors = {
   Cluster: new Map(),
   Curtain: ["#FF00AA", "#FF44AA", "#AA00AA"],
@@ -13,8 +11,6 @@ const Colors = {
 const Zones = new Map();
 
 export default function(shapes) {
-  if (!show) return;
-
   if (!Zones.size) {
     for (const zone of Zone.list()) {
       Zones.set(zone.cell.cluster, zone);
@@ -24,19 +20,10 @@ export default function(shapes) {
   for (const cell of Board.board) {
     const cluster = cell.cluster;
     const zone = cell.zone;
-
     const color = getColor(cluster);
-    const x = cell.x + 0.5;
-    const y = cell.y + 0.5;
+    const opacity = (zone && zone.border.has(cell)) ? 0.8 : 0.2;
 
-    if (cell.zone && cell.zone.border.has(cell)) {
-      shapes.push({ shape: "circle", x, y, r: 0.5, color: "black" });
-      shapes.push({ shape: "circle", x, y, r: 0.4, color: "white" });
-      shapes.push({ shape: "circle", x, y, r: 0.3, color: color });
-    } else {
-      shapes.push({ shape: "circle", x, y, r: 0.5, color: "white" });
-      shapes.push({ shape: "circle", x, y, r: 0.4, color: color });
-    }
+    shapes.push({ shape: "cell", x: cell.x, y: cell.y, color, opacity });
 
     const expect = Zones.get(cluster);
     if ((zone || expect) && (zone !== expect)) {
