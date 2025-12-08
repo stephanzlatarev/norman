@@ -56,7 +56,7 @@ export default class Fight extends Job {
     if ((isDeployed || isAttacking) && this.shouldAttack()) {
       // Attack
 
-      if (this.target) {
+      if (target) {
         this.details = getDetails(this, "attack");
         this.goAttack();
       } else {
@@ -65,9 +65,9 @@ export default class Fight extends Job {
       }
 
       if (REASSIGNABLE_WARRIORS.has(warrior.type.name)) {
-        this.isBusy = false;
+        this.isBusy = isInFireRange(target, warrior);
       } else {
-        this.isBusy = isAttacking;
+        this.isBusy = isAttacking || isInFireRange(target, warrior);
       }
 
       this.isDeploying = false;
@@ -82,9 +82,12 @@ export default class Fight extends Job {
           this.details = getDetails(this, "stalk");
           Order.move(warrior, this.station);
         }
+
+        this.isBusy = true;
       } else if (this.shouldMarch()) {
         this.details = getDetails(this, "march");
         this.goMarch();
+        this.isBusy = true;
       } else {
         this.details = getDetails(this, "station");
 
@@ -94,9 +97,10 @@ export default class Fight extends Job {
         } else {
           Order.hold(warrior, this.station);
         }
+
+        this.isBusy = false;
       }
 
-      this.isBusy = false;
       this.isDeploying = false;
     } else {
       this.details = getDetails(this, "deploy");
@@ -331,6 +335,8 @@ function shouldRegenerateShields(warrior, battle, station) {
 
 // Check if the target is in the fire range of the warrior.
 function isInFireRange(warrior, target, bufferRange = 0) {
+  if (!warrior || !target) return false;
+
   if (target.body.isGround && warrior.type.rangeGround) {
     return isInRange(warrior, target, warrior.type.rangeGround + bufferRange);
   } else if (target.body.isFlying && warrior.type.rangeAir) {
