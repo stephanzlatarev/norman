@@ -34,7 +34,9 @@ export default function() {
     Memory.OpportunityToUseOracle = true;
   }
 
-  if (isEnemyExpandingHarvestPerimeter() || isEnemyDefending()) {
+  if (Memory.MilestoneMaxArmy) {
+    level = ENEMY_RUSH_NOT_EXPECTED;
+  } else if (isEnemyExpandingHarvestPerimeter() || isEnemyDefending()) {
     // Lower the expected enemy rush level
     level = (Memory.LevelEnemyRush >= ENEMY_RUSH_MODERATE_LEVEL) ? ENEMY_RUSH_MODERATE_LEVEL : ENEMY_RUSH_NOT_EXPECTED;
   } else if ((Memory.LevelEnemyRush === ENEMY_RUSH_EXTREME_LEVEL) && (!ActiveCount.ShieldBattery || (ActiveCount.Zealot + ActiveCount.Stalker < 8))) {
@@ -64,7 +66,7 @@ export default function() {
   } else if ((ActiveCount.Nexus === 1) && isExpectingEnemyWaves()) {
     // Enemy rush on one-base economy is expected. If we're already expecting harder rush then don't lower the level.
     level = Math.max(ENEMY_RUSH_MODERATE_LEVEL, Memory.LevelEnemyRush);
-  } else if (Memory.FlagSiegeDefense || Memory.MilestoneMaxArmy) {
+  } else if (Memory.FlagSiegeDefense && didWaveEnd()) {
     level = ENEMY_RUSH_NOT_EXPECTED;
   } else if (Memory.DetectedEnemyProxy || Memory.DetectedEnemyHoard) {
     level = ENEMY_RUSH_HIGH_LEVEL;

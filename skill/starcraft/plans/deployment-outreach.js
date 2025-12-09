@@ -48,7 +48,7 @@ const LEVELS = [
     name: "DeploymentOutreachProbingAttack", label: "Probing Attack",
     blockers: [
       // When our army is weaker than the enemy, then focus on defense
-      { condition: () => (Memory.LevelEnemyArmySuperiority > 1.5), reason: "Enemy army is stronger than ours" },
+      { condition: () => (Memory.LevelEnemyArmySuperiority > 1.5), reason: "Enemy army is much stronger than ours" },
     ],
   },
 
