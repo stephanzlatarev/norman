@@ -175,6 +175,10 @@ class EarlyScout extends Job {
 
     if (Memory.EarlyScoutMode === MODE_KILL) {
       // Kill as many enemy workers as possible
+      if (this.target && !this.target.isAlive) {
+        Memory.EarlyScoutKills = (Memory.EarlyScoutKills + 1) || 1;
+      }
+
       if (!this.target || !this.target.isAlive) {
         this.target = findEnemyWorkerToKill(this.assignee);
       }
