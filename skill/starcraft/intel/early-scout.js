@@ -216,7 +216,8 @@ class EarlyScout extends Job {
       this.transition(this.goBlockExpansion);
     } else if (this.assignee.zone !== this.enemyExpansionZone) {
       // The agent is still away from the enemy expansion zone, so mineral walk to the expansion to avoid being blocked by enemy units
-      if (isAtOrBehindEnemyWallSite(this.assignee, this.enemyWallSite)) {
+      if (this.assignee.cell.z >= Enemy.base.cell.z) {
+        // The agent is still close to the enemy base above the ramp, so check if it can safely walk away to the expansion
         if (this.hasDetectedEnemyWallOff || !this.enemyWallSite.size) {
           return this.transition(this.goCircleEnemyBase);
         } else if (!isInVisibilityRangeOfEnemyWallSite(this.assignee, this.enemyWallSite)) {
@@ -511,14 +512,6 @@ function getEnemyWallSite() {
   return site;
 }
 
-function isAtOrBehindEnemyWallSite(agent, ramp) {
-  if (!agent.zone || !agent.zone.perimeterLevel) return false;
-
-  for (const cell of ramp) {
-    return (agent.zone.perimeterLevel >= cell.zone.perimeterLevel);
-  }
-}
-
 function isInVisibilityRangeOfEnemyWallSite(agent, ramp) {
   for (const cell of ramp) {
     if (!isInRange(agent.body, cell, agent.type.sightRange - 2)) return false;
@@ -529,7 +522,7 @@ function isInVisibilityRangeOfEnemyWallSite(agent, ramp) {
 
 function isEnemyBaseWalledOff(agent, ramp) {
   // The agent must have visiblity over the ramp to determine if it is walled off
-  if (!isAtOrBehindEnemyWallSite(agent, ramp)) return false;
+  if (!isInVisibilityRangeOfEnemyWallSite(agent, ramp)) return false;
 
   for (const cell of ramp) {
     if (cell.isPath) return false;
