@@ -14,17 +14,14 @@ export const ENEMY_RUSH_EXTREME_LEVEL = 3;  // Enemy is expected to attack with 
 // When enemy has lower investment in economy than us, we expect enemy rush
 // When enemy has invested in warriors and warrior production, we expect enemy waves
 // When enemy has invested in economy and static defense, we don't expect enemy expansion
-let enemyGateway = 0;
-let enemyNexus = 0;
 let enemyPhotonCannons = 0;
 let enemyReapers = 0;
 let enemyZerglings = 0;
 
 export default function() {
   let level = ENEMY_RUSH_NOT_EXPECTED;
+  let reason = "No red flags";
 
-  enemyGateway = Math.max(VisibleCount.Gateway, enemyGateway);
-  enemyNexus = Math.max(VisibleCount.Nexus, enemyNexus);
   enemyPhotonCannons = Math.max(VisibleCount.PhotonCannon, enemyPhotonCannons);
   enemyReapers = Math.max(VisibleCount.Reaper, enemyReapers);
   enemyZerglings = Math.max(VisibleCount.Zergling, enemyZerglings);
@@ -35,48 +32,70 @@ export default function() {
   }
 
   if (Memory.MilestoneMaxArmy) {
+    reason = "Army is maxed out";
     level = ENEMY_RUSH_NOT_EXPECTED;
-  } else if (isEnemyExpandingHarvestPerimeter() || isEnemyDefending()) {
+  } else if (isEnemyExpandingHarvestPerimeter()) {
     // Lower the expected enemy rush level
+    reason = "Enemy is expanding its harvest perimeter";
+    level = (Memory.LevelEnemyRush >= ENEMY_RUSH_MODERATE_LEVEL) ? ENEMY_RUSH_MODERATE_LEVEL : ENEMY_RUSH_NOT_EXPECTED;
+  } else if (isEnemyDefending()) {
+    // Lower the expected enemy rush level
+    reason = "Enemy is building defenses";
     level = (Memory.LevelEnemyRush >= ENEMY_RUSH_MODERATE_LEVEL) ? ENEMY_RUSH_MODERATE_LEVEL : ENEMY_RUSH_NOT_EXPECTED;
   } else if ((Memory.LevelEnemyRush === ENEMY_RUSH_EXTREME_LEVEL) && (!ActiveCount.ShieldBattery || (ActiveCount.Zealot + ActiveCount.Stalker < 8))) {
     // Enemy rush with melee units and workers is still expected
+    reason = "Still expecting extreme rush";
     level = ENEMY_RUSH_EXTREME_LEVEL;
   } else if (Memory.EarlyScoutKills && !Memory.FlagSiegeDefense) { // TODO: Improve by lowering the enemy rush level if early scout stops killing enemy workers
     // Early scout is killing enemy workers. This damages enemy economy but makes us blind to enemy rushes. Prepare for extreme rush just in case.
+    reason = "Early scout is busy killing workers and not scouting";
     level = ENEMY_RUSH_EXTREME_LEVEL;
   } else if (Memory.FlagEnemyProxyNexus) {
-    // Enemy rush with melee units and workers is now expected
+    reason = "Expecting strategic recall rush with workers and zealots";
     level = ENEMY_RUSH_EXTREME_LEVEL;
-  } else if (TotalCount.CyberneticsCore && enemyNexus && !enemyGateway) { // TODO: Improve by checking if early scout is still looking for enemy gateway
-    // Enemy proxy gateway with zealot rush is now expected
+  } else if (Memory.FlagEnemyProxyGateway) {
+    reason = "Expecting proxy gateway rush with zealots";
     level = ENEMY_RUSH_EXTREME_LEVEL;
   } else if ((TotalCount.Assimilator <= 1) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3)) && areZerglingsApproaching()) {
-    // Enemy rush with very early zerglings is now expected
+    reason = "Expecting very early rush with zerglings";
     level = ENEMY_RUSH_EXTREME_LEVEL;
   } else if ((Memory.LevelEnemyRush === ENEMY_RUSH_HIGH_LEVEL) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3) || (Memory.LevelEnemyArmySuperiority > 2))) {
-    // Enemy rush on one-base economy is still expected
+    reason = "Still expecting high rush";
     level = ENEMY_RUSH_HIGH_LEVEL;
   } else if (enemyReapers >= 2) {
     // Reapers can jump in my home base so walling it off is not effective. They remove the threat of a rush.
+    reason = "Expecting attacks from reapers";
     level = ENEMY_RUSH_NOT_EXPECTED;
   } else if (!Memory.FlagSiegeDefense && (enemyPhotonCannons > 1)) {
     // Photon Cannons are a big investment. They remove the threat of a rush that can be defended with static defense.
-    level = arePhotonCannonsClose() ? ENEMY_RUSH_HIGH_LEVEL : ENEMY_RUSH_NOT_EXPECTED;
+    if (arePhotonCannonsClose()) {
+      reason = "Expecting rush with photon cannons";
+      level = ENEMY_RUSH_HIGH_LEVEL;
+    } else {
+      reason = "Enemy is building defenses with photon cannons";
+      level = ENEMY_RUSH_NOT_EXPECTED;
+    }
   } else if ((ActiveCount.Nexus === 1) && isExpectingEnemyWaves()) {
     // Enemy rush on one-base economy is expected. If we're already expecting harder rush then don't lower the level.
+    reason = "Expecting enemy waves from one-base economy";
     level = Math.max(ENEMY_RUSH_MODERATE_LEVEL, Memory.LevelEnemyRush);
   } else if (Memory.FlagSiegeDefense && didWaveEnd()) {
+    reason = "Ready to defend and no enemies on the horizon";
     level = ENEMY_RUSH_NOT_EXPECTED;
-  } else if (Memory.DetectedEnemyProxy || Memory.DetectedEnemyHoard) {
+  } else if (Memory.DetectedEnemyProxy) {
+    reason = "Detected enemy proxy";
+    level = ENEMY_RUSH_HIGH_LEVEL;
+  } else if (Memory.DetectedEnemyHoard) {
+    reason = "Expecting enemy hoard";
     level = ENEMY_RUSH_HIGH_LEVEL;
   } else if (!Memory.DetectedEnemyExpansion && ((TotalCount.Nexus > 1) || Memory.FlagHarvesterCapacity)) {
     // TODO: Add Crawler case = enemy expansion without vespene
+    reason = "Enemy is on one base";
     level = ENEMY_RUSH_MODERATE_LEVEL;
   }
 
   if (level != Memory.LevelEnemyRush) {
-    console.log("Enemy rush level changes from", Memory.LevelEnemyRush, "to", level);
+    console.log("Enemy rush level changes from", Memory.LevelEnemyRush, "to", level, "due to:", reason);
     Memory.LevelEnemyRush = level;
   }
 }
@@ -185,13 +204,15 @@ function didWaveStart() {
 }
 
 function didWaveEnd() {
-  let enemyCount = 0;
-
   for (const sector of Depot.home.horizon) {
-    enemyCount += sector.enemies.size;
+    for (const enemy of sector.enemies) {
+      if (enemy.type.damageGround) {
+        return false;
+      }
+    }
   }
 
-  return !enemyCount;
+  return true;
 }
 
 function isDamageTaken() {

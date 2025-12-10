@@ -153,6 +153,7 @@ class EarlyScout extends Job {
       this.transition(this.goAttackEnemyWorker);
     } else if (TotalCount.CyberneticsCore) {
       // The gateway should be there by this time. Stop searching for it and assume proxies
+      Memory.FlagEnemyProxyGateway = true;
       this.transition(this.goAttackEnemyWorker);
     } else {
       // Circle around the base (without transitioning to that stage) while looking for the Gateway
