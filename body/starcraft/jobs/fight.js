@@ -2,12 +2,12 @@ import Job from "../job.js";
 import Order from "../order.js";
 import Battle from "../battle/battle.js";
 import Resources from "../memo/resources.js";
+import { ALERT_RED } from "../map/alert.js";
 
 const KITING_RANGE = 2;
 const KITING_WARRIORS = new Set(["Stalker"]);
 const STALKING_BUFFER_RANGE = 1.2;
 const REASSIGNABLE_WARRIORS = new Set(["Sentry"]);
-const SQUARE_DISTANCE_BLOCKED_PATH = 1000 * 1000;
 
 export default class Fight extends Job {
 
@@ -78,6 +78,9 @@ export default class Fight extends Job {
         if (this.shouldKite()) {
           this.details = getDetails(this, "kite");
           Order.attack(warrior, target);
+        } else if ((warrior.zone === this.station.zone) || (this.station.zone.alertLevel >= ALERT_RED)) {
+          this.details = getDetails(this, "dodge");
+          this.goDodge();
         } else {
           this.details = getDetails(this, "stalk");
           Order.move(warrior, this.station);
@@ -125,14 +128,13 @@ export default class Fight extends Job {
   }
 
   shouldKite() {
-    if (this.isKitingSuppressed) return false;
-
     const warrior = this.assignee;
     const target = this.target;
 
     if (!warrior || !target) return false;
     if (target.lastSeen < warrior.lastSeen) return false;
     if (warrior.weapon.cooldown) return false;
+    if (this.isKitingSuppressed && (target.zone !== this.station.zone)) return false;
     if (!KITING_WARRIORS.has(warrior.type.name)) return false;
 
     const squareDistance = calculateSquareDistance(warrior.body, target.body);
@@ -235,6 +237,45 @@ export default class Fight extends Job {
     // TODO: Recalculate if zones changed alert level.
 
     Order.move(warrior, station, Order.MOVE_CLOSE_TO);
+  }
+
+  goDodge() {
+    const warrior = this.assignee;
+
+    let closestThreat;
+    let closestThreatDistance;
+
+    for (const sector of this.battle.sectors) {
+      for (const threat of sector.threats) {
+        if (!isInFireRange(threat, warrior, STALKING_BUFFER_RANGE)) continue;
+
+        const distance = calculateSquareDistance(warrior.body, threat.body);
+
+        if (!closestThreat || (distance < closestThreatDistance)) {
+          closestThreat = threat;
+          closestThreatDistance = distance;
+        }
+      }
+    }
+
+    if (closestThreat) {
+      let dx = warrior.body.x - closestThreat.body.x;
+      let dy = warrior.body.y - closestThreat.body.y;
+      const adxy = Math.abs(dx) + Math.abs(dy) + 0.1;
+
+      if (adxy < 2) {
+        const factor = Math.min(2 / adxy, 10);
+        dx *= factor;
+        dy *= factor;
+      }
+
+      Order.move(warrior, {
+        x: warrior.body.x + dx,
+        y: warrior.body.y + dy,
+      });
+    } else {
+      Order.move(warrior, this.station);
+    }
   }
 
   goMarch() {
