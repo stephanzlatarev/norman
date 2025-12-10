@@ -1,7 +1,7 @@
 import Battle from "../battle/battle.js";
 
 const polygons = new Map();
-const rallies = new Map();
+const sectors = new Map();
 
 export default function(shapes, texts) {
   const battles = Battle.list().sort((a, b) => (b.priority - a.priority));
@@ -82,23 +82,28 @@ function balanceText(balance) {
 
 function getBattleColor(battle) {
   switch (battle.mode) {
-    case "fight": return "red";
-    case "smash": return "orange";
-    case "stand": return "white";
-    case "watch": return "white";
-    default: return "yellow";
+    case Battle.MODE_FIGHT: return "red";
+    case Battle.MODE_RALLY: return "yellow";
+    case Battle.MODE_MARCH: return "orange";
+    case Battle.MODE_SMASH: return "black";
+    case Battle.MODE_STAND: return "white";
+    case Battle.MODE_WATCH: return "silver";
+    case Battle.MODE_WEAR: return "brown";
+    default: return "pink";
   }
 }
 
 function getBattlePolygon(battle) {
-  if (battle.rally === rallies.get(battle.front)) {
+  const bsectors = sectors.get(battle.front);
+
+  if (bsectors && (new Set([...bsectors, ...battle.sectors]).size === battle.sectors.size)) {
     return polygons.get(battle.front);
   }
 
   const polygon = getBattleContour(battle);
 
   polygons.set(battle.front, polygon);
-  rallies.set(battle.front, battle.rally);
+  sectors.set(battle.front, [...battle.sectors]);
 
   return polygon;
 }
