@@ -4,6 +4,7 @@ import updateBattleDetection from "./update-battle-detection.js";
 import updateBattleList from "./update-battle-list.js";
 import updateBattleMarching from "./update-battle-marching.js";
 import updateBattleMode from "./update-battle-mode.js";
+import updateBattleSectors from "./update-battle-sectors.js";
 import updateBattleStations from "./update-battle-stations.js";
 import updateFighterPrio from "./update-fighter-prio.js";
 import updateFighterStations from "./update-fighter-stations.js";
@@ -15,6 +16,7 @@ import updateThreats from "./update-threats.js";
 import trace from "./trace.js";
 
 const ops = [
+  updateBattleSectors,
   updateThreats,         // Ignore invisible threats for assaults without detector
   updateOpenJobs,        // Open fighter jobs for the active battles. Close obsolete jobs
   updateIdleWarriors,    // Assign idle warriors in battle zones to open fighter jobs

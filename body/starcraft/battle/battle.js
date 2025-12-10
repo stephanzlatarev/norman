@@ -50,15 +50,6 @@ export default class Battle {
       this.front = front;
       this.rally = rally;
 
-      this.sectors.clear();
-      for (const sector of this.front.horizon) {
-        this.sectors.add(sector);
-      }
-      for (const sector of this.rally.horizon) {
-        this.sectors.add(sector);
-      }
-      // TODO: Connect sectors between front and rally
-
       if (this.detector) {
         this.detector.updateBattle(this);
       }
