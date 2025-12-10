@@ -237,7 +237,9 @@ function removeImage(image, group, tag) {
     image.isAlive = false;
     group.delete(tag);
 
-    image.sector.removeUnit(image);
+    if (image.sector) {
+      image.sector.removeUnit(image);
+    }
 
     if (image.zone) {
       image.zone.removeUnit(image);
