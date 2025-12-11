@@ -65,10 +65,10 @@ const LEVELS = [
   {
     name: "DeploymentOutreachFullOffense", label: "Full Offense",
     enablers: [
-      { condition: () => Memory.FlagMaxEnemy, reason: "Army is maxed out" },
+      { condition: () => Memory.FlagMaxArmy, reason: "Army is maxed out" },
     ],
     blockers: [
-      { condition: () => !Memory.FlagMaxEnemy, reason: "Army is yet to max out" },
+      { condition: () => !Memory.FlagMaxArmy, reason: "Army is yet to max out" },
     ],
   },
 

@@ -1,7 +1,7 @@
 import { Memory, ActiveCount, Resources } from "./imports.js";
 
 export default function() {
-  Memory.FlagMaxEnemy = !!hasMaxArmy();
+  Memory.FlagMaxArmy = !!hasMaxArmy();
 
   if (Memory.MilestoneMaxArmy) {
 
@@ -9,7 +9,7 @@ export default function() {
 
   } else if (Memory.MilestoneBasicMilitary) {
 
-    if (Memory.FlagMaxEnemy) {
+    if (Memory.FlagMaxArmy) {
       console.log("Milestone Max Army");
       Memory.MilestoneMaxArmy = true;
     }
