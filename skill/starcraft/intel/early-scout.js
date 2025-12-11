@@ -163,13 +163,13 @@ class EarlyScout extends Job {
 
   goAttackEnemyWorker() {
     if (isAttacked(this.assignee)) {
+      // Enemy worker fights back
+      Memory.EarlyScoutMode = MODE_DAMAGE;
+      this.target = null;
+
       if (this.hasDetectedEnemyExpansion) {
         return this.transition(this.goMonitorEnemyExpansions);
       } else {
-        // Enemy worker fights back
-        Memory.EarlyScoutMode = MODE_DAMAGE;
-        this.target = null;
-
         return this.transition(this.goGuardExpansion);
       }
     }
