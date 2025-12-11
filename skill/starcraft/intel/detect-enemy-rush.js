@@ -10,6 +10,9 @@ export const ENEMY_RUSH_MODERATE_LEVEL = 1;
 export const ENEMY_RUSH_HIGH_LEVEL = 2;     // Enemy is expected to attack with one-base mineral-based economy
 export const ENEMY_RUSH_EXTREME_LEVEL = 3;  // Enemy is expected to attack with melee units and workers before our home base is properly walled off
 
+const REASON_NO_RED_FLAGS = "No red flags";
+let levelEnemyRushChangeReason = REASON_NO_RED_FLAGS;
+
 // TODO: Improve this by keeping track of all enemy investments
 // When enemy has lower investment in economy than us, we expect enemy rush
 // When enemy has invested in warriors and warrior production, we expect enemy waves
@@ -20,7 +23,7 @@ let enemyZerglings = 0;
 
 export default function() {
   let level = ENEMY_RUSH_NOT_EXPECTED;
-  let reason = "No red flags";
+  let reason = REASON_NO_RED_FLAGS;
 
   enemyPhotonCannons = Math.max(VisibleCount.PhotonCannon, enemyPhotonCannons);
   enemyReapers = Math.max(VisibleCount.Reaper, enemyReapers);
@@ -44,7 +47,7 @@ export default function() {
     level = (Memory.LevelEnemyRush >= ENEMY_RUSH_MODERATE_LEVEL) ? ENEMY_RUSH_MODERATE_LEVEL : ENEMY_RUSH_NOT_EXPECTED;
   } else if ((Memory.LevelEnemyRush === ENEMY_RUSH_EXTREME_LEVEL) && (!ActiveCount.ShieldBattery || (ActiveCount.Zealot + ActiveCount.Stalker < 8))) {
     // Enemy rush with melee units and workers is still expected
-    reason = "Still expecting extreme rush";
+    reason = levelEnemyRushChangeReason;
     level = ENEMY_RUSH_EXTREME_LEVEL;
   } else if (Memory.EarlyScoutKills && !Memory.FlagSiegeDefense) { // TODO: Improve by lowering the enemy rush level if early scout stops killing enemy workers
     // Early scout is killing enemy workers. This damages enemy economy but makes us blind to enemy rushes. Prepare for extreme rush just in case.
@@ -60,7 +63,7 @@ export default function() {
     reason = "Expecting very early rush with zerglings";
     level = ENEMY_RUSH_EXTREME_LEVEL;
   } else if ((Memory.LevelEnemyRush === ENEMY_RUSH_HIGH_LEVEL) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3) || (Memory.LevelEnemyArmySuperiority > 2))) {
-    reason = "Still expecting high rush";
+    reason = levelEnemyRushChangeReason;
     level = ENEMY_RUSH_HIGH_LEVEL;
   } else if (enemyReapers >= 2) {
     // Reapers can jump in my home base so walling it off is not effective. They remove the threat of a rush.
@@ -94,9 +97,10 @@ export default function() {
     level = ENEMY_RUSH_MODERATE_LEVEL;
   }
 
-  if (level != Memory.LevelEnemyRush) {
+  if ((level != Memory.LevelEnemyRush) || (reason !== levelEnemyRushChangeReason)) {
     console.log("Enemy rush level changes from", Memory.LevelEnemyRush, "to", level, "due to:", reason);
     Memory.LevelEnemyRush = level;
+    levelEnemyRushChangeReason = reason;
   }
 }
 
