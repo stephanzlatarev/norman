@@ -32,11 +32,11 @@ The other battles will behave as while building the army.
 export default function(battle) {
   let mode = Battle.MODE_WATCH;
 
-  if (battle.front.alertLevel <= ALERT_YELLOW) {
+  if ((Memory.DeploymentOutreach >= Memory.DeploymentOutreachFullOffense) && isPrimaryBattle(battle)) {
+    mode = maxoutTransition(battle);
+  } else if ((Memory.DeploymentOutreach < Memory.DeploymentOutreachNormalOffense) && (battle.front.alertLevel <= ALERT_YELLOW)) {
     // This is the case when preparing for defence or making an ambush
     mode = Battle.MODE_RALLY;
-  } else if ((Memory.DeploymentOutreach >= Memory.DeploymentOutreachFullOffense) && isPrimaryBattle(battle)) {
-    mode = maxoutTransition(battle);
   } else {
     mode = normalTransition(battle);
   }
