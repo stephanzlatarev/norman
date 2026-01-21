@@ -96,6 +96,10 @@ export default class Depot extends Zone {
     }
   }
 
+  toString() {
+    return "Depot " + this.x + ":" + this.y + (this.depot ? " " + this.depot.tag : "");
+  }
+
   static list() {
     return depots;
   }

@@ -11,41 +11,47 @@ class Scan {
   outer = { zones: new Set() };
 
   scan() {
-    let changed = false;
+    const scan = {
+      inner: { zones: new Set(), depots: new Set(), production: new Set() },
+      enemy: { zones: new Set(), depots: new Set(), production: new Set() },
+      outer: { zones: new Set() },
+    };
 
     for (const zone of Zone.list()) {
       if (!zone.isDepot && !zone.isHall) continue;
 
       if (zone.isDepot) {
         if (zone.buildings.size) {
-          if (!this.inner.depots.has(zone)) changed = true;
-          this.inner.depots.add(zone);
+          scan.inner.depots.add(zone);
         } else if (hasEnemyBuildings(zone)) {
-          if (!this.enemy.depots.has(zone)) changed = true;
-          this.enemy.depots.add(zone);
+          scan.enemy.depots.add(zone);
         }
       } else if (zone.isHall) {
         if (zone.buildings.size) {
-          if (!this.inner.production.has(zone)) changed = true;
-          this.inner.production.add(zone);
+          scan.inner.production.add(zone);
         } else if (hasEnemyBuildings(zone)) {
-          if (!this.enemy.production.has(zone)) changed = true;
-          this.enemy.production.add(zone);
+          scan.enemy.production.add(zone);
         }
       }
 
       if (zone.perimeterLevel >= PERIMETER_RED) {
-        this.enemy.zones.add(zone);
+        scan.enemy.zones.add(zone);
       } else if (zone.perimeterLevel >= PERIMETER_WHITE) {
-        this.outer.zones.add(zone);
+        scan.outer.zones.add(zone);
       } else if (zone.perimeterLevel >= PERIMETER_BLUE) {
-        this.inner.zones.add(zone);
+        scan.inner.zones.add(zone);
       } else if (zone.perimeterLevel) {
         zone.perimeterLevel = undefined;
       }
     }
 
-    return changed;
+    if (hasScanChanged(this, scan)) {
+      this.inner = scan.inner;
+      this.enemy = scan.enemy;
+      this.outer = scan.outer;
+
+      return true;
+    }
   }
 
 }
@@ -61,6 +67,20 @@ function hasEnemyBuildings(zone) {
       }
     }
   }
+}
+
+function hasScanChanged(a, b) {
+  if (hasSetChanged(a.inner.zones, b.inner.zones)) return true;
+  if (hasSetChanged(a.inner.depots, b.inner.depots)) return true;
+  if (hasSetChanged(a.inner.production, b.inner.production)) return true;
+  if (hasSetChanged(a.enemy.zones, b.enemy.zones)) return true;
+  if (hasSetChanged(a.enemy.depots, b.enemy.depots)) return true;
+  if (hasSetChanged(a.enemy.production, b.enemy.production)) return true;
+  if (hasSetChanged(a.outer.zones, b.outer.zones)) return true;
+}
+
+function hasSetChanged(a, b) {
+  return (a.size !== b.size) || ([...a, ...b].size !== a.size);
 }
 
 export default new Scan();

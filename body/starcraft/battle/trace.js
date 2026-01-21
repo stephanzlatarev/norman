@@ -155,14 +155,17 @@ function traceWarriorAssignments() {
       "zone:", warrior.zone ? warrior.zone.name : "-",
       "job:", warrior.job ? warrior.job.details : "-",
       "priority:", warrior.job ? warrior.job.priority : "-",
-      "deployed:", isWarriorDeployed(warrior.zone, warrior.job),
-      "target:", getWarriorTarget(warrior.job),
+      "deployed:", isWarriorDeployed(warrior),
+      "target:", getWarriorTarget(warrior),
       "order:", warrior.order ? JSON.stringify(warrior.order) : "-",
     );
   }
 }
 
-function isWarriorDeployed(sector, fight) {
+function isWarriorDeployed(warrior) {
+  const sector = warrior.sector;
+  const fight = warrior.job;
+
   if (!sector) return "?";
   if (!fight) return "-";
   if (!fight.battle) return "no battle";
@@ -171,7 +174,9 @@ function isWarriorDeployed(sector, fight) {
   return fight.battle.sectors.has(sector) ? "yes" : "no";
 }
 
-function getWarriorTarget(fight) {
+function getWarriorTarget(warrior) {
+  const fight = warrior.job;
+
   if (!fight) return "-";
   if (!fight.target) return "none";
   if (!fight.target.type) return "unknown";

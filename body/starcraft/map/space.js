@@ -23,6 +23,8 @@ export default class Space {
   }
 
   addUnit(unit) {
+    if (unit.isDecoy) return this.buildings.delete(unit);
+
     const unitSpace = unit[this.type];
 
     if (unitSpace === this) return;
