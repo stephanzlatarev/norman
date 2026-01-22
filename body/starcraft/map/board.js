@@ -80,6 +80,31 @@ class Board {
     if (row) return row[Math.floor(x)];
   }
 
+  radius(x, y, radius) {
+    const area = new Set();
+    const radiusSquared = radius * radius;
+  
+    for (let dx = 0.5; dx <= radius; dx++) {
+      const maxdy = Math.sqrt(radiusSquared - dx * dx);
+  
+      for (let dy = 0.5; dy <= maxdy; dy++) {
+        const a = this.cell(x + dx, y + dy);
+        if (a) area.add(a);
+
+        const b = this.cell(x - dx, y + dy);
+        if (b) area.add(b);
+
+        const c = this.cell(x + dx, y - dy);
+        if (c) area.add(c);
+
+        const d = this.cell(x - dx, y - dy);
+        if (d) area.add(d);
+      }
+    }
+
+    return area;
+  }
+
   sector(x, y) {
     const cell = this.cell(x, y);
 
