@@ -1,25 +1,20 @@
-import Memory from "../../../code/memory.js";
-import Mission from "../mission.js";
-import Depot from "../map/depot.js";
+import { Memory, Depot } from "./imports.js";
 
 // When enemy warriors are seen near home base before basic economy and basic defense are established
 // Then defend inside the established bases without expanding further
-export default class DetectEnemyProxyMission extends Mission {
+export default function() {
 
-  run() {
-    // Once we have basic military level, stop looking for enemy proxies
-    if (Memory.MilestoneBasicMilitary) {
-      Memory.DetectedEnemyProxy = false;
-      return;
-    }
-
-    if (Memory.DetectedEnemyProxy) {
-      checkEnemyProxyEnd();
-    } else {
-      checkEnemyProxyStart();
-    }
+  // Once we have basic military level, stop looking for enemy proxies
+  if (Memory.MilestoneBasicMilitary) {
+    Memory.DetectedEnemyProxy = false;
+    return;
   }
 
+  if (Memory.DetectedEnemyProxy) {
+    checkEnemyProxyEnd();
+  } else {
+    checkEnemyProxyStart();
+  }
 }
 
 function checkEnemyProxyStart() {
