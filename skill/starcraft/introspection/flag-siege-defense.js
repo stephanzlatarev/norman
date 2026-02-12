@@ -15,8 +15,11 @@ function isSiegeDefenseEnough() {
   if (!ActiveCount.CyberneticsCore) return false;
   if (!ActiveCount.ShieldBattery) return false;
 
-  if (Score.currentValueArmy < 3000) return false;
-  if ((Score.currentValueArmy < 5000) && (ActiveCount.Nexus === 1) && (Memory.LevelEnemyArmySuperiority > 2)) return false;
+  if (Memory.LevelEnemyArmySuperiority < 2) {
+    if (Score.currentValueArmy < 3000) return false;
+  } else {
+    if (Score.currentValueArmy < 5000) return false;
+  }
 
   return true;
 }

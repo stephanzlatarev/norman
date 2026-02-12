@@ -5,9 +5,19 @@ import Resources from "../memo/resources.js";
 import { ActiveCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
 
+let shouldDetect = true;
+
 export default class DetectEnemyHoardMission extends Mission {
 
   run() {
+    // Once we have military to defend a siege, enemy army superiority obsoletes enemy hoarding detection
+    if (!shouldDetect) return;
+    if (Memory.FlagSiegeDefense) {
+      Memory.DetectedEnemyHoard = false;
+      shouldDetect = false;
+    }
+
+    // Once we reach basic military level, stop looking for new cues for enemy hoarding
     if (Memory.MilestoneBasicMilitary) return;
     if (Memory.DetectedEnemyHoard) return;
 

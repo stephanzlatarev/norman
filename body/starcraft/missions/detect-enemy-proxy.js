@@ -7,7 +7,11 @@ import Depot from "../map/depot.js";
 export default class DetectEnemyProxyMission extends Mission {
 
   run() {
-    if (Memory.MilestoneBasicMilitary) return;
+    // Once we have basic military level, stop looking for enemy proxies
+    if (Memory.MilestoneBasicMilitary) {
+      Memory.DetectedEnemyProxy = false;
+      return;
+    }
 
     if (Memory.DetectedEnemyProxy) {
       checkEnemyProxyEnd();
