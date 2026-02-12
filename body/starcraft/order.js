@@ -210,14 +210,15 @@ export default class Order {
     if (!this || !order) return false;
 
     // The command must be the same
-    if (!this.ability || !order.ability) return false;
+    if (this.ability !== order.ability) return false;
 
     // Both orders must be with no targets
     if (!this.target && !order.target) return true;
 
-    // Otherwise, both targets must be exactly the same
+    // Otherwise, both orders must have targets
     if (!this.target || !order.target) return false;
 
+    // And both targets must be exactly the same
     if (this.target.tag) {
       return (this.target.tag === order.target.tag);
     } else if (this.target.x && this.target.y) {
