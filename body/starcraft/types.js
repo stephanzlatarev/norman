@@ -152,7 +152,14 @@ function parseWeapons(unit) {
     }
   }
 
-  if (unit.name === "Bunker") {
+  if (unit.name === "Battlecruiser") {
+    attackGround = 8;
+    damageGround = 49.8 / GAME_LOOPS_PER_SECOND;
+    rangeGround = 6;
+    attackAir = 5;
+    damageAir = 31.1 / GAME_LOOPS_PER_SECOND;
+    rangeAir = 6;
+  } else if (unit.name === "Bunker") {
     attackGround = 6 * 4;
     damageGround = 10 * 4 / GAME_LOOPS_PER_SECOND;
     rangeGround = 6;
