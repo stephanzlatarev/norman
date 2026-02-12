@@ -186,7 +186,9 @@ function areMarchingFightersInFireRange(battle) {
 
   for (const fighter of battle.fighters) {
     if (!fighter.assignee) continue;
-    if (!fighter.marching) continue;
+
+    // TODO: Check this again. It interfered with Fighter job shouldAttack check and kept warriors idle in enemy fire range
+    // if (!fighter.marching) continue;
 
     const warrior = fighter.assignee;
 
