@@ -60,8 +60,8 @@ export default function() {
   } else if (Memory.FlagEnemyProxyNexus) {
     reason = "Expecting strategic recall rush with workers and zealots";
     level = ENEMY_RUSH_EXTREME_LEVEL;
-  } else if (Memory.FlagEnemyProxyGateway) {
-    reason = "Expecting proxy gateway rush with zealots";
+  } else if (Memory.FlagEnemyProxyWarriorProduction) {
+    reason = "Expecting proxy gateway rush with zealots or barracks rush with marines";
     level = ENEMY_RUSH_EXTREME_LEVEL;
   } else if ((TotalCount.Assimilator <= 1) && (!ActiveCount.ShieldBattery || (ActiveCount.Stalker < 3)) && areZerglingsApproaching()) {
     reason = "Expecting very early rush with zerglings";
