@@ -216,13 +216,12 @@ function doGroundArmyMaxOut() {
     Priority.RoboticsBay = 100;
     Priority.ShieldBattery = 100;
     Limit.RoboticsBay = 1;
-    Limit.ShieldBattery = (TotalCount.Stalker + TotalCount.Zealot >= 1) ? TotalCount.Nexus : 0;
   } else {
     Priority.RoboticsBay = 0;
     Priority.ShieldBattery = 0;
     Limit.RoboticsBay = 0;
-    Limit.ShieldBattery = 0;
   }
+  Limit.ShieldBattery = (TotalCount.Stalker + TotalCount.Zealot >= 1) ? TotalCount.Nexus : 0;
 
   if ((TotalCount.Gateway < 3) || (TotalCount.Nexus <= 1)) {
     Limit.Forge = 0;

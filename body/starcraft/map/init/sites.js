@@ -43,6 +43,22 @@ class BlockSite extends Site {
     this.medium = [Board.cell(x + 2, y + 1), Board.cell(x + 5, y + 1)];
     this.wall = [];
     this.battery = [];
+
+    this.cells = new Set();
+    for (const cell of [...this.pylon, this.small]) {
+      for (let xx = cell.x - 1; xx <= cell.x; xx++) {
+        for (let yy = cell.y - 1; yy <= cell.y; yy++) {
+          this.cells.add(Board.cell(xx, yy));
+        }
+      }
+    }
+    for (const cell of this.medium) {
+      for (let xx = cell.x - 1; xx <= cell.x + 1; xx++) {
+        for (let yy = cell.y - 1; yy <= cell.y + 1; yy++) {
+          this.cells.add(Board.cell(xx, yy));
+        }
+      }
+    }
   }
 
   reverse() {
@@ -75,6 +91,8 @@ class WallSite extends Site {
 }
 
 export function createSites() {
+  const move = new Map();
+
   for (const zone of Zone.list()) {
     // Center of all zones are reserved for the depot or for army movements
     for (let y = zone.y - 2; y <= zone.y + 2; y++) {
@@ -88,7 +106,7 @@ export function createSites() {
     const sites = [];
     let starty = depot.cell.y;
 
-    if (depot.depot) {
+    if (depot === Depot.home) {
       const wall = createWallSite(depot, sites);
 
       if (wall) {
@@ -96,16 +114,21 @@ export function createSites() {
       }
     }
 
-    createSiteLine(depot, sites, starty);
+    const border = [...depot.border].filter(cell => cell.y === starty).sort((a, b) => a.x - b.x);
+    createSiteLine(sites, starty, border);
 
-    for (let y = starty + 6, count = -1; count !== sites.length; y += 6) {
-      count = sites.length;
-      createSiteLine(depot, sites, y);
+    for (let y = starty + 6; ; y += 6) {
+      const border = [...depot.border].filter(cell => cell.y === y).sort((a, b) => a.x - b.x);
+      if (!border.length) break;
+
+      createSiteLine(sites, y, border);
     }
 
-    for (let y = starty - 6, count = -1; count !== sites.length; y -= 6) {
-      count = sites.length;
-      createSiteLine(depot, sites, y);
+    for (let y = starty - 6; ; y -= 6) {
+      const border = [...depot.border].filter(cell => cell.y === y).sort((a, b) => a.x - b.x);
+      if (!border.length) break;
+
+      createSiteLine(sites, y, border);
     }
 
     if (depot === Depot.home) {
@@ -117,6 +140,35 @@ export function createSites() {
     }
 
     depot.sites = sites;
+
+    for (const site of sites) {
+      const zone = Board.cell(site.x, site.y).zone;
+
+      if (zone.isDepot && (zone !== depot)) {
+        move.set(site, { fromZone: depot, toZone: zone });
+      }
+    }
+  }
+
+  // Move sites to their own depot
+  for (const [site, { fromZone, toZone }] of move) {
+    fromZone.sites.splice(fromZone.sites.indexOf(site), 1);
+    toZone.sites.push(site);
+  }
+
+  // Set depot site cells
+  for (const depot of Depot.list()) {
+    const sitecells = new Set();
+
+    for (const site of depot.sites) {
+      if (!site.cells) continue;
+
+      for (const cell of site.cells) {
+        sitecells.add(cell);
+      }
+    }
+
+    depot.sitecells = sitecells;
   }
 }
 
@@ -177,9 +229,8 @@ function matches(grid, pattern) {
   return true;
 }
 
-function createSiteLine(zone, sites, y) {
-  const border = [...zone.border].filter((cell) => cell.y === y).sort((a, b) => a.x - b.x);
-  if (!border.length) return;
+function createSiteLine(sites, y, border) {
+  if (!border || !border.length) return;
 
   const left = getSiteLineEnd(border[0], -1);
   const rigth = getSiteLineEnd(border[border.length - 1], +1);

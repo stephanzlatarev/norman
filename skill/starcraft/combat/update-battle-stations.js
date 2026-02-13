@@ -66,6 +66,7 @@ function addStationsAroundWall(wall, stations, fighters) {
 function addStationsAroundRally(zone, stations, fighters) {
   const rally = zone.rally;
   const plot = zone.plot || new Set();
+  const sitecells = zone.sitecells || new Set();
   const taken = new Set(stations);
   const traversed = new Set();
 
@@ -85,7 +86,7 @@ function addStationsAroundRally(zone, stations, fighters) {
     for (const cell of wave) {
       traversed.add(cell);
 
-      if (!taken.has(cell) && !plot.has(cell)) {
+      if (!taken.has(cell) && !plot.has(cell) && !sitecells.has(cell)) {
         stations.push(cell);
         cell.isHoldStation = false;
         taken.add(cell);

@@ -4,11 +4,10 @@ const PYLON = "Pylon";
 const SHIELD_BATTERY = "ShieldBattery";
 
 export default function() {
-  if (Memory.DeploymentOutreach !== Memory.DeploymentOutreachNormalDefense) return;
-  if (TotalCount.Nexus <= 1) return;
+  if (!shouldWallExpo()) return;
 
   const expo = findExpo();
-  if (findShieldBattery(expo)) return;
+  if (!expo || findShieldBattery(expo)) return;
 
   const pylon = findPylon(expo);
 
@@ -39,6 +38,16 @@ export default function() {
       job.zone = expo;
     }
   }
+}
+
+function shouldWallExpo() {
+  if (TotalCount.Nexus <= 1) return false;
+
+  if (Memory.DeploymentOutreach === Memory.DeploymentOutreachNormalDefense) return true;
+
+  // Clicadinha case. Our scouts haven't seen the enemy yet. While in probing attacks we face defenses and we're unaware of how much army the opponent has.
+  // Improve by not walling the expo if we did see where the opponent spent their resources and it's not very aggressive.
+  if ((Memory.DeploymentOutreach >= Memory.DeploymentOutreachNormalDefense) && (TotalCount.Nexus === 2)) return true;
 }
 
 function findExpo() {
