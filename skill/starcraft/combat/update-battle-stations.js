@@ -1,5 +1,4 @@
-import Board from "../map/board.js";
-import Depot from "../map/depot.js";
+import { Board, Depot } from "./imports.js";
 
 export default function(battle) {
   const stations = new Set();

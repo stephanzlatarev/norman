@@ -1,11 +1,6 @@
-import Memory from "../../../code/memory.js";
+import { Depot, Enemy, Memory, TotalCount, Zone } from "./imports.js";
+import { ALERT_RED, ALERT_YELLOW, PERIMETER_GREEN, PERIMETER_WHITE } from "./imports.js";
 import Battle from "./battle.js";
-import Enemy from "../memo/enemy.js";
-import Depot from "../map/depot.js";
-import Zone from "../map/zone.js";
-import { ALERT_RED, ALERT_YELLOW } from "../map/alert.js";
-import { PERIMETER_GREEN, PERIMETER_WHITE } from "../map/perimeter.js";
-import { TotalCount } from "../memo/count.js";
 
 const MAX_BATTLE_PRIORITY = 90;
 

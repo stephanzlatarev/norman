@@ -1,5 +1,5 @@
-import Battle from "../battle/battle.js";
-import Resources from "../memo/resources.js";
+import { Resources } from "./imports.js";
+import Battle from "./battle.js";
 
 const MARCHING_DISTANCE = 1;
 

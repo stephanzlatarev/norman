@@ -1,7 +1,5 @@
-import Job from "../job.js";
-import Units from "../units.js";
+import { Job, Score, Units } from "./imports.js";
 import Battle from "./battle.js";
-import Score from "../memo/score.js";
 
 const INTERVAL = 224;
 let loop = 0;

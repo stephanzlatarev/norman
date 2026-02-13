@@ -1,6 +1,5 @@
-import Job from "../job.js";
-import Order from "../order.js";
-import Battle from "../battle/battle.js";
+import { Job, Order } from "./imports.js";
+import Battle from "./battle.js";
 
 const SAFETY_DISTANCE = 3;
 const LOOPS_LIMIT_DIRECTION = 10 * 22.4; // Limit of ten seconds to reach next target when observing the battle zone

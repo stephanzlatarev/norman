@@ -1,5 +1,5 @@
-import Fight from "../jobs/fight.js";
-import { ActiveCount } from "../memo/count.js";
+import { ActiveCount } from "./imports.js";
+import Fight from "./job-fight.js";
 
 const RECRUIT_BALANCE = 2;
 const ALL_WARRIORS = ["Colossus", "Immortal", "Sentry", "Stalker", "Zealot"];

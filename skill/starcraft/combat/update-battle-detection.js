@@ -1,4 +1,4 @@
-import Detect from "../jobs/detect.js";
+import Detect from "./job-detect.js";
 
 export default function(battle) {
   if (battle.fighters.find(fighter => !!fighter.assignee)) {

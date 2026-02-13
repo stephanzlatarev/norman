@@ -1,6 +1,7 @@
 
 const memory = new Map();
 const labels = new Map();
+const lists = new Map();
 
 export function label(key, value, label) {
   let keyLabels = labels.get(key);
@@ -32,3 +33,16 @@ function set(_, key, value) {
 }
 
 export default new Proxy({}, { get, set });
+
+export const List = new Proxy({}, {
+
+  get: function (_, key) {
+    return lists.get(key) || [];
+  },
+
+  set: function(_, key, value) {
+    lists.set(key, value);
+
+    return true;
+  }
+});

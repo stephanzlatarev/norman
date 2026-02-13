@@ -1,4 +1,4 @@
-import { ActiveCount, Battle, Memory, MemoryLabel } from "./imports.js";
+import { ActiveCount, Memory, MemoryLabel, List } from "./imports.js";
 
 const LEVELS = [
 
@@ -139,7 +139,7 @@ function selectDeploymentOutreach() {
 }
 
 function areFightingBattlesInOurBases() {
-  for (const battle of Battle.list()) {
+  for (const battle of List.Battles) {
     if (battle.front.depot && battle.front.depot.isActive && (battle.front.enemies.size >= 5)) {
       return true;
     }

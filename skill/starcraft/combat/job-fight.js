@@ -1,8 +1,5 @@
-import Job from "../job.js";
-import Order from "../order.js";
-import Battle from "../battle/battle.js";
-import Resources from "../memo/resources.js";
-import { ALERT_RED } from "../map/alert.js";
+import { Job, Order, Resources, ALERT_RED } from "./imports.js";
+import Battle from "./battle.js";
 
 const KITING_RANGE = 2;
 const KITING_WARRIORS = new Set(["Stalker"]);

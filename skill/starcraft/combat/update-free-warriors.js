@@ -1,6 +1,5 @@
+import { Order, Units } from "./imports.js";
 import Battle from "./battle.js";
-import Units from "../units.js";
-import Order from "../order.js";
 
 export default function() {
   for (const warrior of Units.warriors().values()) {

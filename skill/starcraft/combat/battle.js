@@ -1,3 +1,4 @@
+import { List } from "./imports.js";
 import { traceBattle } from "./trace.js";
 
 const battles = [];
@@ -94,3 +95,5 @@ export default class Battle {
   }
 
 }
+
+List.Battles = battles;

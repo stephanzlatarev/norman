@@ -1,8 +1,6 @@
-import Memory from "../../../code/memory.js";
+import { Memory, Depot } from "./imports.js";
+import { ALERT_YELLOW, PERIMETER_BLUE, PERIMETER_GREEN } from "./imports.js";
 import Battle from "./battle.js";
-import Depot from "../map/depot.js";
-import { ALERT_YELLOW } from "../map/alert.js";
-import { PERIMETER_BLUE, PERIMETER_GREEN } from "../map/perimeter.js";
 
 const ATTACK_BALANCE = 1.6;
 const RETREAT_BALANCE = 1.0;

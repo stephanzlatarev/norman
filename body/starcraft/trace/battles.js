@@ -1,10 +1,10 @@
-import Battle from "../battle/battle.js";
+import { List } from "../../../code/memory.js";
 
 const polygons = new Map();
 const sectors = new Map();
 
 export default function(shapes, texts) {
-  const battles = Battle.list().sort((a, b) => (b.priority - a.priority));
+  const battles = List.Battles.sort((a, b) => (b.priority - a.priority));
 
   texts.push("Prio Front Mode  Rally Recruit Deployed Detector");
 
@@ -82,13 +82,13 @@ function balanceText(balance) {
 
 function getBattleColor(battle) {
   switch (battle.mode) {
-    case Battle.MODE_FIGHT: return "red";
-    case Battle.MODE_RALLY: return "yellow";
-    case Battle.MODE_MARCH: return "orange";
-    case Battle.MODE_SMASH: return "black";
-    case Battle.MODE_STAND: return "white";
-    case Battle.MODE_WATCH: return "silver";
-    case Battle.MODE_WEAR: return "brown";
+    case "fight": return "red";
+    case "rally": return "yellow";
+    case "march": return "orange";
+    case "smash": return "black";
+    case "stand": return "white";
+    case "watch": return "silver";
+    case "wear": return "brown";
     default: return "pink";
   }
 }

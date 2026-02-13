@@ -1,4 +1,4 @@
-import { ActiveCount, Battle, Depot, Memory, Types } from "../imports.js";
+import { ActiveCount, Depot, Memory, List, Types } from "../imports.js";
 import WallFielder from "./wall-fielder.js";
 import WallKeeper from "./wall-keeper.js";
 import WallShielder from "./wall-shielder.js";
@@ -32,7 +32,7 @@ function shouldWallBase() {
   if (Memory.FlagEnemyProxyNexus) return false;
 
   // Wall the base only if the only battle is at the home base
-  for (const battle of Battle.list()) {
+  for (const battle of List.Battles) {
     if (battle.front !== Depot.home) return false;
     if (battle.rally !== Depot.home) return false;
   }
