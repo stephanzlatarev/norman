@@ -23,6 +23,7 @@ export default class Depot extends Zone {
   constructor(name, center, cells, border, resources, depot) {
     super(name, center, cells, border);
 
+    this.depot = depot;
     this.x = center.x + 0.5;
     this.y = center.y + 0.5;
 
@@ -52,8 +53,7 @@ export default class Depot extends Zone {
     );
     this.exitRally = this.rally;
 
-    if (depot && !Depot.home) {
-      this.depot = depot;
+    if (depot && (!Depot.home || !Depot.home.depot || (depot.tag < Depot.home.depot.tag))) {
       Depot.home = this;
     }
 
@@ -101,7 +101,11 @@ export default class Depot extends Zone {
   }
 
   static list() {
-    return depots;
+    return [...depots];
+  }
+
+  static order() {
+    depots.sort((a, b) => (a.perimeterLevel - b.perimeterLevel));
   }
 
 }

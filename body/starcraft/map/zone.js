@@ -58,7 +58,11 @@ export default class Zone extends Space {
   }
 
   static list() {
-    return zones;
+    return [...zones];
+  }
+
+  static order() {
+    zones.sort((a, b) => (a.perimeterLevel - b.perimeterLevel));
   }
 
 }
