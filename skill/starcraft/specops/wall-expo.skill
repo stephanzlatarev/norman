@@ -1,0 +1,5 @@
+# Secure expansion with defenses or a wall
+
+name: Wall expo
+brain: wall-expo/wall-expo.js
+type: javascript
