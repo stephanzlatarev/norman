@@ -156,8 +156,13 @@ function findFrontBaseZone() {
 
   for (const zone of Depot.list()) {
     if (!zone.depot) continue;
+
     if (zone.alertLevel >= ALERT_RED) return zone;
-    if (zone.alertLevel >= ALERT_YELLOW) frontThreatened = zone;
+
+    if (zone.alertLevel >= ALERT_YELLOW) {
+      frontThreatened = zone;
+      break;
+    }
 
     frontSecure = zone;
   }
