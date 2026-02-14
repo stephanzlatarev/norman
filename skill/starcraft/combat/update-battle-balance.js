@@ -1,12 +1,13 @@
 
 export default function(battle) {
   const enemyStrength = calculateEnemyStrength(battle);
+  const balanceFactor = calculateBalanceFactor(battle);
 
   battle.recruitedStrength = calculateWarriorStrength(battle, false);
-  battle.recruitedBalance = calculateBalance(battle.recruitedStrength, enemyStrength);
+  battle.recruitedBalance = calculateBalance(battle.recruitedStrength, enemyStrength, balanceFactor);
 
   battle.deployedStrength = calculateWarriorStrength(battle, true);
-  battle.deployedBalance = calculateBalance(battle.deployedStrength, enemyStrength);
+  battle.deployedBalance = calculateBalance(battle.deployedStrength, enemyStrength, balanceFactor);
 }
 
 function calculateEnemyStrength(battle) {
@@ -58,11 +59,25 @@ function calculateWarriorStrength(battle, isDeployed) {
   return warriorHealth * warriorDamage;
 }
 
-function calculateBalance(warriorStrength, enemyStrength) {
+function calculateBalanceFactor(battle) {
+  let factor = 1;
+
+  for (const building of battle.front.buildings) {
+    if (!building.isActive) continue;
+
+    if (building.type.name === "ShieldBattery") {
+      factor = 2;
+    }
+  }
+
+  return factor;
+}
+
+function calculateBalance(warriorStrength, enemyStrength, balanceFactor) {
   if (warriorStrength <= 0) {
     return 0;
   } else if (enemyStrength > 0) {
-    return (warriorStrength / enemyStrength);
+    return (warriorStrength * balanceFactor / enemyStrength);
   } else {
     return Infinity;
   }
