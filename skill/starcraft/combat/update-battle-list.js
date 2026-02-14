@@ -33,7 +33,10 @@ function listSiegeDefenseBattles(battles) {
 
 // Station warriors in economy perimeter
 function listNormalDefenseBattles(battles) {
-  listBattlesInRedZones(battles, PERIMETER_GREEN);
+  const outpost = findOutpostBase();
+  const outpostPerimeterLevel = outpost?.perimeterLevel || PERIMETER_GREEN;
+
+  listBattlesInRedZones(battles, outpostPerimeterLevel);
 
   if (!battles.size) {
     battles.add(getBattle(Battle.list(), MAX_BATTLE_PRIORITY, findFrontBaseZone()));
@@ -56,7 +59,9 @@ function listExpandDefenseBattles(battles) {
 
 // Test enemy lines for weaknesses and keep main army ready to return to defense
 function listProbingAttackBattles(battles) {
-  listOffenseBattles(battles);
+  // TODO: Replacing pure defense with probing battles with limited forces.
+  // Keep the main army well positioned to either support a winning attack or go back to defend
+  listExpandDefenseBattles(battles);
 }
 
 // Create multi-pronged attacks on weakest enemy zones
@@ -144,6 +149,18 @@ function findRallyZone(zone) {
   }
 
   return rally;
+}
+
+function findOutpostBase() {
+  let outpost;
+
+  for (const zone of Depot.list()) {
+    if (zone.depot) {
+      outpost = zone;
+    }
+  }
+
+  return outpost;
 }
 
 function findFrontBaseZone() {
