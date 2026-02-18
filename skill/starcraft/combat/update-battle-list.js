@@ -227,5 +227,5 @@ function getBattle(list, priority, front, rally) {
     if (battle.rally === front) return battle.move(priority, front, rally);
   }
 
-  return new Battle(90, front, rally);
+  return new Battle(priority, front, rally);
 }
