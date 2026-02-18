@@ -144,7 +144,7 @@ export default class Job {
     // Check for the unit tag because the job might be assigned to a progress tracker
     // TODO: Think of better way to handle progress trackers. Fake units is not ideal
     if (unit && unit.tag) {
-      Order.stop(unit);
+      Order.rest(unit);
     }
 
     this.close(false);

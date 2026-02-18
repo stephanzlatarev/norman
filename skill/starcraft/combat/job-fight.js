@@ -301,7 +301,7 @@ export default class Fight extends Job {
       // Make sure the spread movement is not counted as marching
       marching.isMarching = false;
 
-      Order.stop(warrior);
+      Order.rest(warrior);
     } else {
       // Make sure the spread movement is counted as marching
       marching.isMarching = true;
@@ -311,7 +311,7 @@ export default class Fight extends Job {
   }
 
   close(outcome) {
-    Order.stop(this.assignee);
+    Order.rest(this.assignee);
 
     const index = this.battle.fighters.indexOf(this);
     if (index >= 0) {

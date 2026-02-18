@@ -6,8 +6,9 @@ const orders = new Map();
 const STATUS_DEAD = -1;
 const STATUS_EMPTY = -2;
 const STATUS_ABORT = -3;
+const STATUS_LOST = -4;
 
-const RETRY_AFTER = 3;
+const DELAY_LOOPS = 2;
 
 let ids = 1;
 
@@ -113,15 +114,8 @@ export default class Order {
   }
 
   command() {
-    if (this.isIssued) {
-      if (!this.isAccepted && !this.isRejected && (Resources.loop > this.timeIssued + RETRY_AFTER)) {
-        // Commands get lost in the arena. Retry them...
-        log("INFO: Retrying command for", this.toString());
-      } else {
-        // Don't repeat commands
-        return;
-      }
-    }
+    // Don't repeat commands
+    if (this.isIssued) return;
 
     if (this.unit.isAlive && this.ability) {
       if (!this.unit.tag) {
@@ -177,9 +171,24 @@ export default class Order {
 
   // Check if the order is accepted and if so then remove it.
   check() {
-    if (!this.unit.isAlive) this.result(STATUS_DEAD);
-    if (!this.isIssued) return;
+    if (!this.unit.isAlive) return this.result(STATUS_DEAD);
+
     if (this.isAccepted) return;
+
+    if (!this.isIssued) {
+      // The order must be issued before checking whether it's accepted
+      return;
+    } else if (Resources.loop > this.timeIssued + DELAY_LOOPS) {
+      // Multiplayer games delay commands with 2 game loops. When it's issued but not accepted after the delay, then it's lost
+      log("WARNING: Lost command:", this.toString(), "Unit is busy with:", JSON.stringify(this.unit.order));
+      this.status = STATUS_LOST;
+
+      if (this.unit.activeOrder === this) {
+        this.unit.activeOrder = null;
+      }
+
+      return this.remove();
+    }
 
     if (this.checkIsAccepted) {
       this.isAccepted = this.checkIsAccepted(this);
@@ -192,9 +201,6 @@ export default class Order {
 
       // This order is removed from to-be-issued list in memory
       this.remove();
-    } else if (Resources.loop > this.timeIssued + 1) {
-      // It's normal in a multi-player game that the order is picked up in the second game loop after it's issued. Anything beyond that will mean the the order may need to be retried
-      log("INFO: Waiting for unit to accept", this.toString(), "while busy with", JSON.stringify(this.unit.order));
     }
   }
 
@@ -246,8 +252,8 @@ export default class Order {
     if (!unit) return;
 
     // If the unit cannot attack then stop it so that it doesn't carry previous orders
-    if (!target) return Order.stop(unit);
-    if (!unit.type.damageGround && !unit.type.damageAir) return Order.stop(unit);
+    if (!target) return Order.rest(unit);
+    if (!unit.type.damageGround && !unit.type.damageAir) return Order.rest(unit);
 
     // If there's the order is already pending then don't issue a new one
     if (unit.todo && unit.todo.equals({ ability: 23, target })) return unit.todo;
@@ -272,11 +278,11 @@ export default class Order {
     if (!unit || !unit.order) return;
 
     // If the unit cannot attack then stop it so that it doesn't carry previous orders
-    if (!target) return Order.stop(unit);
+    if (!target) return Order.rest(unit);
 
     const pos = target.body ? target.body : target;
 
-    if (!pos.x || !pos.y) return Order.stop(unit);
+    if (!pos.x || !pos.y) return Order.rest(unit);
     if (unit.todo && unit.todo.equals({ ability: 16, target: pos })) return unit.todo;
 
     let distance = 1;
@@ -322,6 +328,17 @@ export default class Order {
     if ((unit.order.abilityId !== 16) || !unit.order.targetWorldSpacePos || !isExactPosition(unit.order.targetWorldSpacePos, target)) {
       return new Order(unit, 16, { x: target.x, y: target.y });
     }
+  }
+
+  static rest(unit) {
+    if (!unit) return;
+    if (!unit.isAlive) return;
+
+    // Immobile units get a stop command
+    if (!unit.type.movementSpeed) return Order.stop(unit);
+
+    // Mobile units get a move command so that they don't attack nearby enemy units
+    return new Order(unit, 16, { x: unit.body.x, y: unit.body.y });
   }
 
   static stop(unit) {
