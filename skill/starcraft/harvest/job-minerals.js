@@ -1,4 +1,5 @@
 import { Job, Order } from "./imports.js";
+import Delay from "./delay.js";
 
 const BUSY_DISTANCE = 2;
 const PUSH_DISTANCE = 1.5;
@@ -176,7 +177,6 @@ function order(worker, ability, target) {
 
 function pushToResource(worker, harvestPoint, resource) {
   if ((worker.order.abilityId === 16) && isSamePoint(worker.order.targetWorldSpacePos, harvestPoint)) return MODE_PUSHING;
-  if ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === resource.tag)) return MODE_PUSHING;
 
   order(worker, 16, harvestPoint).queue(298, resource);
 
@@ -193,7 +193,6 @@ function harvestResource(worker, resource) {
 
 function pushToDepot(worker, storePoint, nexus, resource) {
   if ((worker.order.abilityId === 16) && isSamePoint(worker.order.targetWorldSpacePos, storePoint)) return MODE_PUSHING;
-  if ((worker.order.abilityId === 299) && (worker.order.targetUnitTag === nexus.tag)) return MODE_PUSHING;
 
   order(worker, 16, storePoint).queue(1, nexus).queue(1, resource);
 
@@ -209,16 +208,18 @@ function returnHarvest(worker) {
 }
 
 function shouldPush(worker, xaxis, boost, target) {
+  const { x, y } = Delay.pos(worker);
+
   if (xaxis) {
-    if (worker.body.x < Math.min(boost.x, target.x)) return false;
-    if (worker.body.x > Math.max(boost.x, target.x)) return false;
-    if (worker.body.y < target.y - PUSH_DISTANCE) return false;
-    if (worker.body.y > target.y + PUSH_DISTANCE) return false;
+    if (x < Math.min(boost.x, target.x)) return false;
+    if (x > Math.max(boost.x, target.x)) return false;
+    if (y < target.y - PUSH_DISTANCE) return false;
+    if (y > target.y + PUSH_DISTANCE) return false;
   } else {
-    if (worker.body.y < Math.min(boost.y, target.y)) return false;
-    if (worker.body.y > Math.max(boost.y, target.y)) return false;
-    if (worker.body.x < target.x - PUSH_DISTANCE) return false;
-    if (worker.body.x > target.x + PUSH_DISTANCE) return false;
+    if (y < Math.min(boost.y, target.y)) return false;
+    if (y > Math.max(boost.y, target.y)) return false;
+    if (x < target.x - PUSH_DISTANCE) return false;
+    if (x > target.x + PUSH_DISTANCE) return false;
   }
 
   return true;

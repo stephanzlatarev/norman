@@ -162,6 +162,7 @@ function syncUnit(units, unit, type, zombies, me) {
   image.isVisible = (unit.displayType === 1);
   image.isHallucination = unit.isHallucination;
   image.lastSeen = Resources.loop;
+  image.lastPos = image.body ? { ...image.body } : { ...unit.pos };
   image.buildProgress = unit.buildProgress;
   image.isActive = (unit.buildProgress >= 1) && (unit.isPowered || !image.type.needsPower);
   image.order = unit.orders.length ? { ...unit.orders[0], queue: unit.orders.length } : { abilityId: 0, queue: 0 };

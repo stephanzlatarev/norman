@@ -1,10 +1,13 @@
 import { Depot } from "./imports.js";
+import Delay from "./delay.js";
 import Harvest from "./job-minerals.js";
 
 const zoneToJobs = new Map();
 const zoneToLinesProfile = new Map();
 
 export default function() {
+  Delay.sync();
+
   for (const zone of Depot.list()) {
     const nexus = zone.depot;
     const availableWorkersCount = countAvailableWorkers(zone);
