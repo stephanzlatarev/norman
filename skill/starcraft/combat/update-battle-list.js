@@ -96,8 +96,13 @@ function listBattlesInRedZones(battles, perimeterLevelLimit) {
     if (zone.alertLevel < ALERT_RED) continue;
 
     const rally = findRallyZone(zone);
+    const isZoneOutsidePerimeter = !zone.perimeterLevel || (zone.perimeterLevel >= PERIMETER_WHITE);
+    const isRallyHotspot = !rally || !rally.alertLevel || (rally.alertLevel >= ALERT_RED);
 
-    if (rally) hotspots.push({ zone, rally });
+    // When outside our perimeter, the rally zone must not be a hotspot itself
+    const isRallyAcceptable = !isZoneOutsidePerimeter || !isRallyHotspot;
+
+    if (isRallyAcceptable) hotspots.push({ zone, rally });
   }
 
   hotspots.sort((a, b) => (a.zone.perimeterLevel - b.zone.perimeterLevel));
@@ -141,11 +146,6 @@ function findRallyZone(zone) {
     if (neighbor.perimeterLevel < rally.perimeterLevel) {
       rally = neighbor;
     }
-  }
-
-  if (zone.perimeterLevel && (zone.perimeterLevel >= PERIMETER_WHITE)) {
-    // When outside our perimeter, the rally zone must not be a hotspot itself
-    if (!rally.alertLevel || (rally.alertLevel >= ALERT_RED)) return;
   }
 
   return rally;
@@ -215,6 +215,8 @@ function findBattle(list, front) {
 }
 
 function getBattle(list, priority, front, rally) {
+  rally = rally || findRallyZone(front);
+
   for (const battle of list) {
     if (battle.front === front) return battle.move(priority, front, rally);
   }
