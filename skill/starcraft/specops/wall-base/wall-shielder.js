@@ -40,6 +40,13 @@ export default class WallShielder extends Job {
     }
   }
 
+  accepts() {
+    // Too late in the game, when there are no minerals for mineral walk, don't assign probes to the job
+    if (!mineralsBack || !mineralsBack.isAlive || !mineralsForth || !mineralsForth.isAlive) return false;
+
+    return true;
+  }
+
   execute() {
     const probe = this.assignee;
 
