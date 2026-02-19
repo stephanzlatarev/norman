@@ -1,5 +1,4 @@
-import Job from "../job.js";
-import Order from "../order.js";
+import { Job, Order } from "./imports.js";
 
 const BUSY_DISTANCE = 2;
 const PUSH_DISTANCE = 1.5;

@@ -1,31 +1,26 @@
-import Job from "../job.js";
-import Mission from "../mission.js";
-import Order from "../order.js";
-import Depot from "../map/depot.js";
+import { Depot, Job, Order } from "./imports.js";
+
+let job;
 
 // Transfer idle workers from all over the map (including non-depot zones) to one nexus that needs harvesters
-export default class HarvestTransferMission extends Mission {
-
-  run() {
-    if (this.job) {
-      if (this.job.isDone || this.job.isFailed) {
-        this.job = null;
-      } else if (!this.job.assignee && !doesNeedHarvesters(this.job.zone)) {
-        this.job.close(true);
-        this.job = null;
-      } else if (!this.job.assignee) {
-        // The open transfer job is valid. No need to create another.
-        return;
-      }
-    }
-
-    const zone = findTransferZone();
-
-    if (zone) {
-      this.job = new Transfer(zone);
+export default function() {
+  if (job) {
+    if (job.isDone || job.isFailed) {
+      job = null;
+    } else if (!job.assignee && !doesNeedHarvesters(job.zone)) {
+      job.close(true);
+      job = null;
+    } else if (!job.assignee) {
+      // The open transfer job is valid. No need to create another.
+      return;
     }
   }
 
+  const zone = findTransferZone();
+
+  if (zone) {
+    job = new Transfer(zone);
+  }
 }
 
 class Transfer extends Job {

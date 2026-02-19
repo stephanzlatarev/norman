@@ -1,5 +1,4 @@
-import Job from "../job.js";
-import Order from "../order.js";
+import { Job, Order } from "./imports.js";
 
 export default class HarvestVespene extends Job {
 

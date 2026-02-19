@@ -1,34 +1,30 @@
-import Mission from "../mission.js";
-import Harvest from "../jobs/harvest-minerals.js";
-import Depot from "../map/depot.js";
+import { Depot } from "./imports.js";
+import Harvest from "./job-minerals.js";
 
 const zoneToJobs = new Map();
 const zoneToLinesProfile = new Map();
 
-export default class HarvestMineralsMission extends Mission {
+export default function() {
+  for (const zone of Depot.list()) {
+    const nexus = zone.depot;
+    const availableWorkersCount = countAvailableWorkers(zone);
 
-  run() {
-    for (const zone of Depot.list()) {
-      const nexus = zone.depot;
-      const availableWorkersCount = countAvailableWorkers(zone);
+    if (nexus && nexus.isActive) {
+      const jobs = getActiveJobs(zone);
+      const profile = getLineProfile(zone, availableWorkersCount, jobs);
 
-      if (nexus && nexus.isActive) {
-        const jobs = getActiveJobs(zone);
-        const profile = getLineProfile(zone, availableWorkersCount, jobs);
+      if (zoneToLinesProfile.get(zone) !== profile) {
+        createJobsForLines(createLines(zone, availableWorkersCount), jobs);
+        zoneToLinesProfile.set(zone, getLineProfile(zone, availableWorkersCount, jobs));
+      }
+    } else {
+      const jobs = zoneToJobs.get(zone);
 
-        if (zoneToLinesProfile.get(zone) !== profile) {
-          createJobsForLines(createLines(zone, availableWorkersCount), jobs);
-          zoneToLinesProfile.set(zone, getLineProfile(zone, availableWorkersCount, jobs));
-        }
-      } else {
-        const jobs = zoneToJobs.get(zone);
+      if (jobs) {
+        zoneToJobs.delete(zone);
 
-        if (jobs) {
-          zoneToJobs.delete(zone);
-
-          for (const job of jobs) {
-            job.close(true);
-          }
+        for (const job of jobs) {
+          job.close(true);
         }
       }
     }
