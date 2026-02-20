@@ -3,6 +3,7 @@ import Delay from "./delay.js";
 
 const BUSY_DISTANCE = 2;
 const PUSH_DISTANCE = 1.5;
+const ARRIVED_DISTANCE = 0.1;
 
 const MODE_IDLE = "idle";
 const MODE_PUSHING = "pushing";
@@ -209,19 +210,24 @@ function returnHarvest(worker) {
 
 function shouldPush(worker, xaxis, boost, target) {
   const { x, y } = Delay.pos(worker);
+  const dx = Math.abs(x - target.x);
+  const dy = Math.abs(y - target.y);
 
+  // If the worker is already at the target position, then there's no need to push it
+  if ((dx < ARRIVED_DISTANCE) && (dy < ARRIVED_DISTANCE)) return false;
+
+  // If the worker is outside its push track, then don't push it
   if (xaxis) {
     if (x < Math.min(boost.x, target.x)) return false;
     if (x > Math.max(boost.x, target.x)) return false;
-    if (y < target.y - PUSH_DISTANCE) return false;
-    if (y > target.y + PUSH_DISTANCE) return false;
+    if (dy < PUSH_DISTANCE) return false;
   } else {
     if (y < Math.min(boost.y, target.y)) return false;
     if (y > Math.max(boost.y, target.y)) return false;
-    if (x < target.x - PUSH_DISTANCE) return false;
-    if (x > target.x + PUSH_DISTANCE) return false;
+    if (dx < PUSH_DISTANCE) return false;
   }
 
+  // Otherwise, push towards the target
   return true;
 }
 
