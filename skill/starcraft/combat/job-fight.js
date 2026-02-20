@@ -191,7 +191,7 @@ export default class Fight extends Job {
       // Regenerate shields
       Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
       this.attackMoveForward = false;
-    } else if (!this.station.isHoldStation && shouldMoveToCoolDown(warrior)) {
+    } else if (shouldMoveToCoolDown(warrior, this.station, target)) {
       const range = target.body.isFlying ? warrior.type.rangeAir : warrior.type.rangeGround;
       const distance = Math.sqrt(calculateSquareDistance(warrior.body, target.body)) - warrior.body.r - target.body.r;
       const closestDistanceOnReadyWeapon = distance + (target.type.movementSpeed - warrior.type.movementSpeed) * (warrior.weapon.cooldown - 3);
@@ -336,7 +336,10 @@ function getDetails(fight, mode) {
   return details.join(" ");
 }
 
-function shouldMoveToCoolDown(warrior) {
+function shouldMoveToCoolDown(warrior, station, target) {
+  // If the warrior is holding position behind a wall and the target is outside the wall, then hold the position
+  if (station.isHoldStation && target.zone && (target.zone !== warrior.zone)) return false;
+
   return (warrior.weapon.cooldown > 3) && (warrior.weapon.cooldown < warrior.type.weaponCooldown - 3);
 }
 
