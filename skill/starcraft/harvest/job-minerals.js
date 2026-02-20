@@ -220,11 +220,11 @@ function shouldPush(worker, xaxis, boost, target) {
   if (xaxis) {
     if (x < Math.min(boost.x, target.x)) return false;
     if (x > Math.max(boost.x, target.x)) return false;
-    if (dy < PUSH_DISTANCE) return false;
+    if (dy > PUSH_DISTANCE) return false;
   } else {
     if (y < Math.min(boost.y, target.y)) return false;
     if (y > Math.max(boost.y, target.y)) return false;
-    if (dx < PUSH_DISTANCE) return false;
+    if (dx > PUSH_DISTANCE) return false;
   }
 
   // Otherwise, push towards the target
