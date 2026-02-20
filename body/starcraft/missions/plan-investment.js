@@ -99,12 +99,13 @@ function doOneBaseDefense() {
       } else if ((TotalCount.Zealot >= 2) && (TotalCount.Zealot >= VisibleCount.Zealot)) {
 
         // If we have too much minerals and not enough gas, then build Zealots
-        if ((Resources.minerals >= 225) && (Resources.vespene < 50)) {
+        if (haveTooMuchMineralsAndTooLittleVespeneForExtremeRush()) {
           Limit.Zealot = TotalCount.Zealot + 1;
         } else {
           Priority.Stalker = 100;
-          Limit.Probe = 26;
         }
+
+        Limit.Probe = 26;
       } else {
         // We need more Zealots to defend against the rush
         Limit.Zealot = Infinity;
@@ -346,7 +347,7 @@ function calculateLimitAssimilator() {
 
   if (Memory.LevelEnemyRush >= 3) {
     // Expecting enemy rush on minerals-only economy
-    return 1;
+    return haveTooMuchMineralsAndTooLittleVespeneForExtremeRush() ? 2 : 1;
   }
 
   let limit = 0;
@@ -420,4 +421,8 @@ function calculateLimitGateway() {
   const availableMineralIncomePerSecond = (mineralIncomePerSecond - mineralCostPerSecond);
 
   return TotalCount.Gateway + Math.floor(availableMineralIncomePerSecond / MineralCostPerSecondGateway);
+}
+
+function haveTooMuchMineralsAndTooLittleVespeneForExtremeRush() {
+  return ((Resources.minerals >= 225) && (Resources.vespene < 50));
 }
