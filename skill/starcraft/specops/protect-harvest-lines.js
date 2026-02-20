@@ -1,5 +1,7 @@
 import { Depot, Job, Order } from "./imports.js";
 
+const ATTACKERS = { Battlecruiser: true, LiberatorAG: true };
+
 const jobs = new Set();
 
 export default function() {
@@ -45,22 +47,11 @@ class Protect extends Job {
 function isUnderAttack(zone) {
   if (!zone.enemies.size) return false;
 
-  return isUnderLiberatorAttack(zone);
-}
-
-function isUnderLiberatorAttack(zone) {
-  if (!zone.effects.size) return false;
-
-  let isLiberatorInDefendMode = false;
-
   for (const enemy of zone.enemies) {
-    if (enemy.type.name === "LiberatorAG") {
-      isLiberatorInDefendMode = true;
-      break;
+    if (ATTACKERS[enemy.type.name]) {
+      return true;
     }
   }
-
-  return isLiberatorInDefendMode;
 }
 
 function countJobs(zone) {
@@ -108,6 +99,6 @@ function closeJobs(zone) {
 
 function pickDepotZone(zone) {
   for (const one of Depot.list()) {
-    if ((one !== zone) && one.isDepot && one.minerals.size) return one;
+    if ((one !== zone) && one.minerals?.size) return one;
   }
 }
