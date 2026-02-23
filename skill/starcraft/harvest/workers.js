@@ -1,4 +1,4 @@
-import { Depot, Limit, Order, Produce, TotalCount, Types } from "./imports.js";
+import { Depot, Limit, Memory, Order, Produce, TotalCount, Types } from "./imports.js";
 
 const jobs = new Map();
 
@@ -11,12 +11,32 @@ export default function() {
 
   if (TotalCount.Probe >= Limit.Probe) return;
 
+  const isUnderSiege = (Memory.DeploymentOutreach === Memory.DeploymentOutreachSiegeDefense);
+
   for (const zone of Depot.list()) {
     const nexus = zone.depot;
 
     if (!nexus) continue;
     if (!nexus.zone) continue;
     if (!nexus.isActive) continue;
+
+    if (isUnderSiege) {
+      if (zone === Depot.home) {
+        // Don't produce workers if home base is already saturated
+        if (zone.workers.size >= 26) continue;
+      } else {
+        // Don't produce workers outside home base. Abort any open jobs.
+        const job = jobs.get(nexus);
+
+        if (job) {
+          job.abort();
+          jobs.delete(nexus);
+        }
+
+        continue;
+      }
+    }
+
     if (jobs.has(nexus)) continue;
     if (nexus.job && !nexus.job.isDone && !nexus.job.isFailed) continue;
     if (setRallyPoint(nexus)) continue;
