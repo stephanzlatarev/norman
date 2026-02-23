@@ -1,4 +1,4 @@
-import { Depot, Job, Limit, Memory, Units, TotalCount } from "./imports.js";
+import { Depot, Job, Limit, Memory, Priority, Units, TotalCount } from "./imports.js";
 import WaitOnSite from "./job-wait-on-site.js";
 
 let jobWaitOnShieldBatterySite = null;
@@ -10,6 +10,8 @@ let battery = null;
 export default function() {
   if (!Depot.home) return;
 
+  if (jobWaitOnShieldBatterySite && !shouldBuildShieldBattery()) return jobWaitOnShieldBatterySite.close(false);
+
   if (jobWaitOnShieldBatterySite && TotalCount.ShieldBattery) cleanJobWaitOnShieldBatterySite();
   if (TotalCount.CyberneticsCore && !cybercore) {
     cybercore = findCyberCore();
@@ -17,9 +19,13 @@ export default function() {
     if ((Memory.LevelEnemyRush >= 3) && !probe) queueProbeToBuildCoreAndBattery();
   }
 
-  if (Limit.ShieldBattery && !TotalCount.ShieldBattery && isTimeToBuildShieldBattery()) {
+  if (shouldBuildShieldBattery() && isTimeToBuildShieldBattery()) {
     buildShieldBattery();
   }
+}
+
+function shouldBuildShieldBattery() {
+  return Priority.ShieldBattery && Limit.ShieldBattery && !TotalCount.ShieldBattery;
 }
 
 function queueProbeToBuildCoreAndBattery() {

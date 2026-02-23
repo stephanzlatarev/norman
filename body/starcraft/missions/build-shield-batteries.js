@@ -3,6 +3,7 @@ import Build from "../jobs/build.js";
 import Board from "../map/board.js";
 import Depot from "../map/depot.js";
 import Limit from "../memo/limit.js";
+import Priority from "../memo/priority.js";
 import { TotalCount } from "../memo/count.js";
 
 export default class BuildShieldBatteriesMission extends Mission {
@@ -40,7 +41,7 @@ export default class BuildShieldBatteriesMission extends Mission {
 }
 
 function shouldBuildShieldBattery() {
-  return Limit.ShieldBattery && !TotalCount.ShieldBattery;
+  return Priority.ShieldBattery && Limit.ShieldBattery && !TotalCount.ShieldBattery;
 }
 
 function findBuildingPlot() {

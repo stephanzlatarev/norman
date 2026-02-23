@@ -74,7 +74,7 @@ export default class Job {
 
       this.designee = unit;
 
-      unit.job = { isBusy: true, details: "Designated to job " + this.details };
+      unit.job = { isDesignated: true, isBusy: true, details: "Designated to job " + this.details };
     }
   }
 
@@ -161,6 +161,10 @@ export default class Job {
       log(this.assignee.type.name, this.assignee.nick, "released on", (outcome ? "success" : "failure"), "of job", this.details);
 
       this.assignee.job = null;
+    }
+
+    if (this.designee && this.designee.job && this.designee.job.isDesignated) {
+      this.designee.job = null;
     }
 
     jobs.delete(this);
