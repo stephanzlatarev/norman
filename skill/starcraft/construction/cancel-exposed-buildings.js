@@ -1,6 +1,7 @@
 import { Depot, Memory, Order } from "./imports.js";
 
 export default function() {
+  if (Memory.FlagSiegeDefense) return;
   if (Memory.DeploymentOutreach !== Memory.DeploymentOutreachSiegeDefense) return;
   if (Memory.LevelEnemyArmySuperiority < 2) return;
 
