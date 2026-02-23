@@ -51,9 +51,10 @@ function shouldWallExpo() {
 }
 
 function findExpo() {
-  let previous = Depot.home;
+  let previous;
 
   for (const depot of Depot.list()) {
+    if (depot === Depot.home) continue;
     if (!depot.depot) return previous;
 
     previous = depot;
