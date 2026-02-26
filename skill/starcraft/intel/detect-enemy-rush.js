@@ -38,7 +38,7 @@ export default function() {
   if (Memory.MilestoneMaxArmy) {
     reason = "Army is maxed out";
     level = ENEMY_RUSH_NOT_EXPECTED;
-  } else if (Memory.FlagSiegeDefense && (Memory.LevelEnemyArmySuperiority < 0.5)) {
+  } else if (canDefendHomeBaseUnderSiege()) {
     reason = "Army can defend siege of home base";
     level = ENEMY_RUSH_NOT_EXPECTED;
   } else if (isEnemyExpandingHarvestPerimeter()) {
@@ -107,6 +107,19 @@ export default function() {
 }
 
 let enemyDefense;
+
+function canDefendHomeBaseUnderSiege() {
+  // Check if we have enough army to defend under siege
+  if (!Memory.FlagSiegeDefense) return false;
+
+  // Check if we're still under siege. If enemy in sight is still strong, assume enemy rush continues.
+  if (Memory.LevelEnemyArmySuperiority >= 0.5) return false;
+
+  // Check if we already fought under siege. If there were lots of casualties and there's no evidence for enemy expanding its economy, assume strong enemy rush continues.
+  if ((Score.killedValueArmy > 800) && !isEnemyExpandingHarvestPerimeter()) return false;
+
+  return true;
+}
 
 function isEnemyDefending() {
   if (enemyDefense) return true;
