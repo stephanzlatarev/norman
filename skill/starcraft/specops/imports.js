@@ -9,6 +9,7 @@ import Board from "../../../body/starcraft/map/board.js";
 import Depot from "../../../body/starcraft/map/depot.js";
 import Zone from "../../../body/starcraft/map/zone.js";
 import { ActiveCount, TotalCount } from "../../../body/starcraft/memo/count.js";
+import { VisibleCount } from "../../../body/starcraft/memo/encounters.js";
 import Resources from "../../../body/starcraft/memo/resources.js";
 
 export {
@@ -16,5 +17,5 @@ export {
   Job, Order, Types, Units,
   Build,
   Board, Depot, Zone,
-  ActiveCount, TotalCount, Resources,
+  ActiveCount, TotalCount, VisibleCount, Resources,
 };

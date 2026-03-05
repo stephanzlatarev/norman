@@ -6,10 +6,12 @@ const Warrior = "Warrior";
 const Worker = "Worker";
 
 export const VisibleCount = {
+  CommandCenterFlying: 0,
   Forge: 0,
   Marine: 0,
   NydusCanal: 0,
   Queen: 0,
+  Reaper: 0,
   SpawningPool: 0,
   Zealot: 0,
   Zergling: 0,

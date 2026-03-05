@@ -1,4 +1,4 @@
-import { Depot, Job, Memory, Order } from "../imports.js";
+import { Depot, Job, Memory, Order, VisibleCount } from "../imports.js";
 
 export default class WallKeeper extends Job {
 
@@ -17,7 +17,12 @@ export default class WallKeeper extends Job {
 
     if (!warrior.isAlive) return this.close(false);
 
-    if (this.rally && shouldBlockWall()) {
+    const intruder = getIntruder();
+
+    if (intruder) {
+      Order.hold(warrior, intruder.body);
+      this.isHoldingPoisiton = true;
+    } else if (this.rally && shouldBlockWall()) {
       const wy = (this.rally.dy > 0) ? this.rally.y + 1.5 : this.rally.y - 1.5;
       Order.hold(warrior, { x: this.rally.x, y: wy });
       this.isHoldingPoisiton = true;
@@ -37,6 +42,20 @@ export default class WallKeeper extends Job {
     super.close(outcome);
   }
 
+}
+
+function getIntruder() {
+  if (VisibleCount.CommandCenterFlying) {
+    for (const enemy of Depot.home.enemies) {
+      if (enemy.type.name === "CommandCenterFlying") return enemy;
+    }
+  }
+
+  if (VisibleCount.Reaper) {
+    for (const enemy of Depot.home.enemies) {
+      if (enemy.type.name === "Reaper") return enemy;
+    }
+  }
 }
 
 function shouldBlockWall() {
