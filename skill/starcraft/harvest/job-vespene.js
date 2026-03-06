@@ -24,11 +24,25 @@ export default class HarvestVespene extends Job {
       return this.close(true);
     }
 
+    const depot = extractor.zone.depot;
+
+    if (!depot || !depot.isAlive || !depot.isActive) {
+      return this.close(true);
+    }
+
     const worker = this.assignee;
 
-    if (!this.order || (this.order.target !== extractor)) {
+    if (shouldIssueOrder(worker, extractor, depot, this.order)) {
       this.order = new Order(worker, 1, extractor).accept(true);
     }
   }
 
+}
+
+function shouldIssueOrder(worker, extractor, depot, order) {
+  if (!order) return true;
+  if (order.target !== extractor) return true;
+
+  const orderTargetTag = worker.order?.targetUnitTag;
+  if (orderTargetTag && (orderTargetTag !== extractor.tag) && (orderTargetTag !== depot.tag)) return true;
 }
