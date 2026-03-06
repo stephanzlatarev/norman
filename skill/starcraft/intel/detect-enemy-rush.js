@@ -1,4 +1,4 @@
-import { ActiveCount, Depot, Enemy, Memory, Score, TotalCount, Units, VisibleCount } from "./imports.js";
+import { ActiveCount, Depot, Enemy, Memory, Resources, Score, TotalCount, Units, VisibleCount } from "./imports.js";
 
 const WAVE_STARTER_ENEMY_ARMY_LEVEL = 0.5;
 const ALERT_YELLOW = 4;
@@ -116,9 +116,15 @@ function canDefendHomeBaseUnderSiege() {
   if (Memory.LevelEnemyArmySuperiority >= 0.5) return false;
 
   // Check if we already fought under siege. If there were lots of casualties and there's no evidence for enemy expanding its economy, assume strong enemy rush continues.
-  if ((Score.killedValueArmy > 800) && !isEnemyExpandingHarvestPerimeter()) return false;
+  if ((Score.killedValueArmy > 800) && !isEnemyExpandingHarvestPerimeter() && !isOneBaseTimelineOver()) return false;
 
   return true;
+}
+
+// Estimate if enemy can sustain its rush on just one base
+function isOneBaseTimelineOver() {
+  // TODO: Count minerals instead
+  return (Resources.loop >= 12000);
 }
 
 function isEnemyDefending() {
