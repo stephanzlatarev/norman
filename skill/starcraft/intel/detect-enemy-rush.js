@@ -1,4 +1,4 @@
-import { ActiveCount, Depot, Enemy, Memory, Resources, Score, TotalCount, Units, VisibleCount } from "./imports.js";
+import { ActiveCount, Depot, Enemy, Memory, Resources, Score, TotalCount, Units, VisibleCount, info } from "./imports.js";
 
 const WAVE_STARTER_ENEMY_ARMY_LEVEL = 0.5;
 const ALERT_YELLOW = 4;
@@ -31,7 +31,7 @@ export default function() {
   enemyZerglings = Math.max(VisibleCount.Zergling, enemyZerglings);
 
   if ((enemyZerglings >= 20) && !Memory.OpportunityToUseOracle) {
-    console.log("Raise opportunity to use Oracle");
+    info("strategy", "Raise opportunity to use Oracle");
     Memory.OpportunityToUseOracle = true;
   }
 
@@ -100,7 +100,7 @@ export default function() {
   }
 
   if ((level != Memory.LevelEnemyRush) || (reason !== levelEnemyRushChangeReason)) {
-    console.log("Enemy rush level changes from", Memory.LevelEnemyRush, "to", level, "due to:", reason);
+    info("strategy", "Enemy rush level changes from", Memory.LevelEnemyRush, "to", level, "due to:", reason);
     Memory.LevelEnemyRush = level;
     levelEnemyRushChangeReason = reason;
   }
@@ -131,10 +131,10 @@ function isEnemyDefending() {
   if (enemyDefense) return true;
 
   if (isEnemyStructureDefensive("Bunker", VisibleCount.Bunker)) {
-    console.log("Detected enemy defensive stance: Bunker");
+    info("strategy", "Detected enemy defensive stance: Bunker");
     enemyDefense = true;
   } else if (isEnemyStructureDefensive("PhotonCannon", VisibleCount.PhotonCannon)) {
-    console.log("Detected enemy defensive stance: Photon Cannon");
+    info("strategy", "Detected enemy defensive stance: Photon Cannon");
     enemyDefense = true;
   }
 
@@ -148,7 +148,7 @@ function isEnemyExpandingHarvestPerimeter() {
 
   for (const unit of Units.enemies().values()) {
     if (unit.isCarryingMinerals && (unit.zone !== Enemy.base) && isEnemyBase(unit.zone)) {
-      console.log("Detected enemy harvests expansion:", unit.zone.name);
+      info("strategy", "Detected enemy harvests expansion:", unit.zone.name);
       enemyExpandingHarvestPerimeter = true;
       break;
     }
@@ -199,7 +199,7 @@ function isExpectingEnemyWaves() {
     if (didWaveEnd()) {
       isInWave = false;
 
-      console.log("Enemy wave ended.",
+      info("strategy", "Enemy wave ended.",
         "Own losses:", (Score.lostValueArmy - lostValueArmyAtWaveStart),
         "Enemy losses:", enemyArmyValue,
         "Move out army value:", valueArmyAtMoveOut
@@ -213,7 +213,7 @@ function isExpectingEnemyWaves() {
     killedValueArmyAtWaveStart = Score.killedValueArmy;
     lostValueArmyAtWaveStart = Score.lostValueArmy;
 
-    console.log("Enemy wave started.");
+    info("strategy", "Enemy wave started.");
   }
 
   return (Score.currentValueArmy < valueArmyAtMoveOut);

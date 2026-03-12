@@ -3,12 +3,6 @@ import path from "path";
 import Body from "./code/body.js";
 import Skill from "./code/skill.js";
 
-const print = console.log;
-
-console.log = function() {
-  print(`[${new Date().toISOString()}]`, ...arguments);
-}
-
 const env = JSON.parse(fs.readFileSync("./norman.env").toString());
 const bodies = [];
 const skills = [];

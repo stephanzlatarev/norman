@@ -1,6 +1,7 @@
 import Memory from "../../../code/memory.js";
 import { List } from "../../../code/memory.js";
 import Job from "../../../body/starcraft/job.js";
+import { info } from "../../../body/starcraft/log.js";
 import Order from "../../../body/starcraft/order.js";
 import Units from "../../../body/starcraft/units.js";
 import { ALERT_RED, ALERT_YELLOW } from "../../../body/starcraft/map/alert.js";
@@ -20,4 +21,5 @@ export {
   ALERT_RED, ALERT_YELLOW, PERIMETER_BLUE, PERIMETER_GREEN, PERIMETER_WHITE,
   Enemy, Resources, Score,
   ActiveCount, TotalCount,
+  info,
 };

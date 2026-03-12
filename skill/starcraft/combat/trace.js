@@ -1,4 +1,4 @@
-import { Job, Score, Units } from "./imports.js";
+import { Job, Score, Units, info } from "./imports.js";
 import Battle from "./battle.js";
 
 const INTERVAL = 224;
@@ -34,7 +34,7 @@ export default function() {
 export function traceBattle(battle, event) {
   const trace = [];
 
-  trace.push("[battle]", battle.front.name);
+  trace.push(battle.front.name);
 
   if (event) trace.push(event);
 
@@ -53,7 +53,7 @@ export function traceBattle(battle, event) {
   trace.push("threats:");
   traceThreats(trace, battle.sectors);
 
-  console.log(trace.join(" "));
+  info("battles", trace.join(" "));
 }
 
 function traceDetector(trace, detector) {
@@ -139,7 +139,8 @@ function increment(map, key) {
 }
 
 function traceArmyScore() {
-  console.log(
+  info(
+    "strategy",
     "Army value:", Score.currentValueArmy,
     "Killed:", Score.killedValueArmy,
     "Lost:", Score.lostValueArmy,

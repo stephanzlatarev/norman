@@ -1,4 +1,5 @@
 import Job from "../job.js";
+import { info } from "../log.js";
 import Order from "../order.js";
 import Types from "../types.js";
 import Units from "../units.js";
@@ -42,7 +43,7 @@ export default class Build extends Job {
       this.progress++;
     } else if (!this.assignee.isAlive || this.assignee.isHit) {
       // The probe is under attack. Abort.
-      console.log("Job", this.details, "aborted after worker was hit");
+      info("jobs", this.details, "aborted after worker was hit");
       this.abort();
     } else if (!this.order) {
       if ((this.assignee.zone !== this.target) && this.target.isDepot && this.target.minerals.size) {

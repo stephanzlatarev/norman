@@ -1,4 +1,4 @@
-import { Memory, Depot } from "./imports.js";
+import { Memory, Depot, info } from "./imports.js";
 
 // When enemy warriors are seen near home base before basic economy and basic defense are established
 // Then defend inside the established bases without expanding further
@@ -21,7 +21,7 @@ function checkEnemyProxyStart() {
   for (const sector of Depot.home.horizon) {
     for (const threat of sector.threats) {
       if (threat.type.isBuilding && !threat.type.damageGround) {
-        console.log("Enemy proxy", threat.type.name, threat.nick, "detected in sector", sector.name);
+        info("strategy", "Enemy proxy", threat.type.name, threat.nick, "detected in sector", sector.name);
         Memory.DetectedEnemyProxy = true;
         return;
       }
@@ -37,6 +37,6 @@ function checkEnemyProxyEnd() {
     }
   }
 
-  console.log("Enemy proxy cleared");
+  info("strategy", "Enemy proxy cleared");
   Memory.DetectedEnemyProxy = false;
 }

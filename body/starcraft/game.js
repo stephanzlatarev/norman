@@ -1,5 +1,6 @@
 import starcraft from "@node-sc2/proto";
 import Job from "./job.js";
+import { error, info, warning } from "./log.js";
 import Mission from "./mission.js";
 import Order from "./order.js";
 import scheduleJobs from "./schedule.js";
@@ -13,13 +14,8 @@ import countEncounters from "./memo/encounters.js";
 import Enemy from "./memo/enemy.js";
 import Resources from "./memo/resources.js";
 import Score from "./memo/score.js";
-import log from "./trace/orders.js";
 
 const LOOPS_PER_STEP = 1;
-const LOOPS_PER_SECOND = 22.4;
-const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
-
-const print = console.log;
 
 export default class Game {
 
@@ -53,20 +49,6 @@ export default class Game {
         break;
       }
     }
-
-    console.log = function() { const prefix = this.clock(); if (prefix) { print(prefix, ...arguments); } else { print(...arguments); } }.bind(this);
-  }
-
-  clock() {
-    if (this.observation && this.observation.gameLoop) {
-      const loop = this.observation.gameLoop;
-      const minutes = Math.floor(loop / LOOPS_PER_MINUTE);
-      const seconds = Math.floor(loop / LOOPS_PER_SECOND) % 60;
-      const mm = (minutes >= 10) ? minutes : "0" + minutes;
-      const ss = (seconds >= 10) ? seconds : "0" + seconds;
-
-      return `${mm}:${ss}/${loop}`;
-    }
   }
 
   async observe() {
@@ -89,7 +71,7 @@ export default class Game {
 
     for (const job of Job.list()) {
       if (job.assignee && !job.assignee.isAlive) {
-        log(job.assignee.type.name, job.assignee.nick, "died on job", job.details);
+        info("jobs", job.assignee.type.name, job.assignee.nick, "died on job", job.details);
         job.close(false);
       }
     }
@@ -112,7 +94,7 @@ export default class Game {
 
     for (const job of Job.list()) {
       if (job.order && job.order.isAccepted && job.assignee && !job.assignee.order.abilityId) {
-        log("WARNING! Unit", job.assignee.type.name, job.assignee.nick, "idle on job", job.details);
+        warning("jobs", job.assignee.type.name, job.assignee.nick, "idle on job", job.details);
         job.close(false);
       }
     }
@@ -156,11 +138,6 @@ export default class Game {
     }
 
     if (actions.length) {
-      // if (actions.length > 99) {
-      //   log("WARNING: Reducing orders from", actions.length, "to 99. Skipping:", JSON.stringify(actions.slice(99)));
-      //   actions.length = 99;
-      // }
-
       try {
         const response = await this.client.action({ actions: actions });
 
@@ -168,15 +145,15 @@ export default class Game {
           orders[i].result(response.result[i]);
         }
 
-        log("Executed", String(actions.length).padStart(3, "0"), "orders:", JSON.stringify(actions));
+        info("orders", "Executed", String(actions.length).padStart(3, "0"), "orders:", JSON.stringify(actions));
 
         if ((response.result.length !== actions.length) || (response.result.some(code => (code !== 1)))) {
-          log("Received", String(response.result.length).padStart(3, "0"), "results:", JSON.stringify(response.result));
+          error("orders", "Received", String(response.result.length).padStart(3, "0"), "results:", JSON.stringify(response.result));
         }
       } catch (error) {
-        console.log("ERROR: Failed to execute", actions.length, "orders");
-        console.log(JSON.stringify(actions));
-        console.log(error);
+        error("orders", "Failed to execute", actions.length, "orders");
+        error("orders", JSON.stringify(actions));
+        error("orders", error);
       }
     }
   }
@@ -186,8 +163,6 @@ export default class Game {
   }
 
   async detach() {
-    console.log = print;
-
     if (this.client) {
       await this.client.quit();
       this.client = null;

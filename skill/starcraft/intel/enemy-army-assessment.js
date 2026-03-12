@@ -1,4 +1,4 @@
-import { Memory, Sector } from "./imports.js";
+import { Memory, Sector, info } from "./imports.js";
 
 export default function() {
   const previousLevel = Memory.LevelEnemyArmySuperiority;
@@ -33,7 +33,7 @@ export default function() {
   const currentLevel = warriorStrength ? (enemyStrength / warriorStrength) : Infinity;
 
   if (previousLevel && (Math.round(previousLevel * 10) != Math.round(currentLevel * 10))) {
-    console.log("Level of enemy army superiority changes from", previousLevel, "to", currentLevel);
+    info("strategy", "Level of enemy army superiority changes from", previousLevel, "to", currentLevel);
   }
 
   Memory.LevelEnemyArmySuperiority = currentLevel;

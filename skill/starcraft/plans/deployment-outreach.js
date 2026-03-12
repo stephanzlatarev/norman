@@ -1,4 +1,4 @@
-import { ActiveCount, Memory, MemoryLabel, List } from "./imports.js";
+import { ActiveCount, Memory, MemoryLabel, List, info } from "./imports.js";
 
 const LEVELS = [
 
@@ -90,13 +90,13 @@ for (let level = 0; level < LEVELS.length; level++) {
 
 // Start the game with siege defense
 Memory.DeploymentOutreach = 0;
-console.log(`Deployment outreach is set to ${label(Memory.DeploymentOutreach)}`);
+info("strategy", `Deployment outreach is set to ${label(Memory.DeploymentOutreach)}`);
 
 export default function() {
   const { level, condition } = selectDeploymentOutreach()
 
   if (level !== Memory.DeploymentOutreach) {
-    console.log(`Deployment outreach changes from ${label(Memory.DeploymentOutreach)} to ${label(level)}: ${condition}`);
+    info("strategy", `Deployment outreach changes from ${label(Memory.DeploymentOutreach)} to ${label(level)}: ${condition}`);
     Memory.DeploymentOutreach = level;
   }
 }

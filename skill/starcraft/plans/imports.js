@@ -1,5 +1,6 @@
 import Memory from "../../../code/memory.js";
 import { label as MemoryLabel, List } from "../../../code/memory.js";
+import { info } from "../../../body/starcraft/log.js";
 import Order from "../../../body/starcraft/order.js";
 import Units from "../../../body/starcraft/units.js";
 import Depot from "../../../body/starcraft/map/depot.js";
@@ -13,4 +14,5 @@ export {
   Order, Units,
   Depot, Zone,
   ActiveCount, Enemy, Limit, TotalCount,
+  info,
 };

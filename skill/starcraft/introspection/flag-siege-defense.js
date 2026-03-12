@@ -1,11 +1,11 @@
-import { Memory, ActiveCount, Score } from "./imports.js";
+import { Memory, ActiveCount, Score, info } from "./imports.js";
 
 export default function() {
   const previousFlag = Memory.FlagSiegeDefense;
   let flag = isSiegeDefenseEnough();
 
   if (flag != previousFlag) {
-    console.log(flag ? "Raise" : "Lower", "Flag Siege Defense");
+    info("strategy", flag ? "Raise" : "Lower", "Flag Siege Defense");
     Memory.FlagSiegeDefense = flag;
   }
 }

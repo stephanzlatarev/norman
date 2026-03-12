@@ -1,3 +1,4 @@
+import { info } from "../log.js";
 import Mission from "../mission.js";
 import Units from "../units.js";
 import { TotalCount } from "../memo/count.js";
@@ -129,20 +130,42 @@ function trackGatewayProduction() {
 }
 
 function show() {
-  const text = ["[stats]"];
+  info(
+    "stats",
 
-  text.push("Supply:", (Resources.supplyUsed - TotalCount.Probe), "+", TotalCount.Probe, "/", Resources.supplyLimit, percentage(timeTotal - timeSupplyBlocked, timeTotal));
-  text.push("|");
-  text.push("Workers:");
-  text.push(fraction(mineralsHarvesterLoops, LOOPS_PER_MINUTE), percentage(minerals, mineralsHarvesterLoops / LOOPS_PER_SECOND), minerals, "minerals");
-  text.push("+");
-  text.push(fraction(vespeneHarvesterLoops, LOOPS_PER_MINUTE), percentage(vespene, vespeneHarvesterLoops / LOOPS_PER_SECOND), vespene, "vespene");
-  text.push("|");
-  text.push("Nexuses:", workerProduction.size, percentage(workerProductionUsed, workerProductionTotal));
-  text.push("|");
-  text.push("Gateways:", gatewayProduction.size, percentage(gatewayProductionUsed, gatewayProductionTotal));
+    "Supply:",
+    (Resources.supplyUsed - TotalCount.Probe),
+    "+",
+    TotalCount.Probe,
+    "/",
+    Resources.supplyLimit,
+    percentage(timeTotal - timeSupplyBlocked, timeTotal),
 
-  console.log(text.join(" "));
+    "|",
+
+    "Workers:",
+    fraction(mineralsHarvesterLoops, LOOPS_PER_MINUTE),
+    percentage(minerals, mineralsHarvesterLoops / LOOPS_PER_SECOND),
+    minerals,
+    "minerals",
+    "+",
+    fraction(vespeneHarvesterLoops, LOOPS_PER_MINUTE),
+    percentage(vespene, vespeneHarvesterLoops / LOOPS_PER_SECOND),
+    vespene,
+    "vespene",
+
+    "|",
+
+    "Nexuses:",
+    workerProduction.size,
+    percentage(workerProductionUsed, workerProductionTotal),
+
+    "|",
+
+    "Gateways:",
+    gatewayProduction.size,
+    percentage(gatewayProductionUsed, gatewayProductionTotal),
+  );
 }
 
 function fraction(value, max) {

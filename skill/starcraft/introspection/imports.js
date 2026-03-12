@@ -1,4 +1,5 @@
 import Memory from "../../../code/memory.js";
+import { info } from "../../../body/starcraft/log.js";
 import Depot from "../../../body/starcraft/map/depot.js";
 import { ActiveCount } from "../../../body/starcraft/memo/count.js";
 import Resources from "../../../body/starcraft/memo/resources.js";
@@ -11,4 +12,5 @@ export {
   Depot,
   ActiveCount, Resources, Score,
   Job, Types,
+  info,
 };

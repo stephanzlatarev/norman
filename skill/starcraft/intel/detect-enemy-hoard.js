@@ -1,4 +1,4 @@
-import { Memory, Sector, Resources, ActiveCount, VisibleCount } from "./imports.js";
+import { Memory, Sector, Resources, ActiveCount, VisibleCount, info } from "./imports.js";
 
 const IS_PRODUCING_WARRIORS = { Barracks: 1, Gateway: 1 };
 
@@ -20,16 +20,16 @@ export default function() {
   if (Memory.DetectedEnemyHoard) return;
 
   if (isEarlySpawningPool()) {
-    console.log("Enemy hoarding detected: early spawing pool.");
+    info("strategy", "Enemy hoarding detected: early spawing pool.");
     Memory.DetectedEnemyHoard = true;
   } else if (isEarlyZergling()) {
-    console.log("Enemy hoarding detected: early zergling.");
+    info("strategy", "Enemy hoarding detected: early zergling.");
     Memory.DetectedEnemyHoard = true;
   } else if (isEnemyHoardingProduction()) {
-    console.log("Enemy hoarding detected: production.");
+    info("strategy", "Enemy hoarding detected: production.");
     Memory.DetectedEnemyHoard = true;
   } else if (isEnemyHoardingWarriors()) {
-    console.log("Enemy hoarding detected: warriors.");
+    info("strategy", "Enemy hoarding detected: warriors.");
     Memory.DetectedEnemyHoard = true;
   }
 }

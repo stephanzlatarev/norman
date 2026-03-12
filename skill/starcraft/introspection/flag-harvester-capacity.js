@@ -1,4 +1,4 @@
-import { ActiveCount, Depot, Job, Memory, Types } from "./imports.js";
+import { ActiveCount, Depot, Job, Memory, Types, info } from "./imports.js";
 
 let TIME_TO_BUILD_NEXUS;
 let TIME_TO_BUILD_PROBE;
@@ -12,7 +12,7 @@ export default function() {
   const currentFlag = isReachingHarvesterCapacity();
 
   if (currentFlag != previousFlag) {
-    console.log(currentFlag ? "Raise" : "Lower", "Flag Harvester Capacity");
+    info("economy", currentFlag ? "Raise" : "Lower", "Flag Harvester Capacity");
 
     Memory.FlagHarvesterCapacity = currentFlag;
   }

@@ -1,4 +1,4 @@
-import { Memory, Job, Order, Types, Units, Board, Depot, ActiveCount, Enemy, Resources, TotalCount, VisibleCount } from "./imports.js";
+import { Memory, Job, Order, Types, Units, Board, Depot, ActiveCount, Enemy, Resources, TotalCount, VisibleCount, info } from "./imports.js";
 
 const RACE_TERRAN = 1;
 const RACE_PROTOSS = 3;
@@ -20,7 +20,7 @@ export default function() {
   if (homeWallSite && enemyExpansionZone) {
     job = new EarlyScout(homeWallSite, enemyExpansionZone);
   } else {
-    console.log("No early scout.");
+    info("strategy", "No early scout.");
     job = "skip";
   }
 }
@@ -69,14 +69,14 @@ class EarlyScout extends Job {
     const agent = this.assignee;
 
     if (!agent.isAlive) {
-      console.log("Early scout died.");
+      info("strategy", "Early scout died.");
 
       return this.close(false);
     }
 
     if ((Memory.LevelEnemyRush >= 3) && (Memory.EarlyScoutMode !== MODE_KILL)) {
       if (agent.zone === Depot.home) {
-        console.log("Early scout retires due to extreme enemy rush.");
+        info("strategy", "Early scout retires due to extreme enemy rush.");
 
         return this.close(true);
       } else {
@@ -85,19 +85,19 @@ class EarlyScout extends Job {
     }
 
     if (!this.hasDetectedEnemyExpansion && isEnemyExpansionStarted(this.enemyExpansionZone)) {
-      console.log("Early scout detected enemy expansion.");
+      info("strategy", "Early scout detected enemy expansion.");
       this.hasDetectedEnemyExpansion = true;
     }
 
     if (!this.hasDetectedEnemyWallOff && !this.hasDetectedEnemyWarriors && this.isInEnemyWarriorsRange()) {
-      console.log("Early scout transitions to monitoring enemy expansions.");
+      info("strategy", "Early scout transitions to monitoring enemy expansions.");
       this.hasDetectedEnemyWarriors = true;
 
       this.transition(this.goMonitorEnemyExpansions);
     }
 
     if (!this.hasDetectedEnemyWallOff && isEnemyBaseWalledOff(agent, this.enemyWallSite)) {
-      console.log("Early scout detected enemy wall off.");
+      info("strategy", "Early scout detected enemy wall off.");
       this.hasDetectedEnemyWallOff = true;
     }
 
@@ -105,7 +105,7 @@ class EarlyScout extends Job {
   }
 
   transition(action) {
-    console.log("Early scout transitions to", action.name);
+    info("strategy", "Early scout transitions to", action.name);
 
     this.act = action.bind(this);
   }
@@ -359,7 +359,7 @@ class EarlyScout extends Job {
     const agent = this.assignee;
 
     if (agent.zone === Depot.home) {
-      console.log("Early scout retires after being pushed back to home base.");
+      info("strategy", "Early scout retires after being pushed back to home base.");
       this.close(true);
     } else if ((agent.zone === Enemy.base) || isAttacked(agent) || this.isInEnemyWarriorsRange()) {
       // Pull back to home base

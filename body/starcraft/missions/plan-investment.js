@@ -1,6 +1,7 @@
 import Memory from "../../../code/memory.js";
 import Mission from "../mission.js";
 import Job from "../job.js";
+import { info } from "../log.js";
 import Types from "../types.js";
 import Depot from "../map/depot.js";
 import { ActiveCount, TotalCount } from "../memo/count.js";
@@ -41,10 +42,10 @@ function doStartUp() {
 
   if (Memory.LimitBase === 1) {
     plan = doOneBaseDefense;
-    console.log("Transition to one base defense.");
+    info("strategy", "Transition to one base defense.");
   } else if (TotalCount.Stalker) {
     plan = doGroundArmyMaxOut;
-    console.log("Transition to maxing out with ground army.");
+    info("strategy", "Transition to maxing out with ground army.");
   }
 }
 
@@ -174,7 +175,7 @@ function doOneBaseDefense() {
 
   if (Memory.LimitBase > 1) {
     plan = doGroundArmyMaxOut;
-    console.log("Transition to maxing out with ground army.");
+    info("strategy", "Transition to maxing out with ground army.");
   }
 }
 
@@ -238,10 +239,10 @@ function doGroundArmyMaxOut() {
 
   if (Memory.LimitBase === 1) {
     plan = doOneBaseDefense;
-    console.log("Transition to one base defense.");
+    info("strategy", "Transition to one base defense.");
   } else if ((VisibleCount.Queen >= 5) && (VisibleCount.Warrior <= 5)) {
     plan = counterMassLightZerg;
-    console.log("Transition to countering mass light zerg.");
+    info("strategy", "Transition to countering mass light zerg.");
   }
 }
 

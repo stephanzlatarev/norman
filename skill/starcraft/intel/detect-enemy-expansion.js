@@ -1,4 +1,4 @@
-import { Memory, Enemy, Units } from "./imports.js";
+import { Memory, Enemy, Units, info } from "./imports.js";
 
 const enemyDepotZones = new Set();
 
@@ -20,7 +20,7 @@ export default function() {
   }
 
   if (enemyDepotZones.size >= 2) {
-    console.log("Enemy expansion detected.");
+    info("strategy", "Enemy expansion detected.");
     Memory.DetectedEnemyExpansion = true;
   }
 }

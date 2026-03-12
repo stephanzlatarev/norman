@@ -1,5 +1,5 @@
+import { error, info, warning } from "./log.js";
 import Resources from "./memo/resources.js";
-import log from "./trace/orders.js";
 
 const orders = new Map();
 
@@ -119,7 +119,7 @@ export default class Order {
 
     if (this.unit.isAlive && this.ability) {
       if (!this.unit.tag) {
-        log("ERROR: Unit", this.unit.type ? this.unit.type.name : "-", this.unit.nick, "has no tag");
+        error("orders", "Unit", this.unit.type ? this.unit.type.name : "-", this.unit.nick, "has no tag");
       } else if (this.target) {
         if (this.target.tag) {
           return { unitTags: [this.unit.tag], abilityId: this.ability, targetUnitTag: this.target.tag };
@@ -140,7 +140,7 @@ export default class Order {
       this.isAccepted = (this.checkIsAccepted && this.checkIsAccepted(this)) || checkIsAccepted(this);
 
       if (!this.isAccepted) {
-        log("INFO: Abort", this.toString());
+        info("orders", "Abort", this.toString());
       }
     }
 
@@ -165,7 +165,7 @@ export default class Order {
       this.isAccepted = false;
       this.remove();
 
-      if (this.unit.isAlive) log("ERROR:", this.toString(), ">>", status);
+      if (this.unit.isAlive) error("orders", this.toString(), ">>", status);
     }
   }
 
@@ -180,7 +180,7 @@ export default class Order {
       return;
     } else if (Resources.loop > this.timeIssued + DELAY_LOOPS) {
       // Multiplayer games delay commands with 2 game loops. When it's issued but not accepted after the delay, then it's lost
-      log("WARNING: Lost command:", this.toString(), "Unit is busy with:", JSON.stringify(this.unit.order));
+      warning("orders", "Lost command:", this.toString(), "Unit is busy with:", JSON.stringify(this.unit.order));
       this.status = STATUS_LOST;
 
       if (this.unit.activeOrder === this) {
@@ -357,7 +357,7 @@ function addOrder(order) {
   const previous = orders.get(order.unit.tag);
 
   if (previous) {
-    log("INFO: Overwrite", previous.toString());
+    info("orders", "Overwrite", previous.toString());
     previous.abort();
   }
 

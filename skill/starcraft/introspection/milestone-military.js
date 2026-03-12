@@ -1,4 +1,4 @@
-import { Memory, ActiveCount, Resources } from "./imports.js";
+import { Memory, ActiveCount, Resources, info } from "./imports.js";
 
 export default function() {
   Memory.FlagMaxArmy = !!hasMaxArmy();
@@ -10,20 +10,20 @@ export default function() {
   } else if (Memory.MilestoneBasicMilitary) {
 
     if (Memory.FlagMaxArmy) {
-      console.log("Milestone Max Army");
+      info("strategy", "Milestone Max Army");
       Memory.MilestoneMaxArmy = true;
     }
 
   } else if (Memory.MilestoneFirstMilitary) {
 
     if (hasBasicMilitary()) {
-      console.log("Milestone Basic Military");
+      info("strategy", "Milestone Basic Military");
       Memory.MilestoneBasicMilitary = true;
     }
 
   } else if (hasFirstMilitary()) {
 
-    console.log("Milestone First Military");
+    info("strategy", "Milestone First Military");
     Memory.MilestoneFirstMilitary = true;
 
   }

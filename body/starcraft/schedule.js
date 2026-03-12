@@ -1,4 +1,5 @@
 import Job from "./job.js";
+import { error } from "./log.js";
 import Order from "./order.js";
 import Types from "./types.js";
 import Units from "./units.js";
@@ -32,7 +33,7 @@ export default function() {
   // Account for resources required for leaked orders
   for (const order of Order.list()) {
     if (order.output && (!order.isIssued || !order.isAccepted || order.isCompound) && !accountedOrders.has(order)) {
-      console.log("ERROR: Leaked order for", order.output.name);
+      error("orders", "Leaked order for", order.output.name);
       accountForProduction(order.output);
     }
   }

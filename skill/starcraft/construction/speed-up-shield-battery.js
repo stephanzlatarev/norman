@@ -1,4 +1,4 @@
-import { Depot, Job, Limit, Memory, Priority, Units, TotalCount } from "./imports.js";
+import { Depot, Job, Limit, Memory, Priority, Units, TotalCount, info } from "./imports.js";
 import WaitOnSite from "./job-wait-on-site.js";
 
 let jobWaitOnShieldBatterySite = null;
@@ -31,7 +31,7 @@ function shouldBuildShieldBattery() {
 function queueProbeToBuildCoreAndBattery() {
   for (const job of Job.list()) {
     if (job.assignee && job.output && (job.output.name === "CyberneticsCore")) {
-      console.log("Designate", job.assignee.type.name, job.assignee.nick, "to build Shield Battery");
+      info("jobs", "Designate", job.assignee.type.name, job.assignee.nick, "to build Shield Battery");
       probe = job.assignee;
       return;
     }

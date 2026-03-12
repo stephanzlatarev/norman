@@ -1,3 +1,4 @@
+import { info } from "./log.js";
 import Order from "./order.js";
 import Types from "./types.js";
 import Priority from "./memo/priority.js";
@@ -70,7 +71,7 @@ export default class Job {
 
   designate(unit) {
     if (unit && (unit !== this.designee)) {
-      log(unit.type.name, unit.nick, "designated to job", this.details);
+      info("jobs", unit.type.name, unit.nick, "designated to job", this.details);
 
       this.designee = unit;
 
@@ -85,16 +86,16 @@ export default class Job {
     if (unit) {
       if (unit.job) {
         if (this.assignee) {
-          log(unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details, "replacing", this.assignee.type.name, this.assignee.nick);
+          info("jobs", unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details, "replacing", this.assignee.type.name, this.assignee.nick);
         } else {
-          log(unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details);
+          info("jobs", unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details);
         }
 
         unit.job.assignee = null;
       } else if (this.assignee) {
-        log(unit.type.name, unit.nick, "assigned to job", this.details, "replacing", this.assignee.type.name, this.assignee.nick);
+        info("jobs", unit.type.name, unit.nick, "assigned to job", this.details, "replacing", this.assignee.type.name, this.assignee.nick);
       } else {
-        log(unit.type.name, unit.nick, "assigned to job", this.details);
+        info("jobs", unit.type.name, unit.nick, "assigned to job", this.details);
       }
 
       if (this.assignee && (this.assignee.job === this)) {
@@ -104,7 +105,7 @@ export default class Job {
       this.assignee = unit;
       this.assignee.job = this;
     } else if (this.assignee) {
-      log(this.assignee.type.name, this.assignee.nick, "released from job", this.details);
+      info("jobs", this.assignee.type.name, this.assignee.nick, "released from job", this.details);
       this.assignee.job = null;
       this.assignee = null;
     }
@@ -124,7 +125,7 @@ export default class Job {
 
   shift(mode, silent) {
     if (!silent && (this.mode !== mode) && (this.mode !== undefined) && this.assignee) {
-      log(this.assignee.type.name, this.assignee.nick, "switches from", this.modes[this.mode], "to", this.modes[mode], "on job", this.details);
+      info("jobs", this.assignee.type.name, this.assignee.nick, "switches from", this.modes[this.mode], "to", this.modes[mode], "on job", this.details);
     }
 
     this.mode = mode;
@@ -158,7 +159,7 @@ export default class Job {
     this.isFailed = !outcome;
 
     if (this.assignee && this.assignee.isAlive && (this.assignee.job === this)) {
-      log(this.assignee.type.name, this.assignee.nick, "released on", (outcome ? "success" : "failure"), "of job", this.details);
+      info("jobs", this.assignee.type.name, this.assignee.nick, "released on", (outcome ? "success" : "failure"), "of job", this.details);
 
       this.assignee.job = null;
     }
@@ -174,10 +175,6 @@ export default class Job {
     return jobs;
   }
 
-}
-
-function log(...line) {
-  console.log(...line);
 }
 
 function getAgent(agent) {
