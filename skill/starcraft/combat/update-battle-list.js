@@ -163,25 +163,19 @@ function findOutpostBase() {
   return outpost;
 }
 
+// Find the single outer-most depot zone to focus my defense on
 function findFrontBaseZone() {
-  if ((TotalCount.Nexus === 1) || (Depot.home.alertLevel >= ALERT_RED)) {
-    return Depot.home;
-  }
-
   let frontThreatened;
   let frontSecure;
 
   for (const zone of Depot.list()) {
     if (!zone.depot) continue;
 
-    if (zone.alertLevel >= ALERT_RED) return zone;
-
     if (zone.alertLevel >= ALERT_YELLOW) {
       frontThreatened = zone;
-      break;
+    } else {
+      frontSecure = zone;
     }
-
-    frontSecure = zone;
   }
 
   return frontThreatened || frontSecure || Depot.home;
