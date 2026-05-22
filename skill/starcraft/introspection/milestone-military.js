@@ -43,6 +43,11 @@ function hasBasicMilitary() {
 }
 
 function hasMaxArmy() {
-  // TODO: Check if total units (active and in production) is close to maximum supply
-  if (Resources.supplyUsed >= 196) return true;
+  if (Memory.FlagMaxArmy) {
+    // We already reached max army. Keep the flag until a significant drop in army
+    if (Resources.supplyUsed >= 160) return true;
+  } else {
+    // TODO: Check if total units (active and in production) is close to maximum supply
+    if (Resources.supplyUsed >= 196) return true;
+  }
 }

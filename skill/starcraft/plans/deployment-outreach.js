@@ -139,6 +139,9 @@ function selectDeploymentOutreach() {
 }
 
 function areFightingBattlesInOurBases() {
+  // If we're maxed out we can fight any battles including in our bases
+  if (Memory.FlagMaxArmy) return false;
+
   for (const battle of List.Battles) {
     if (battle.front.depot && battle.front.depot.isActive && (battle.front.enemies.size >= 5)) {
       return true;
