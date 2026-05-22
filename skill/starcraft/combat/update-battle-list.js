@@ -102,32 +102,60 @@ function listBattlesInRedZones(battles, perimeterLevelLimit) {
     // When outside our perimeter, the rally zone must not be a hotspot itself
     const isRallyAcceptable = !isZoneOutsidePerimeter || !isRallyHotspot;
 
-    if (isRallyAcceptable) hotspots.push({ zone, rally });
+    if (isRallyAcceptable) hotspots.push({ zone, rally, skip: false, processed: false, taken: false });
   }
 
   hotspots.sort((a, b) => (a.zone.perimeterLevel - b.zone.perimeterLevel));
 
-  const taken = new Set();
   const candidates = new Set(Battle.list());
   let priority = MAX_BATTLE_PRIORITY - 1;
 
   for (const one of hotspots) one.priority = priority--;
 
   for (const one of hotspots) {
+    if (one.skip) continue;
+    one.processed = true;
+
     const battle = findBattle(candidates, one.zone);
 
     if (battle) {
       battles.add(battle.move(one.priority, one.zone, one.rally));
       candidates.delete(battle);
-      taken.add(one);
+      one.taken = true;
+
+      // Remove other battles in adjacent sectors
+      for (const other of candidates) {
+        if (battles.has(other)) continue;
+
+        if (areZonesTooClose(one.zone, other.front)) {
+          candidates.delete(other);
+        }
+      }
+
+      // Remove other hotspots in adjacent sectors
+      for (const other of hotspots) {
+        if (other.processed) continue;
+
+        if (areZonesTooClose(one.zone, other.zone)) {
+          other.skip = true;
+        }
+      }
     }
   }
 
   for (const one of hotspots) {
-    if (!taken.has(one)) {
-      battles.add(getBattle(candidates, one.priority, one.zone, one.rally));
-    }
+    if (one.taken) continue;
+
+    battles.add(getBattle(candidates, one.priority, one.zone, one.rally));
   }
+}
+
+function areZonesTooClose(a, b) {
+  // Depots are never too close to be separate fronts
+  if (a.isDepot && b.isDepot) return false;
+
+  // Zones are too close to be separate front if they are in adjacent sectors.
+  return a.cell.sector.neighbors.has(b.cell.sector);
 }
 
 function findRallyZone(zone) {
