@@ -1,10 +1,10 @@
 import Board from "../map/board.js";
+import Depot from "../map/depot.js";
 import Build from "../jobs/build.js";
 import Job from "../job.js";
 import Mission from "../mission.js";
 import Order from "../order.js";
 import Resources from "../memo/resources.js";
-import Units from "../units.js";
 import { ActiveCount } from "../memo/count.js";
 import { VisibleCount } from "../memo/encounters.js";
 
@@ -21,6 +21,7 @@ let lastNydusCanalVisibleCount;
 export default class NeutralizeNydusMission extends Mission {
 
   run() {
+    if (!Depot.home) return;
     if (!ActiveCount.Forge) return;
 
     if (VisibleCount.NydusCanal !== lastNydusCanalVisibleCount) {
@@ -73,7 +74,7 @@ class NeutralizeWorm extends Job {
 }
 
 function updateCanalsList() {
-  for (const unit of Units.enemies().values()) {
+  for (const unit of Depot.home.enemies) {
     if (unit.type.name === "NydusCanal") {
       canals.add(unit);
       army.set(unit, [
