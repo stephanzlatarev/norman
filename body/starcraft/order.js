@@ -179,7 +179,7 @@ export default class Order {
     if (!this.isIssued) {
       // The order must be issued before checking whether it's accepted
       return;
-    } else if (this.target.tag && !this.target.isAlive) {
+    } else if (this.target && this.target.tag && !this.target.isAlive) {
       // Multiplayer games delay commands with 2 game loops. It's possible for the target to die before the command is issued
       info("orders", "Cancelled command:", this.toString(), "Target died before command was issued:", this.target.tag);
       this.status = STATUS_TARGET_DIED;
