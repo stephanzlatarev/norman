@@ -144,6 +144,7 @@ function listBattlesInRedZones(battles, perimeterLevelLimit) {
   }
 
   for (const one of hotspots) {
+    if (one.skip) continue;
     if (one.taken) continue;
 
     battles.add(getBattle(candidates, one.priority, one.zone, one.rally));
