@@ -7,6 +7,7 @@ const STATUS_DEAD = -1;
 const STATUS_EMPTY = -2;
 const STATUS_ABORT = -3;
 const STATUS_LOST = -4;
+const STATUS_TARGET_DIED = -5;
 
 const DELAY_LOOPS = 2;
 
@@ -178,6 +179,16 @@ export default class Order {
     if (!this.isIssued) {
       // The order must be issued before checking whether it's accepted
       return;
+    } else if (this.target.tag && !this.target.isAlive) {
+      // Multiplayer games delay commands with 2 game loops. It's possible for the target to die before the command is issued
+      info("orders", "Cancelled command:", this.toString(), "Target died before command was issued:", this.target.tag);
+      this.status = STATUS_TARGET_DIED;
+
+      if (this.unit.activeOrder === this) {
+        this.unit.activeOrder = null;
+      }
+
+      return this.remove();
     } else if (Resources.loop > this.timeIssued + DELAY_LOOPS) {
       // Multiplayer games delay commands with 2 game loops. When it's issued but not accepted after the delay, then it's lost
       warning("orders", "Lost command:", this.toString(), "Unit is busy with:", JSON.stringify(this.unit.order));
