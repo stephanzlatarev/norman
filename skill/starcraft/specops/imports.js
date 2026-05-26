@@ -1,6 +1,7 @@
 import Memory from "../../../code/memory.js";
 import { List } from "../../../code/memory.js";
 import Job from "../../../body/starcraft/job.js";
+import { info } from "../../../body/starcraft/log.js";
 import Order from "../../../body/starcraft/order.js";
 import Types from "../../../body/starcraft/types.js";
 import Units from "../../../body/starcraft/units.js";
@@ -18,4 +19,5 @@ export {
   Build,
   Board, Depot, Zone,
   ActiveCount, TotalCount, VisibleCount, Resources,
+  info,
 };
