@@ -1,11 +1,9 @@
-import { Board, Build, Depot, Memory, VisibleCount, info } from "../imports.js";
+import { Board, Build, Depot, Memory, Units, VisibleCount, info } from "../imports.js";
 
 const TIME_WINDOW = 6 * 60 * 22.4; // 6 minutes
 const PSIONIC_MATRIX_RADIUS = 6.5;
 
-const MIN_DISTANCE = 1.125 + 6 + 1.25 + 0.1;
-const MAX_DISTANCE = 1.125 + 7 + 1.25 - 0.1;
-const MIN_SQUARE_DISTANCE = MIN_DISTANCE * MIN_DISTANCE;
+const MAX_DISTANCE = 1 + 7 + 1 - 0.1;
 const MAX_SQUARE_DISTANCE = MAX_DISTANCE * MAX_DISTANCE;
 
 const protectedDepots = new Set();
@@ -23,9 +21,10 @@ export default function() {
   }
 
   if (job) {
-    if (job.isFailed) {
+    if (job.isDone || job.isFailed) {
       job = null;
-    } else if (!job.isDone) {
+    } else {
+      // Still building
       return;
     }
   }
@@ -78,17 +77,31 @@ function findPhotonCannonPlot(zone) {
     for (let y = miny; y <= maxy; y++) {
       const plot = { x, y };
 
-      if (isCorrectDistance(center, plot) && Board.accepts(x, y, 2) && isInPsionicMatrix(zone, plot)) {
-        return plot;
-      }
+      if (isInHarvestZone(zone, plot)) continue;
+      if (!isCorrectDistance(center, plot)) continue;
+      if (!Board.accepts(x, y, 2)) continue;
+      if (!isInPsionicMatrix(zone, plot)) continue;
+      if (isAroundObstacle(plot)) continue;
+
+      return plot;
     }
   }
+}
+
+function isInHarvestZone(zone, pos) {
+  if (!zone.depot || !zone.depot.harvestRally) return;
+
+  const harvest = zone.depot.harvestRally;
+  const dx = Math.abs(zone.depot.body.x - harvest.x);
+  const dy = Math.abs(zone.depot.body.y - harvest.y);
+
+  return (dx <= 5) && (dy <= 5);
 }
 
 function isCorrectDistance(a, b) {
   const sd = (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 
-  if ((sd >= MIN_SQUARE_DISTANCE) && (sd <= MAX_SQUARE_DISTANCE)) {
+  if (sd <= MAX_SQUARE_DISTANCE) {
     return true;
   }
 }
@@ -107,6 +120,18 @@ function isInPsionicMatrix(zone, pos) {
     if ((dy < -radius) || (dy > radius)) continue;
 
     if (dx * dx + dy * dy < radius * radius) {
+      return true;
+    }
+  }
+}
+
+// TODO: Remove this once map sync updates the map with observed obstacles
+function isAroundObstacle(pos) {
+  for (const obstacle of Units.obstacles().values()) {
+    const dx = Math.abs(obstacle.body.x - pos.x);
+    const dy = Math.abs(obstacle.body.y - pos.y);
+
+    if ((dx < 5) && (dy < 5)) {
       return true;
     }
   }
