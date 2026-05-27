@@ -17,7 +17,6 @@ export default class Fight extends Job {
     this.summary = "Fight " + battle.front.name;
     this.details = this.summary;
     this.isBusy = false;
-    this.isDeploying = false;
 
     battle.fighters.push(this);
   }
@@ -44,6 +43,7 @@ export default class Fight extends Job {
       this.details = getDetails(this, "dead");
       this.assignee = null;
       this.isBusy = false;
+      this.route = null;
       return;
     }
 
@@ -52,6 +52,7 @@ export default class Fight extends Job {
 
     if ((isDeployed || isAttacking) && this.shouldAttack()) {
       // Attack
+      this.route = null;
 
       if (target) {
         this.details = getDetails(this, "attack");
@@ -66,10 +67,9 @@ export default class Fight extends Job {
       } else {
         this.isBusy = isAttacking || isInFireRange(target, warrior);
       }
-
-      this.isDeploying = false;
     } else if (isDeployed) {
       // Deployed but shouldn't attack yet
+      this.route = null;
 
       if (this.shouldStalk()) {
         if (this.shouldKite()) {
@@ -100,14 +100,11 @@ export default class Fight extends Job {
 
         this.isBusy = false;
       }
-
-      this.isDeploying = false;
     } else {
       this.details = getDetails(this, "deploy");
       this.goDeploy();
 
       this.isBusy = false;
-      this.isDeploying = true;
     }
   }
 
@@ -228,12 +225,31 @@ export default class Fight extends Job {
 
   goDeploy() {
     const warrior = this.assignee;
-    const station = this.station;
+    const warriorRoute = warrior.zone?.route;
+    const stationRoute = this.station?.zone?.route;
 
-    // TODO: Calculate safe path and use this.isDeploying to hop through zones.
-    // TODO: Recalculate if zones changed alert level.
+    if (!warriorRoute || !stationRoute) {
+      // There are no routes to follow, so move directly to the station
+      return Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
+    }
 
-    Order.move(warrior, station, Order.MOVE_CLOSE_TO);
+    if ((this.route === stationRoute) || (stationRoute.indexOf(warrior.zone) >= 0)) {
+      // The warrior is on the route to the station, so move on it
+      this.route = stationRoute;
+
+      return Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
+    }
+
+
+    for (const zone of warriorRoute) {
+      if (stationRoute.indexOf(zone) >= 0) {
+        // The warrior should go back to this zone to change route to the station
+        return Order.move(warrior, zone, Order.MOVE_CLOSE_TO);
+      }
+    }
+
+    // Fall back to moving directly to the station
+    Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
   }
 
   goDodge() {

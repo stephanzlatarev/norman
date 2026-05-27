@@ -12,6 +12,7 @@ import { separateIslands } from "./islands.js";
 import { initNames } from "./names.js";
 import { initNeighbors } from "./neighbors.js";
 import { dissolvePatches } from "./patches.js";
+import { routeZones } from "./routes.js";
 import { initSectors } from "./sectors.js";
 import { validateRamp } from "./ramps.js";
 import { createSites } from "./sites.js";
@@ -47,6 +48,7 @@ export default function(gameInfo) {
   initNames(clusters);
   processClusters(clusters, addSkirt);
   createZones(clusters);
+  routeZones();
   createSites();
 }
 

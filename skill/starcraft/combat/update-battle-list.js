@@ -165,19 +165,8 @@ function findRallyZone(zone) {
     return zone;
   }
 
-  let rally = zone;
-
-  // The rally zone is the exit closest to our perimeter
-  for (const [neighbor, corridor] of zone.exits) {
-    if (!corridor.via.isPassage) continue;
-    if (!neighbor.perimeterLevel) continue;
-
-    if (neighbor.perimeterLevel < rally.perimeterLevel) {
-      rally = neighbor;
-    }
-  }
-
-  return rally;
+  // Rally is on route to home base
+  return (zone.route && (zone.route.length > 1)) ? zone.route[1] : zone;
 }
 
 function findOutpostBase() {

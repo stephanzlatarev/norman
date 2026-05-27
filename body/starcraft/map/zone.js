@@ -13,6 +13,10 @@ export default class Zone extends Space {
   neighbors = new Set();
   exits = new Map();
 
+  // Route to home base
+  distance = 0;
+  route = [];
+
   constructor(name, center, cells, border) {
     super("zone");
 

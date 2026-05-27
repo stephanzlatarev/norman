@@ -7,6 +7,13 @@ export default function(shapes) {
 
   for (const zone of Zone.list()) {
     if (!zone.isDepot && !zone.isHall) continue;
+    if (!zone.route || (zone.route.length <= 1)) continue;
+
+    arrow(shapes, zone.route[1].cell, zone.cell);
+  }
+
+  for (const zone of Zone.list()) {
+    if (!zone.isDepot && !zone.isHall) continue;
 
     const neighbors = new Set();
 
@@ -45,6 +52,18 @@ export default function(shapes) {
       opacity: 0.8,
     });
   }
+}
+
+function arrow(shapes, a, b) {
+  shapes.push({
+    shape: "arrow",
+    x1: a.x + 0.5, y1: a.y + 0.5,
+    x2: b.x + 0.5, y2: b.y + 0.5,
+    r: 1,
+    color: "#444444",
+    filled: true,
+    opacity: 0.4,
+  });
 }
 
 function line(shapes, a, b, dotted) {
