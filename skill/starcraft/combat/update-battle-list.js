@@ -160,8 +160,16 @@ function areZonesTooClose(a, b) {
 }
 
 function findRallyZone(zone) {
-  if (zone.perimeterLevel && (zone.perimeterLevel < PERIMETER_GREEN)) {
-    // The zone is inside our defendable perimeter
+  let hasShieldBattery = false;
+
+  for (const building of zone.buildings) {
+    if (building.isActive && building.energy && (building.type.name === "ShieldBattery")) {
+      hasShieldBattery = true;
+      break;
+    }
+  }
+
+  if (hasShieldBattery) {
     return zone;
   }
 
