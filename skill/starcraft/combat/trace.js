@@ -38,18 +38,20 @@ export function traceBattle(battle, event) {
 
   if (event) trace.push(event);
 
-  trace.push("perimeter:", battle.front.perimeterLevel);
+  trace.push("perimeter:", battle.front.perimeterLevel?.toFixed(2));
   trace.push("rally:", battle.rally.name);
   trace.push("sectors:", [...battle.sectors].map(sector => sector.name).join());
   trace.push("balance:", battle.deployedBalance.toFixed(2), "/", battle.recruitedBalance.toFixed(2));
   trace.push("mode:", battle.mode);
 
+  trace.push("|");
   trace.push("detector:");
   traceDetector(trace, battle.detector);
 
   trace.push("fighters:");
   traceFighters(trace, battle);
 
+  trace.push("|");
   trace.push("threats:");
   traceThreats(trace, battle.sectors);
 
@@ -59,77 +61,104 @@ export function traceBattle(battle, event) {
 function traceDetector(trace, detector) {
   if (!detector || !detector.assignee) return;
 
-  trace.push(detector.assignee.zone.name);
+  trace.push(detector.assignee.sector.name);
 }
 
 function traceFighters(trace, battle) {
   const types = new Set();
+
+  for (const fighter of battle.fighters) {
+    types.add(fighter.agent.type.name);
+  }
+
+  for (const type of types) {
+    traceFighterType(trace, battle, type);
+  }
+}
+
+function traceFighterType(trace, battle, type) {
   const count = new Map();
   const hire = new Map();
   const deploy = new Set();
   const rally = new Set();
 
   for (const fighter of battle.fighters) {
-    types.add(fighter.agent.type.name);
+    if (fighter.agent.type.name !== type) continue;
 
     if (fighter.assignee) {
-      increment(count, fighter.assignee.zone.name);
+      increment(count, fighter.assignee.sector.name);
 
       if (battle.sectors.has(fighter.assignee.sector)) {
-        deploy.add(fighter.assignee.zone.name);
+        deploy.add(fighter.assignee.sector.name);
       } else {
-        rally.add(fighter.assignee.zone.name);
+        rally.add(fighter.assignee.sector.name);
       }
     } else {
-      increment(hire, fighter.zone.name);
+      increment(hire, fighter.zone.cell.sector.name);
+    }
+  }
+
+  trace.push(type);
+
+  if (deploy.size) {
+    trace.push("deployed:");
+
+    for (const sector of deploy) {
+      trace.push(sector, count.get(sector));
+    }
+  }
+
+  if (rally.size) {
+    trace.push("rallying:");
+
+    for (const sector of rally) {
+      trace.push(sector, count.get(sector));
+    }
+  }
+
+  if (hire.size) {
+    trace.push("hire:");
+
+    for (const [sector, amount] of hire) {
+      trace.push(sector, amount);
+    }
+  }
+
+  trace.push("·");
+}
+
+function traceThreats(trace, sectors) {
+  const types = new Set();
+
+  for (const sector of sectors) {
+    for (const enemy of sector.threats) {
+      types.add(enemy.type.name);
     }
   }
 
   for (const type of types) {
-    trace.push(type);
-  }
-
-  if (deploy.size) {
-    trace.push("|");
-
-    for (const zone of deploy) {
-      trace.push(zone, count.get(zone));
-    }
-
-    trace.push("deployed");
-  }
-
-  if (rally.size) {
-    trace.push("|");
-
-    for (const zone of rally) {
-      trace.push(zone, count.get(zone));
-    }
-
-    trace.push("rallying");
-  }
-
-  if (hire.size) {
-    trace.push("| hire:");
-
-    for (const [zone, count] of hire) {
-      trace.push(zone, count);
-    }
+    traceThreatType(trace, sectors, type);
   }
 }
 
-function traceThreats(trace, sectors) {
-  const threats = new Map();
+function traceThreatType(trace, sectors, type) {
+  const count = new Map();
 
   for (const sector of sectors) {
     for (const enemy of sector.threats) {
-      increment(threats, enemy.type.name);
+      if (enemy.type.name !== type) continue;
+
+      increment(count, enemy.sector.name);
     }
   }
 
-  for (const [threat, count] of threats) {
-    trace.push(threat, count);
+  trace.push(type);
+
+  for (const [sector, amount] of count) {
+    trace.push(sector, amount);
   }
+
+  trace.push("·");
 }
 
 function increment(map, key) {
@@ -148,9 +177,10 @@ function traceArmyScore() {
 }
 
 function traceWarriorAssignments() {
-  console.log("Warrior assignments:");
+  info("battles", "Warrior assignments:");
   for (const warrior of Units.warriors().values()) {
-    console.log("-", warrior.type.name, warrior.nick,
+    info("battles", "-", warrior.type.name, warrior.nick,
+      "sector:", warrior.sector ? warrior.sector.name : "-",
       "zone:", warrior.zone ? warrior.zone.name : "-",
       "job:", warrior.job ? warrior.job.details : "-",
       "priority:", warrior.job ? warrior.job.priority : "-",
