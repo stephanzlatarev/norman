@@ -80,6 +80,11 @@ export default class Depot extends Zone {
     } else if (unit.type.isVespene) {
       this.vespene.add(unit);
     }
+
+    if (unit.type.isExtractor) {
+      const vespene = findVespeneGeyser(this, unit.body);
+      if (vespene) vespene.extractor = unit;
+    }
   }
 
   removeUnit(unit) {
@@ -93,6 +98,9 @@ export default class Depot extends Zone {
       this.vespene.delete(unit);
     } else if (unit.type.isExtractor) {
       this.extractors.delete(unit);
+
+      const vespene = findVespeneGeyser(this, unit.body);
+      if (vespene) vespene.extractor = null;
     }
   }
 
@@ -123,4 +131,12 @@ function findRally(cell, resources) {
   const dy = resources.size ? Math.sign(Math.floor(sumy / resources.size) - cell.y) : 1;
 
   return Board.cell(cell.x + dx * 3 + 0.5, cell.y + dy * 3 + 0.5);
+}
+
+function findVespeneGeyser(zone, pos) {
+  for (const vespene of zone.vespene) {
+    if ((pos.x === vespene.body.x) && (pos.y === vespene.body.y)) {
+      return vespene;
+    }
+  }
 }

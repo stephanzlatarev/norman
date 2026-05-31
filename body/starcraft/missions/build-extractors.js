@@ -15,7 +15,10 @@ export default class BuildExtractorsMission extends Mission {
         this.vespene = null;
         this.job = null;
       } else if (this.job.isDone) {
-        this.vespene.extractor = this.job.product;
+        this.job = null;
+        this.vespene = null;
+      } else if (this.vespene.extractor) {
+        this.job.close(true);
         this.job = null;
         this.vespene = null;
       } else {
@@ -27,7 +30,7 @@ export default class BuildExtractorsMission extends Mission {
 
     for (const zone of Depot.list()) {
       if (!zone.depot || !zone.depot.isActive) continue;
-      if (zone.extractors.size >= 2) continue;
+      if (zone.extractors.size >= zone.vespene.size) continue;
 
       for (const vespene of zone.vespene) {
         if (hasExtractor(zone, vespene)) continue;
