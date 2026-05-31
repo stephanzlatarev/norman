@@ -49,6 +49,7 @@ export default class Fight extends Job {
 
     const isAttacking = (warrior && target && warrior.order && (warrior.order.targetUnitTag === target.tag));
     const isDeployed = this.battle.sectors.has(warrior.sector);
+    let isRouting = false;
 
     if ((isDeployed || isAttacking) && this.shouldAttack()) {
       // Attack
@@ -69,8 +70,6 @@ export default class Fight extends Job {
       }
     } else if (isDeployed) {
       // Deployed but shouldn't attack yet
-      this.route = null;
-
       if (this.shouldStalk()) {
         if (this.shouldKite()) {
           this.details = getDetails(this, "kite");
@@ -80,7 +79,8 @@ export default class Fight extends Job {
           this.goDodge();
         } else {
           this.details = getDetails(this, "stalk");
-          Order.move(warrior, this.station);
+          this.goRouteTo(this.station);
+          isRouting = true;
         }
 
         this.isBusy = true;
@@ -88,7 +88,7 @@ export default class Fight extends Job {
         this.details = getDetails(this, "march");
         this.goMarch();
         this.isBusy = true;
-      } else {
+      } else if (warrior.zone === this.station.zone) {
         this.details = getDetails(this, "station");
 
         if (this.battle.mode === Battle.MODE_STAND) {
@@ -99,12 +99,23 @@ export default class Fight extends Job {
         }
 
         this.isBusy = false;
+      } else {
+        this.details = getDetails(this, "route");
+        this.goRouteTo(this.station);
+
+        isRouting = true;
+        this.isBusy = false;
       }
     } else {
       this.details = getDetails(this, "deploy");
-      this.goDeploy();
+      this.goRouteTo(this.station);
 
+      isRouting = true;
       this.isBusy = false;
+    }
+
+    if (!isRouting) {
+      this.route = null;
     }
   }
 
@@ -223,33 +234,34 @@ export default class Fight extends Job {
     }
   }
 
-  goDeploy() {
+  goRouteTo(rally) {
     const warrior = this.assignee;
+    if (!warrior || !rally) return;
+
     const warriorRoute = warrior.zone?.route;
-    const stationRoute = this.station?.zone?.route;
+    const rallyRoute = rally.zone?.route;
 
-    if (!warriorRoute || !stationRoute) {
-      // There are no routes to follow, so move directly to the station
-      return Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
+    if (!warriorRoute || !rallyRoute) {
+      // There are no routes to follow, so move directly to the rally point
+      return Order.move(warrior, rally);
     }
 
-    if ((this.route === stationRoute) || (stationRoute.indexOf(warrior.zone) >= 0)) {
-      // The warrior is on the route to the station, so move on it
-      this.route = stationRoute;
+    if ((this.route === rallyRoute) || (rallyRoute.indexOf(warrior.zone) >= 0)) {
+      // The warrior is on the route to the rally point, so move on that route
+      this.route = rallyRoute;
 
-      return Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
+      return Order.move(warrior, rally);
     }
-
 
     for (const zone of warriorRoute) {
-      if (stationRoute.indexOf(zone) >= 0) {
-        // The warrior should go back to this zone to change route to the station
-        return Order.move(warrior, zone, Order.MOVE_CLOSE_TO);
+      if (rallyRoute.indexOf(zone) >= 0) {
+        // The warrior should go back to this zone to change route to the rally point
+        return Order.move(warrior, zone);
       }
     }
 
-    // Fall back to moving directly to the station
-    Order.move(warrior, this.station, Order.MOVE_CLOSE_TO);
+    // Fall back to moving directly to the rally point
+    Order.move(warrior, rally);
   }
 
   goDodge() {
