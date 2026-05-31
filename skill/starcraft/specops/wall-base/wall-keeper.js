@@ -56,6 +56,10 @@ function getIntruder() {
       if (enemy.type.name === "Reaper") return enemy;
     }
   }
+
+  for (const enemy of Depot.home.enemies) {
+    if (enemy.type.isExtractor) return enemy;
+  }
 }
 
 function shouldBlockWall() {

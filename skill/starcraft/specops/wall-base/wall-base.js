@@ -45,6 +45,10 @@ function shouldShieldWall() {
   if (!wallKeeperJob) return false;
 
   for (const enemy of Depot.home.enemies.values()) {
+    if (!enemy.body.isGround) continue;
+    if (!enemy.type.rangeGround) continue;
+    if (!enemy.type.damageGround) continue;
+
     if (enemy.type.rangeGround < 1) return true;
   }
 }
