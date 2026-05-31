@@ -53,20 +53,34 @@ export default class Fight extends Job {
 
     if ((isDeployed || isAttacking) && this.shouldAttack()) {
       // Attack
-      this.route = null;
+      let destination;
 
       if (target) {
-        this.details = getDetails(this, "attack");
-        this.goAttack();
+        destination = target.cell;
+      } else if (this.station.zone === this.battle.front) {
+        destination = this.station;
       } else {
-        this.details = getDetails(this, "charge");
-        Order.attack(warrior, (this.station.zone === this.battle.front) ? this.station : this.battle.front.rally);
+        destination = this.battle.front.rally;
       }
 
-      if (REASSIGNABLE_WARRIORS.has(warrior.type.name)) {
-        this.isBusy = isInFireRange(target, warrior);
+      if (warrior.zone && destination.zone && !isSameZoneOrNeighbor(warrior.zone, destination.zone)) {
+        this.goRouteTo(destination);
+
+        this.isBusy = false;
+      } else if (target) {
+        this.details = getDetails(this, "attack");
+        this.goAttack();
+
+        if (REASSIGNABLE_WARRIORS.has(warrior.type.name)) {
+          this.isBusy = isInFireRange(target, warrior);
+        } else {
+          this.isBusy = isAttacking || isInFireRange(target, warrior);
+        }
       } else {
-        this.isBusy = isAttacking || isInFireRange(target, warrior);
+        this.details = getDetails(this, "charge");
+        Order.attack(warrior, destination);
+
+        this.isBusy = false;
       }
     } else if (isDeployed) {
       // Deployed but shouldn't attack yet
@@ -439,6 +453,13 @@ function isInRange(warrior, target, range) {
   const squareRange = totalRange * totalRange;
 
   return (squareDistance <= squareRange);
+}
+
+function isSameZoneOrNeighbor(a, b) {
+  if (!a) return false;
+  if (!b) return false;
+  if (a === b) return true;
+  if (a.neighbors.has(b)) return true;
 }
 
 function isClose(a, b, distance) {
