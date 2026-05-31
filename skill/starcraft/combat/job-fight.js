@@ -238,6 +238,26 @@ export default class Fight extends Job {
     const warrior = this.assignee;
     if (!warrior || !rally) return;
 
+    // First check if an enemy is in warrior's fire range
+    if (!warrior.weapon.cooldown) {
+      let target;
+
+      for (const sector of [warrior.sector, ...warrior.sector.neighbors]) {
+        for (const enemy of sector.enemies) {
+          if (!isInFireRange(warrior, enemy)) continue;
+
+          if (!target || (enemy.armor.total < target.armor.total)) {
+            target = enemy;
+          }
+        }
+      }
+
+      if (target) {
+        return Order.attack(warrior, target);
+      }
+    }
+
+    // Otherwise, get on route to the rally point
     const warriorRoute = warrior.zone?.route;
     const rallyRoute = rally.zone?.route;
 
