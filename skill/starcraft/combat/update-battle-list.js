@@ -174,7 +174,17 @@ function findRallyZone(zone) {
   }
 
   // Rally is on route to home base
-  return (zone.route && (zone.route.length > 1)) ? zone.route[1] : zone;
+  if (zone.route) {
+    for (let i = 1; i < zone.route.length; i++) {
+      const one = zone.route[i];
+
+      if (one.isDepot || one.isHall) {
+        return one;
+      }
+    }
+  }
+
+  return zone;
 }
 
 function findOutpostBase() {

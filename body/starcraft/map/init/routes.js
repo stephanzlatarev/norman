@@ -21,17 +21,14 @@ function traverse(wave, traversed) {
       if (traversed.has(neighbor)) continue;
 
       if (corridor.via === neighbor) {
-        setRoute(zone, neighbor, calculateDistance(zone, neighbor));
+        setRoute(zone, neighbor);
         next.add(neighbor);
       } else if (corridor.via.isPassage) {
-        const leg1 = calculateDistance(zone, corridor.via);
-        const leg2 = calculateDistance(zone, neighbor);
-
-        setRoute(zone, corridor.via, leg1);
-        setRoute(zone, neighbor, leg1 + leg2);
+        setRoute(zone, corridor.via);
+        setRoute(corridor.via, neighbor);
         next.add(neighbor);
       } else {
-        setRoute(zone, corridor.via, calculateDistance(zone, corridor.via));
+        setRoute(zone, corridor.via);
       }
     }
   }
@@ -41,7 +38,9 @@ function traverse(wave, traversed) {
   }
 }
 
-function setRoute(a, b, distance) {
+function setRoute(a, b) {
+  const distance = Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+
   if (!b.distance || (a.distance + distance < b.distance)) {
     b.distance = a.distance + distance;
     b.route = [b, ...a.route];

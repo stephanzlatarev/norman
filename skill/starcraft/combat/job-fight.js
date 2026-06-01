@@ -64,6 +64,7 @@ export default class Fight extends Job {
       }
 
       if (warrior.zone && destination.zone && !isSameZoneOrNeighbor(warrior.zone, destination.zone)) {
+        this.details = getDetails(this, "approach");
         this.goRouteTo(destination);
 
         this.isBusy = false;
