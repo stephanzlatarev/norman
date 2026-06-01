@@ -179,6 +179,9 @@ function traceArmyScore() {
 function traceWarriorAssignments() {
   info("battles", "Warrior assignments:");
   for (const warrior of Units.warriors().values()) {
+    if (!warrior.isAlive) continue;
+    if (!warrior.type.movementSpeed) continue;
+
     info("battles", "-", warrior.type.name, warrior.nick,
       "sector:", warrior.sector ? warrior.sector.name : "-",
       "zone:", warrior.zone ? warrior.zone.name : "-",
