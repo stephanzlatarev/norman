@@ -133,11 +133,6 @@ export default class Fight extends Job {
       this.isBusy = false;
     }
 
-if (warrior.tag == 4350803970) console.log(
-  warrior.type.name, warrior.nick,
-  this.details,
-  "| transit:", !!isInTransit, this.transit ? this.transit.name : "-",
-);
     if (!isInTransit) {
       this.transit = null;
     }
@@ -285,7 +280,6 @@ if (warrior.tag == 4350803970) console.log(
     const rallyRoute = rally.zone?.route;
     if (!rallyRoute) return Order.move(warrior, rally);
 
-if (warrior.tag == 4350803970) console.log("  ROUTE", rallyRoute.map(z => z.name).join(" "));
     // When the warrior is already on the route to the rally point, move to the next transit zone
     if (this.transit) {
       const index = rallyRoute.indexOf(this.transit);
@@ -293,21 +287,14 @@ if (warrior.tag == 4350803970) console.log("  ROUTE", rallyRoute.map(z => z.name
       if (index >= 0) {
         if (!isClose(warrior.body, this.transit, 5)) {
           // Warrior has not reached the space of the transit zone. Move closer to its center
-if (warrior.tag == 4350803970) console.log("  MOVE A",
-  "W:", warrior.body.x.toFixed(2), warrior.body.y.toFixed(2),
-  "T:", this.transit.x.toFixed(2), this.transit.y.toFixed(2),
-  "D:", Math.abs(warrior.body.x, this.transit.x).toFixed(2), Math.abs(warrior.body.y, this.transit.y).toFixed(2),
-);
           return Order.move(warrior, this.transit);
         } else if (index > 0) {
           // Warrior has reached this transit zone. Set next transit zone
           this.transit = rallyRoute[index - 1];
 
-if (warrior.tag == 4350803970) console.log("  MOVE B");
           return Order.move(warrior, this.transit);
         } else {
           // Warrior has reached the last transit zone. Move to the rally point
-if (warrior.tag == 4350803970) console.log("  MOVE C");
           return Order.move(warrior, rally);
         }
       }
@@ -317,7 +304,6 @@ if (warrior.tag == 4350803970) console.log("  MOVE C");
     if (rallyRoute.indexOf(warrior.zone) >= 0) {
       this.transit = warrior.zone;
 
-if (warrior.tag == 4350803970) console.log("  MOVE D");
       return Order.move(warrior, warrior.zone);
     }
 
@@ -328,14 +314,12 @@ if (warrior.tag == 4350803970) console.log("  MOVE D");
         if (rallyRoute.indexOf(zone) >= 0) {
           this.transit = zone;
 
-if (warrior.tag == 4350803970) console.log("  MOVE E");
           return Order.move(warrior, zone);
         }
       }
     }
 
     // Otherwise, move directly to the rally point
-if (warrior.tag == 4350803970) console.log("  MOVE Z");
     Order.move(warrior, rally);
   }
 
