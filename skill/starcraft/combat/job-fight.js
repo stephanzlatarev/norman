@@ -65,9 +65,9 @@ export default class Fight extends Job {
         destination = this.battle.front.rally;
       }
 
-      if (warrior.zone && destination.zone && !isSameZoneOrNeighbor(warrior.zone, destination.zone)) {
+      if (!isDeployed || (warrior.zone && destination.zone && !isSameZoneOrNeighbor(warrior.zone, destination.zone))) {
         this.details = getDetails(this, "approach");
-        this.goRouteTo(destination);
+        this.goRouteTo(this.station);
 
         isInTransit = true;
         this.isBusy = false;
