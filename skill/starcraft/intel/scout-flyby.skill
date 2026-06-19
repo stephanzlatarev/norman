@@ -1,0 +1,5 @@
+# Scout flyby
+
+name: Scout flyby
+brain: scout-flyby.js
+type: javascript

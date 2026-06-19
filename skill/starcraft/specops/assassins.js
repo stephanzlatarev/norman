@@ -1,26 +1,15 @@
-import Job from "../job.js";
-import Mission from "../mission.js";
-import Order from "../order.js";
-import Units from "../units.js";
-import Depot from "../map/depot.js";
-import { PERIMETER_RED } from "../map/perimeter.js";
-import { ActiveCount } from "../memo/count.js";
-import Enemy from "../memo/enemy.js";
+import { Job, Order, Units, Depot, PERIMETER_RED, ActiveCount, Enemy } from "./imports.js";
 
 const DARK_TEMPLAR = "DarkTemplar";
 
-export default class AssassinsMission extends Mission {
+export default function() {
+  if (!ActiveCount.DarkTemplar) return;
 
-  run() {
-    if (!ActiveCount.DarkTemplar) return;
-
-    for (const unit of Units.warriors().values()) {
-      if (!unit.job && (unit.type.name === DARK_TEMPLAR)) {
-        new Assassin().assign(unit);
-      }
+  for (const unit of Units.warriors().values()) {
+    if (!unit.job && (unit.type.name === DARK_TEMPLAR)) {
+      new Assassin().assign(unit);
     }
   }
-
 }
 
 class Assassin extends Job {
@@ -33,7 +22,7 @@ class Assassin extends Job {
 
   execute() {
     const assassin = this.assignee;
-    const zone  = assassin.zone;
+    const zone = assassin.zone;
 
     if (!assassin.isAlive || !zone) {
       this.close(false);

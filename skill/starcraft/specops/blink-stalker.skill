@@ -1,0 +1,5 @@
+# Blink stalker
+
+name: Blink stalker
+brain: blink-stalker.js
+type: javascript

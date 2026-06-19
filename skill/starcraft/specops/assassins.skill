@@ -1,0 +1,5 @@
+# Assassins
+
+name: Assassins
+brain: assassins.js
+type: javascript

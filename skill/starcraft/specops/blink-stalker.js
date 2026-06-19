@@ -1,9 +1,4 @@
-import Mission from "../mission.js";
-import Order from "../order.js";
-import Units from "../units.js";
-import Board from "../map/board.js";
-import { ActiveCount } from "../memo/count.js";
-import Resources from "../memo/resources.js";
+import { Order, Units, Board, ActiveCount, Resources } from "./imports.js";
 
 const LOOPS_PER_SECOND = 22.4;
 const BLINK_COOLDOWN_LOOPS = LOOPS_PER_SECOND * 7.2;
@@ -13,26 +8,22 @@ const MAX_BLINK_SQUARE_DISTANCE = MAX_BLINK_DISTANCE * MAX_BLINK_DISTANCE;
 
 const blinks = new Map();
 
-export default class BlinkStalkerMission extends Mission {
+export default function() {
+  if (!ActiveCount["BlinkTech"]) return;
 
-  run() {
-    if (!ActiveCount["BlinkTech"]) return;
+  for (const warrior of Units.warriors().values()) {
+    if (!warrior.order.targetWorldSpacePos) continue;
+    if (warrior.type.name !== "Stalker") continue;
+    if (!canBlink(warrior)) continue;
 
-    for (const warrior of Units.warriors().values()) {
-      if (!warrior.order.targetWorldSpacePos) continue;
-      if (warrior.type.name !== "Stalker") continue;
-      if (!canBlink(warrior)) continue;
+    const target = getBlinkLocation(warrior);
 
-      const target = getBlinkLocation(warrior);
+    if (target) {
+      new Order(warrior, 1442, target).accept(true);
 
-      if (target) {
-        new Order(warrior, 1442, target).accept(true);
-
-        blinks.set(warrior, Resources.loop + BLINK_COOLDOWN_LOOPS);
-      }
+      blinks.set(warrior, Resources.loop + BLINK_COOLDOWN_LOOPS);
     }
   }
-
 }
 
 function canBlink(warrior) {

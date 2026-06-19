@@ -1,13 +1,4 @@
-import Memory from "../../../code/memory.js";
-import Job from "../job.js";
-import Mission from "../mission.js";
-import Order from "../order.js";
-import Units from "../units.js";
-import Zone from "../map/zone.js";
-import { ActiveCount } from "../memo/count.js";
-import { VisibleCount } from "../memo/encounters.js";
-import Enemy from "../memo/enemy.js";
-import Resources from "../memo/resources.js";
+import { Memory, Job, Order, Units, Zone, ActiveCount, VisibleCount, Enemy, Resources } from "./imports.js";
 
 const COST_FORCE_FIELD = 50;
 const COST_GUARDIAN_SHIELD = 75;
@@ -17,56 +8,53 @@ const TWO_MINUTES = 22.4 * 60 * 2;
 // TODO: Maintain up to 2 hallucinated phoenixes at a time for better map coverage
 // TODO: Create scouts when visible enemies are only outside our perimeter
 // TODO: Maneuver the scout in zones where there are enemies that can shoot air
-export default class ScoutFlyby extends Mission {
 
-  jobCreateScout = null;
-  jobScoutFlyby = null;
+let jobCreateScout = null;
+let jobScoutFlyby = null;
 
-  run() {
-    // Update last scout time for all zones
-    for (const zone of Zone.list()) {
-      if (zone.warriors.size || zone.buildings.size) {
-        zone.lastScoutTime = Resources.loop;
-      } else if (!zone.lastScoutTime) {
-        zone.lastScoutTime = 0;
-      }
-    }
-
-    // Check if job to create scout is closed
-    if (this.jobCreateScout && (this.jobCreateScout.isDone || this.jobCreateScout.isFailed)) {
-      this.jobCreateScout = null;
-    }
-
-    // Check if job to fly by is closed
-    if (this.jobScoutFlyby && (this.jobScoutFlyby.isDone || this.jobScoutFlyby.isFailed)) {
-      this.jobScoutFlyby = null;
-    }
-
-    // When there is no active scout then create job to create it
-    if (!this.jobScoutFlyby && !this.jobCreateScout) {
-      const sentry = selectSentry();
-
-      if (sentry) {
-        this.jobCreateScout = new CreateScout();
-        this.jobScoutFlyby = new Flyby();
-
-        this.jobCreateScout.assign(sentry);
-      }
-    }
-
-    // Ensure the flyby job is assigned. The scheduler won't do it as hallucinations are not considered warriors
-    if (this.jobScoutFlyby && !this.jobScoutFlyby.assignee) {
-      for (const unit of Units.hallucinations().values()) {
-        if (!unit.job) {
-          console.log("Hallucinated phoenix", unit.nick, "starts flyby scouting");
-
-          this.jobScoutFlyby.assign(unit);
-          break;
-        }
-      }
+export default function() {
+  // Update last scout time for all zones
+  for (const zone of Zone.list()) {
+    if (zone.warriors.size || zone.buildings.size) {
+      zone.lastScoutTime = Resources.loop;
+    } else if (!zone.lastScoutTime) {
+      zone.lastScoutTime = 0;
     }
   }
 
+  // Check if job to create scout is closed
+  if (jobCreateScout && (jobCreateScout.isDone || jobCreateScout.isFailed)) {
+    jobCreateScout = null;
+  }
+
+  // Check if job to fly by is closed
+  if (jobScoutFlyby && (jobScoutFlyby.isDone || jobScoutFlyby.isFailed)) {
+    jobScoutFlyby = null;
+  }
+
+  // When there is no active scout then create job to create it
+  if (!jobScoutFlyby && !jobCreateScout) {
+    const sentry = selectSentry();
+
+    if (sentry) {
+      jobCreateScout = new CreateScout();
+      jobScoutFlyby = new Flyby();
+
+      jobCreateScout.assign(sentry);
+    }
+  }
+
+  // Ensure the flyby job is assigned. The scheduler won't do it as hallucinations are not considered warriors
+  if (jobScoutFlyby && !jobScoutFlyby.assignee) {
+    for (const unit of Units.hallucinations().values()) {
+      if (!unit.job) {
+        console.log("Hallucinated phoenix", unit.nick, "starts flyby scouting");
+
+        jobScoutFlyby.assign(unit);
+        break;
+      }
+    }
+  }
 }
 
 class CreateScout extends Job {

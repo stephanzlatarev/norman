@@ -8,16 +8,18 @@ import Units from "../../../body/starcraft/units.js";
 import Build from "../../../body/starcraft/jobs/build.js";
 import Board from "../../../body/starcraft/map/board.js";
 import Depot from "../../../body/starcraft/map/depot.js";
+import { PERIMETER_RED } from "../../../body/starcraft/map/perimeter.js";
 import Zone from "../../../body/starcraft/map/zone.js";
 import { ActiveCount, TotalCount } from "../../../body/starcraft/memo/count.js";
 import { VisibleCount } from "../../../body/starcraft/memo/encounters.js";
+import Enemy from "../../../body/starcraft/memo/enemy.js";
 import Resources from "../../../body/starcraft/memo/resources.js";
 
 export {
   Memory, List,
   Job, Order, Types, Units,
   Build,
-  Board, Depot, Zone,
-  ActiveCount, TotalCount, VisibleCount, Resources,
+  Board, Depot, Zone, PERIMETER_RED,
+  ActiveCount, TotalCount, VisibleCount, Enemy, Resources,
   info,
 };
