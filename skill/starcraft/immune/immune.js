@@ -3,6 +3,7 @@ import neutralizeProxies from "./neutralize-proxies.js";
 import battlecruiserHarass from "./battlecruiser-harass.js";
 import cancelExposedBuildings from "./cancel-exposed-buildings.js";
 import defendDepotsWithWorkers from "./defend-depots-with-workers.js";
+import protectHarvestLines from "./protect-harvest-lines.js";
 
 export default function() {
   neutralizeNydus();
@@ -10,4 +11,5 @@ export default function() {
   battlecruiserHarass();
   cancelExposedBuildings();
   defendDepotsWithWorkers();
+  protectHarvestLines();
 }
