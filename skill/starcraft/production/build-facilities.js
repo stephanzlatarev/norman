@@ -1,13 +1,4 @@
-import Mission from "../mission.js";
-import Types from "../types.js";
-import Build from "../jobs/build.js";
-import { ALERT_WHITE } from "../map/alert.js";
-import Board from "../map/board.js";
-import Depot from "../map/depot.js";
-import { TotalCount } from "../memo/count.js";
-import Limit from "../memo/limit.js";
-import Priority from "../memo/priority.js";
-import Resources from "../memo/resources.js";
+import { Types, Build, ALERT_WHITE, Board, Depot, Limit, Priority, Resources, TotalCount } from "./imports.js";
 
 const DEFAULT_FACILITIES = ["Stargate", "Gateway", "Forge"];
 const SPECIAL_FACILITIES_DEFAULT = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil", "RoboticsBay", "DarkShrine"];
@@ -17,43 +8,38 @@ const COOLDOWN_LOOPS = 500;
 
 const cooldown = new Map();
 let cooldownSite;
+let job;
 
 // TODO: Convert to skill and run one skill per facility type
-export default class BuildFacilitiesMission extends Mission {
-
-  job;
-
-  run() {
-    if (this.job) {
-      if (this.job.isFailed) {
-        // This build job failed. Set the target on cooldown and open a new build job
-        if (cooldownSite) cooldown.set(cooldownSite, Resources.loop);
-        this.job = null;
-      } else if (this.job.isDone) {
-        // This build job is done. Free the build slot to open a new build job
-        this.job = null;
-      } else if (!this.job.assignee && (TotalCount[this.job.output.name] >= Limit[this.job.output.name])) {
-        // This build job is not assigned yet but priorities have meanwhile changed so close it
-        this.job.close(false);
-        this.job = null;
-      } else {
-        // This build job is still in progress
-        this.job.priority = Priority[this.job.output.name];
-        return;
-      }
+export default function() {
+  if (job) {
+    if (job.isFailed) {
+      // This build job failed. Set the target on cooldown and open a new build job
+      if (cooldownSite) cooldown.set(cooldownSite, Resources.loop);
+      job = null;
+    } else if (job.isDone) {
+      // This build job is done. Free the build slot to open a new build job
+      job = null;
+    } else if (!job.assignee && (TotalCount[job.output.name] >= Limit[job.output.name])) {
+      // This build job is not assigned yet but priorities have meanwhile changed so close it
+      job.close(false);
+      job = null;
+    } else {
+      // This build job is still in progress
+      job.priority = Priority[job.output.name];
+      return;
     }
-
-    cooldownSite = null;
-
-    const facility = selectFacilityType();
-    if (!facility) return;
-
-    const pos = findBuildingPlot();
-    if (!pos) return;
-
-    this.job = new Build(facility, pos);
   }
 
+  cooldownSite = null;
+
+  const facility = selectFacilityType();
+  if (!facility) return;
+
+  const pos = findBuildingPlot();
+  if (!pos) return;
+
+  job = new Build(facility, pos);
 }
 
 function selectFacilityType() {

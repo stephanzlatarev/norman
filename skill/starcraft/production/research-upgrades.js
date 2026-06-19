@@ -1,8 +1,4 @@
-import Mission from "../mission.js";
-import Types from "../types.js";
-import Units from "../units.js";
-import Produce from "../jobs/produce.js";
-import { ActiveCount } from "../memo/count.js";
+import { Types, Units, Produce, ActiveCount } from "./imports.js";
 
 const UPGRADES = {
   Forge: [
@@ -19,27 +15,23 @@ const UPGRADES = {
   ],
 };
 
-export default class ResearchUpgradesMission extends Mission {
+const jobs = new Map();
 
-  jobs = new Map();
+export default function() {
+  for (const facility of Units.buildings().values()) {
+    if (facility.job) continue;
+    if (!facility.isActive) continue;
+    if (facility.order.progress) continue;
 
-  run() {
-    for (const facility of Units.buildings().values()) {
-      if (facility.job) continue;
-      if (!facility.isActive) continue;
-      if (facility.order.progress) continue;
+    const job = jobs.get(facility);
+    if (job && !job.isDone && !job.isFailed) continue;
 
-      const job = this.jobs.get(facility);
-      if (job && !job.isDone && !job.isFailed) continue;
+    const upgrade = getUpgradeType(UPGRADES[facility.type.name], jobs.values());
 
-      const upgrade = getUpgradeType(UPGRADES[facility.type.name], this.jobs.values());
-
-      if (upgrade) {
-        this.jobs.set(facility, new Produce(facility, upgrade));
-      }
+    if (upgrade) {
+      jobs.set(facility, new Produce(facility, upgrade));
     }
   }
-
 }
 
 function getUpgradeType(upgrades, jobs) {

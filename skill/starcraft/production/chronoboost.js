@@ -1,8 +1,4 @@
-import Mission from "../mission.js";
-import Order from "../order.js";
-import Job from "../job.js";
-import Units from "../units.js";
-import Priority from "../memo/priority.js";
+import { Job, Order, Units, Priority } from "./imports.js";
 
 const CAN_CHRONOBOOST = {
   Gateway: true,
@@ -10,28 +6,24 @@ const CAN_CHRONOBOOST = {
   RoboticsFacility: true,
 };
 
-export default class ChronoboostMission extends Mission {
+export default function() {
+  let jobs;
 
-  run() {
-    let jobs;
+  for (const nexus of Units.buildings().values()) {
+    if (nexus.type.name !== "Nexus") continue;
+    if (!nexus.isActive) continue;
+    if (nexus.energy < 50) continue;
 
-    for (const nexus of Units.buildings().values()) {
-      if (nexus.type.name !== "Nexus") continue;
-      if (!nexus.isActive) continue;
-      if (nexus.energy < 50) continue;
+    if (!jobs) jobs = listJobs();
+    if (!jobs.length) break;
 
-      if (!jobs) jobs = listJobs();
-      if (!jobs.length) break;
+    const job = jobs[0];
 
-      const job = jobs[0];
+    new Order(nexus, 3755, job.assignee).accept(order => (order.target.boost > 0));
 
-      new Order(nexus, 3755, job.assignee).accept(order => (order.target.boost > 0));
-
-      job.assignee.boost = 1;
-      jobs.splice(0, 1);
-    }
+    job.assignee.boost = 1;
+    jobs.splice(0, 1);
   }
-
 }
 
 function listJobs() {

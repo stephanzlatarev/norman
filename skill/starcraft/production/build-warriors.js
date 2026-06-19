@@ -1,11 +1,4 @@
-import Mission from "../mission.js";
-import Types from "../types.js";
-import Units from "../units.js";
-import Produce from "../jobs/produce.js";
-import { ActiveCount, TotalCount } from "../memo/count.js";
-import Limit from "../memo/limit.js";
-import Priority from "../memo/priority.js";
-import Resources from "../memo/resources.js";
+import { Types, Units, Produce, ActiveCount, Limit, Priority, Resources, TotalCount } from "./imports.js";
 
 const jobs = new Map();
 
@@ -22,20 +15,16 @@ const UNIT_PREREQUISITES = {
   Stalker: "CyberneticsCore",
 };
 
-export default class BuildWarriorsMission extends Mission {
+export default function() {
+  removeCompletedJobs();
 
-  run() {
-    removeCompletedJobs();
+  if (Resources.supplyUsed >= Resources.supplyLimit) return;
 
-    if (Resources.supplyUsed >= Resources.supplyLimit) return;
-
-    for (const facility of Units.buildings().values()) {
-      if (facility.isActive && FACILITY_PRODUCTS[facility.type.name] && !jobs.has(facility)) {
-        createProduceJob(facility);
-      }
+  for (const facility of Units.buildings().values()) {
+    if (facility.isActive && FACILITY_PRODUCTS[facility.type.name] && !jobs.has(facility)) {
+      createProduceJob(facility);
     }
   }
-
 }
 
 function removeCompletedJobs() {
