@@ -1,12 +1,4 @@
-import Board from "../map/board.js";
-import Depot from "../map/depot.js";
-import Build from "../jobs/build.js";
-import Job from "../job.js";
-import Mission from "../mission.js";
-import Order from "../order.js";
-import Resources from "../memo/resources.js";
-import { ActiveCount } from "../memo/count.js";
-import { VisibleCount } from "../memo/encounters.js";
+import { Job, Order, Build, Board, Depot, Resources, ActiveCount, VisibleCount } from "./imports.js";
 
 const WORM_DISSOLVE_LOOPS = 500;
 const WORM_FORGET_LOOPS = 1500;
@@ -18,37 +10,33 @@ const army = new Map();
 
 let lastNydusCanalVisibleCount;
 
-export default class NeutralizeNydusMission extends Mission {
+export default function() {
+  if (!Depot.home) return;
+  if (!ActiveCount.Forge) return;
 
-  run() {
-    if (!Depot.home) return;
-    if (!ActiveCount.Forge) return;
+  if (VisibleCount.NydusCanal !== lastNydusCanalVisibleCount) {
+    updateCanalsList();
 
-    if (VisibleCount.NydusCanal !== lastNydusCanalVisibleCount) {
-      updateCanalsList();
+    lastNydusCanalVisibleCount = VisibleCount.NydusCanal;
+  }
 
-      lastNydusCanalVisibleCount = VisibleCount.NydusCanal;
-    }
-
-    if (canals.size) {
-      for (const canal of canals) {
-        monitorCanal(canal);
-      }
-    }
-
-    if (plots.size) {
-      for (const plot of plots) {
-        monitorPlot(plot);
-      }
-    }
-
-    if (jobs.size) {
-      for (const job of jobs) {
-        monitorJob(job);
-      }
+  if (canals.size) {
+    for (const canal of canals) {
+      monitorCanal(canal);
     }
   }
 
+  if (plots.size) {
+    for (const plot of plots) {
+      monitorPlot(plot);
+    }
+  }
+
+  if (jobs.size) {
+    for (const job of jobs) {
+      monitorJob(job);
+    }
+  }
 }
 
 class NeutralizeWorm extends Job {
@@ -67,7 +55,7 @@ class NeutralizeWorm extends Job {
 
     if (!warrior || !warrior.isAlive) return;
     if (isClose(warrior.body, this.location, 6)) return;
-    
+
     Order.move(warrior, this.location);
   }
 
