@@ -1,4 +1,4 @@
-import { Board, Build, Depot, Memory, Units, VisibleCount, info } from "../imports.js";
+import { Board, Build, Depot, Memory, Units, VisibleCount, info } from "./imports.js";
 
 const TIME_WINDOW = 6 * 60 * 22.4; // 6 minutes
 const PSIONIC_MATRIX_RADIUS = 6.5;

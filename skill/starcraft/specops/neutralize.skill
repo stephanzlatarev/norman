@@ -1,5 +1,0 @@
-# Neutralize proxies and harassment
-
-name: Neutralize proxies and harassment
-brain: neutralize/neutralize.js
-type: javascript

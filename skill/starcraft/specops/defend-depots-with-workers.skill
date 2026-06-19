@@ -1,5 +1,0 @@
-# Pull workers to defend depots when military units are not enough
-
-name: Defend depots with workers
-brain: defend-depots-with-workers.js
-type: javascript
