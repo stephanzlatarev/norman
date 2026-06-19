@@ -1,23 +1,9 @@
-import Memory from "../../../code/memory.js";
-import Mission from "../mission.js";
-import Job from "../job.js";
-import { info } from "../log.js";
-import Types from "../types.js";
-import Depot from "../map/depot.js";
-import { ActiveCount, TotalCount } from "../memo/count.js";
-import { VisibleCount } from "../memo/encounters.js";
-import Limit from "../memo/limit.js";
-import Priority from "../memo/priority.js";
-import Resources from "../memo/resources.js";
+import { Memory, Job, Types, Depot, ActiveCount, TotalCount, VisibleCount, Limit, Priority, Resources, info } from "./imports.js";
 
 let plan = doStartUp;
 
-export default class PlanInvestmentsMission extends Mission {
-
-  run() {
-    plan();
-  }
-
+export default function() {
+  plan();
 }
 
 function doStartUp() {
