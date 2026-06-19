@@ -1,7 +1,6 @@
 import starcraft from "@node-sc2/proto";
 import Job from "./job.js";
 import { error, info, warning } from "./log.js";
-import Mission from "./mission.js";
 import Order from "./order.js";
 import scheduleJobs from "./schedule.js";
 import Types from "./types.js";
@@ -83,10 +82,6 @@ export default class Game {
 
   async act() {
     if (!this.client) return;
-
-    for (const mission of Mission.list()) {
-      mission.run();
-    }
 
     scheduleJobs();
 
