@@ -1,5 +1,0 @@
-# Cancels exposed buildings
-
-name: Cancel exposed buildings
-brain: cancel-exposed-buildings.js
-type: javascript
