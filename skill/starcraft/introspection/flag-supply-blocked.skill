@@ -1,0 +1,5 @@
+# Flag supply blocked
+
+name: Flag supply blocked
+brain: flag-supply-blocked.js
+type: javascript

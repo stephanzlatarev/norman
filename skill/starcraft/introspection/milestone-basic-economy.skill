@@ -1,0 +1,5 @@
+# Milestone basic economy
+
+name: Milestone basic economy
+brain: milestone-basic-economy.js
+type: javascript

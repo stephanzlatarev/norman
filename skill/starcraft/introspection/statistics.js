@@ -1,8 +1,4 @@
-import { info } from "../log.js";
-import Mission from "../mission.js";
-import Units from "../units.js";
-import { TotalCount } from "../memo/count.js";
-import Resources from "../memo/resources.js";
+import { Units, TotalCount, Resources, info } from "./imports.js";
 
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = Math.round(LOOPS_PER_SECOND * 60);
@@ -26,22 +22,18 @@ const gatewayProduction = new Set();
 let gatewayProductionUsed = 0;
 let gatewayProductionTotal = 0;
 
-export default class Statistics extends Mission {
+export default function() {
+  if (Resources.loop > 0) {
+    trackSupply();
+    trackHarvest();
+    trackWorkerProduction();
+    trackGatewayProduction();
 
-  run() {
-    if (Resources.loop > 0) {
-      trackSupply();
-      trackHarvest();
-      trackWorkerProduction();
-      trackGatewayProduction();
-
-      if ((Resources.loop % LOOPS_PER_MINUTE) === 0) {
-        show();
-        clear();
-      }
+    if ((Resources.loop % LOOPS_PER_MINUTE) === 0) {
+      show();
+      clear();
     }
   }
-
 }
 
 function clear() {
