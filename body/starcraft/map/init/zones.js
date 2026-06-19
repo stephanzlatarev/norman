@@ -24,6 +24,7 @@ export function createZones(clusters) {
     if (zone) zones.set(cluster, zone);
   }
 
+  // Neighbors and exits point only to the neighboring depot and ground zones 
   for (const [cluster, zone] of zones.entries()) {
     if (!cluster.isDepot && !cluster.isGround) continue;
 
@@ -35,6 +36,11 @@ export function createZones(clusters) {
 
       if ((corridor.via === neighborZone) || corridor.via.isPassage) {
         zone.neighbors.add(neighborZone);
+      }
+
+      if (corridor.via.isPassage) {
+        corridor.via.exits.set(zone, corridor);
+        corridor.via.neighbors.add(zone);
       }
     }
   }
