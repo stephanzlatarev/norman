@@ -485,6 +485,7 @@ function isSameZoneOrNeighbor(a, b) {
   if (!b) return false;
   if (a === b) return true;
   if (a.neighbors.has(b)) return true;
+  if (b.neighbors.has(a)) return true;
 }
 
 function isClose(a, b, distance) {
