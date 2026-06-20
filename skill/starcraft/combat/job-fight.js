@@ -4,11 +4,13 @@ import Battle from "./battle.js";
 const KITING_RANGE = 2;
 const KITING_WARRIORS = new Set(["Stalker"]);
 const STALKING_BUFFER_RANGE = 1.2;
+const CHECKIN_DISTANCE = 5;
 const REASSIGNABLE_WARRIORS = new Set(["Sentry"]);
 
 export default class Fight extends Job {
 
-  transit = null;
+  checkin = null; // Current check-in zone. Warrior checks in when arriving at the fighter station
+  transit = null; // Current transit zone
 
   constructor(battle, warrior, station) {
     super(warrior);
@@ -49,6 +51,14 @@ export default class Fight extends Job {
       return;
     }
 
+    if (this.checkin) {
+      // Clear check-in if station zone changed
+      if (this.station.zone !== this.checkin) this.checkin = null;
+    } else {
+      // Set check-in if warrior arrived at station zone
+      if (isClose(warrior.body, this.station, CHECKIN_DISTANCE)) this.checkin = this.station.zone;
+    }
+
     const isAttacking = (warrior && target && warrior.order && (warrior.order.targetUnitTag === target.tag));
     const isDeployed = this.battle.sectors.has(warrior.sector);
     let isInTransit = false;
@@ -65,7 +75,7 @@ export default class Fight extends Job {
         destination = this.battle.front.rally;
       }
 
-      if (!isDeployed || (warrior.zone && destination.zone && !isSameZoneOrNeighbor(warrior.zone, destination.zone))) {
+      if (!isDeployed || (this.checkin !== this.station.zone)) {
         this.details = getDetails(this, "approach");
         this.goRouteTo(this.station);
 
@@ -207,7 +217,7 @@ export default class Fight extends Job {
     const target = this.target;
 
     if (target.lastSeen < warrior.lastSeen) {
-      if (isClose(warrior.body, target.body, 5)) {
+      if (isClose(warrior.body, target.body, CHECKIN_DISTANCE)) {
         // Cannot hit this target. Either it's hidden and we don't have detection, or it's gone
         target.sector.clearThreat(target);
       } else {
@@ -285,7 +295,7 @@ export default class Fight extends Job {
       const index = rallyRoute.indexOf(this.transit);
 
       if (index >= 0) {
-        if (!isClose(warrior.body, this.transit, 5)) {
+        if (!isClose(warrior.body, this.transit, CHECKIN_DISTANCE)) {
           // Warrior has not reached the space of the transit zone. Move closer to its center
           return Order.move(warrior, this.transit);
         } else if (index > 0) {
@@ -478,14 +488,6 @@ function isInRange(warrior, target, range) {
   const squareRange = totalRange * totalRange;
 
   return (squareDistance <= squareRange);
-}
-
-function isSameZoneOrNeighbor(a, b) {
-  if (!a) return false;
-  if (!b) return false;
-  if (a === b) return true;
-  if (a.neighbors.has(b)) return true;
-  if (b.neighbors.has(a)) return true;
 }
 
 function isClose(a, b, distance) {
