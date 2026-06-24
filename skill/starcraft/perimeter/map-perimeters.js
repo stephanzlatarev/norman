@@ -31,8 +31,7 @@ export default function() {
     if (!zone.isDepot && !zone.isHall) continue;
 
     for (const [neighbor, corridor] of zone.exits) {
-      if (corridor.via === zone) continue;
-      if (corridor.via === neighbor) continue;
+      if (!corridor.via) continue;
       if (!perimeter.has(neighbor)) continue;
 
       corridor.via.perimeterLevel = Math.max(zone.perimeterLevel, neighbor.perimeterLevel);

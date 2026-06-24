@@ -486,7 +486,7 @@ function getEnemyRampZone() {
 
     for (const zone of wave) {
       for (const [neighbor, corridor] of zone.exits) {
-        if (corridor.via.isRamp) return corridor.via;
+        if (corridor.via?.isRamp) return corridor.via;
 
         if (!traversed.has(neighbor)) {
           traversed.add(neighbor);

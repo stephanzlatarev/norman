@@ -38,16 +38,10 @@ export default class Game {
     Resources.sync(this.observation);
     Score.sync(this.observation);
 
-    initMap(gameInfo);
+    await initMap(this.client, gameInfo);
 
-    for (const location of gameInfo.startRaw.startLocations) {
-      const base = [...Depot.list()].find(depot => ((depot.x === location.x) && (depot.y === location.y)));
-
-      if (base) {
-        Enemy.base = base;
-        break;
-      }
-    }
+    // TODO: Replace all use of Enemy.base with the newer Depot.enemy
+    Enemy.base = Depot.enemy;
   }
 
   async observe() {
@@ -59,7 +53,7 @@ export default class Game {
     this.observation = observation.observation;
     this.chat = observation.chat;
 
-    syncMap(gameInfo, this.observation);
+    await syncMap(this.client, gameInfo, this.observation);
 
     Resources.sync(this.observation);
     Score.sync(this.observation);

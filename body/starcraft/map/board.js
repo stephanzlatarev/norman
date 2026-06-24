@@ -1,6 +1,8 @@
 
 class Board {
 
+  refreshLoop = -1;
+
   create(gameInfo) {
     const playableArea = gameInfo.startRaw.playableArea;
     const placementGrid = gameInfo.startRaw.placementGrid;
@@ -152,6 +154,11 @@ class Board {
     }
 
     return true;
+  }
+
+  // Called when obstacles have appeared or have been removed
+  refresh(loop) {
+    this.refreshLoop = loop;
   }
 
 }

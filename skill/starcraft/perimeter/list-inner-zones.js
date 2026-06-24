@@ -26,22 +26,21 @@ export default function() {
       const root = paths.get(zone);
 
       for (const [neighbor, corridor] of zone.exits) {
-        if (!corridor.via.isPassage) continue;
+        if (!corridor.isGroundPassable) continue;
         if (traversed.has(neighbor)) continue;
 
         const path = paths.get(neighbor);
-        const withCorridor = (corridor.via !== neighbor);
 
         if (path) {
-          const length = withCorridor ? root.length + 2 : root.length + 1;
+          const length = corridor.via ? root.length + 2 : root.length + 1;
 
           if (path.length === length) {
             for (let i = 0; i < root.length; i++) path[i].add(...root[i]);
-            if (withCorridor) path[root.length + 1].add(corridor.via);
+            if (corridor.via) path[root.length + 1].add(corridor.via);
             path[root.length].add(zone);
           }
         } else {
-          if (withCorridor) {
+          if (corridor.via) {
             paths.set(neighbor, [...root, new Set([corridor.via]), new Set([zone])]);
           } else {
             paths.set(neighbor, [...root, new Set([zone])]);

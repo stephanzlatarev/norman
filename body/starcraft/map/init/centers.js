@@ -33,6 +33,10 @@ export function setCenter(cluster) {
 
   cluster.center = center;
 
+  if (!center.isPath && !center.isMinerals) {
+    console.log("[map] Non-path cell", center.x, center.y, "is the center of a zone!");
+  }
+
   return cluster;
 }
 

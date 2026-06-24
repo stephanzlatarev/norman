@@ -1,9 +1,12 @@
 import Board from "../board.js";
+import Depot from "../depot.js";
+import { routeZones } from "../routes.js";
 import Cluster from "./cluster.js";
 import { setBorder } from "./borders.js";
 import { setCenter } from "./centers.js";
 import { dissolveInvalidCurtains, separateCurtains } from "./curtains.js";
 import { separateCurtainDepots, separateGroundDepots } from "./depots.js";
+import { pruneExits } from "./pruning.js";
 import { addSkirt, validateGround } from "./grounds.js";
 import { separateHalls } from "./halls.js";
 import { separateTerrainHeights } from "./heights.js";
@@ -12,14 +15,13 @@ import { separateIslands } from "./islands.js";
 import { initNames } from "./names.js";
 import { initNeighbors } from "./neighbors.js";
 import { dissolvePatches } from "./patches.js";
-import { routeZones } from "./routes.js";
 import { initSectors } from "./sectors.js";
 import { validateRamp } from "./ramps.js";
 import { createSites } from "./sites.js";
 import { adjustCellsToUnits, getStartLocation } from "./units.js";
 import { createZones } from "./zones.js";
 
-export default function(gameInfo) {
+export default async function(client, gameInfo) {
   Board.create(gameInfo);
 
   initSectors();
@@ -44,10 +46,14 @@ export default function(gameInfo) {
   dissolveInvalidCurtains(clusters);
   dissolvePatches(clusters);
   processClusters(clusters, setBorder);
-  initNeighbors(clusters);
   initNames(clusters);
+  initNeighbors(clusters);
   processClusters(clusters, addSkirt);
   createZones(clusters);
+  setEnemyBase(gameInfo);
+
+  await pruneExits(client);
+
   routeZones();
   createSites();
 }
@@ -93,5 +99,16 @@ function createCluster(parent, cluster) {
     return cluster;
   } else {
     return parent.derive(cluster);
+  }
+}
+
+function setEnemyBase(gameInfo) {
+  for (const location of gameInfo.startRaw.startLocations) {
+    const base = [...Depot.list()].find(depot => ((depot.x === location.x) && (depot.y === location.y)));
+
+    if (base) {
+      Depot.enemy = base;
+      return;
+    }
   }
 }

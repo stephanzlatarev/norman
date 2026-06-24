@@ -66,13 +66,14 @@ function findExpo() {
 function findExpoExit(zone) {
   let best;
 
-  for (const exit of zone.exits.values()) {
-    if (!exit.via) continue;
-    if (exit.isAir) continue;
-    if (exit.isCliff) continue;
+  for (const [neighbor, corridor] of zone.exits) {
+    if (corridor.isAir) continue;
+    if (corridor.isCliff) continue;
 
-    if (!best || (exit.via.perimeterLevel > best.perimeterLevel)) {
-      best = exit.via;
+    const exit = corridor.via || neighbor;
+
+    if (!best || (exit.perimeterLevel > best.perimeterLevel)) {
+      best = exit;
     }
   }
 

@@ -64,6 +64,10 @@ class Units {
 
           removeImage(image, group, tag);
         }
+
+        if ((group === obstacles) || (group === resources)) {
+          Board.refresh(Resources.loop);
+        }
       }
     }
 

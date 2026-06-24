@@ -1,15 +1,23 @@
 import Board from "../board.js";
+import { routeZones } from "../routes.js";
 import { syncAlerts } from "./alert.js";
-import { syncCurtains } from "./curtains.js";
+import { syncCorridors } from "./corridors.js";
 import { syncEffects } from "./effects.js";
 import { syncZones } from "./zones.js";
 
-export default function (gameInfo, observation) {
+let loop;
+
+export default async function(client, gameInfo, observation) {
   Board.sync(gameInfo);
 
   syncEffects(observation);
   syncZones();
   syncAlerts();
 
-  syncCurtains();
+  await syncCorridors(client);
+
+  if (loop !== Board.refreshLoop) {
+    routeZones();
+    loop = Board.refreshLoop;
+  }
 }

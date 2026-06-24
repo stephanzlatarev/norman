@@ -12,7 +12,7 @@ export function separateCurtains(cluster) {
   const clusters = [cluster];
 
   for (const curtain of curtains) {
-    clusters.push(cluster.derive(curtain).setCurtain());
+    clusters.push(cluster.derive(curtain).setCurtain([...curtain].every(c => c.isMinerals)));
   }
 
   return clusters;

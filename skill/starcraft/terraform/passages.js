@@ -20,11 +20,12 @@ function findCorridorToClear() {
   for (const zone of Zone.list()) {
     if (zone.perimeterLevel >= PERIMETER_GREEN) continue;
 
-    for (const corridor of zone.exits.values()) {
-      if (!corridor.via.isCurtain) continue;
-      if (corridor.via.isPassage) continue;
+    for (const { via } of zone.exits.values()) {
+      if (!via) continue;
+      if (!via.isCurtain) continue;
+      if (via.isGroundPassable) continue;
 
-      if (corridor.via.minerals && corridor.via.minerals.size) return corridor.via;
+      if (via.minerals && via.minerals.size) return via;
     }
   }
 }
@@ -44,7 +45,7 @@ class ClearMinerals extends Job {
     if (!zone.minerals.size) {
       // Mineral curtain has been cleared
       corridorToClear = null;
-      zone.isPassage = true;
+      zone.isGroundPassable = true;
       return this.close(true);
     }
 

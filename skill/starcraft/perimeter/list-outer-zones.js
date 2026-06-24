@@ -11,7 +11,7 @@ export default function(inner, enemy) {
 
     for (const zone of wave) {
       for (const [neighbor, corridor] of zone.exits) {
-        if (!corridor.via.isPassage) continue;
+        if (!corridor.isGroundPassable) continue;
         if (traversed.has(neighbor)) continue;
 
         next.add(neighbor);

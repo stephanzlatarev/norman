@@ -24,21 +24,30 @@ export function createZones(clusters) {
     if (zone) zones.set(cluster, zone);
   }
 
+  // Resolve corridor zones
+  for (const cluster of clusters) {
+    for (const [neighbor, corridor] of cluster.exits) {
+      const zone = corridor.via ? zones.get(corridor.via) : null;
+
+      if (zone) {
+        corridor.via = zone;
+      }
+    }
+  }
+
   // Neighbors and exits point only to the neighboring depot and ground zones 
   for (const [cluster, zone] of zones.entries()) {
-    if (!cluster.isDepot && !cluster.isGround) continue;
-
     for (const [neighbor, corridor] of cluster.exits) {
+      if (!neighbor.isDepot && !neighbor.isGround) continue;
+
       const neighborZone = zones.get(neighbor);
 
-      corridor.via = zones.get(corridor.via);
       zone.exits.set(neighborZone, corridor);
-
-      if ((corridor.via === neighborZone) || corridor.via.isPassage) {
+      if (corridor.isGroundPassable) {
         zone.neighbors.add(neighborZone);
       }
 
-      if (corridor.via.isPassage) {
+      if (corridor.via) {
         corridor.via.exits.set(zone, corridor);
         corridor.via.neighbors.add(zone);
       }
@@ -84,9 +93,9 @@ function createDepotZone(cluster, depots, resources) {
 }
 
 function createCurtainZone(cluster) {
-  const isPassage = !cluster.isMineralCurtain && ![...cluster.cells].some(cell => cell.isResource);
+  const isGroundPassable = !cluster.isMinerals && ![...cluster.cells].some(cell => cell.isResource);
 
-  return new Curtain(cluster.name, cluster.center, cluster.cells, isPassage);
+  return new Curtain(cluster.name, cluster.center, cluster.cells, isGroundPassable);
 }
 
 function createHallZone(cluster) {
@@ -100,14 +109,14 @@ function createRampZone(cluster) {
 class Curtain extends Zone {
 
   isCurtain = true;
-  isPassage = false;
+  isGroundPassable = false;
 
   minerals = new Set();
 
-  constructor(name, center, cells, isPassage) {
+  constructor(name, center, cells, isGroundPassable) {
     super(name, center, cells);
 
-    this.isPassage = isPassage;
+    this.isGroundPassable = isGroundPassable;
   }
 
   addUnit(unit) {
@@ -131,13 +140,13 @@ class Curtain extends Zone {
 class Hall extends Zone {
 
   isHall = true;
-  isPassage = true;
+  isGroundPassable = true;
 
 }
 
 class Ramp extends Zone {
 
   isRamp = true;
-  isPassage = true;
+  isGroundPassable = true;
 
 }

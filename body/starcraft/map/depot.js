@@ -8,8 +8,11 @@ export default class Depot extends Zone {
   // Home base is the first zone with depot building
   static home = null;
 
+  // enemy base is the depot zone of the enemy
+  static enemy = null;
+
   isDepot = true;
-  isPassage = true;
+  isGroundPassable = true;
 
   // The depot building of this zone
   depot = null;
