@@ -21,7 +21,7 @@ import { createSites } from "./sites.js";
 import { adjustCellsToUnits, getStartLocation } from "./units.js";
 import { createZones } from "./zones.js";
 
-export default async function(client, gameInfo) {
+export default async function(client, gameInfo, loop) {
   Board.create(gameInfo);
 
   initSectors();
@@ -52,7 +52,8 @@ export default async function(client, gameInfo) {
   createZones(clusters);
   setEnemyBase(gameInfo);
 
-  await pruneExits(client);
+  // Prune exits only when playing. Do not prune when replaying.
+  if (!loop) await pruneExits(client);
 
   routeZones();
   createSites();

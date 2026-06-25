@@ -38,7 +38,7 @@ export default class Game {
     Resources.sync(this.observation);
     Score.sync(this.observation);
 
-    await initMap(this.client, gameInfo);
+    await initMap(this.client, gameInfo, Resources.loop);
 
     // TODO: Replace all use of Enemy.base with the newer Depot.enemy
     Enemy.base = Depot.enemy;

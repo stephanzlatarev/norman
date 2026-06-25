@@ -7,28 +7,32 @@ export function routeZones() {
   for (const zone of Zone.list()) {
     zone.route.length = 0;
     zone.distance = 0;
+    zone.offset = 0;
   }
 
   Depot.home.route.push(Depot.home);
   Depot.home.distance = 0;
+  Depot.home.offset = 0;
 
-  traverse(new Set([Depot.home]), new Set());
+  traverse(new Set([Depot.home]));
   complete();
 }
 
-function traverse(wave, traversed) {
+function traverse(wave) {
   const next = new Set();
-
-  for (const zone of wave) {
-    traversed.add(zone);
-  }
 
   for (const zone of wave) {
     if (!zone.isGroundPassable) continue;
 
     for (const [neighbor, corridor] of zone.exits) {
+      // Avoid obstacles
       if (!corridor.isGroundPassable) continue;
-      if (traversed.has(neighbor)) continue;
+
+      // Prevent cycles
+      if (zone.route.some(one => (one === neighbor))) continue;
+
+      // Ignore longer paths
+      if (neighbor.distance && (reach(neighbor) < reach(zone))) continue;
 
       if (corridor.via) {
         setRoute(zone, corridor.via);
@@ -42,7 +46,7 @@ function traverse(wave, traversed) {
   }
 
   if (next.size) {
-    traverse(next, traversed);
+    traverse(next);
   }
 }
 
@@ -61,12 +65,20 @@ function complete() {
 }
 
 function setRoute(a, b) {
-  const distance = a.distance + Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+  const leg = Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+  const distance = a.distance + leg;
+  const offset = b.depot ? 0 : a.offset + leg;
 
-  if (!b.distance || (distance < b.distance)) {
+  if (!b.route.length || (reach({ distance, offset }) < reach(b))) {
     b.distance = distance;
+    b.offset = offset;
     b.route = [b, ...a.route];
   }
+}
+
+// Give weight to distance from home base and nearest base
+function reach({ distance, offset }) {
+  return distance + offset;
 }
 
 function calculateDistance(a, b) {

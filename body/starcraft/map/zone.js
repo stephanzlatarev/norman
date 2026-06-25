@@ -14,7 +14,8 @@ export default class Zone extends Space {
   exits = new Map();
 
   // Route to home base
-  distance = 0;
+  distance = 0; // Distance from home base
+  offset = 0;   // Distance from nearest base
   route = [];
 
   constructor(name, center, cells, border) {
