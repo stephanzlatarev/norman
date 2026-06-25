@@ -36,7 +36,6 @@ function isZoneValid(zone) {
   if (zone.isDepot) return false;
   if (zone.buildings.size) return false;
 
-  if (!zone.perimeterLevel) return false;
   if (zone.perimeterLevel > PERIMETER_WHITE) return false;
 
   if (!zone.alertLevel) return false;

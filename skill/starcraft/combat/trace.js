@@ -38,7 +38,7 @@ export function traceBattle(battle, event) {
 
   if (event) trace.push(event);
 
-  trace.push("perimeter:", battle.front.perimeterLevel?.toFixed(2));
+  trace.push("perimeter:", battle.front.perimeterLevel.toFixed(2));
   trace.push("rally:", battle.rally.name);
   trace.push("sectors:", [...battle.sectors].map(sector => sector.name).join());
   trace.push("balance:", battle.deployedBalance.toFixed(2), "/", battle.recruitedBalance.toFixed(2));

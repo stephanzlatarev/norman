@@ -8,14 +8,12 @@ export function syncZones() {
   let needsSorting = false;
 
   for (const zone of zones) {
-    const level = (zone.perimeterLevel >= 0) ? zone.perimeterLevel : Infinity;
-
-    if (level < previousLevel) {
+    if (zone.perimeterLevel < previousLevel) {
       needsSorting = true;
       break;
     }
 
-    previousLevel = level;
+    previousLevel = zone.perimeterLevel;
   }
 
   if (needsSorting) {

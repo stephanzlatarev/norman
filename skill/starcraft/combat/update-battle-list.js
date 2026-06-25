@@ -89,14 +89,13 @@ function listBattlesInRedZones(battles, perimeterLevelLimit) {
   for (const zone of Zone.list()) {
     if (!zone.isDepot && !zone.isHall) continue;
 
-    if (!zone.perimeterLevel) continue;
     if (zone.perimeterLevel > perimeterLevelLimit) continue;
 
     if (!zone.alertLevel) continue;
     if (zone.alertLevel < ALERT_RED) continue;
 
     const rally = findRallyZone(zone);
-    const isZoneOutsidePerimeter = !zone.perimeterLevel || (zone.perimeterLevel >= PERIMETER_WHITE);
+    const isZoneOutsidePerimeter = (zone.perimeterLevel >= PERIMETER_WHITE);
     const isRallyHotspot = !rally || !rally.alertLevel || (rally.alertLevel >= ALERT_RED);
 
     // When outside our perimeter, the rally zone must not be a hotspot itself

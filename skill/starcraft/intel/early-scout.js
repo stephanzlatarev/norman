@@ -581,7 +581,6 @@ function findEnemyWorkerClosestToEnemyExpansion(expansion) {
 
     // Ignore units that scout us
     if (!unit.zone) continue;
-    if (!unit.zone.perimeterLevel) continue;
     if (unit.zone.perimeterLevel < expansion.perimeterLevel) continue;
 
     const isBuilding = isEnemyWorkerBuildingStructures(unit);

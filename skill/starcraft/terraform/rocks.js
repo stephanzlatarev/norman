@@ -37,7 +37,6 @@ export default function() {
 function findRockToClear() {
   for (const obstacle of Units.obstacles().values()) {
     if (!obstacle.zone) continue;
-    if (!obstacle.zone.perimeterLevel) continue;
     if (obstacle.zone.perimeterLevel >= PERIMETER_GREEN) continue;
 
     if (!obstacle.armor.health) continue;

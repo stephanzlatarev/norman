@@ -18,6 +18,9 @@ export default class Zone extends Space {
   offset = 0;   // Distance from nearest base
   route = [];
 
+  // Perimeter level
+  perimeterLevel = Infinity;
+
   constructor(name, center, cells, border) {
     super("zone");
 

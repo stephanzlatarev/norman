@@ -18,12 +18,12 @@ export default function() {
 
 function findCorridorToClear() {
   for (const zone of Zone.list()) {
+    if (!zone.isDepot && !zone.isHall) continue;
     if (zone.perimeterLevel >= PERIMETER_GREEN) continue;
 
     for (const { via } of zone.exits.values()) {
       if (!via) continue;
       if (!via.isCurtain) continue;
-      if (via.isGroundPassable) continue;
 
       if (via.minerals && via.minerals.size) return via;
     }
@@ -45,15 +45,14 @@ class ClearMinerals extends Job {
     if (!zone.minerals.size) {
       // Mineral curtain has been cleared
       corridorToClear = null;
-      zone.isGroundPassable = true;
       return this.close(true);
     }
 
     const worker = this.assignee;
-    const target = zone.minerals.has(this.target) ? this.target : selectMineralToClear(zone, worker);
-
     if (worker.isCarryingHarvest) return;
     if (worker.order.abilityId === 299) return;
+
+    const target = zone.minerals.has(this.target) ? this.target : selectMineralToClear(zone, worker);
     if ((worker.order.abilityId === 298) && (worker.order.targetUnitTag === target.tag)) return;
 
     new Order(worker, 298, target).accept(true);

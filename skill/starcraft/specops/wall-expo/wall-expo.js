@@ -67,8 +67,7 @@ function findExpoExit(zone) {
   let best;
 
   for (const [neighbor, corridor] of zone.exits) {
-    if (corridor.isAir) continue;
-    if (corridor.isCliff) continue;
+    if (!corridor.isGroundPassable) continue;
 
     const exit = corridor.via || neighbor;
 

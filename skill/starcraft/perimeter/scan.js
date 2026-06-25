@@ -3,6 +3,7 @@ import { Zone } from "./imports.js";
 const PERIMETER_BLUE = 1;    // The zone is within the defendable perimeter
 const PERIMETER_WHITE = 3;   // The zone is outside our perimeter
 const PERIMETER_RED = 5;     // The zone is within enemy perimeter
+const PERIMETER_BLACK = 6;   // The zone is unreachable
 
 class Scan {
 
@@ -34,14 +35,16 @@ class Scan {
         }
       }
 
-      if (zone.perimeterLevel >= PERIMETER_RED) {
+      if (zone.perimeterLevel >= PERIMETER_BLACK) {
+        zone.perimeterLevel = Infinity;
+      } else if (zone.perimeterLevel >= PERIMETER_RED) {
         scan.enemy.zones.add(zone);
       } else if (zone.perimeterLevel >= PERIMETER_WHITE) {
         scan.outer.zones.add(zone);
       } else if (zone.perimeterLevel >= PERIMETER_BLUE) {
         scan.inner.zones.add(zone);
       } else if (zone.perimeterLevel) {
-        zone.perimeterLevel = undefined;
+        zone.perimeterLevel = Infinity;
       }
     }
 

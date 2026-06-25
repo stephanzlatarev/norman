@@ -1,10 +1,10 @@
-import { PERIMETER_BLUE, PERIMETER_GREEN, PERIMETER_WHITE, PERIMETER_YELLOW, PERIMETER_RED } from "../map/perimeter.js";
+import { PERIMETER_BLUE, PERIMETER_GREEN, PERIMETER_WHITE, PERIMETER_YELLOW, PERIMETER_RED, PERIMETER_BLACK } from "../map/perimeter.js";
 import Zone from "../map/zone.js";
 
 export default function(shapes) {
   const sectors = new Set();
 
-  for (const zone of Zone.list().sort((a, b) => ((b.perimeterLevel || 0) - (a.perimeterLevel || 0)))) {
+  for (const zone of Zone.list().sort((a, b) => (b.perimeterLevel - a.perimeterLevel))) {
     const color = getColor(zone);
 
     if (color) {
@@ -19,7 +19,9 @@ export default function(shapes) {
 }
 
 function getColor(zone) {
-  if (zone.perimeterLevel >= PERIMETER_RED) {
+  if (zone.perimeterLevel >= PERIMETER_BLACK) {
+    return "black";
+  } else if (zone.perimeterLevel >= PERIMETER_RED) {
     return "red";
   } else if (zone.perimeterLevel >= PERIMETER_YELLOW) {
     return "yellow";
@@ -30,6 +32,6 @@ function getColor(zone) {
   } else if (zone.perimeterLevel >= PERIMETER_BLUE) {
     return "blue";
   } else {
-    return "black";
+    return "gray";
   }
 }

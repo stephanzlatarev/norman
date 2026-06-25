@@ -43,7 +43,7 @@ export default function() {
   // Clear perimeter levels outside inner, outer and enemy perimeters
   for (const zone of Zone.list()) {
     if (!perimeter.has(zone)) {
-      zone.perimeterLevel = undefined;
+      zone.perimeterLevel = Infinity;
     }
   }
 
