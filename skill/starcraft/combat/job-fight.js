@@ -1,4 +1,4 @@
-import { Job, Order, Resources, ALERT_RED } from "./imports.js";
+import { Job, Order, Resources, ALERT_RED, PERIMETER_WHITE } from "./imports.js";
 import Battle from "./battle.js";
 
 const KITING_RANGE = 2;
@@ -75,7 +75,11 @@ export default class Fight extends Job {
         destination = this.battle.front.rally;
       }
 
-      if (!isDeployed || (this.checkin !== this.station.zone)) {
+      const isStationOutsidePerimeter = (this.station.zone.perimeterLevel >= PERIMETER_WHITE);
+      const hasCheckedIn = (this.checkin === this.station.zone);
+      const shouldCheckIn = isStationOutsidePerimeter && !hasCheckedIn;
+
+      if (!isDeployed || shouldCheckIn) {
         this.details = getDetails(this, "approach");
         this.goRouteTo(this.station);
 
