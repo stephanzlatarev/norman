@@ -76,8 +76,8 @@ function openJobs(battle, ...warriors) {
 }
 
 function openJob(battle, warrior) {
-  if (!battle.fighters.find(job => (isJobOpen(job) && job.agent && (job.agent.type.name === warrior) && (job.zone === battle.front)))) {
-    new Fight(battle, warrior, battle.front.cell);
+  if (!battle.fighters.find(job => (isJobOpen(job) && job.agent && (job.agent.type.name === warrior) && (job.zone === battle.rally)))) {
+    new Fight(battle, warrior, battle.rally.cell);
   }
 }
 
@@ -93,7 +93,7 @@ function closeOpenJobsOutsideBattle(battle) {
   for (const job of battle.fighters) {
     if (!isJobOpen(job)) continue;
 
-    if (job.zone === battle.rally) {
+    if (job.zone !== battle.rally) {
       job.close(true);
     }
   }
