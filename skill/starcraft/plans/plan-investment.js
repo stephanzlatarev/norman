@@ -227,25 +227,25 @@ function doGroundArmyMaxOut() {
     plan = doOneBaseDefense;
     info("strategy", "Transition to one base defense.");
   } else if ((VisibleCount.Queen >= 5) && (VisibleCount.Warrior <= 5)) {
-    plan = counterMassLightZerg;
-    info("strategy", "Transition to countering mass light zerg.");
+    plan = counterMassQueens;
+    info("strategy", "Transition to countering mass queens.");
   }
 }
 
-function counterMassLightZerg() {
+function counterMassQueens() {
   const probeLimit = 100;
 
   Limit.Zealot = TotalCount.CyberneticsCore ? 100 : 0;
-  Limit.Colossus = 100;
+  Limit.Immortal = 100;
   Limit.Sentry = 10; // Maintain 10:1 ratio of Zealot to Sentry
-  Limit.Observer = ActiveCount.RoboticsBay ? 33 : 2; // Maintain 3:1 ratio of Colossus to Observer and build 2 Observers before Colossi can be built
-  Limit.Immortal = 0;
+  Limit.Observer = Math.floor(TotalCount.Immortal / 5) + 1; // Maintain 5:1 ratio of Immortal to Observer
+  Limit.Colossus = 0;
   Limit.Stalker = 0;
   Limit.DarkTemplar = 0;
 
   Priority.Probe = 90;
   Priority.Observer = 90;
-  Priority.Colossus = 90;
+  Priority.Immortal = 90;
   Priority.Sentry = 50;
   Priority.Zealot = 50;
 
@@ -265,7 +265,7 @@ function counterMassLightZerg() {
   Limit.RoboticsFacility = 1;
   Limit.Forge = 1;
   Limit.TwilightCouncil = 1;
-  Limit.RoboticsBay = 1;
+  Limit.RoboticsBay = 0;
   Limit.ShieldBattery = 0;
 }
 
