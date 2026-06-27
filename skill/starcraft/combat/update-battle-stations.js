@@ -63,8 +63,16 @@ function addStationsAroundWall(wall, stations, fighters) {
   }
 }
 
+function getShieldBattery(zone) {
+  for (const building of zone.buildings) {
+    if (building.isActive && building.energy && (building.type.name === "ShieldBattery")) {
+      return building;
+    }
+  }
+}
+
 function addStationsAroundRally(zone, stations, fighters) {
-  const rally = zone.rally;
+  const rally = getShieldBattery(zone)?.cell || zone.rally;
   const plot = zone.plot || new Set();
   const sitecells = zone.sitecells || new Set();
   const taken = new Set(stations);
