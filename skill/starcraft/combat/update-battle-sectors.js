@@ -1,35 +1,49 @@
+/*
+For each battle, sectors is the union of the horizon sectors of the front and rally zones.
+The screen maps each sector to the influence weight of the battle over that sector.
 
-export default function(battle) {
-  const sectors = new Set();
+When a sector belongs to only one battle, its weight is 1.0.
+When a sector is shared between battles, weights are distributed proportionally to the inverse
+of the squared distance between the sector and each battle's front sector, summing to 1.0.
+If the sector is the front sector of a battle, that battle gets weight 1.0.
+*/
+export default function(battles) {
+  for (const battle of battles) {
+    battle.sectors = new Set([...battle.front.horizon, ...battle.rally.horizon]);
+    battle.screen = new Map();
+  }
 
-  // Add sector of battle front center
-  sectors.add(battle.front.cell.sector);
+  const sectorClaims = new Map();
 
-  // Add sector of battle rally point
-  sectors.add(battle.rally.cell.sector);
+  for (let index = 0; index < battles.length; index++) {
+    const front = battles[index].front.cell.sector;
 
-  // Add known threats in battle front
-  for (const space of battle.front.sectors) {
-    for (const threat of space.threats) {
-      if (threat.zone === battle.front) {
-        sectors.add(threat.sector);
+    for (const sector of battles[index].sectors) {
+      if (!sectorClaims.has(sector)) sectorClaims.set(sector, []);
+
+      const dr = sector.row - front.row;
+      const dc = sector.col - front.col;
+      const distance = dr * dr + dc * dc;
+      sectorClaims.get(sector).push({ index, distance });
+    }
+  }
+
+  for (const [sector, claims] of sectorClaims) {
+    if (claims.length === 1) {
+      battles[claims[0].index].screen.set(sector, 1.0);
+    } else {
+      const frontClaim = claims.find(c => c.distance === 0);
+
+      if (frontClaim) {
+        battles[frontClaim.index].screen.set(sector, 1.0);
+      } else {
+        const inverseDistances = claims.map(c => 1 / c.distance);
+        const total = inverseDistances.reduce((a, b) => a + b, 0);
+
+        for (let i = 0; i < claims.length; i++) {
+          battles[claims[i].index].screen.set(sector, inverseDistances[i] / total);
+        }
       }
     }
   }
-
-  // Add fighter stations
-  for (const station of battle.stations) {
-    sectors.add(station.sector);
-  }
-
-  // Add neighboring sectors to cover fire range
-  for (const sector of [...sectors]) {
-    for (const neighbor of sector.neighbors) {
-      sectors.add(neighbor);
-    }
-  }
-
-  // TODO: Connect the sectors so that there's no gap between them
-
-  battle.sectors = sectors;
 }

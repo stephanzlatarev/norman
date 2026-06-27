@@ -15,13 +15,13 @@ function calculateEnemyStrength(battle) {
   let armyHealth = 0;
   let totalHealth = 0;
 
-  for (const sector of battle.sectors) {
+  for (const [sector, weight] of battle.screen) {
     for (const enemy of sector.threats) {
-      totalHealth += enemy.armor.total;
+      totalHealth += enemy.armor.total * weight;
 
       if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
         damage += enemy.type.damageGround;
-        armyHealth += enemy.armor.total;
+        armyHealth += enemy.armor.total * weight;
       }
 
       if (enemy.type.name === "Immortal") {
@@ -29,9 +29,9 @@ function calculateEnemyStrength(battle) {
         damage += enemy.type.damageGround * 1.5;
 
         // Immortals absorb up to 100 damage
-        armyHealth += 100;
+        armyHealth += 100 * weight;
       } else if (enemy.type.name === "ShieldBattery") {
-        armyHealth += 300;
+        armyHealth += 300 * weight;
       }
     }
   }

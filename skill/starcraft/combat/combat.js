@@ -16,7 +16,6 @@ import updateThreats from "./update-threats.js";
 import trace from "./trace.js";
 
 const ops = [
-  updateBattleSectors,
   updateThreats,         // Ignore invisible threats for assaults without detector
   updateOpenJobs,        // Open fighter jobs for the active battles. Close obsolete jobs
   updateIdleWarriors,    // Assign idle warriors in battle zones to open fighter jobs
@@ -33,6 +32,8 @@ const ops = [
 export default function() {
   const battles = updateBattleList();
   const focusBattle = selectFocusBattle(battles);
+
+  updateBattleSectors([...battles]);
 
   for (const op of ops) {
     const isOnlyBattle = (battles.size === 1);

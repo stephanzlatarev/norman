@@ -2,6 +2,7 @@ import { ActiveCount } from "./imports.js";
 import Fight from "./job-fight.js";
 
 const RECRUIT_BALANCE = 2;
+const CAP_BALANCE = 10;
 const ALL_WARRIORS = ["Colossus", "Immortal", "Sentry", "Stalker", "Zealot"];
 const GROUND_HITTING_WARRIORS = ["Colossus", "Immortal", "Zealot"];
 
@@ -22,7 +23,7 @@ export default function(battle, isFocusBattle, isOnlyBattle) {
       }
 
       closeOpenJobs(battle, "Colossus", "Immortal", "Sentry");
-    } else {
+    } else if (battle.recruitedBalance < CAP_BALANCE) {
       openJobs(battle, "Sentry", "Stalker");
 
       // Make sure ground-hitting units are included only when there are ground enemy units

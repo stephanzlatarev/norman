@@ -27,6 +27,7 @@ export default class Battle {
   mode = Battle.MODE_WATCH;
 
   sectors = new Set();
+  screen = new Map();
   stations = [];
 
   detector;
