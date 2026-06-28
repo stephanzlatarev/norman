@@ -171,7 +171,7 @@ function doGroundArmyMaxOut() {
 
   Limit.Colossus = useColossus ? 100 : 0;
   Limit.Immortal = useColossus ? 0 : 100;
-  Limit.Observer = (ActiveCount.Colossus + ActiveCount.Immortal < 2) ? 1 : 2;
+  Limit.Observer = calculateLimitObserver();
   Limit.Sentry = 100;
   Limit.Stalker = 400; // Maintain 4:1 ratio of Stalker to Zealot and Stalker to Sentry
   Limit.Zealot = TotalCount.CyberneticsCore ? 100 : 0;
@@ -238,7 +238,7 @@ function counterMassQueens() {
   Limit.Zealot = TotalCount.CyberneticsCore ? 100 : 0;
   Limit.Immortal = 100;
   Limit.Sentry = 10; // Maintain 10:1 ratio of Zealot to Sentry
-  Limit.Observer = Math.floor(TotalCount.Immortal / 5) + 1; // Maintain 5:1 ratio of Immortal to Observer
+  Limit.Observer = calculateLimitObserver();
   Limit.VoidRay = 3;
   Limit.Colossus = 0;
   Limit.Stalker = 0;
@@ -415,6 +415,18 @@ function calculateLimitGateway() {
   const availableMineralIncomePerSecond = (mineralIncomePerSecond - mineralCostPerSecond);
 
   return TotalCount.Gateway + Math.floor(availableMineralIncomePerSecond / MineralCostPerSecondGateway);
+}
+
+function calculateLimitObserver() {
+  if (Resources.supplyLimit <= 100) {
+    return 1;
+  } else if (Resources.supplyLimit <= 150) {
+    return 2;
+  } else if (Resources.supplyLimit <= 180) {
+    return 3;
+  } else {
+    return 4;
+  }
 }
 
 function haveTooMuchMineralsAndTooLittleVespeneForExtremeRush() {
