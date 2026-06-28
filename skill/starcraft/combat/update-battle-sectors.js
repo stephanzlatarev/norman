@@ -8,8 +8,25 @@ of the squared distance between the sector and each battle's front sector, summi
 If the sector is the front sector of a battle, that battle gets weight 1.0.
 */
 export default function(battles) {
+  if (battles.length === 1) {
+    singleBattle(battles[0]);
+  } else if (battles.length > 1) {
+    multipleBattles(battles);
+  }
+}
+
+function singleBattle(battle) {
+  battle.sectors = new Set([...battle.front.horizon, ...battle.rally.sectors]);
+  battle.screen = new Map();
+
+  for (const sector of battle.sectors) {
+    battle.screen.set(sector, 1.0);
+  }
+}
+
+function multipleBattles(battles) {
   for (const battle of battles) {
-    battle.sectors = new Set([...battle.front.horizon, ...battle.rally.horizon]);
+    battle.sectors = new Set([...battle.front.horizon, ...battle.rally.sectors]);
     battle.screen = new Map();
   }
 

@@ -55,7 +55,8 @@ class TargetMatrix {
         if (!threat.type.isWarrior) continue;
 
         // Treat the enemy warriors that are in the battle zone and those that have range over my warriors as primary targets
-        if ((threat.zone === battle.front) || isEnemyWarriorAbleToAttack(battle.front, threat, groundWarriors)) {
+        const isAnAttackerInBattleFront = threat.type.damageGround && (threat.zone === battle.front);
+        if (isAnAttackerInBattleFront || isEnemyWarriorAbleToAttack(battle.front, threat, groundWarriors)) {
           this.primaryTargets.push(threat);
         }
       }
