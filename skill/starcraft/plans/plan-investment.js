@@ -239,16 +239,17 @@ function counterMassQueens() {
   Limit.Immortal = 100;
   Limit.Sentry = 10; // Maintain 10:1 ratio of Zealot to Sentry
   Limit.Observer = calculateLimitObserver();
-  Limit.VoidRay = 3;
+  Limit.Tempest = 5;
   Limit.Colossus = 0;
   Limit.Stalker = 0;
   Limit.DarkTemplar = 0;
   Limit.Oracle = 0;
+  Limit.VoidRay = 0;
 
+  Priority.Tempest = 100;
   Priority.Probe = 90;
   Priority.Observer = 90;
   Priority.Immortal = 90;
-  Priority.VoidRay = 90;
   Priority.Sentry = 50;
   Priority.Zealot = 50;
 
@@ -264,6 +265,9 @@ function counterMassQueens() {
 
   Priority.Gateway = 50;
   Limit.Gateway = calculateLimitGateway();
+
+  Priority.FleetBeacon = 100;
+  Limit.FleetBeacon = 1;
 
   Priority.Stargate = 100;
   Limit.Stargate = 1;

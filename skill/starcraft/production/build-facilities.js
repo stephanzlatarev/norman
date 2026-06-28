@@ -1,8 +1,8 @@
 import { Types, Build, ALERT_WHITE, Board, Depot, Limit, Priority, Resources, TotalCount } from "./imports.js";
 
 const DEFAULT_FACILITIES = ["Stargate", "Gateway", "Forge"];
-const SPECIAL_FACILITIES_DEFAULT = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil", "RoboticsBay", "DarkShrine"];
-const SPECIAL_FACILITIES_ROBOBAY = ["Gateway", "CyberneticsCore", "RoboticsFacility", "RoboticsBay", "Forge", "TwilightCouncil", "DarkShrine"];
+const SPECIAL_FACILITIES_DEFAULT = ["Gateway", "CyberneticsCore", "RoboticsFacility", "Forge", "TwilightCouncil", "FleetBeacon"];
+const SPECIAL_FACILITIES_ROBOBAY = ["Gateway", "CyberneticsCore", "RoboticsFacility", "RoboticsBay", "Forge", "TwilightCouncil"];
 
 const COOLDOWN_LOOPS = 500;
 
@@ -58,7 +58,7 @@ function selectFacilityType() {
 }
 
 function selectSpecialFacilityType() {
-  const facilities = (Priority.RoboticsBay > 50) ? SPECIAL_FACILITIES_ROBOBAY : SPECIAL_FACILITIES_DEFAULT;
+  const facilities = Limit.RoboticsBay ? SPECIAL_FACILITIES_ROBOBAY : SPECIAL_FACILITIES_DEFAULT;
 
   for (const facility of facilities) {
     // Special facilities are to be built in order, so if there's one of this type, then move to the next

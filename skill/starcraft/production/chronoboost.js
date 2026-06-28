@@ -4,6 +4,7 @@ const CAN_CHRONOBOOST = {
   Gateway: true,
   Nexus: true,
   RoboticsFacility: true,
+  StarGate: true,
 };
 
 export default function() {
