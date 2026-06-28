@@ -6,7 +6,7 @@ const jobs = new Map();
 const FACILITY_PRODUCTS = {
   Gateway: ["Zealot", "Stalker", "Sentry", "DarkTemplar"],
   RoboticsFacility: ["Observer", "Immortal", "Colossus"],
-  Stargate: ["Oracle"],
+  Stargate: ["Oracle", "VoidRay"],
 };
 const UNIT_PREREQUISITES = {
   DarkTemplar: "DarkShrine",

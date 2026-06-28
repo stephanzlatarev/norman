@@ -1,0 +1,5 @@
+# Auto behavior of Void Rays
+
+name: Auto Void Rays
+brain: auto-voidrays.js
+type: javascript

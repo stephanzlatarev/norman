@@ -23,6 +23,7 @@ export const ActiveCount = {
   Sentry: 0,
   Stalker: 0,
   TwilightCouncil: 0,
+  VoidRay: 0,
   Zealot: 0,
 };
 
