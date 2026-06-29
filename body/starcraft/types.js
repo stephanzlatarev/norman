@@ -64,13 +64,13 @@ class Types {
       type.isDetector = !!IS_DETECTOR[unit.name];
       type.isPylon = !!IS_PYLON[unit.name];
       type.isWorker = !!IS_WORKER[unit.name];
-      type.isWarrior = (weapons.damageGround + weapons.damageAir > 0) || IS_OFFENSIVE[unit.name];
+      type.isWarrior = (weapons.damageGround + weapons.damageAir > 0) || !!IS_OFFENSIVE[unit.name];
       type.isExtractor = !!IS_EXTRACTOR[unit.name];
       type.isBuilding = isBuilding && !isNeutral;
       type.isMinerals = !!unit.hasMinerals;
       type.isVespene = !!unit.hasVespene && !unit.race;
       type.isRich = (type.isMinerals || type.isVespene) && (unit.name.indexOf("Rich") >= 0);
-      type.isCocoon = (unit.name.indexOf("Cocoon") >= 0) || (unit.name.indexOf("Egg") >= 0);
+      type.isCocoon = (unit.name === "Larva") || (unit.name.indexOf("Egg") >= 0) || (unit.name.indexOf("Cocoon") >= 0);
 
       type.supplyProvided = unit.foodProvided;
       type.needsPower = (unit.race === RACE_PROTOSS) && isBuilding && !IS_DEPOT[unit.name] && !IS_EXTRACTOR[unit.name] && !IS_PYLON[unit.name];
