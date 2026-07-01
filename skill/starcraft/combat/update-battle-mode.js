@@ -5,6 +5,7 @@ import Battle from "./battle.js";
 const ATTACK_BALANCE = 1.6;
 const RETREAT_BALANCE = 1.0;
 const DEFEND_BALANCE = 0.7;
+const STAND_BALANCE = 0.3;
 
 const IS_STRONG_ENEMY = {
   Bunker: true,
@@ -77,6 +78,8 @@ function normalTransition(battle) {
   if (battle.front.perimeterLevel <= PERIMETER_BLUE) {
     if ((battle.deployedBalance >= DEFEND_BALANCE) || (battle.front == Depot.home) || areEnoughFightersRallied(battle)) {
       return Battle.MODE_FIGHT;
+    } else if (canStandOurGround(battle)) {
+      return Battle.MODE_FIGHT;
     } else {
       return Battle.MODE_RALLY;
     }
@@ -85,6 +88,8 @@ function normalTransition(battle) {
   // Check if we are defending the approaches to our bases
   if (battle.front.perimeterLevel <= PERIMETER_GREEN) {
     if ((battle.deployedBalance >= RETREAT_BALANCE) || (battle.front === Depot.home)) {
+      return Battle.MODE_FIGHT;
+    } else if (canStandOurGround(battle)) {
       return Battle.MODE_FIGHT;
     } else {
       return Battle.MODE_RALLY;
@@ -151,6 +156,30 @@ function areEnoughFightersRallied(battle) {
   // TODO: Check for capacity of zone (now hardcoded to 20).
   // If deployed fighters are more than that count units rallied to neighbor zones as deployed
   return (deployed > 20) || (deployed > rallying * 4);
+}
+
+function canStandOurGround(battle) {
+  // We need at least some warriors
+  if (battle.deployedBalance < STAND_BALANCE) return false;
+
+  // We're this desperate only for the home base and the natural expansion
+  if ((battle.front !== Depot.home) && !Depot.home.neighbors.has(battle.front)) return false;
+
+  // We also need some workers supporting
+  if (battle.front.workers.size <= 4) return false;
+
+  // We also need a shield battery
+  if (!hasShieldBattery(battle.front)) return false;
+
+  return true;
+}
+
+function hasShieldBattery(zone) {
+  for (const building of zone.buildings) {
+    if (building.isActive && building.energy && (building.type.name === "ShieldBattery")) {
+      return true;
+    }
+  }
 }
 
 function isSmallFight(battle) {
