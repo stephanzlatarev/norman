@@ -297,14 +297,26 @@ export default class Fight extends Job {
     // When the warrior is already on the route to the rally point, move to the next transit zone
     if (this.transit) {
       const index = rallyRoute.indexOf(this.transit);
+      const nextTransit = rallyRoute[index - 1];
 
       if (index >= 0) {
         if (!isClose(warrior.body, this.transit, CHECKIN_DISTANCE)) {
-          // Warrior has not reached the space of the transit zone. Move closer to its center
+          // Warrior has not reached the space of the transit zone
+          if (nextTransit) {
+            const distanceThisTransit = calculateSquareDistance(warrior.zone, this.transit);
+            const distanceNextTransit = calculateSquareDistance(warrior.zone, nextTransit);
+
+            if (distanceNextTransit < distanceThisTransit) {
+              // But is closer to the next transit zone. Transit through it
+              this.transit = nextTransit;
+            }
+          }
+
+          // Move closer to the center of the transit zone
           return Order.move(warrior, this.transit);
-        } else if (index > 0) {
+        } else if (nextTransit) {
           // Warrior has reached this transit zone. Set next transit zone
-          this.transit = rallyRoute[index - 1];
+          this.transit = nextTransit;
 
           return Order.move(warrior, this.transit);
         } else {
