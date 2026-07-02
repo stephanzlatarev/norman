@@ -7,14 +7,6 @@ const RETREAT_BALANCE = 1.0;
 const DEFEND_BALANCE = 0.7;
 const STAND_BALANCE = 0.3;
 
-const IS_STRONG_ENEMY = {
-  Bunker: true,
-  Immortal: true,
-  ShieldBattery: true,
-  SiegeTank: true,
-  SiegeTankSieged: true,
-};
-
 /*
 Battles start in WATCH mode.
 
@@ -70,7 +62,7 @@ function normalTransition(battle) {
   }
 
   // Check if this is a fight between small number of warriors, where balance numbers are not exact
-  if (isSmallFight(battle)) {
+  if (battle.isSmallBattle && areWarriorsMoreThanEnemies(battle)) {
     return (battle.mode === Battle.MODE_FIGHT) ? Battle.MODE_FIGHT : Battle.MODE_MARCH;
   }
 
@@ -182,7 +174,7 @@ function hasShieldBattery(zone) {
   }
 }
 
-function isSmallFight(battle) {
+function areWarriorsMoreThanEnemies(battle) {
   let warriorCount = 0;
   let enemyCount = 0;
 
@@ -196,15 +188,13 @@ function isSmallFight(battle) {
 
   for (const sector of battle.sectors) {
     for (const enemy of sector.threats) {
-      if (IS_STRONG_ENEMY[enemy.type.name]) return false;
-
       if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
         enemyCount++;
       }
     }
   }
 
-  return (enemyCount <= 3) && (warriorCount > enemyCount);
+  return (warriorCount > enemyCount);
 }
 
 // TODO: Use target matrix for battle

@@ -32,9 +32,9 @@ const ops = [
 
 export default function() {
   const battles = updateBattleList();
-  const list = [...battles].sort((a, b) => (b.priority - a.priority));
+  const list = [...battles];
 
-  updateBattleFlags(list);
+  updateBattleFlags(battles);
   updateBattleSectors(list);
 
   for (const op of ops) {

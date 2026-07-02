@@ -16,7 +16,7 @@ export default function(battle) {
     if (battle.isOnlyBattle) {
       // All warriors go to the only battle in case enemy is reinforced
       openJobs(battle, ...ALL_WARRIORS);
-    } else if (isSmallBattle(battle)) {
+    } else if (battle.isSmallBattle) {
       // Make sure we don't overreact to individual enemy units in our territory
       if (isBalanceInsufficient || (battle.fighters.length < 3)) {
         openJobs(battle, "Stalker", "Zealot");
@@ -27,7 +27,7 @@ export default function(battle) {
       openJobs(battle, "Sentry", "Stalker");
 
       // Make sure ground-hitting units are included only when there are ground enemy units
-      if (isAirBattle(battle)) {
+      if (battle.isAirBattle) {
         closeOpenJobs(battle, ...GROUND_HITTING_WARRIORS);
       } else {
         openJobs(battle, ...GROUND_HITTING_WARRIORS);
@@ -36,32 +36,6 @@ export default function(battle) {
   } else {
     closeOpenJobs(battle, ...ALL_WARRIORS);
   }
-}
-
-function isAirBattle(battle) {
-  for (const sector of battle.sectors) {
-    for (const threat of sector.threats) {
-      if (threat.body.isGround) {
-        // There's at least this one ground enemy unit, so the battle is not only in the air
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-function isSmallBattle(battle) {
-  let count = 0;
-
-  for (const sector of battle.sectors) {
-    for (const threat of sector.threats) {
-      if (threat.type.damageGround) count++;
-      if (count > 2) return false;
-    }
-  }
-
-  return true;
 }
 
 function isJobOpen(job) {
