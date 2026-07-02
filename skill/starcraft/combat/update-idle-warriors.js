@@ -1,6 +1,17 @@
 
-const ALL_WARRIORS = ["Colossus", "Immortal", "Sentry", "Stalker", "Zealot"];
-const GROUND_HITTING_WARRIORS = ["Colossus", "Immortal", "Zealot"];
+const IS_WARRIOR = {
+  Colossus: true,
+  Immortal: true,
+  Sentry: true,
+  Stalker: true,
+  Zealot: true,
+};
+
+const IS_GROUND_ONLY_WARRIOR = {
+  Colossus: true,
+  Immortal: true,
+  Zealot: true,
+};
 
 export default function(battle) {
   hireIdleWarriorsInBattleZone(battle);
@@ -12,8 +23,8 @@ function hireIdleWarriorsInBattleZone(battle) {
       if (!warrior.isAlive) continue;
       if (warrior.job && (warrior.job.battle === battle)) continue;
       if (warrior.job && (warrior.job.priority >= battle.priority)) continue;
-      if (battle.isAirBattle && (GROUND_HITTING_WARRIORS.indexOf(warrior.type.name) >= 0)) continue;
-      if (ALL_WARRIORS.indexOf(warrior.type.name) < 0) continue;
+      if (battle.isAirBattle && IS_GROUND_ONLY_WARRIOR[warrior.type.name]) continue;
+      if (!IS_WARRIOR[warrior.type.name]) continue;
 
       const openJob = findOpenJob(battle, warrior);
 
