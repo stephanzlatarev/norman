@@ -6,14 +6,14 @@ const CAP_BALANCE = 10;
 const ALL_WARRIORS = ["Colossus", "Immortal", "Sentry", "Stalker", "Zealot"];
 const GROUND_HITTING_WARRIORS = ["Colossus", "Immortal", "Zealot"];
 
-export default function(battle, isFocusBattle, isOnlyBattle) {
+export default function(battle) {
   const isBalanceInsufficient = (battle.recruitedBalance < RECRUIT_BALANCE);
 
-  if (isFocusBattle || isBalanceInsufficient) {
+  if (battle.isFocusBattle || isBalanceInsufficient) {
 
     closeOpenJobsOutsideBattle(battle);
 
-    if (isOnlyBattle) {
+    if (battle.isOnlyBattle) {
       // All warriors go to the only battle in case enemy is reinforced
       openJobs(battle, ...ALL_WARRIORS);
     } else if (isSmallBattle(battle)) {

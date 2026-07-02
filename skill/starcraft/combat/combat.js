@@ -1,6 +1,7 @@
 import Battle from "./battle.js";
 import updateBattleBalance from "./update-battle-balance.js";
 import updateBattleDetection from "./update-battle-detection.js";
+import updateBattleFlags from "./update-battle-flags.js";
 import updateBattleList from "./update-battle-list.js";
 import updateBattleMarching from "./update-battle-marching.js";
 import updateBattleMode from "./update-battle-mode.js";
@@ -31,17 +32,14 @@ const ops = [
 
 export default function() {
   const battles = updateBattleList();
-  const focusBattle = selectFocusBattle(battles);
+  const list = [...battles].sort((a, b) => (b.priority - a.priority));
 
-  updateBattleSectors([...battles]);
+  updateBattleFlags(list);
+  updateBattleSectors(list);
 
   for (const op of ops) {
-    const isOnlyBattle = (battles.size === 1);
-
     for (const battle of battles) {
-      const isFocusBattle = (battle === focusBattle);
-
-      op(battle, isFocusBattle, isOnlyBattle);
+      op(battle);
     }
   }
 
@@ -55,16 +53,4 @@ export default function() {
   updateFreeWarriors();
 
   trace();
-}
-
-function selectFocusBattle(battles) {
-  let focusBattle;
-
-  for (const battle of battles) {
-    if (!focusBattle || (battle.front.perimeterLevel < focusBattle.front.perimeterLevel)) {
-      focusBattle = battle;
-    }
-  }
-
-  return focusBattle;
 }
