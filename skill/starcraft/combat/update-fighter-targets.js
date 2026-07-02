@@ -135,6 +135,7 @@ function isValidTarget(target) {
   if (target.type.isCocoon) return false;
   if (target.type.name === "AdeptPhaseShift") return false;
   if (target.type.name === "Interceptor") return false;
+  if (target.type.name === "KD8Charge") return false;
 
   return true;
 }
