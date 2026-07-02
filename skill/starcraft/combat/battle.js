@@ -25,6 +25,7 @@ export default class Battle {
 
   pastmode = Battle.MODE_WATCH;
   mode = Battle.MODE_WATCH;
+  priority = 0;
 
   sectors = new Set();
   screen = new Map();
@@ -33,17 +34,17 @@ export default class Battle {
   detector;
   fighters;
 
-  constructor(priority, front, rally) {
+  constructor(front, rally) {
     this.detector = null;
     this.fighters = [];
 
-    this.move(priority, front, rally);
+    this.move(front, rally);
 
     battles.push(this);
     traceBattle(this, "begins");
   }
 
-  move(priority, front, rally) {
+  move(front, rally) {
     rally = rally || front;
 
     if ((this.front !== front) || (this.rally !== rally)) {
@@ -60,8 +61,6 @@ export default class Battle {
         fighter.updateBattle(this);
       }
     }
-
-    this.priority = priority;
 
     return this;
   }

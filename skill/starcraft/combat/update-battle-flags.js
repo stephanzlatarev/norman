@@ -1,4 +1,6 @@
 
+const MAX_BATTLE_PRIORITY = 90;
+
 const IS_STRONG_ENEMY = {
   Battlecruiser: true,
   Bunker: true,
@@ -17,6 +19,7 @@ export default function(battles) {
 }
 
 function singleBattle([battle]) {
+  battle.priority = MAX_BATTLE_PRIORITY;
   battle.isAirBattle = false;
   battle.isFocusBattle = true;
   battle.isOnlyBattle = true;
@@ -24,7 +27,12 @@ function singleBattle([battle]) {
 }
 
 function multipleBattles(battles) {
+  battles.sort((a, b) => (a.front.perimeterLevel - b.front.perimeterLevel));
+
+  let priority = MAX_BATTLE_PRIORITY;
+
   for (const battle of battles) {
+    battle.priority = priority--;
     battle.isAirBattle = isAirBattle(battle);
     battle.isOnlyBattle = false;
     battle.isSmallBattle = isSmallBattle(battle);
@@ -37,8 +45,6 @@ function multipleBattles(battles) {
 }
 
 function selectFocusBattle(battles) {
-  battles.sort((a, b) => (a.front.perimeterLevel - b.front.perimeterLevel));
-
   // The focus battle is the first large battle closest to our home base
   for (const battle of battles) {
     if (!battle.isSmallBattle) {
