@@ -1,6 +1,12 @@
 import { Resources } from "./imports.js";
 import Battle from "./battle.js";
 
+const INVALID_TARGET_TYPE = {
+  AdeptPhaseShift: true,
+  Interceptor: true,
+  KD8Charge: true,
+};
+
 export default function(battle) {
   if (battle.mode === Battle.MODE_FIGHT) {
     setFightTargets(battle);
@@ -133,9 +139,7 @@ class TargetMatrix {
 
 function isValidTarget(target) {
   if (target.type.isCocoon) return false;
-  if (target.type.name === "AdeptPhaseShift") return false;
-  if (target.type.name === "Interceptor") return false;
-  if (target.type.name === "KD8Charge") return false;
+  if (INVALID_TARGET_TYPE[target.type.name]) return false;
 
   return true;
 }
