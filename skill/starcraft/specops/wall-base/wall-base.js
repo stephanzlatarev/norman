@@ -1,8 +1,10 @@
-import { ActiveCount, Depot, Memory, List, Types } from "../imports.js";
+import { ActiveCount, Depot, Memory, List, Resources, Types } from "../imports.js";
 import WallFielder from "./wall-fielder.js";
 import WallKeeper from "./wall-keeper.js";
 import WallShielder from "./wall-shielder.js";
 import calculateRampVisionLevels from "./ramp-vision.js";
+
+let isWallAllowed = true;
 
 let wallSite;
 let wallFielderJob;
@@ -10,6 +12,7 @@ let wallKeeperJob;
 let wallShielderJobs = new Set();
 
 export default function() {
+  if (!isWallAllowed) return;
   if (!Depot.home) return;
 
   if (!wallSite) {
@@ -20,10 +23,16 @@ export default function() {
     }
   }
 
-  if (wallSite) {
-    maintainWallKeeperJob();
-    maintainWallFielderJob();
-    maintainWallShielderJobs();
+  if (!wallSite) return;
+
+  const doWallBase = shouldWallBase();
+
+  maintainWallKeeperJob(doWallBase);
+  maintainWallFielderJob(doWallBase);
+  maintainWallShielderJobs(doWallBase);
+
+  if (!doWallBase && (Resources.loop > 3000)) {
+    isWallAllowed = false;
   }
 }
 
@@ -63,9 +72,9 @@ function findWallKeeperType() {
   }
 }
 
-function maintainWallKeeperJob() {
+function maintainWallKeeperJob(doWallBase) {
   if (wallKeeperJob) {
-    if (!shouldWallBase()) {
+    if (!doWallBase) {
       wallKeeperJob.close(true);
       wallKeeperJob = null;
       return;
@@ -76,7 +85,7 @@ function maintainWallKeeperJob() {
     }
   }
 
-  if (shouldWallBase()) {
+  if (doWallBase) {
     const keeperType = findWallKeeperType();
 
     if (keeperType) {
@@ -85,9 +94,9 @@ function maintainWallKeeperJob() {
   }
 }
 
-function maintainWallFielderJob() {
+function maintainWallFielderJob(doWallBase) {
   if (wallFielderJob) {
-    if (!shouldWallBase()) {
+    if (!doWallBase) {
       wallFielderJob.close(true);
       wallFielderJob = null;
       return;
@@ -98,13 +107,13 @@ function maintainWallFielderJob() {
     }
   }
 
-  if (shouldWallBase()) {
+  if (doWallBase) {
     wallFielderJob = new WallFielder(wallSite);
   }
 }
 
-function maintainWallShielderJobs() {
-  if (shouldShieldWall()) {
+function maintainWallShielderJobs(doWallBase) {
+  if (doWallBase && shouldShieldWall()) {
     let addShielder = !wallShielderJobs.size;
 
     for (const job of wallShielderJobs) {
