@@ -3,6 +3,9 @@ import { Memory, Job, Order, Types, Units, Board, Depot, ActiveCount, Enemy, Res
 const RACE_TERRAN = 1;
 const RACE_PROTOSS = 3;
 
+const zoneVisits = new Map();
+let nextZoneVisit = null;
+
 let agent = null;
 let job = null;
 
@@ -358,18 +361,31 @@ class EarlyScout extends Job {
   goMonitorEnemyExpansions() {
     const agent = this.assignee;
 
-    if (agent.zone === Depot.home) {
-      info("strategy", "Early scout retires after being pushed back to home base.");
-      this.close(true);
-    } else if ((agent.zone === Enemy.base) || isAttacked(agent) || this.isInEnemyWarriorsRange()) {
-      // Pull back to home base
-      orderSlip(agent);
-    } else if (!this.hasDetectedEnemyWarriors) {
-      this.transition(this.goAttackEnemyWorker);
-    } else {
-      // Move towards the enemy base
-      orderMove(agent, Enemy.base.harvestRally);
+    if (isAttacked(agent) || this.isInEnemyWarriorsRange()) {
+      // Force change of next zone to visit to avoid back and forth movement
+      if (nextZoneVisit) {
+        zoneVisits.set(nextZoneVisit, (zoneVisits.get(nextZoneVisit) || 0) + 1);
+      }
+
+      nextZoneVisit = null;
+      return orderSlip(agent);
     }
+
+    if (!nextZoneVisit || !isEligibleScoutZone(nextZoneVisit)) {
+      nextZoneVisit = selectNextScoutZone();
+    }
+
+    if (nextZoneVisit && isWithinBlock(agent.body, nextZoneVisit, 5)) {
+      zoneVisits.set(nextZoneVisit, (zoneVisits.get(nextZoneVisit) || 0) + 1);
+      nextZoneVisit = selectNextScoutZone();
+    }
+
+    if (!nextZoneVisit) {
+      info("strategy", "Early scout retires - no zones left to scout.");
+      return this.close(true);
+    }
+
+    orderMove(agent, nextZoneVisit);
   }
 
 }
@@ -718,6 +734,42 @@ function isSamePosition(a, b) {
 
 function isWithinBlock(a, b, distance) {
   return (Math.abs(a.x - b.x) <= distance) && (Math.abs(a.y - b.y) <= distance);
+}
+
+function selectNextScoutZone() {
+  let bestZone = null;
+  let bestVisits = Infinity;
+
+  for (const zone of Depot.list()) {
+    if (!isEligibleScoutZone(zone)) continue;
+
+    const visits = zoneVisits.get(zone) || 0;
+
+    if (visits <= bestVisits) {
+      bestVisits = visits;
+      bestZone = zone;
+    }
+  }
+
+  return bestZone;
+}
+
+function isEligibleScoutZone(zone) {
+  if (hasOwnUnits(zone)) return false;
+  if (hasEnemyWarriors(zone)) return false;
+  return true;
+}
+
+function hasOwnUnits(zone) {
+  if (zone.warriors.size) return true;
+  if (zone.buildings.size) return true;
+}
+
+function hasEnemyWarriors(zone) {
+  for (const enemy of zone.threats()) {
+    if (enemy.type.isWorker) continue;
+    if (enemy.type.damageGround) return true;
+  }
 }
 
 function squareDistance(a, b) {
