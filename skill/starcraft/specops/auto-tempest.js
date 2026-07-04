@@ -1,18 +1,25 @@
-import { ActiveCount, Depot, Order, Units, Zone } from "./imports.js";
+import { ActiveCount, Depot, Order, Resources, Units, Zone } from "./imports.js";
 
 let target = null;
 
 export default function() {
   if (ActiveCount.Tempest === 0) return;
 
-  if (!target || !target.isAlive || !target.isVisible) {
-    target = findClosestEnemy();
-  }
+  if (!isValidTarget()) target = findClosestEnemy();
   if (!target) return;
 
   for (const unit of Units.warriors().values()) {
     if (unit.type.name === "Tempest") controlTempest(unit);
   }
+}
+
+function isValidTarget() {
+  if (!target) return false;
+  if (!target.isAlive) return false;
+  if (!target.isVisible) return false;
+  if (target.lastSeen < Resources.loop) return false;
+
+  return true;
 }
 
 function controlTempest(tempest) {
