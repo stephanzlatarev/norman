@@ -223,7 +223,7 @@ export default class Fight extends Job {
     if (target.lastSeen < warrior.lastSeen) {
       if (isClose(warrior.body, target.body, CHECKIN_DISTANCE)) {
         // Cannot hit this target. Either it's hidden and we don't have detection, or it's gone
-        target.sector.clearThreat(target);
+        target.sector.untrackUnit(target);
       } else {
         // Move closer to see the target so that warrior can attack it
         Order.move(warrior, target.body);

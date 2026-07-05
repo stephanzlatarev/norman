@@ -61,7 +61,7 @@ class Scan {
 
 function hasEnemyBuildings(zone) {
   for (const sector of zone.sectors) {
-    for (const unit of sector.threats) {
+    for (const unit of sector.contacts) {
       if (unit.zone !== zone) continue;
 
       // TODO: Exclude offensive unit types like photon cannons and bunkers

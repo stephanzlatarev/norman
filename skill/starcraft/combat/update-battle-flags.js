@@ -11,14 +11,14 @@ const IS_STRONG_ENEMY = {
 };
 
 export default function(battles) {
-  if (battles.size > 1) {
-    multipleBattles([...battles]);
-  } else if (battles.size === 1) {
-    singleBattle(battles);
+  if (battles.length > 1) {
+    multipleBattles(battles);
+  } else if (battles.length === 1) {
+    singleBattle(battles[0]);
   }
 }
 
-function singleBattle([battle]) {
+function singleBattle(battle) {
   battle.priority = MAX_BATTLE_PRIORITY;
   battle.isAirBattle = false;
   battle.isFocusBattle = true;

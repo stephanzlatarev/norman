@@ -60,7 +60,7 @@ class Units {
         if (!image) { group = hallucinations; image = hallucinations.get(tag); }
 
         if (image) {
-          image.sector.clearThreat(image);
+          image.sector.untrackUnit(image);
 
           removeImage(image, group, tag);
         }

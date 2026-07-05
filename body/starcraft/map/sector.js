@@ -4,15 +4,16 @@ const SECTOR_NAME_COLS = "ABCDEFGHIJ";
 const SECTOR_NAME_ROWS = "0123456789";
 
 const sectors = [];
-const knownThreats = new Map();
+const tracked = new Map();
 
 export default class Sector extends Space {
 
   cells = new Set();
   neighbors = new Set();
 
-  // Units
-  threats = new Set();
+  // Enemy units tracked regardless of fog of war.
+  threats = new Set();  // Enemy warriors
+  contacts = new Set(); // Non-warrior enemy units
 
   constructor(row, col) {
     super("sector");
@@ -26,41 +27,45 @@ export default class Sector extends Space {
   }
 
   addUnit(unit) {
-    updateThreats(this, unit);
-
+    this.trackUnit(unit);
     super.addUnit(unit);
   }
 
-  clearThreat(threat) {
-    this.threats.delete(threat);
+  trackUnit(unit) {
+    if (!unit.isEnemy) return;
+    if (!unit.isVisible) return;
+    if (unit.isHallucination) return;
+
+    const known = tracked.get(unit.tag);
+
+    if (known && (known !== unit)) {
+      // The known image is outdated
+      known.sector.threats.delete(known);
+      known.sector.contacts.delete(known);
+    }
+
+    if (unit.sector && (unit.sector !== this)) {
+      // The unit moved to a different sector
+      unit.sector.threats.delete(unit);
+      unit.sector.contacts.delete(unit);
+    }
+
+    if (unit.type.isWarrior) {
+      this.threats.add(unit);
+    } else {
+      this.contacts.add(unit);
+    }
+
+    tracked.set(unit.tag, unit);
+  }
+
+  untrackUnit(unit) {
+    this.threats.delete(unit);
+    this.contacts.delete(unit);
   }
 
   static list() {
     return sectors;
   }
 
-}
-
-function updateThreats(sector, unit) {
-  if (!unit.isEnemy) return;
-  if (!unit.isVisible) return;
-  if (unit.isHallucination) return;
-
-  // Update known threats
-  const knownThreat = knownThreats.get(unit.tag);
-
-  if (knownThreat && (knownThreat !== unit)) {
-    // The known threat image is outdated
-    knownThreat.sector.clearThreat(knownThreat);
-  }
-
-  knownThreats.set(unit.tag, unit);
-
-  // Update sector threats
-  if (unit.sector && (unit.sector !== sector)) {
-    // The unit moved to a different sector
-    unit.sector.clearThreat(unit);
-  }
-
-  sector.threats.add(unit);
 }

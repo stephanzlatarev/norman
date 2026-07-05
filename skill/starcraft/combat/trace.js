@@ -34,15 +34,20 @@ export default function() {
 export function traceBattle(battle, event) {
   const trace = [];
 
-  trace.push(battle.front.name);
+  trace.push(battle.mode);
+  trace.push(battle.rally.name, ">", battle.front.name);
+
+  if (battle.isFocusBattle) trace.push("focus");
+  if (battle.isOnlyBattle) trace.push("only");
+  if (battle.isSmallBattle) trace.push("small");
+  if (battle.isAirBattle) trace.push("air");
 
   if (event) trace.push(event);
 
+  trace.push("priority:", Math.floor(battle.priority));
   trace.push("perimeter:", battle.front.perimeterLevel.toFixed(2));
-  trace.push("rally:", battle.rally.name);
   trace.push("sectors:", [...battle.sectors].map(sector => sector.name).join());
   trace.push("balance:", battle.deployedBalance.toFixed(2), "/", battle.recruitedBalance.toFixed(2));
-  trace.push("mode:", battle.mode);
 
   trace.push("|");
   trace.push("detector:");
@@ -54,6 +59,8 @@ export function traceBattle(battle, event) {
   trace.push("|");
   trace.push("threats:");
   traceThreats(trace, battle.sectors);
+  trace.push("contacts:");
+  traceContacts(trace, battle.sectors);
 
   info("battles", trace.join(" "));
 }
@@ -125,6 +132,18 @@ function traceFighterType(trace, battle, type) {
   }
 
   trace.push("·");
+}
+
+function traceContacts(trace, sectors) {
+  const types = new Set();
+
+  for (const sector of sectors) {
+    for (const enemy of sector.contacts) {
+      types.add(enemy.type.name);
+    }
+  }
+
+  trace.push([...types].sort().join(" "));
 }
 
 function traceThreats(trace, sectors) {

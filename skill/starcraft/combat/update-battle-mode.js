@@ -13,17 +13,17 @@ Battles start in WATCH mode.
 # While building the army
 While battle balance is not sufficient for attacking, the battle is in RALLY mode.
 When battle balance becomes sufficient for attacking, the battle transitions from RALLY to MARCH mode.
-When fighters reach fire range, the battle transitions from MARCH to FIGHT/SMASH mode.
+When fighters reach fire range, the battle transitions from MARCH to FIGHT mode.
 When battle balance falls below the retreat level, the battle transitions to RALLY mode.
 
 # When the army is complete
-The primary battle will start attacking as soon as the majority of fighters are in the battle zones.
+The focus battle will start attacking as soon as the majority of fighters are in the battle zones.
 The other battles will behave as while building the army.
 */
 export default function(battle) {
   let mode = Battle.MODE_WATCH;
 
-  if ((Memory.DeploymentOutreach >= Memory.DeploymentOutreachFullOffense) && isPrimaryBattle(battle)) {
+  if ((Memory.DeploymentOutreach >= Memory.DeploymentOutreachFullOffense) && battle.isFocusBattle) {
     mode = maxoutTransition(battle);
   } else if ((Memory.DeploymentOutreach < Memory.DeploymentOutreachNormalOffense) && (battle.front.alertLevel <= ALERT_YELLOW)) {
     // This is the case when preparing for defence or making an ambush
@@ -123,10 +123,6 @@ function maxoutTransition(battle) {
   }
 
   return Battle.MODE_RALLY;
-}
-
-function isPrimaryBattle() {
-  return true;
 }
 
 function areEnoughFightersRallied(battle) {

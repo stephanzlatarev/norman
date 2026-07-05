@@ -1,8 +1,9 @@
 import Battle from "./battle.js";
+import listCleanupBattles from "./list-cleanup-battles.js";
+import listFightBattles from "./list-fight-battles.js";
 import updateBattleBalance from "./update-battle-balance.js";
 import updateBattleDetection from "./update-battle-detection.js";
 import updateBattleFlags from "./update-battle-flags.js";
-import updateBattleList from "./update-battle-list.js";
 import updateBattleMarching from "./update-battle-marching.js";
 import updateBattleMode from "./update-battle-mode.js";
 import updateBattleSectors from "./update-battle-sectors.js";
@@ -16,7 +17,7 @@ import updateOpenJobs from "./update-open-jobs.js";
 import updateThreats from "./update-threats.js";
 import trace from "./trace.js";
 
-const ops = [
+const FIGHT_OPS = [
   updateThreats,         // Ignore invisible threats for assaults without detector
   updateOpenJobs,        // Open fighter jobs for the active battles. Close obsolete jobs
   updateIdleWarriors,    // Assign idle warriors in battle zones to open fighter jobs
@@ -30,19 +31,34 @@ const ops = [
   updateBattleDetection, // Assign a detector to the battle if needed
 ];
 
+const CLEANUP_OPS = [
+  updateOpenJobs,        // Open fighter jobs for the active battles. Close obsolete jobs
+  updateFighterTargets,  // Destroy closest targets
+  updateFighterPrio,     // Update the priority of fighter jobs
+];
+
 export default function() {
-  const battles = updateBattleList();
-  const list = [...battles];
+  const fights = listFightBattles();
+  const cleanups = listCleanupBattles(fights);
 
-  updateBattleFlags(battles);
-  updateBattleSectors(list);
+  updateBattleFlags([...fights, ...cleanups]);
 
-  for (const op of ops) {
-    for (const battle of battles) {
+  // TODO: Calculate sectors while listing battles. Calculate screen there, too.
+  updateBattleSectors([...fights, ...cleanups]);
+
+  for (const op of FIGHT_OPS) {
+    for (const battle of fights) {
       op(battle);
     }
   }
 
+  for (const op of CLEANUP_OPS) {
+    for (const battle of cleanups) {
+      op(battle);
+    }
+  }
+
+  const battles = new Set([...fights, ...cleanups]);
   for (const battle of Battle.list()) {
     if (!battles.has(battle)) {
       battle.close();

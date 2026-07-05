@@ -65,6 +65,20 @@ export default class Zone extends Space {
     return threats;
   }
 
+  contacts() {
+    const contacts = new Set();
+
+    for (const sector of this.sectors) {
+      for (const contact of sector.contacts) {
+        if (contact.zone && (contact.zone === this)) {
+          contacts.add(contact);
+        }
+      }
+    }
+
+    return contacts;
+  }
+
   static list() {
     return [...zones];
   }

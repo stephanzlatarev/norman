@@ -104,7 +104,7 @@ class Neutralize extends Job {
 
     if (!target.isAlive || (target.lastSeen !== probe.lastSeen)) {
       if (isSamePosition(probe.body, target.body)) {
-        target.sector.clearThreat(target);
+        target.sector.untrackUnit(target);
 
         return this.close(true);
       } else {
@@ -185,7 +185,7 @@ function findProxy() {
   const workers = [];
 
   for (const sector of Depot.home.horizon) {
-    for (const enemy of sector.threats) {
+    for (const enemy of [...sector.threats, ...sector.contacts]) {
       if (enemy.zone === Depot.home) isHome = true;
 
       if (enemy.type.isWorker) {

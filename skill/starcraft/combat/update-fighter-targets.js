@@ -11,7 +11,7 @@ export default function(battle) {
   if (battle.mode === Battle.MODE_FIGHT) {
     setFightTargets(battle);
   } else if (battle.mode === Battle.MODE_SMASH) {
-    setFightTargets(battle);
+    setSmashTargets(battle);
   } else if (battle.mode === Battle.MODE_WEAR) {
     setFightTargets(battle);
   } else {
@@ -193,6 +193,22 @@ function assignRemainingWarriors(battle, matrix) {
 
     if (warrior && !matrix.isWarriorAssigned(warrior)) {
       fighter.target = getClosestVisibleTarget(warrior, matrix.primaryTargets) || getClosestVisibleTarget(warrior, matrix.allTargets);
+    }
+  }
+}
+
+function setSmashTargets(battle) {
+  for (const fighter of battle.fighters) {
+    const warrior = fighter.assignee;
+
+    if (warrior) {
+      const targets = [];
+
+      for (const sector of battle.sectors) {
+        targets.push(...sector.contacts);
+      }
+
+      fighter.target = getClosestVisibleTarget(warrior, targets);
     }
   }
 }

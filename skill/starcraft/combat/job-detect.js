@@ -29,7 +29,7 @@ export default class Detect extends Job {
   execute() {
     const observer = this.assignee;
     const mode = this.battle.mode;
-    const isBattleInAttackMode = (mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_MARCH) || (mode === Battle.MODE_SMASH) || (mode === Battle.MODE_WEAR);
+    const isBattleInAttackMode = (mode === Battle.MODE_FIGHT) || (mode === Battle.MODE_MARCH) || (mode === Battle.MODE_WEAR);
 
     clearDetectedThreats(observer);
 
@@ -74,9 +74,9 @@ export default class Detect extends Job {
 
 function clearDetectedThreats(observer) {
   for (const sector of [observer.sector, ...observer.sector.neighbors]) {
-    for (const threat of sector.threats) {
-      if (!sector.enemies.has(threat) && isInSight(observer, threat.body)) {
-        sector.clearThreat(threat);
+    for (const enemy of [...sector.threats, ...sector.contacts]) {
+      if (!sector.enemies.has(enemy) && isInSight(observer, enemy.body)) {
+        sector.untrackUnit(enemy);
       }
     }
   }

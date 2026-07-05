@@ -29,11 +29,10 @@ export default function(shapes, texts) {
 
     texts.push(text.join(" "));
 
-    const isPrimaryBattle = (battle === battles[0]);
     const color = getBattleColor(battle);
     const polygon = getBattlePolygon(battle);
 
-    if (isPrimaryBattle) {
+    if (battle.isFocusBattle) {
       shapes.push({
         shape: "polygon",
         points: polygon,
