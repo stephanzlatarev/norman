@@ -416,17 +416,13 @@ function isClose(a, b, span) {
   return (Math.abs(a.x - b.x) <= span) && (Math.abs(a.y - b.y) <= span);
 }
 
-function calculateSquareDistance(a, b) {
-  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
-}
-
 function getWeakestTargetInFireRange(warrior) {
   if (!warrior || !warrior.zone) return false;
 
   let weakestTarget = null;
 
   for (const enemy of warrior.zone.enemies) {
-    if (!isInFireRange(warrior, enemy)) continue;
+    if (!warrior.isTargetInFireRange(enemy)) continue;
 
     if (!weakestTarget || (enemy.armor.total < weakestTarget.armor.total)) {
       weakestTarget = enemy;
@@ -434,22 +430,6 @@ function getWeakestTargetInFireRange(warrior) {
   }
 
   return weakestTarget;
-}
-
-function isInFireRange(warrior, target, bufferRange = 0) {
-  if (target.body.isGround && warrior.type.rangeGround) {
-    return isInRange(warrior, target, warrior.type.rangeGround + bufferRange);
-  } else if (target.body.isFlying && warrior.type.rangeAir) {
-    return isInRange(warrior, target, warrior.type.rangeAir + bufferRange);
-  }
-}
-
-function isInRange(warrior, target, range) {
-  const squareDistance = calculateSquareDistance(warrior.body, target.body);
-  const totalRange = warrior.body.r + range + target.body.r;
-  const squareRange = totalRange * totalRange;
-
-  return (squareDistance <= squareRange);
 }
 
 function targetToString(target) {

@@ -1,12 +1,6 @@
 import { Resources } from "./imports.js";
 import Battle from "./battle.js";
 
-const INVALID_TARGET_TYPE = {
-  AdeptPhaseShift: true,
-  Interceptor: true,
-  KD8Charge: true,
-};
-
 export default function(battle) {
   if (battle.mode === Battle.MODE_FIGHT) {
     setFightTargets(battle);
@@ -54,7 +48,7 @@ class TargetMatrix {
 
     for (const sector of battle.sectors) {
       for (const threat of sector.threats) {
-        if (!isValidTarget(threat)) continue;
+        if (!threat.isValidShootingTarget()) continue;
 
         this.allTargets.push(threat);
 
@@ -135,13 +129,6 @@ class TargetMatrix {
       }
     }
   }
-}
-
-function isValidTarget(target) {
-  if (target.type.isCocoon) return false;
-  if (INVALID_TARGET_TYPE[target.type.name]) return false;
-
-  return true;
 }
 
 function isEnemyWarriorAbleToAttack(zone, enemy, groundWarriors) {
@@ -234,10 +221,7 @@ function getClosestVisibleTarget(warrior, targets) {
   let closestDistance = Infinity;
 
   for (const target of targets) {
-    if (!target.isAlive || (target.lastSeen < Resources.loop)) continue;
-    if (target.body.isGround && !warrior.type.damageGround) continue;
-    if (target.body.isFlying && !warrior.type.damageAir) continue;
-    if (!isValidTarget(target)) continue;
+    if (!warrior.canShootTarget(target, true)) continue;
 
     const distance = calculateSquareDistance(warrior.body, target.body);
 

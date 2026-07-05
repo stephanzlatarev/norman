@@ -66,7 +66,7 @@ class Defend extends Job {
 
     if (targets.size && ((probe.order.abilityId !== 23) || !probe.order.targetUnitTag || (probe.zone !== this.zone))) {
       for (const target of targets) {
-        if (target.isAlive && target.body.isGround && (target.lastSeen === probe.lastSeen)) {
+        if (probe.canShootTarget(target, true)) {
           new Order(probe, 23, target.body).accept(true);
           break;
         }

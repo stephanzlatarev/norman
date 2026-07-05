@@ -96,6 +96,79 @@ class Units {
 
 }
 
+const INVALID_TARGET_TYPES = new Set([
+  "AdeptPhaseShift",
+  "Interceptor",
+  "KD8Charge",
+]);
+
+class Unit {
+
+  constructor(unit, isOwn, type) {
+    this.setTag(unit.tag);
+    this.isOwn = isOwn;
+    this.isEnemy = !isOwn && (unit.owner !== Enemy.NEUTRAL_ID);
+    this.type = type;
+    this.body = {
+      r: unit.radius,
+      x: unit.pos.x,
+      y: unit.pos.y,
+      z: unit.pos.z,
+    };
+    this.weapon = {
+      cooldown: 0,
+    };
+    this.armor = {
+      healthMax: unit.healthMax,
+      shieldMax: unit.shieldMax,
+      totalMax: unit.healthMax + unit.shieldMax,
+    };
+  }
+
+  setTag(tag) {
+    this.tag = tag;
+    this.nick = tag.slice(tag.length - 3);
+  }
+
+  canShootTarget(target, isInSight) {
+    if (!target) return false;
+    if (!target.isValidShootingTarget) return false;
+    if (!target.isValidShootingTarget(isInSight)) return false;
+
+    if (target.body.isGround && !this.type.damageGround) return false;
+    if (target.body.isFlying && !this.type.damageAir) return false;
+
+    return true;
+  }
+
+  isValidShootingTarget(isInSight) {
+    if (isInSight) {
+      if (!this.isVisible) return false;
+      if (this.lastSeen < Resources.loop) return false;
+    }
+
+    if (!this.isEnemy) return false;
+    if (!this.isAlive) return false;
+
+    if (this.isHallucination) return false;
+    if (this.type.isCocoon) return false;
+    if (INVALID_TARGET_TYPES.has(this.type.name)) return false;
+
+    return true;
+  }
+
+  // Check if the target is in the fire range of this unit.
+  isTargetInFireRange(target, bufferRange = 0) {
+    if (!target) return false;
+
+    if (target.body.isGround && this.type.rangeGround) {
+      return isInRange(this, target, this.type.rangeGround + bufferRange);
+    } else if (target.body.isFlying && this.type.rangeAir) {
+      return isInRange(this, target, this.type.rangeAir + bufferRange);
+    }
+  }
+}
+
 function findGroup(unit, type, me) {
   if (unit.owner === me.id) {
     if (unit.isHallucination) {
@@ -126,31 +199,9 @@ function syncUnit(units, unit, type, zombies, me) {
 
     if (zombie) {
       image = zombie;
-
-      image.tag = unit.tag;
-      image.nick = unit.tag.slice(unit.tag.length - 3);
+      image.setTag(unit.tag);
     } else {
-      image = {
-        tag: unit.tag,
-        nick: unit.tag.slice(unit.tag.length - 3),
-        isOwn: (unit.owner === me.id),
-        isEnemy: (unit.owner !== me.id) && (unit.owner !== Enemy.NEUTRAL_ID),
-        type: type,
-        body: {
-          r: unit.radius,
-          x: unit.pos.x,
-          y: unit.pos.y,
-          z: unit.pos.z,
-        },
-        weapon: {
-          cooldown: 0,
-        },
-        armor: {
-          healthMax: unit.healthMax,
-          shieldMax: unit.shieldMax,
-          totalMax: unit.healthMax + unit.shieldMax,
-        }
-      };
+      image = new Unit(unit, (unit.owner === me.id), type);
     }
 
     units.set(unit.tag, image);
@@ -328,6 +379,18 @@ function isPulsarBeamOn(unit) {
   }
 
   return false;
+}
+
+function isInRange(warrior, target, range) {
+  const squareDistance = calculateSquareDistance(warrior.body, target.body);
+  const totalRange = warrior.body.r + range + target.body.r;
+  const squareRange = totalRange * totalRange;
+
+  return (squareDistance <= squareRange);
+}
+
+function calculateSquareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
 
 export default new Units();

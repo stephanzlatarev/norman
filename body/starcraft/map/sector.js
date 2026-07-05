@@ -32,9 +32,7 @@ export default class Sector extends Space {
   }
 
   trackUnit(unit) {
-    if (!unit.isEnemy) return;
-    if (!unit.isVisible) return;
-    if (unit.isHallucination) return;
+    if (!unit.isValidShootingTarget(true)) return;
 
     const known = tracked.get(unit.tag);
 

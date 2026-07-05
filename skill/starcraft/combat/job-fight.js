@@ -90,9 +90,9 @@ export default class Fight extends Job {
         this.goAttack();
 
         if (REASSIGNABLE_WARRIORS.has(warrior.type.name)) {
-          this.isBusy = isInFireRange(target, warrior);
+          this.isBusy = target.isTargetInFireRange(warrior);
         } else {
-          this.isBusy = isAttacking || isInFireRange(target, warrior);
+          this.isBusy = isAttacking || target.isTargetInFireRange(warrior);
         }
       } else {
         this.details = getDetails(this, "charge");
@@ -213,7 +213,7 @@ export default class Fight extends Job {
     if (warrior.armor.shield < warrior.armor.shieldMax) return true;
 
     // Check if the warrior is in the fire range of the target.
-    return isInFireRange(target, warrior, STALKING_BUFFER_RANGE);
+    return target.isTargetInFireRange(warrior, STALKING_BUFFER_RANGE);
   }
 
   goAttack() {
@@ -277,7 +277,7 @@ export default class Fight extends Job {
 
       for (const sector of [warrior.sector, ...warrior.sector.neighbors]) {
         for (const enemy of sector.enemies) {
-          if (!isInFireRange(warrior, enemy)) continue;
+          if (!warrior.isTargetInFireRange(enemy)) continue;
 
           if (!target || (enemy.armor.total < target.armor.total)) {
             target = enemy;
@@ -357,7 +357,7 @@ export default class Fight extends Job {
 
     for (const sector of this.battle.sectors) {
       for (const threat of sector.threats) {
-        if (!isInFireRange(threat, warrior, STALKING_BUFFER_RANGE)) continue;
+        if (!threat.isTargetInFireRange(warrior, STALKING_BUFFER_RANGE)) continue;
 
         const distance = calculateSquareDistance(warrior.body, threat.body);
 
@@ -485,25 +485,6 @@ function shouldRegenerateShields(warrior, battle, station) {
   }
 
   return !warrior.hasRegeneratedShields;
-}
-
-// Check if the target is in the fire range of the warrior.
-function isInFireRange(warrior, target, bufferRange = 0) {
-  if (!warrior || !target) return false;
-
-  if (target.body.isGround && warrior.type.rangeGround) {
-    return isInRange(warrior, target, warrior.type.rangeGround + bufferRange);
-  } else if (target.body.isFlying && warrior.type.rangeAir) {
-    return isInRange(warrior, target, warrior.type.rangeAir + bufferRange);
-  }
-}
-
-function isInRange(warrior, target, range) {
-  const squareDistance = calculateSquareDistance(warrior.body, target.body);
-  const totalRange = warrior.body.r + range + target.body.r;
-  const squareRange = totalRange * totalRange;
-
-  return (squareDistance <= squareRange);
 }
 
 function isClose(a, b, distance) {
