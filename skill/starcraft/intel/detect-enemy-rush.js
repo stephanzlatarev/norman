@@ -23,6 +23,8 @@ let enemyReapers = 0;
 let enemyZerglings = 0;
 
 export default function() {
+  if (!Memory.LevelEnemyRush && (Resources.loop > 3000)) return;
+
   let level = ENEMY_RUSH_NOT_EXPECTED;
   let reason = REASON_NO_RED_FLAGS;
 
