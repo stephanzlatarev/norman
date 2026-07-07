@@ -17,10 +17,12 @@ function clearInvisibleMobileThreats(battle) {
 
   for (const sector of battle.sectors) {
     for (const threat of sector.threats) {
-      if (threat.type.movementSpeed && !sector.enemies.has(threat)) {
-        sector.untrackUnit(threat);
-        cleared = true;
-      }
+      if (!threat.type.movementSpeed) continue;
+      if (threat.type.isWorker) continue;
+      if (sector.enemies.has(threat)) continue;
+
+      sector.untrackUnit(threat);
+      cleared = true;
     }
   }
 
