@@ -81,7 +81,7 @@ class Units {
     removeDeadUnits(buildings, alive);
     removeDeadUnits(warriors, alive);
     removeDeadUnits(hallucinations, alive);
-    removeDeadUnits(enemies, alive);
+    removeDeadUnits(enemies, alive, true);
     removeDeadUnits(obstacles, alive);
 
     for (const unit of units) {
@@ -288,9 +288,12 @@ function syncUnit(units, unit, type, zombies, me) {
   return image;
 }
 
-function removeImage(image, group, tag) {
+function removeImage(image, group, tag, keepAlive) {
   if (image) {
-    image.isAlive = false;
+    if (!keepAlive) {
+      image.isAlive = false;
+    }
+
     group.delete(tag);
 
     if (image.sector) {
@@ -323,10 +326,10 @@ function removeDeadWorkers(alive) {
   }
 }
 
-function removeDeadUnits(units, alive) {
+function removeDeadUnits(units, alive, keepAlive) {
   for (const [tag, unit] of units) {
     if (!alive.get(tag)) {
-      removeImage(unit, units, tag);
+      removeImage(unit, units, tag, keepAlive);
     }
   }
 }
