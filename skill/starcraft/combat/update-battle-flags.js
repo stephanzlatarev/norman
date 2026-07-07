@@ -77,7 +77,7 @@ function isSmallBattle(battle) {
       if (threat.type.isWorker) continue;
       if (IS_STRONG_ENEMY[threat.type.name]) return false;
       if (threat.type.damageGround) count++;
-      if (count > 2) return false;
+      if (count > 3) return false;
     }
   }
 
