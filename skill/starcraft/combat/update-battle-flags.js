@@ -1,6 +1,12 @@
 
 const MAX_BATTLE_PRIORITY = 90;
 
+const IS_AMBUSH_ENEMY = {
+  Bunker: true,
+  PhotonCannon: true,
+  ShieldBattery: true,
+};
+
 const IS_STRONG_ENEMY = {
   Battlecruiser: true,
   Bunker: true,
@@ -21,6 +27,7 @@ export default function(battles) {
 function singleBattle(battle) {
   battle.priority = MAX_BATTLE_PRIORITY;
   battle.isAirBattle = false;
+  battle.isAmbushBattle = isAmbushBattle(battle);
   battle.isFocusBattle = true;
   battle.isOnlyBattle = true;
   battle.isSmallBattle = isSmallBattle(battle);
@@ -34,6 +41,7 @@ function multipleBattles(battles) {
   for (const battle of battles) {
     battle.priority = priority--;
     battle.isAirBattle = isAirBattle(battle);
+    battle.isAmbushBattle = isAmbushBattle(battle);
     battle.isOnlyBattle = false;
     battle.isSmallBattle = isSmallBattle(battle);
   }
@@ -45,6 +53,19 @@ function multipleBattles(battles) {
 }
 
 function selectFocusBattle(battles) {
+  // Prefer a non-ambush battle when one is available
+  for (const battle of battles) {
+    if (!battle.isAmbushBattle && !battle.isSmallBattle) {
+      return battle;
+    }
+  }
+
+  for (const battle of battles) {
+    if (!battle.isAmbushBattle) {
+      return battle;
+    }
+  }
+
   // The focus battle is the first large battle closest to our home base
   for (const battle of battles) {
     if (!battle.isSmallBattle) {
@@ -54,6 +75,16 @@ function selectFocusBattle(battles) {
 
   // When all battles are small, the focus battle is the closest to our home base
   return battles[0];
+}
+
+function isAmbushBattle(battle) {
+  for (const sector of battle.front.sectors) {
+    for (const threat of sector.threats) {
+      if (IS_AMBUSH_ENEMY[threat.type.name]) return true;
+    }
+  }
+
+  return false;
 }
 
 function isAirBattle(battle) {

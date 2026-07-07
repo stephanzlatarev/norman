@@ -39,6 +39,7 @@ export function traceBattle(battle, event) {
 
   if (battle.isFocusBattle) trace.push("focus");
   if (battle.isOnlyBattle) trace.push("only");
+  if (battle.isAmbushBattle) trace.push("ambush");
   if (battle.isSmallBattle) trace.push("small");
   if (battle.isAirBattle) trace.push("air");
 
