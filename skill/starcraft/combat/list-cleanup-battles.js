@@ -15,7 +15,7 @@ function listCleanupBattles(fights) {
   for (const zone of Zone.list()) {
     if (!zone.isDepot && !zone.isHall) continue;
     if (isFightsZone(fights, zone)) continue;
-    if (isThreatZone(zone)) continue;
+    if (isThreatenedZone(zone)) continue;
     if (!isContactZone(zone)) continue;
 
     const battle = getBattle(zone);
@@ -35,12 +35,10 @@ function isFightsZone(fights, zone) {
   }
 }
 
-function isThreatZone(zone) {
-  for (const sector of zone.sectors) {
+function isThreatenedZone(zone) {
+  for (const sector of zone.horizon) {
     for (const threat of sector.threats) {
-      if (threat.zone && (threat.zone === zone)) {
-        return true;
-      }
+      return true;
     }
   }
 }
