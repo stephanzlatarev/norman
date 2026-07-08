@@ -1,25 +1,31 @@
-import { ActiveCount, Depot, Order, Resources, Units, Zone } from "./imports.js";
+import { ActiveCount, Depot, Order, Units, Zone } from "./imports.js";
 
-const SQUARE_RANGE = 81; // This is optimized for a Queen target
+const SQUARE_SIGHT = 12 * 12;
 
-let target = null;
-
-// All Tempest units move in a clump with synchronized weapons
+// All Tempest units move as a group with synchronized weapons
 export default function() {
   if (ActiveCount.Tempest === 0) return;
 
   const tempests = getTempests();
-  const center = calculateCenter(tempests);
 
-  target = updateTarget(center);
+  let target = null;
+  let rally = Depot.home;
 
-  const command = calculateCommand(center);
+  if (!areThreatened(tempests)) {
+    target = selectTarget(tempests);
+
+    if (target && !target.isValidShootingTarget(true)) {
+      // Go closer to target to get it in sight
+      rally = target.body;
+      target = null;
+    }
+  }
 
   for (const tempest of tempests) {
-    if (command.action === "attack") {
-      Order.attack(tempest, command.target);
+    if (target) {
+      Order.attack(tempest, target);
     } else {
-      Order.move(tempest, command.target);
+      Order.move(tempest, rally);
     }
   }
 }
@@ -36,66 +42,55 @@ function getTempests() {
   return tempests;
 }
 
-function updateTarget(pos) {
-  const closestEnemy = findClosestEnemy();
+function areThreatened(tempests) {
+  for (const tempest of tempests) {
+    const sectors = [tempest.sector, ...tempest.sector.neighbors];
 
-  if (!closestEnemy) return;
-  const distanceClosestEnemy = calculateSquaredDistance(pos, closestEnemy.body);
-  if ((distanceClosestEnemy < SQUARE_RANGE) && !closestEnemy.isValidShootingTarget(true)) {
-    closestEnemy.sector.untrackUnit(closestEnemy);
-    return;
-  }
-
-  if (!target) return closestEnemy;
-  const distanceTarget = calculateSquaredDistance(pos, target.body);
-  if ((distanceTarget < SQUARE_RANGE) && !target.isValidShootingTarget(true)) {
-    target.sector.untrackUnit(target);
-    return closestEnemy;
-  }
-
-  if (target === closestEnemy) return closestEnemy;
-  if (target.zone !== closestEnemy.zone) return closestEnemy;
-  if (!target.isValidShootingTarget()) return closestEnemy;
-
-  return (distanceTarget <= distanceClosestEnemy) ? target : closestEnemy;
-}
-
-function calculateCommand(center) {
-  if (!target) return { action: "move", target: Depot.home };
-
-  const squareDistance = calculateSquaredDistance(center, target.body);
-
-  if (squareDistance < SQUARE_RANGE) return { action: "move", target: Depot.home };
-  if (!target.isValidShootingTarget(true)) return { action: "move", target: target.body };
-
-  return { action: "attack", target };
-}
-
-function findClosestEnemy() {
-  for (const zone of Zone.list()) {
-    for (const sector of zone.sectors) {
+    for (const sector of sectors) {
       for (const enemy of sector.threats) {
-        if (enemy.type.isWarrior && enemy.isValidShootingTarget()) return enemy;
+        if (enemy.isTargetInFireRange(tempest, 1)) return true;
       }
     }
   }
 }
 
-function calculateCenter(units) {
-  let x = 0;
-  let y = 0;
-  let count = 0;
+function selectTarget(tempests) {
+  const targets = new Set();
 
-  for (const unit of units) {
-    x += unit.body.x;
-    y += unit.body.y;
-    count++;
+  for (const zone of Zone.list()) {
+    for (const sector of zone.sectors) {
+      for (const enemy of sector.threats) {
+        if (enemy.type.isWarrior && enemy.isValidShootingTarget()) {
+          targets.add(enemy);
+        }
+      }
+    }
+
+    // If there are targets in this zone then select from it
+    if (targets.size) break;
   }
 
-  return {
-    x: x / count,
-    y: y / count,
-  };
+  // When there are no targets then return no target
+  if (!targets.size) return;
+
+  let bestTarget;
+  let bestDistance = Infinity;
+
+  for (const target of targets) {
+    for (const tempest of tempests) {
+      const distance = calculateSquaredDistance(target.body, tempest.body);
+
+      if ((distance < SQUARE_SIGHT) && !target.isValidShootingTarget(true)) {
+        target.sector.untrackUnit(target);
+        targets.delete(target);
+      } else if (!bestTarget || (distance < bestDistance)) {
+        bestTarget = target;
+        bestDistance = distance;
+      }
+    }
+  }
+
+  return bestTarget;
 }
 
 function calculateSquaredDistance(a, b) {
