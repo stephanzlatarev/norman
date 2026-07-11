@@ -8,14 +8,5 @@ export default function(exclude) {
 
   return enemy
     .filter(zone => !exclude.has(zone))
-    .map(zone => ({ zone, distance: calculateSquareDistance(zone, Depot.home) }))
-    .sort((a, b) => (b.distance - a.distance))
-    .map(item => item.zone);
-}
-
-function calculateSquareDistance(a, b) {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-
-  return dx * dx + dy * dy;
+    .sort((a, b) => (a.distance - b.distance));
 }
