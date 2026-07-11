@@ -179,7 +179,9 @@ function assignRemainingWarriors(battle, matrix) {
     const warrior = fighter.assignee;
 
     if (warrior && !matrix.isWarriorAssigned(warrior)) {
-      fighter.target = getClosestVisibleTarget(warrior, matrix.primaryTargets) || getClosestVisibleTarget(warrior, matrix.allTargets);
+      fighter.target = getClosestTarget(warrior, matrix.primaryTargets, true)
+        || getClosestTarget(warrior, matrix.primaryTargets, false)
+        || getClosestTarget(warrior, matrix.allTargets);
     }
   }
 }
@@ -195,7 +197,7 @@ function setSmashTargets(battle) {
         targets.push(...sector.contacts);
       }
 
-      fighter.target = getClosestVisibleTarget(warrior, targets);
+      fighter.target = getClosestTarget(warrior, targets, false);
     }
   }
 }
@@ -211,17 +213,17 @@ function setKiteTargets(battle) {
         targets.push(...sector.threats);
       }
 
-      fighter.target = getClosestVisibleTarget(warrior, targets);
+      fighter.target = getClosestTarget(warrior, targets, true);
     }
   }
 }
 
-function getClosestVisibleTarget(warrior, targets) {
+function getClosestTarget(warrior, targets, isInSight) {
   let closestTarget;
   let closestDistance = Infinity;
 
   for (const target of targets) {
-    if (!warrior.canShootTarget(target, true)) continue;
+    if (!warrior.canShootTarget(target, isInSight)) continue;
 
     const distance = calculateSquareDistance(warrior.body, target.body);
 
