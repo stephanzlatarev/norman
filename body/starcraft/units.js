@@ -98,6 +98,7 @@ class Units {
 
 const INVALID_TARGET_TYPES = new Set([
   "AdeptPhaseShift",
+  "Broodling",
   "Interceptor",
   "KD8Charge",
 ]);
