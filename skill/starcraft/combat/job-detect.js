@@ -109,7 +109,7 @@ function selectObserveDirection(battle, previousTarget) {
 }
 
 function findClosestInvisibleThreat(observer, sectors) {
-  let closestThreat;
+  let closestTarget;
   let closestDistance = Infinity;
 
   for (const sector of sectors) {
@@ -119,13 +119,28 @@ function findClosestInvisibleThreat(observer, sectors) {
       const distance = calculateSquareDistance(observer.body, threat.body);
 
       if (distance < closestDistance) {
-        closestThreat = threat;
+        closestTarget = threat;
         closestDistance = distance;
       }
     }
   }
 
-  return closestThreat;
+  if (closestTarget) return closestTarget;
+
+  for (const sector of sectors) {
+    for (const contact of sector.contacts) {
+      if (sector.enemies.has(contact)) continue;
+
+      const distance = calculateSquareDistance(observer.body, contact.body);
+
+      if (distance < closestDistance) {
+        closestTarget = contact;
+        closestDistance = distance;
+      }
+    }
+  }
+
+  return closestTarget;
 }
 
 function getRetreatPoint(observer, battle) {
