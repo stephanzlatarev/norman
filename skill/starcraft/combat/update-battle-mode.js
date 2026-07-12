@@ -53,7 +53,7 @@ function normalTransition(battle) {
 
   // Check if there's no resistence.
   if (battle.deployedBalance === Infinity) {
-    return battle.enemyHealth ? Battle.MODE_SMASH : Battle.MODE_STAND;
+    return Battle.MODE_SMASH;
   }
 
   // Check if the balance is enough for attacking
