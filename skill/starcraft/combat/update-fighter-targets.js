@@ -187,16 +187,28 @@ function assignRemainingWarriors(battle, matrix) {
 }
 
 function setSmashTargets(battle) {
+  const threats = [];
+  const contacts = [];
+  const tumors = [];
+
+  for (const sector of battle.sectors) {
+    threats.push(...sector.threats);
+
+    for (const contact of sector.contacts) {
+      if (contact.type.isTumor) {
+        tumors.push(contact);
+      } else {
+        contacts.push(contact);
+      }
+    }
+  }
+
+  const targets = threats.length ? threats : (contacts.length ? contacts : tumors);
+
   for (const fighter of battle.fighters) {
     const warrior = fighter.assignee;
 
     if (warrior) {
-      const targets = [];
-
-      for (const sector of battle.sectors) {
-        targets.push(...sector.contacts);
-      }
-
       fighter.target = getClosestTarget(warrior, targets, false);
     }
   }
