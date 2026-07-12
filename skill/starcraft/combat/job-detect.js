@@ -1,4 +1,4 @@
-import { Job, Order } from "./imports.js";
+import { Depot, Job, Order } from "./imports.js";
 import Battle from "./battle.js";
 
 const SAFETY_DISTANCE = 3;
@@ -153,8 +153,18 @@ function getRetreatPoint(observer, battle) {
     return { x: observer.body.x + dx, y: observer.body.y + dy };
   }
 
-  // Else, move to the rally point
-  return battle.rally;
+  // Else, move to the rally point or to home base
+  if (observer.zone === battle.front) {
+    if (battle.rally !== battle.front) {
+      return battle.rally;
+    } else {
+      return Depot.home;
+    }
+  } else if (observer.zone !== battle.rally) {
+    return battle.rally;
+  } else {
+    return Depot.home;
+  }
 }
 
 function isSamePosition(a, b) {
