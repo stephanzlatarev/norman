@@ -88,16 +88,20 @@ function isAmbushBattle(battle) {
 }
 
 function isAirBattle(battle) {
+  let hasAirThreats = false;
+
   for (const sector of battle.sectors) {
     for (const threat of sector.threats) {
       if (threat.body.isGround) {
         // There's at least this one ground enemy unit, so the battle is not only in the air
         return false;
+      } else {
+        hasAirThreats = true;
       }
     }
   }
 
-  return true;
+  return hasAirThreats;
 }
 
 function isSmallBattle(battle) {
