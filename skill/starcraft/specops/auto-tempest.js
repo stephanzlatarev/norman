@@ -55,23 +55,43 @@ function areThreatened(tempests) {
 }
 
 function selectTarget(tempests) {
-  const targets = new Set();
+  const threats = new Set();
+  const contacts = new Set();
 
   for (const zone of Zone.list()) {
     for (const sector of zone.sectors) {
       for (const enemy of sector.threats) {
         if (enemy.type.isWarrior && enemy.isValidShootingTarget()) {
-          targets.add(enemy);
+          threats.add(enemy);
         }
       }
     }
 
-    // If there are targets in this zone then select from it
-    if (targets.size) break;
+    // If there are threats in this zone then select from it
+    if (threats.size) break;
+
+    // Remember the valid shooting contacts from the closest zone with valid shooting targets
+    if (contacts.size) continue;
+    for (const sector of zone.sectors) {
+      for (const enemy of sector.contacts) {
+        if (enemy.isValidShootingTarget()) {
+          contacts.add(enemy);
+        }
+      }
+    }
   }
+
+  // Target the threats if there are any. Otherwise, target the contacts.
+  const targets = threats.size ? threats : contacts;
 
   // When there are no targets then return no target
   if (!targets.size) return;
+
+  // When there is only one target then return it
+  if (targets.size === 1) {
+    const [target] = targets;
+    return target;
+  }
 
   let bestTarget;
   let bestDistance = Infinity;
