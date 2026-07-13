@@ -179,12 +179,12 @@ function doGroundArmyMaxOut() {
 
   Priority.Probe = 90;
   Priority.Observer = 80;
-  Priority.DarkTemplar = 40;
   Priority.Colossus = 50;
   Priority.Immortal = 50;
   Priority.Sentry = 50;
   Priority.Stalker = 50;
   Priority.Zealot = 50;
+  Priority.DarkTemplar = 40;
 
   if (Resources.supplyLimit < 198) {
     Limit.Nexus = !TotalCount.RoboticsFacility ? 2 : calculateLimitNexus(probeLimit);
@@ -246,9 +246,9 @@ function counterMassQueens() {
   Limit.Oracle = 0;
   Limit.VoidRay = 0;
 
-  Priority.Tempest = 100;
+  Priority.Observer = 100;
+  Priority.Tempest = 95;
   Priority.Probe = 90;
-  Priority.Observer = 90;
   Priority.Immortal = 90;
   Priority.Sentry = 50;
   Priority.Zealot = 50;
