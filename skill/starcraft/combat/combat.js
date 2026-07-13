@@ -35,6 +35,7 @@ const CLEANUP_OPS = [
   updateOpenJobs,        // Open fighter jobs for the active battles. Close obsolete jobs
   updateFighterTargets,  // Destroy closest targets
   updateFighterPrio,     // Update the priority of fighter jobs
+  updateBattleDetection, // Assign a detector to the battle as soon as fighters join
 ];
 
 export default function() {
