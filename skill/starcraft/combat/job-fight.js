@@ -38,6 +38,25 @@ export default class Fight extends Job {
     }
   }
 
+  swap(job) {
+    super.swap(job);
+
+    const marching = this.marching;
+    const checkin = this.checkin;
+    const transit = this.transit;
+    this.marching = job.marching;
+    this.checkin = job.checkin;
+    this.transit = job.transit;
+    job.marching = marching;
+    job.checkin = checkin;
+    job.transit = transit;
+
+    this.isKitingSuppressed = false;
+    this.attackMoveForward = false;
+    job.isKitingSuppressed = false;
+    job.attackMoveForward = false;
+  }
+
   execute() {
     const warrior = this.assignee;
     const target = this.target;

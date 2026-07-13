@@ -111,6 +111,20 @@ export default class Job {
     }
   }
 
+  swap(job) {
+    if (!this.assignee || !job.assignee) return;
+
+    const a = this.assignee;
+    const b = job.assignee;
+
+    info("jobs", a.type.name, a.nick, "swapped from job", this.details, "to job", job.details, "with", b.type.name, b.nick);
+
+    this.assignee = b;
+    b.job = this;
+    job.assignee = a;
+    a.job = job;
+  }
+
   distance(unit) {
     if (!unit) return Infinity;
     if (!this.zone) return 0;
