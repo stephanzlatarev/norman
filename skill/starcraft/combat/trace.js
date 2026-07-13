@@ -10,7 +10,7 @@ export default function() {
   const battles = new Set();
   const orphans = new Set();
 
-  for (const battle of Battle.list()) {
+  for (const battle of Battle.list(true)) {
     traceBattle(battle);
     battles.add(battle);
   }

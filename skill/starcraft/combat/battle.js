@@ -90,7 +90,11 @@ export default class Battle {
     }
   }
 
-  static list() {
+  static list(byPriority) {
+    if (byPriority) {
+      battles.sort((a, b) => (b.priority - a.priority));
+    }
+
     return [...battles];
   }
 
