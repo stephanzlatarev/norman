@@ -77,9 +77,10 @@ class Board {
   }
 
   cell(x, y) {
-    const row = this.cells[Math.floor(y)];
+    x = Math.min(Math.max(Math.floor(x), this.left), this.right);
+    y = Math.min(Math.max(Math.floor(y), this.top), this.bottom);
 
-    if (row) return row[Math.floor(x)];
+    return this.cells[y][x];
   }
 
   radius(x, y, radius) {
@@ -180,6 +181,7 @@ class Cell {
     this.rim = new Set();
 
     this.zone = null;
+    this.sector = null;
   }
 
   isObstructed() {
