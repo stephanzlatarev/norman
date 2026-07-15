@@ -23,6 +23,12 @@ export default class Game {
 
     await this.connect();
 
+    // Patch: @node-sc2/proto creates the WebSocket internally, so we increase the ws receiver's
+    // fragment limit here to prevent "RangeError: Too many message fragments" on large SC2 observations.
+    if (this.client._ws && this.client._ws._receiver) {
+      this.client._ws._receiver._maxFragmentation = 65535;
+    }
+
     const gameInfo = await this.client.gameInfo();
     const observation = await this.client.observation();
 
