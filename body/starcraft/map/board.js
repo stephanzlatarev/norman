@@ -77,8 +77,16 @@ class Board {
   }
 
   cell(x, y) {
+const xx = Math.floor(x);
+const yy = Math.floor(y);
+
     x = Math.min(Math.max(Math.floor(x), this.left), this.right);
     y = Math.min(Math.max(Math.floor(y), this.top), this.bottom);
+
+  if ((x !== xx) || (y !== yy)) {
+    console.log("non playable cell:", xx, yy, ">>", x, y);
+    console.trace();
+  }
 
     return this.cells[y][x];
   }
