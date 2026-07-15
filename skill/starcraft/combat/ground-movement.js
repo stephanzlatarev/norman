@@ -25,56 +25,49 @@ export function routeTo(warrior, rally) {
     }
   }
 
+  // When the warrior is already in the rally zone, move directly to the rally point
+  if (warrior.zone === rally.zone) return Order.move(warrior, rally);
+
   // When there is no route to follow, move directly to the rally point
   const rallyRoute = rally.zone?.route;
   if (!rallyRoute) return Order.move(warrior, rally);
 
-  // When the warrior is already on the route to the rally point, move to the next transit zone
-  if (warrior.transit) {
-    const index = rallyRoute.indexOf(warrior.transit);
-    const nextTransit = rallyRoute[index - 1];
+  const warriorZoneIndex = rallyRoute.indexOf(warrior.zone);
+  const transitZoneIndex = warrior.transit ? rallyRoute.indexOf(warrior.transit) : -1;
 
-    if (index >= 0) {
-      if (!isClose(warrior.body, warrior.transit, CHECKIN_DISTANCE)) {
-        // Warrior has not reached the space of the transit zone
-        if (nextTransit) {
-          const distanceThisTransit = calculateSquareDistance(warrior.zone, warrior.transit);
-          const distanceNextTransit = calculateSquareDistance(warrior.zone, nextTransit);
+  // When warrior is on the route and has already checked into the route, move to the transit zone
+  if (warriorZoneIndex >= 0 && transitZoneIndex >= 0) {
+    if (warrior.transit === warrior.zone) {
+      if (isClose(warrior.body, warrior.transit, CHECKIN_DISTANCE)) {
+        // Warrior reached the transit space. Advance to the next zone on the route.
+        const nextZone = rallyRoute[transitZoneIndex - 1];
 
-          if (distanceNextTransit < distanceThisTransit) {
-            // But is closer to the next transit zone. Transit through it
-            warrior.transit = nextTransit;
-          }
+        if (nextZone) {
+          warrior.transit = nextZone;
+          return moveToZone(warrior, nextZone);
+        } else {
+          return Order.move(warrior, rally);
         }
-
-        // Move closer to the center of the transit zone
-        return moveToZone(warrior, warrior.transit);
-      } else if (nextTransit) {
-        // Warrior has reached this transit zone. Set next transit zone
-        warrior.transit = nextTransit;
-
-        return moveToZone(warrior, warrior.transit);
       } else {
-        // Warrior has reached the last transit zone. Move to the rally point
-        return Order.move(warrior, rally);
+        // Still moving to the center of the transit zone
+        return Order.move(warrior, warrior.transit);
       }
     }
+
+    return moveToZone(warrior, warrior.transit);
   }
 
-  // When the warrior is in a zone on the route to the rally point, transit through it
-  if (rallyRoute.indexOf(warrior.zone) >= 0) {
+  // When transit is not on the route, check into the zone where the warrior's path crosses the rally route
+  if (warriorZoneIndex >= 0) {
     warrior.transit = warrior.zone;
-
     return Order.move(warrior, warrior.zone);
   }
 
-  // When the warrior route crosses route to the rally point, transit through the crossing
   const warriorRoute = warrior.zone?.route;
   if (warriorRoute) {
     for (const zone of warriorRoute) {
       if (rallyRoute.indexOf(zone) >= 0) {
         warrior.transit = zone;
-
         return moveToZone(warrior, zone);
       }
     }
@@ -105,8 +98,4 @@ function moveToZone(warrior, zone) {
 
 function isClose(a, b, distance) {
   return (Math.abs(a.x - b.x) <= distance) && (Math.abs(a.y - b.y) <= distance);
-}
-
-function calculateSquareDistance(a, b) {
-  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
