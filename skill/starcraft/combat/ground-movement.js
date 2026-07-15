@@ -3,6 +3,16 @@ import { Order, Resources } from "./imports.js";
 const CHECKIN_DISTANCE = 5;
 const TRAFFIC_RESERVATION_LOOPS = 10;
 
+export function attackTarget(warrior, target) {
+  if (!warrior || !target) return;
+
+  if (!target.zone || (warrior.zone === target.zone)) return Order.attack(warrior, target);
+
+  if (isCorridorBlocked(warrior, target.zone)) return Order.move(warrior, warrior.zone);
+
+  return Order.attack(warrior, target);
+}
+
 export function routeWarriorTo(warrior, rally) {
   if (!warrior || !rally) return;
 
@@ -85,6 +95,12 @@ export function routeWarriorTo(warrior, rally) {
 }
 
 function moveToZone(warrior, zone) {
+  if (isCorridorBlocked(warrior, zone)) return Order.move(warrior, warrior.zone);
+
+  Order.move(warrior, zone);
+}
+
+function isCorridorBlocked(warrior, zone) {
   if (warrior.zone !== zone) {
     const corridor = warrior.zone.exits.get(zone);
 
@@ -94,13 +110,11 @@ function moveToZone(warrior, zone) {
       if (movingTowardsHome) {
         corridor.traffic = Resources.loop + TRAFFIC_RESERVATION_LOOPS;
       } else if (corridor.traffic > Resources.loop) {
-        // Choke is reserved for traffic towards home. Wait in current zone.
-        return Order.move(warrior, warrior.zone);
+        // Choke is reserved for traffic towards home. This warrior should not go.
+        return true;
       }
     }
   }
-
-  Order.move(warrior, zone);
 }
 
 function isClose(a, b, distance) {

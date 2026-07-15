@@ -1,6 +1,6 @@
 import { Job, Order, Resources, ALERT_RED, PERIMETER_WHITE } from "./imports.js";
 import Battle from "./battle.js";
-import { routeWarriorTo } from "./ground-movement.js";
+import { attackTarget, routeWarriorTo } from "./ground-movement.js";
 
 const KITING_RANGE = 2;
 const KITING_WARRIORS = new Set(["Stalker"]);
@@ -98,7 +98,7 @@ export default class Fight extends Job {
         }
       } else {
         this.details = getDetails(this, "charge");
-        Order.attack(warrior, destination);
+        attackTarget(warrior, destination);
 
         this.isBusy = false;
       }
@@ -264,7 +264,7 @@ export default class Fight extends Job {
       Order.move(warrior, this.station);
       this.attackMoveForward = false;
     } else {
-      Order.attack(warrior, target);
+      attackTarget(warrior, target);
       this.attackMoveForward = false;
     }
   }
