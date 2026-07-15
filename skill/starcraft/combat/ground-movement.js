@@ -1,6 +1,7 @@
-import { Order } from "./imports.js";
+import { Order, Resources } from "./imports.js";
 
 const CHECKIN_DISTANCE = 5;
+const TRAFFIC_RESERVATION_LOOPS = 10;
 
 export function routeTo(warrior, rally) {
   if (!warrior || !rally) return;
@@ -47,12 +48,12 @@ export function routeTo(warrior, rally) {
         }
 
         // Move closer to the center of the transit zone
-        return Order.move(warrior, warrior.transit);
+        return moveToZone(warrior, warrior.transit);
       } else if (nextTransit) {
         // Warrior has reached this transit zone. Set next transit zone
         warrior.transit = nextTransit;
 
-        return Order.move(warrior, warrior.transit);
+        return moveToZone(warrior, warrior.transit);
       } else {
         // Warrior has reached the last transit zone. Move to the rally point
         return Order.move(warrior, rally);
@@ -74,13 +75,32 @@ export function routeTo(warrior, rally) {
       if (rallyRoute.indexOf(zone) >= 0) {
         warrior.transit = zone;
 
-        return Order.move(warrior, zone);
+        return moveToZone(warrior, zone);
       }
     }
   }
 
   // Otherwise, move directly to the rally point
   Order.move(warrior, rally);
+}
+
+function moveToZone(warrior, zone) {
+  if (warrior.zone !== zone) {
+    const corridor = warrior.zone.exits.get(zone);
+
+    if (corridor?.isChoke) {
+      const movingTowardsHome = (zone.perimeterLevel < warrior.zone.perimeterLevel);
+
+      if (movingTowardsHome) {
+        corridor.traffic = Resources.loop + TRAFFIC_RESERVATION_LOOPS;
+      } else if (corridor.traffic > Resources.loop) {
+        // Choke is reserved for traffic towards home. Wait in current zone.
+        return Order.move(warrior, warrior.zone);
+      }
+    }
+  }
+
+  Order.move(warrior, zone);
 }
 
 function isClose(a, b, distance) {

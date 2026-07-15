@@ -8,7 +8,7 @@ export default class Corridor {
     this.name = name(type, path, via);
 
     this.isAir = (type === "air");
-    this.isChoke = (type === "choke");
+    this.isChoke = (type === "choke") || !!via;
     this.isCliff = (type === "cliff");
     this.isCurtain = (type === "curtain");
     this.isGround = (type === "ground");
