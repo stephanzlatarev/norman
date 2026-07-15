@@ -1,5 +1,6 @@
 import { Job, Order, Resources, ALERT_RED, PERIMETER_WHITE } from "./imports.js";
 import Battle from "./battle.js";
+import { routeTo } from "./ground-movement.js";
 
 const KITING_RANGE = 2;
 const KITING_WARRIORS = new Set(["Stalker"]);
@@ -10,7 +11,6 @@ const REASSIGNABLE_WARRIORS = new Set(["Sentry"]);
 export default class Fight extends Job {
 
   checkin = null; // Current check-in zone. Warrior checks in when arriving at the fighter station
-  transit = null; // Current transit zone
 
   constructor(battle, warrior, station) {
     super(warrior);
@@ -47,7 +47,9 @@ export default class Fight extends Job {
       this.details = getDetails(this, "dead");
       this.assignee = null;
       this.isBusy = false;
-      this.transit = null;
+
+      warrior.transit = null;
+
       return;
     }
 
@@ -81,7 +83,7 @@ export default class Fight extends Job {
 
       if (!isDeployed || shouldCheckIn) {
         this.details = getDetails(this, "approach");
-        this.goRouteTo(this.station);
+        routeTo(warrior, this.station);
 
         isInTransit = true;
         this.isBusy = false;
@@ -111,7 +113,7 @@ export default class Fight extends Job {
           this.goDodge();
         } else {
           this.details = getDetails(this, "stalk");
-          this.goRouteTo(this.station);
+          routeTo(warrior, this.station);
 
           isInTransit = true;
         }
@@ -134,21 +136,21 @@ export default class Fight extends Job {
         this.isBusy = false;
       } else {
         this.details = getDetails(this, "route");
-        this.goRouteTo(this.station);
+        routeTo(warrior, this.station);
 
         isInTransit = true;
         this.isBusy = false;
       }
     } else {
       this.details = getDetails(this, "deploy");
-      this.goRouteTo(this.station);
+      routeTo(warrior, this.station);
 
       isInTransit = true;
       this.isBusy = false;
     }
 
     if (!isInTransit) {
-      this.transit = null;
+      warrior.transit = null;
     }
   }
 
@@ -265,88 +267,6 @@ export default class Fight extends Job {
       Order.attack(warrior, target);
       this.attackMoveForward = false;
     }
-  }
-
-  goRouteTo(rally) {
-    const warrior = this.assignee;
-    if (!warrior || !rally) return;
-
-    // When the warrior can shoot an enemy, then shoot
-    if (!warrior.weapon.cooldown) {
-      let target;
-
-      for (const sector of [warrior.sector, ...warrior.sector.neighbors]) {
-        for (const enemy of sector.enemies) {
-          if (!warrior.isTargetInFireRange(enemy)) continue;
-
-          if (!target || (enemy.armor.total < target.armor.total)) {
-            target = enemy;
-          }
-        }
-      }
-
-      if (target) {
-        return Order.attack(warrior, target);
-      }
-    }
-
-    // When there is no route to follow, move directly to the rally point
-    const rallyRoute = rally.zone?.route;
-    if (!rallyRoute) return Order.move(warrior, rally);
-
-    // When the warrior is already on the route to the rally point, move to the next transit zone
-    if (this.transit) {
-      const index = rallyRoute.indexOf(this.transit);
-      const nextTransit = rallyRoute[index - 1];
-
-      if (index >= 0) {
-        if (!isClose(warrior.body, this.transit, CHECKIN_DISTANCE)) {
-          // Warrior has not reached the space of the transit zone
-          if (nextTransit) {
-            const distanceThisTransit = calculateSquareDistance(warrior.zone, this.transit);
-            const distanceNextTransit = calculateSquareDistance(warrior.zone, nextTransit);
-
-            if (distanceNextTransit < distanceThisTransit) {
-              // But is closer to the next transit zone. Transit through it
-              this.transit = nextTransit;
-            }
-          }
-
-          // Move closer to the center of the transit zone
-          return Order.move(warrior, this.transit);
-        } else if (nextTransit) {
-          // Warrior has reached this transit zone. Set next transit zone
-          this.transit = nextTransit;
-
-          return Order.move(warrior, this.transit);
-        } else {
-          // Warrior has reached the last transit zone. Move to the rally point
-          return Order.move(warrior, rally);
-        }
-      }
-    }
-
-    // When the warrior is in a zone on the route to the rally point, transit through it
-    if (rallyRoute.indexOf(warrior.zone) >= 0) {
-      this.transit = warrior.zone;
-
-      return Order.move(warrior, warrior.zone);
-    }
-
-    // When the warrior route crosses route to the rally point, transit through the crossing
-    const warriorRoute = warrior.zone?.route;
-    if (warriorRoute) {
-      for (const zone of warriorRoute) {
-        if (rallyRoute.indexOf(zone) >= 0) {
-          this.transit = zone;
-
-          return Order.move(warrior, zone);
-        }
-      }
-    }
-
-    // Otherwise, move directly to the rally point
-    Order.move(warrior, rally);
   }
 
   goDodge() {
