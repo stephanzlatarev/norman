@@ -11,7 +11,6 @@ import updateBattleStations from "./update-battle-stations.js";
 import updateFighterPrio from "./update-fighter-prio.js";
 import updateFighterStations from "./update-fighter-stations.js";
 import updateFighterTargets from "./update-fighter-targets.js";
-import swapJobFighters from "./swap-job-fighters.js";
 import updateFreeWarriors from "./update-free-warriors.js";
 import updateIdleWarriors from "./update-idle-warriors.js";
 import updateOpenJobs from "./update-open-jobs.js";
@@ -68,7 +67,6 @@ export default function() {
   }
 
   // Idle warriors outside of battle zones should start moving to the closest battle as reinforcements
-  swapJobFighters([...fights, ...cleanups]);
   updateFreeWarriors();
 
   trace();
