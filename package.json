@@ -8,5 +8,8 @@
   "dependencies": {
     "@node-sc2/proto": "^0.6.0-alpha.0",
     "yaml": "^2.8.0"
+  },
+  "overrides": {
+    "ws": "6.2.3"
   }
 }
