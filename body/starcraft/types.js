@@ -12,7 +12,17 @@ const IS_DETECTOR = { Ghost: 1, MissileTurret: 1, Observer: 1, Oracle: 1, Overse
 const IS_EXTRACTOR = { Assimilator: 1, AssimilatorRich: 1, Extractor: 1, ExtractorRich: 1, Refinery: 1, RefineryRich: 1 };
 const IS_PYLON = { Pylon: 1 };
 const IS_WORKER = { Drone: 1, MULE: 1, Probe: 1, SCV: 1 };
-const IS_OFFENSIVE = { Observer: 1, Overseer: 1, Raven: 1, NydusCanal: 1, NydusNetwork: 1 };
+const IS_OFFENSIVE = {
+  LurkerMP: 1,
+  NydusCanal: 1,
+  NydusNetwork: 1,
+  Infestor: 1,
+  Observer: 1,
+  Overseer: 1,
+  Raven: 1,
+  SwarmHostMP: 1,
+  Viper: 1,
+};
 
 const RACE_PROTOSS = 3;
 
