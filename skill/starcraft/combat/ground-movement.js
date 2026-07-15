@@ -3,7 +3,7 @@ import { Order, Resources } from "./imports.js";
 const CHECKIN_DISTANCE = 5;
 const TRAFFIC_RESERVATION_LOOPS = 10;
 
-export function routeTo(warrior, rally) {
+export function routeWarriorTo(warrior, rally) {
   if (!warrior || !rally) return;
 
   // When the warrior can shoot an enemy, then shoot
@@ -35,7 +35,7 @@ export function routeTo(warrior, rally) {
   const warriorZoneIndex = rallyRoute.indexOf(warrior.zone);
   const transitZoneIndex = warrior.transit ? rallyRoute.indexOf(warrior.transit) : -1;
 
-  // When warrior is on the route and has already checked into the route, move to the transit zone
+  // When warrior is on the route and already knows the transit zone, move to the transit zone
   if (warriorZoneIndex >= 0 && transitZoneIndex >= 0) {
     if (warrior.transit === warrior.zone) {
       if (isClose(warrior.body, warrior.transit, CHECKIN_DISTANCE)) {
@@ -48,21 +48,28 @@ export function routeTo(warrior, rally) {
         } else {
           return Order.move(warrior, rally);
         }
-      } else {
-        // Still moving to the center of the transit zone
-        return Order.move(warrior, warrior.transit);
       }
+
+      // Still moving to the center of the transit zone
+      return Order.move(warrior, warrior.transit);
     }
 
     return moveToZone(warrior, warrior.transit);
   }
 
-  // When transit is not on the route, check into the zone where the warrior's path crosses the rally route
+  // When warrior is on the route and without knowing the transit zone, transit via the next zone on the route
   if (warriorZoneIndex >= 0) {
-    warrior.transit = warrior.zone;
-    return Order.move(warrior, warrior.zone);
+    const nextZone = rallyRoute[warriorZoneIndex - 1];
+
+    if (nextZone) {
+      warrior.transit = nextZone;
+      return moveToZone(warrior, nextZone);
+    }
+
+    return Order.move(warrior, rally);
   }
 
+  // When warrior is not on the route, transit via the zone where the warrior's path crosses the rally route
   const warriorRoute = warrior.zone?.route;
   if (warriorRoute) {
     for (const zone of warriorRoute) {

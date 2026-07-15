@@ -1,6 +1,6 @@
 import { Job, Order, Resources, ALERT_RED, PERIMETER_WHITE } from "./imports.js";
 import Battle from "./battle.js";
-import { routeTo } from "./ground-movement.js";
+import { routeWarriorTo } from "./ground-movement.js";
 
 const KITING_RANGE = 2;
 const KITING_WARRIORS = new Set(["Stalker"]);
@@ -83,7 +83,7 @@ export default class Fight extends Job {
 
       if (!isDeployed || shouldCheckIn) {
         this.details = getDetails(this, "approach");
-        routeTo(warrior, this.station);
+        routeWarriorTo(warrior, this.station);
 
         isInTransit = true;
         this.isBusy = false;
@@ -113,7 +113,7 @@ export default class Fight extends Job {
           this.goDodge();
         } else {
           this.details = getDetails(this, "stalk");
-          routeTo(warrior, this.station);
+          routeWarriorTo(warrior, this.station);
 
           isInTransit = true;
         }
@@ -136,14 +136,14 @@ export default class Fight extends Job {
         this.isBusy = false;
       } else {
         this.details = getDetails(this, "route");
-        routeTo(warrior, this.station);
+        routeWarriorTo(warrior, this.station);
 
         isInTransit = true;
         this.isBusy = false;
       }
     } else {
       this.details = getDetails(this, "deploy");
-      routeTo(warrior, this.station);
+      routeWarriorTo(warrior, this.station);
 
       isInTransit = true;
       this.isBusy = false;
