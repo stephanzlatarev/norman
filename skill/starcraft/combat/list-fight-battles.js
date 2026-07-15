@@ -172,6 +172,11 @@ function findRallyZone(zone) {
     for (let i = 1; i < zone.route.length; i++) {
       const one = zone.route[i];
 
+      if ((one === Depot.home) && (Memory.DeploymentOutreach > Memory.DeploymentOutreachSiegeDefense)) {
+        // Avoid moving the army through the wall
+        return zone;
+      }
+
       if (one.isDepot || one.isHall) {
         return one;
       }
