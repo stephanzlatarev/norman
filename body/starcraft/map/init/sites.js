@@ -199,7 +199,7 @@ function getWallSite(cell) {
   const plots = [];
   for (let y = cell.y - 3; y <= cell.y + 3; y++) {
     for (let x = cell.x - 3; x <= cell.x + 3; x++) {
-      const c = Board.cell(x, y);
+      const c = getPlayableCell(x, y);
 
       if (c && c.isPath && !c.isObstacle) {
         plots.push(c.isPlot ? " " : "-");
@@ -255,7 +255,7 @@ function getSiteLineEnd(cell, dx) {
 
   while (cell && cell.isPlot) {
     x = cell.x;
-    cell = Board.cell(x + dx, cell.y);
+    cell = getPlayableCell(x + dx, cell.y);
   }
 
   return x;
@@ -300,14 +300,25 @@ function getSiteLineBounds(left, right, centery) {
   return list;
 }
 
+function getPlayableCell(x, y) {
+  const cell = Board.cell(x, y);
+
+  // Check if the board returned a different cell because the coordinates
+  // were outside the playable area
+  if (cell.x !== Math.floor(x)) return;
+  if (cell.y !== Math.floor(y)) return;
+
+  return cell;
+}
+
 function isSiteVertical(centerx, centery) {
-  return isSitePath(Board.cell(centerx, centery - 3)) &&
-         isSitePlot(Board.cell(centerx, centery - 2)) &&
-         isSitePlot(Board.cell(centerx, centery - 1)) &&
-         isSitePlot(Board.cell(centerx, centery    )) &&
-         isSitePlot(Board.cell(centerx, centery + 1)) &&
-         isSitePlot(Board.cell(centerx, centery + 2)) &&
-         isSitePath(Board.cell(centerx, centery + 3));
+  return isSitePath(getPlayableCell(centerx, centery - 3)) &&
+         isSitePlot(getPlayableCell(centerx, centery - 2)) &&
+         isSitePlot(getPlayableCell(centerx, centery - 1)) &&
+         isSitePlot(getPlayableCell(centerx, centery    )) &&
+         isSitePlot(getPlayableCell(centerx, centery + 1)) &&
+         isSitePlot(getPlayableCell(centerx, centery + 2)) &&
+         isSitePath(getPlayableCell(centerx, centery + 3));
 }
 
 function isSitePath(cell) {
