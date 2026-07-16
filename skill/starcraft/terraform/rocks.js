@@ -1,15 +1,15 @@
-import { Job, Order, Units, Zone } from "./imports.js";
+import { Job, Memory, Order, Units, Zone } from "./imports.js";
 
 const ALERT_YELLOW = 4;
-const PERIMETER_GREEN = 2;
 const PERIMETER_WHITE = 3;
+const PERIMETER_YELLOW = 4;
 
 const jobs = new Set();
 let rock = null;
 
-// Clear passages
+// Clear rocks and obstacles
 export default function() {
-  if (!rock) rock = findRockToClear();
+  if (!rock || !rock.isAlive) rock = findRockToClear();
 
   if (rock && !areUnderAttack()) {
     let hasOpenJob = false;
@@ -35,14 +35,35 @@ export default function() {
 }
 
 function findRockToClear() {
+  const rocks = [];
+
+  const isAttacking = (Memory.DeploymentOutreach >= Memory.DeploymentOutreachProbingAttack);
+  const perimeter = isAttacking ? PERIMETER_YELLOW : PERIMETER_WHITE;
+
   for (const obstacle of Units.obstacles().values()) {
     if (!obstacle.zone) continue;
-    if (obstacle.zone.perimeterLevel >= PERIMETER_GREEN) continue;
+    if (obstacle.zone.perimeterLevel >= perimeter) continue;
 
     if (!obstacle.armor.health) continue;
     if (!obstacle.armor.health > 3000) continue; // Ignore this one as it's too hard to destroy
 
-    return obstacle;
+    if (obstacle.type.name === "XelNagaTower") continue;
+
+    rocks.push(obstacle);
+  }
+
+  if (rocks.length === 1) {
+    return rocks[0];
+  } else if (rocks.length >= 1) {
+    let selection;
+
+    for (const rock of rocks) {
+      if (!selection || (rock.zone.perimeterLevel < selection.zone.perimeterLevel)) {
+        selection = rock;
+      }
+    }
+
+    return selection;
   }
 }
 
@@ -69,14 +90,18 @@ class ClearRock extends Job {
 
 function areUnderAttack() {
   for (const zone of Zone.list()) {
+    // Check if there are enemies where we are
+    if (zone.enemies.size) {
+      if (zone.buildings.size) return true;
+      if (zone.warriors.size) return true;
+      if (zone.workers.size) return true;
+    }
+
     // Check alert levels in our perimeter
     if (zone.perimeterLevel && zone.alertLevel) {
-      if ((zone.perimeterLevel >= PERIMETER_WHITE) && (zone.alertLevel >= ALERT_YELLOW)) {
+      if ((zone.perimeterLevel < PERIMETER_WHITE) && (zone.alertLevel >= ALERT_YELLOW)) {
         return true;
       }
     }
-
-    // Check if our warriors are facing enemies
-    if (zone.warriors.size && zone.enemies.size) return true;
   }
 }
