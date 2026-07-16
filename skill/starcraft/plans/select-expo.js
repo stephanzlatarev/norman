@@ -1,6 +1,7 @@
-import { Depot, Limit, Memory, TotalCount } from "./imports.js";
+import { Depot, Limit, Memory, TotalCount, Units } from "./imports.js";
 
 const PERIMETER_RED = 5;     // The zone is within enemy perimeter
+const DEPOT_BUILDING_HALF_SIZE = 5 / 2;
 
 let expansionSelectionLoop;
 
@@ -57,6 +58,7 @@ function findNextExpansionLocation() {
 
   for (const depot of depots) {
     if (depot.perimeterLevel >= PERIMETER_RED) continue;
+    if (isDepotBlockedByObstacle(depot)) continue;
 
     if (!expo || (depot.perimeterLevel < expo.perimeterLevel)) {
       expo = depot;
@@ -64,4 +66,16 @@ function findNextExpansionLocation() {
   }
 
   return expo;
+}
+
+function isDepotBlockedByObstacle(depot) {
+  for (const obstacle of Units.obstacles().values()) {
+    const { x, y, r } = obstacle.body;
+    const closestX = Math.max(depot.x - DEPOT_BUILDING_HALF_SIZE, Math.min(x, depot.x + DEPOT_BUILDING_HALF_SIZE));
+    const closestY = Math.max(depot.y - DEPOT_BUILDING_HALF_SIZE, Math.min(y, depot.y + DEPOT_BUILDING_HALF_SIZE));
+    const dx = x - closestX;
+    const dy = y - closestY;
+
+    if ((dx * dx + dy * dy) < (r * r)) return true;
+  }
 }
