@@ -1,15 +1,15 @@
 import Job from "../job.js";
 
-export default function(texts) {
+export default function(texts, showHarvest) {
   const jobs = [...Job.list()];
   const started = jobs.filter(job => !!job.assignee).sort(orderByPriorityAndSummary);
   const pending = jobs.filter(job => !job.assignee).sort(orderByPriorityAndSummary);
 
   texts.push("Job Prio Zone");
-  displayJobList(texts, started);
+  displayJobList(texts, started, showHarvest);
 
   texts.push("--- ---- ----");
-  displayJobList(texts, pending);
+  displayJobList(texts, pending, showHarvest);
 
   texts.push("");
 }
@@ -21,12 +21,21 @@ function orderByPriorityAndSummary(a, b) {
   return b.summary.localeCompare(a.summary);
 }
 
-function displayJobList(texts, jobs) {
+function displayJobList(texts, jobs, showHarvest) {
   let groupText;
   let groupCount;
 
   for (const job of jobs) {
-    const text = threeletter(" ", job.priority) + (job.zone ? threeletter("  ", job.zone.name) : "     ") + "  " + job.summary;
+    let text;
+
+    if (job.isHarvestMineralsJob && !showHarvest) {
+      text = "   *       Harvest minerals";
+    } else if (job.isHarvestVespeneJob && !showHarvest) {
+      text = "   *       Harvest vespene";
+    } else {
+      const zone = job.zone ? threeletter("  ", job.zone.name) : "     ";
+      text = threeletter(" ", job.priority) + zone + "  " + job.summary;
+    }
 
     if (text !== groupText) {
       if (groupCount) {

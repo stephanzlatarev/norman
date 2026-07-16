@@ -27,7 +27,7 @@ export default async function(client, chat) {
   if (Memory.ShowThreats) traceThreats(shapes);
 
   traceMemory(text);
-  traceJobs(text);
+  traceJobs(text, Memory.ShowHarvest);
 
   for (let row = 0; row < text.length; row++) text[row] = { text: text[row], virtualPos: { x: 0, y: row } };
   for (const shape of shapes) text.push({ text: JSON.stringify(shape) });
@@ -44,6 +44,7 @@ function initializeToggles() {
   Memory.ShowPins = true;
   Memory.ShowBattles = true;
   Memory.ShowThreats = true;
+  Memory.ShowHarvest = false;
 }
 
 function updateToggles(messages) {
@@ -65,5 +66,6 @@ function updateToggles(messages) {
     { toggle: "ShowPins", label: "&#x1F4CC;", description: "Show pins", on: !!Memory.ShowPins },
     { toggle: "ShowBattles", label: "&#x2694;", description: "Show battles", on: !!Memory.ShowBattles },
     { toggle: "ShowThreats", label: "&#x1F47B;", description: "Show threats", on: !!Memory.ShowThreats },
+    { toggle: "ShowHarvest", label: "&#x26CF;", description: "Show harvest", on: !!Memory.ShowHarvest },
   ];
 }
