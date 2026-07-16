@@ -1,7 +1,7 @@
 import { Board, Build, Memory, Zone } from "./imports.js";
 
 const ALERT_YELLOW = 4;
-const PERIMETER_WHITE = 3;
+const PERIMETER_YELLOW = 4;
 
 let cooldown = 0;
 let job = null;
@@ -36,7 +36,7 @@ function isZoneValid(zone) {
   if (zone.isDepot) return false;
   if (zone.buildings.size) return false;
 
-  if (zone.perimeterLevel > PERIMETER_WHITE) return false;
+  if (zone.perimeterLevel >= PERIMETER_YELLOW) return false;
 
   if (!zone.alertLevel) return false;
   if (zone.alertLevel > ALERT_YELLOW) return false;
