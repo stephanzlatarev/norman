@@ -1,6 +1,8 @@
 import { Build, Memory } from "./imports.js";
 import { getBestSpreadLocation, STATIC_DETECTION } from "./spread.js";
 
+const PERIMETER_RED = 5;
+
 let cooldown = 0;
 let job = null;
 
@@ -16,7 +18,7 @@ export default function() {
 
   if (Memory.Loop < cooldown) return;
 
-  const plot = getBestSpreadLocation(STATIC_DETECTION);
+  const plot = getBestSpreadLocation(STATIC_DETECTION, PERIMETER_RED);
 
   if (plot) {
     job = new Build("PhotonCannon", plot);

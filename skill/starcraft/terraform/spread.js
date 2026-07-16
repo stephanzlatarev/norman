@@ -7,6 +7,7 @@ export const PSIONIC_MATRIX = {
   // Pylons provide the Psionic Matrix over a 6.5 radius
   radius: 6.5,
 
+  fast: false,
   bonusAir: false,
   bonusGround: true,
   coversHarvest: false,
@@ -24,6 +25,7 @@ export const STATIC_DETECTION = {
   // but we want to use it for static defense too so we use fire range plus body radius
   radius: 7 + 1.125,
 
+  fast: true,
   bonusAir: true,
   bonusGround: true,
   coversHarvest: true,
@@ -33,9 +35,25 @@ export const STATIC_DETECTION = {
 
 };
 
-export function getBestSpreadLocation(spread) {
-  const zones = [...Zone.list()].sort((a, b) => (a.perimeterLevel - b.perimeterLevel));
+export function getBestSpreadLocation(spread, perimeterLevel) {
+  const zones = [...Zone.list()]
+    .filter(zone => (perimeterLevel === undefined) || (zone.perimeterLevel < perimeterLevel))
+    .sort((a, b) => (a.perimeterLevel - b.perimeterLevel));
 
+  if (spread.fast) {
+    // Spread to more zones faster. One unit is enough to spread to the next zone.
+    for (const zone of zones) {
+      if (hasZoneSpread(zone, spread)) continue;
+
+      const location = getBestSpreadLocationInZone(spread, zone);
+
+      if (location) {
+        return location;
+      }
+    }
+  }
+
+  // Spread slowly. Fully saturate a zone before spreading to the next zone.
   for (const zone of zones) {
     const location = getBestSpreadLocationInZone(spread, zone);
 
@@ -167,5 +185,13 @@ function isInPsionicMatrix(cell) {
     if (dx * dx + dy * dy < radius * radius) {
       return true;
     }
+  }
+}
+
+function hasZoneSpread(zone, spread) {
+  const group = zone[spread.group];
+
+  for (const unit of group) {
+    if (unit.type.name === spread.type) return true;
   }
 }
