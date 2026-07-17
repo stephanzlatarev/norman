@@ -14,7 +14,7 @@ export default function(shapes, texts) {
     const text = [];
 
     text.push(battle.priority, " ");
-    text.push(battle.front.name, " ");
+    text.push(battle.front.name, battle.isFocusBattle ? "✦" : " ");
     text.push(battle.mode);
     text.push(battle.rally.name, " ");
     text.push(balanceText(battle.recruitedBalance));
