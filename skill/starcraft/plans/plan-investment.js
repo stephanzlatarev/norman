@@ -2,7 +2,14 @@ import { Memory, Job, Types, Depot, ActiveCount, TotalCount, VisibleCount, Limit
 
 let plan = doStartUp;
 
+let detectedMassQueens = false;
+
 export default function() {
+  if (!detectedMassQueens && (VisibleCount.Queen >= 5) && (VisibleCount.Warrior <= VisibleCount.Queen)) {
+    info("strategy", "Detected mass queens.");
+    detectedMassQueens = true;
+  }
+
   plan();
 }
 
@@ -167,7 +174,7 @@ function doOneBaseDefense() {
 
 function doGroundArmyMaxOut() {
   const probeLimit = 85;
-  const useColossus = (ActiveCount.RoboticsBay > 0);
+  const useColossus = (ActiveCount.RoboticsBay > 0) && !detectedMassQueens;
 
   Limit.Colossus = useColossus ? 100 : 0;
   Limit.Immortal = useColossus ? 0 : 100;
@@ -200,7 +207,7 @@ function doGroundArmyMaxOut() {
   Limit.Gateway = calculateLimitGateway();
   Limit.RoboticsFacility = (TotalCount.Nexus > 1) ? 1 : 0;
 
-  if (Memory.DeploymentOutreach <= Memory.DeploymentOutreachNormalDefense) {
+  if ((Memory.DeploymentOutreach <= Memory.DeploymentOutreachNormalDefense) && !detectedMassQueens) {
     Priority.RoboticsBay = 100;
     Priority.ShieldBattery = 100;
     Limit.RoboticsBay = 1;
@@ -226,58 +233,7 @@ function doGroundArmyMaxOut() {
   if (Memory.LimitBase === 1) {
     plan = doOneBaseDefense;
     info("strategy", "Transition to one base defense.");
-  } else if ((VisibleCount.Queen >= 5) && (VisibleCount.Warrior <= 5)) {
-    plan = counterMassQueens;
-    info("strategy", "Transition to countering mass queens.");
   }
-}
-
-function counterMassQueens() {
-  const probeLimit = 100;
-
-  Limit.Zealot = TotalCount.CyberneticsCore ? 100 : 0;
-  Limit.Immortal = 100;
-  Limit.Sentry = 10; // Maintain 10:1 ratio of Zealot to Sentry
-  Limit.Observer = calculateLimitObserver();
-  Limit.Tempest = 5;
-  Limit.Colossus = 0;
-  Limit.Stalker = 0;
-  Limit.DarkTemplar = 0;
-  Limit.Oracle = 0;
-  Limit.VoidRay = 0;
-
-  Priority.Observer = 100;
-  Priority.Tempest = 95;
-  Priority.Probe = 90;
-  Priority.Immortal = 90;
-  Priority.Sentry = 50;
-  Priority.Zealot = 50;
-
-  if (Resources.supplyLimit < 198) {
-    Limit.Nexus = !TotalCount.RoboticsFacility ? 2 : calculateLimitNexus(probeLimit);
-    Priority.Nexus = (TotalCount.Nexus < Limit.Nexus) ? 70 : 0;
-  } else {
-    Limit.Nexus = Infinity;
-    Priority.Nexus = 40;
-  }
-  Limit.Assimilator = calculateLimitAssimilator();
-  Limit.Probe = Math.min(TotalCount.Nexus * 20 + TotalCount.Assimilator * 3, probeLimit);
-
-  Priority.Gateway = 50;
-  Limit.Gateway = calculateLimitGateway();
-
-  Priority.FleetBeacon = 100;
-  Limit.FleetBeacon = 1;
-
-  Priority.Stargate = 100;
-  Limit.Stargate = 1;
-
-  Limit.CyberneticsCore = 1;
-  Limit.RoboticsFacility = 1;
-  Limit.Forge = 1;
-  Limit.TwilightCouncil = 1;
-  Limit.RoboticsBay = 0;
-  Limit.ShieldBattery = 0;
 }
 
 // When time to reach harvester capacity is less than time to increase harvester capacity, then build a new nexus
