@@ -33,11 +33,11 @@ export default class Detect extends Job {
 
     clearDetectedThreats(observer);
 
-    const invisibleThreat = findClosestInvisibleThreat(observer, this.battle.sectors);
+    const { target, isVisible } = findTarget(observer, this.battle.sectors);
 
-    if ((observer.armor.shield >= observer.armor.shieldMax) && invisibleThreat) {
+    if ((observer.armor.shield >= observer.armor.shieldMax) && target && !isVisible) {
       // All threats may be outside sight range, so the observer may need to get into their fire range if necessary. That's why do it on full shield.
-      this.target = invisibleThreat;
+      this.target = target;
     } else if ((observer.armor.shield < this.shield) || isInEnemyFireRange(this.battle, observer)) {
       this.target = getRetreatPoint(observer, this.battle);
     } else if (!this.battle.sectors.has(observer.sector)) {
@@ -46,8 +46,8 @@ export default class Detect extends Job {
       this.target = this.battle.front;
     } else if (!shouldChangeTarget(observer, this.target, this.loopsInDirection, this.battle)) {
       // Should not change target
-    } else if (invisibleThreat) {
-      this.target = invisibleThreat;
+    } else if (target) {
+      this.target = target;
       this.loopsInDirection = 0;
     } else {
       this.target = selectObserveDirection(this.battle, this.target);
@@ -108,39 +108,38 @@ function selectObserveDirection(battle, previousTarget) {
   return candidates[Math.floor(candidates.length * Math.random())];
 }
 
-function findClosestInvisibleThreat(observer, sectors) {
-  let closestTarget;
-  let closestDistance = Infinity;
+function findTarget(observer, sectors) {
+  let target;
+  let isVisible;
+  let closest = Infinity;
 
   for (const sector of sectors) {
     for (const threat of sector.threats) {
-      if (sector.enemies.has(threat)) continue;
-
       const distance = calculateSquareDistance(observer.body, threat.body);
 
-      if (distance < closestDistance) {
-        closestTarget = threat;
-        closestDistance = distance;
+      if (distance < closest) {
+        target = threat;
+        isVisible = sector.enemies.has(target);
+        closest = distance;
       }
     }
   }
 
-  if (closestTarget) return closestTarget;
+  if (target) return target;
 
   for (const sector of sectors) {
     for (const contact of sector.contacts) {
-      if (sector.enemies.has(contact)) continue;
-
       const distance = calculateSquareDistance(observer.body, contact.body);
 
-      if (distance < closestDistance) {
-        closestTarget = contact;
-        closestDistance = distance;
+      if (distance < closest) {
+        target = contact;
+        isVisible = sector.enemies.has(target);
+        closest = distance;
       }
     }
   }
 
-  return closestTarget;
+  return { target, isVisible };
 }
 
 function getRetreatPoint(observer, battle) {
