@@ -121,7 +121,7 @@ function listBattlesInRedZones(battles, perimeterLevelLimit) {
       for (const other of candidates) {
         if (battles.has(other)) continue;
 
-        if (areZonesTooClose(one.zone, other.front)) {
+        if (isFrontTooCloseToBattle(one.zone, other.front, other.rally)) {
           candidates.delete(other);
         }
       }
@@ -130,7 +130,7 @@ function listBattlesInRedZones(battles, perimeterLevelLimit) {
       for (const other of hotspots) {
         if (other.processed) continue;
 
-        if (areZonesTooClose(one.zone, other.zone)) {
+        if (isFrontTooCloseToBattle(one.zone, other.zone, other.rally)) {
           other.skip = true;
         }
       }
@@ -145,12 +145,18 @@ function listBattlesInRedZones(battles, perimeterLevelLimit) {
   }
 }
 
-function areZonesTooClose(a, b) {
+function isFrontTooCloseToBattle(front, battleFront, battleRally) {
   // Depots are never too close to be separate fronts
-  if (a.isDepot && b.isDepot) return false;
+  if (front.isDepot && battleFront.isDepot) return false;
 
-  // Zones are too close to be separate front if they are in adjacent sectors.
-  return a.cell.sector.neighbors.has(b.cell.sector);
+  // Fronts are too close if they are in the same sector
+  if (front.cell.sector === battleFront.cell.sector) return true;
+
+  // Fronts are too close to be separate front if they are in adjacent sectors.
+  if (front.cell.sector.neighbors.has(battleFront.cell.sector)) return true;
+
+  // Front should not be the rally point of another battle
+  return (front === battleRally);
 }
 
 function findRallyZone(zone) {
@@ -238,8 +244,14 @@ function getNextExpansionZone() {
 }
 
 function findBattle(list, front) {
+  // Search for a battle with the given front
   for (const battle of list) {
     if (battle.front === front) return battle;
+  }
+
+  // Search for a battle that the given front is too close to
+  for (const battle of list) {
+    if (isFrontTooCloseToBattle(front, battle.front, battle.rally)) return battle;
   }
 }
 
