@@ -74,7 +74,7 @@ class ClearRock extends Job {
 
     this.zone = rock.zone;
     this.target = rock;
-    this.priority = 100;
+    this.priority = 85;
   }
 
   execute() {
