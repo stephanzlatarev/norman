@@ -6,25 +6,43 @@ const MIN_RECRUIT_BALANCE = 2;
 const MAX_RECRUIT_BALANCE = 4;
 
 const ALL_WARRIORS = ["Colossus", "Immortal", "Sentry", "Stalker", "Zealot"];
+const CLEANUP_WARRIORS = ["Stalker", "Zealot"];
 const GROUND_HITTING_WARRIORS = ["Colossus", "Immortal", "Zealot"];
 
-export default function(battle) {
-  if (battle.isFocusBattle || (battle.recruitedBalance < MIN_RECRUIT_BALANCE)) {
-    // Open new jobs
-    closeOpenJobsOutsideBattle(battle);
+const NON_CLEANUP_WARRIORS = ALL_WARRIORS.filter(one => (CLEANUP_WARRIORS.indexOf(one) < 0));
+const NON_GROUND_HITTING_WARRIORS = ALL_WARRIORS.filter(one => (GROUND_HITTING_WARRIORS.indexOf(one) < 0));
 
+export function updateOpenFightJobs(battle) {
+  const shouldHire = (battle.recruitedBalance < MIN_RECRUIT_BALANCE) || (battle.fighters.length < MIN_FIGHTERS);
+  const shouldFire = !shouldHire && (battle.recruitedBalance > MAX_RECRUIT_BALANCE);
+
+  updateOpenJobs(battle, shouldHire, shouldFire);
+}
+
+export function updateOpenCleanupJobs(battle) {
+  const shouldHire = (battle.fighters.length < MIN_FIGHTERS);
+  const shouldFire = (battle.fighters.length > MIN_FIGHTERS);
+
+  updateOpenJobs(battle, shouldHire, shouldFire);
+}
+
+function updateOpenJobs(battle, shouldHire, shouldFire) {
+  closeOpenJobsOutsideBattle(battle);
+
+  if (battle.isFocusBattle || shouldHire) {
+    // Open new jobs
     if (battle.isOnlyBattle) {
       // All warriors go to the only battle in case enemy is reinforced
       openJobs(battle, ...ALL_WARRIORS);
     } else if (battle.isSmallBattle) {
       // Make sure we don't overreact to individual enemy units in our territory
-      if ((battle.recruitedBalance < MIN_RECRUIT_BALANCE) || (battle.fighters.length < MIN_FIGHTERS)) {
-        openJobs(battle, "Stalker", "Zealot");
+      if (shouldHire) {
+        openJobs(battle, ...CLEANUP_WARRIORS);
       }
 
-      closeOpenJobs(battle, "Colossus", "Immortal", "Sentry");
-    } else if ((battle.recruitedBalance < MAX_RECRUIT_BALANCE)) {
-      openJobs(battle, "Sentry", "Stalker");
+      closeOpenJobs(battle, ...NON_CLEANUP_WARRIORS);
+    } else {
+      openJobs(battle, ...NON_GROUND_HITTING_WARRIORS);
 
       // Make sure ground-hitting units are included only when there are ground enemy units
       if (battle.isAirBattle) {
@@ -33,7 +51,7 @@ export default function(battle) {
         openJobs(battle, ...GROUND_HITTING_WARRIORS);
       }
     }
-  } else if (battle.recruitedBalance > MAX_RECRUIT_BALANCE) {
+  } else if (shouldFire) {
     // Reduce jobs
     closeOpenJobs(battle, ...ALL_WARRIORS);
     if (battle.isAirBattle) closeJobs(battle, ...GROUND_HITTING_WARRIORS);

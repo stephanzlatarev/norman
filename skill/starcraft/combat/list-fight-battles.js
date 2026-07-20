@@ -20,6 +20,8 @@ export default function() {
     enlist(battles);
   }
 
+  for (const battle of battles) battle.isCleanupBattle = false;
+
   return battles;
 }
 

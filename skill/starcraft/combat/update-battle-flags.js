@@ -53,28 +53,15 @@ function multipleBattles(battles) {
 }
 
 function selectFocusBattle(battles) {
-  // Prefer a non-ambush battle when one is available
+  // Prefer a large (not ambush, small, or cleanup) battle close to our home base
   for (const battle of battles) {
-    if (!battle.isAmbushBattle && !battle.isSmallBattle) {
+    if (!battle.isAmbushBattle && !battle.isSmallBattle && !battle.isCleanupBattle) {
       return battle;
     }
   }
 
-  for (const battle of battles) {
-    if (!battle.isAmbushBattle) {
-      return battle;
-    }
-  }
-
-  // The focus battle is the first large battle closest to our home base
-  for (const battle of battles) {
-    if (!battle.isSmallBattle) {
-      return battle;
-    }
-  }
-
-  // When all battles are small, the focus battle is the closest to our home base
-  return battles[0];
+  // When all battles are ambush, small, or cleanup, focus on the battle that is closest to the enemy
+  return battles[battles.length - 1];
 }
 
 function isAmbushBattle(battle) {
@@ -105,6 +92,8 @@ function isAirBattle(battle) {
 }
 
 function isSmallBattle(battle) {
+  if (battle.isCleanupBattle) return true;
+
   let count = 0;
 
   for (const sector of battle.sectors) {

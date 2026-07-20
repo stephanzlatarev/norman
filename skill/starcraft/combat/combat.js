@@ -13,13 +13,13 @@ import updateFighterStations from "./update-fighter-stations.js";
 import updateFighterTargets from "./update-fighter-targets.js";
 import updateFreeWarriors from "./update-free-warriors.js";
 import updateIdleWarriors from "./update-idle-warriors.js";
-import updateOpenJobs from "./update-open-jobs.js";
+import { updateOpenFightJobs, updateOpenCleanupJobs } from "./update-open-jobs.js";
 import updateThreats from "./update-threats.js";
 import trace from "./trace.js";
 
 const FIGHT_OPS = [
   updateThreats,         // Ignore invisible threats for assaults without detector
-  updateOpenJobs,        // Open fighter jobs for the active battles. Close obsolete jobs
+  updateOpenFightJobs,   // Open fighter jobs for the active battles. Close obsolete jobs
   updateIdleWarriors,    // Assign idle warriors in battle zones to open fighter jobs
   updateBattleBalance,   // Update the balance scores for each battle
   updateBattleMode,      // Update the mode for each battle
@@ -32,7 +32,7 @@ const FIGHT_OPS = [
 ];
 
 const CLEANUP_OPS = [
-  updateOpenJobs,        // Open fighter jobs for the active battles. Close obsolete jobs
+  updateOpenCleanupJobs, // Open fighter jobs for the active battles. Close obsolete jobs
   updateFighterTargets,  // Destroy closest targets
   updateFighterPrio,     // Update the priority of fighter jobs
   updateBattleDetection, // Assign a detector to the battle as soon as fighters join

@@ -58,12 +58,12 @@ function normalTransition(battle) {
 
   // Check if the balance is enough for attacking
   if (battle.deployedBalance >= ATTACK_BALANCE) {
-    return (battle.mode === Battle.MODE_FIGHT) ? Battle.MODE_FIGHT : Battle.MODE_MARCH;
+    return Battle.MODE_FIGHT;
   }
 
   // Check if this is a fight between small number of warriors, where balance numbers are not exact
   if (battle.isSmallBattle && areWarriorsMoreThanEnemies(battle)) {
-    return (battle.mode === Battle.MODE_FIGHT) ? Battle.MODE_FIGHT : Battle.MODE_MARCH;
+    return Battle.MODE_FIGHT;
   }
 
   // Check if we are defending our bases

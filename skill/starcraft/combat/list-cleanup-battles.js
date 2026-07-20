@@ -20,6 +20,7 @@ function listCleanupBattles(fights) {
 
     const battle = getBattle(zone);
 
+    battle.isCleanupBattle = true;
     battle.mode = Battle.MODE_SMASH;
 
     cleanups.push(battle);
@@ -31,13 +32,14 @@ function listCleanupBattles(fights) {
 function isFightsZone(fights, zone) {
   for (const fight of fights) {
     if (fight.front === zone) return true;
-    if (fight.front.neighbors.has(zone)) return true;
   }
 }
 
 function isThreatenedZone(zone) {
   for (const sector of zone.horizon) {
     for (const threat of sector.threats) {
+      if (threat.type.isWorker) continue;
+
       return true;
     }
   }
