@@ -15,8 +15,8 @@ function listCleanupBattles(fights) {
   for (const zone of Zone.list()) {
     if (!zone.isDepot && !zone.isHall) continue;
     if (isFightsZone(fights, zone)) continue;
-    if (isThreatenedZone(zone)) continue;
     if (!isContactZone(zone)) continue;
+    if (isThreatenedZone(zone)) continue;
 
     const battle = getBattle(zone);
 
@@ -36,11 +36,21 @@ function isFightsZone(fights, zone) {
 }
 
 function isThreatenedZone(zone) {
-  for (const sector of zone.horizon) {
-    for (const threat of sector.threats) {
+  if (zone.isDepot) {
+    // Depot zones are cleaned up more aggressively
+    for (const threat of zone.threats()) {
       if (threat.type.isWorker) continue;
 
       return true;
+    }
+  } else {
+    // We are more cautious about non-depot zones
+    for (const sector of zone.horizon) {
+      for (const threat of sector.threats) {
+        if (threat.type.isWorker) continue;
+
+        return true;
+      }
     }
   }
 }
@@ -48,6 +58,9 @@ function isThreatenedZone(zone) {
 function isContactZone(zone) {
   for (const sector of zone.sectors) {
     for (const contact of sector.contacts) {
+      // Only clean up zones with static structures
+      if (!contact.type.movementSpeed) continue;
+
       if (contact.zone && (contact.zone === zone)) {
         return true;
       }
