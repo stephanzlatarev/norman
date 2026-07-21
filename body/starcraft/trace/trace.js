@@ -3,7 +3,6 @@ import traceAlerts from "./alerts.js";
 import traceBattles from "./battles.js";
 import traceJobs from "./jobs.js";
 import traceMemory from "./memory.js";
-import tracePerimeter from "./perimeter.js";
 import tracePins from "./pins.js";
 import traceRoutes from "./routes.js";
 import traceThreats from "./threats.js";
@@ -19,7 +18,6 @@ export default async function(client, chat) {
   const toggles = updateToggles(chat);
 
   if (Memory.ShowZones) traceZones(shapes);
-  if (Memory.ShowPerimeter) tracePerimeter(shapes);
   if (Memory.ShowRoutes) traceRoutes(shapes);
   if (Memory.ShowAlerts) traceAlerts(shapes);
   if (Memory.ShowPins) tracePins(shapes);
@@ -38,7 +36,6 @@ export default async function(client, chat) {
 
 function initializeToggles() {
   Memory.ShowZones = false;
-  Memory.ShowPerimeter = false;
   Memory.ShowRoutes = false;
   Memory.ShowAlerts = true;
   Memory.ShowPins = true;
@@ -60,9 +57,8 @@ function updateToggles(messages) {
 
   return [
     { toggle: "ShowZones", label: "&#x1F5FA;", description: "Show zones", on: !!Memory.ShowZones },
-    { toggle: "ShowPerimeter", label: "&#x29BC;", description: "Show perimeter", on: !!Memory.ShowPerimeter },
     { toggle: "ShowRoutes", label: "&#x1F6E3;", description: "Show routes", on: !!Memory.ShowRoutes },
-    { toggle: "ShowAlerts", label: "&#x26A0;", description: "Show routes", on: !!Memory.ShowAlerts },
+    { toggle: "ShowAlerts", label: "&#x26A0;", description: "Show alerts", on: !!Memory.ShowAlerts },
     { toggle: "ShowPins", label: "&#x1F4CC;", description: "Show pins", on: !!Memory.ShowPins },
     { toggle: "ShowBattles", label: "&#x2694;", description: "Show battles", on: !!Memory.ShowBattles },
     { toggle: "ShowThreats", label: "&#x1F47B;", description: "Show threats", on: !!Memory.ShowThreats },

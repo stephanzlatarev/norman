@@ -1,3 +1,4 @@
+import { PERIMETER_BLUE, PERIMETER_GREEN, PERIMETER_WHITE, PERIMETER_YELLOW, PERIMETER_RED, PERIMETER_BLACK } from "../map/perimeter.js";
 import Zone from "../map/zone.js";
 
 const MODE_CENTERS = true;
@@ -19,11 +20,29 @@ export default function(shapes) {
   integrityChecks();
 }
 
+function getPerimeterColor(zone) {
+  if (zone.perimeterLevel >= PERIMETER_BLACK) {
+    return "black";
+  } else if (zone.perimeterLevel >= PERIMETER_RED) {
+    return "red";
+  } else if (zone.perimeterLevel >= PERIMETER_YELLOW) {
+    return "yellow";
+  } else if (zone.perimeterLevel >= PERIMETER_WHITE) {
+    return "white";
+  } else if (zone.perimeterLevel >= PERIMETER_GREEN) {
+    return "green";
+  } else if (zone.perimeterLevel >= PERIMETER_BLUE) {
+    return "blue";
+  } else {
+    return "gray";
+  }
+}
+
 function showRoutes(shapes) {
   for (const zone of Zone.list()) {
     if (!zone.route || (zone.route.length <= 1)) continue;
 
-    arrow(shapes, zone.route[1].cell, zone.cell);
+    arrow(shapes, zone.route[1].cell, zone.cell, getPerimeterColor(zone));
   }
 }
 
@@ -137,13 +156,13 @@ function integrityChecks() {
   }
 }
 
-function arrow(shapes, a, b) {
+function arrow(shapes, a, b, color) {
   shapes.push({
     shape: "arrow",
     x1: a.x + 0.5, y1: a.y + 0.5,
     x2: b.x + 0.5, y2: b.y + 0.5,
     r: 0.5,
-    color: "#ADFF2F",
+    color,
     filled: true,
     opacity: 1,
   });
