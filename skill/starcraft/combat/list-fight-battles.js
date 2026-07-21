@@ -1,5 +1,5 @@
 import { Depot, Enemy, Memory, TotalCount, Zone } from "./imports.js";
-import { ALERT_RED, ALERT_YELLOW, PERIMETER_GREEN, PERIMETER_WHITE } from "./imports.js";
+import { ALERT_RED, ALERT_YELLOW, PERIMETER_WHITE } from "./imports.js";
 import Battle from "./battle.js";
 
 const BATTLE_LIST = [
@@ -34,7 +34,7 @@ function listSiegeDefenseBattles(battles) {
 // Station warriors in economy perimeter
 function listNormalDefenseBattles(battles) {
   const outpost = findOutpostBase();
-  const outpostPerimeterLevel = outpost?.perimeterLevel || PERIMETER_GREEN;
+  const outpostPerimeterLevel = outpost?.perimeterLevel || PERIMETER_WHITE;
 
   listBattlesInRedZones(battles, outpostPerimeterLevel);
 
@@ -45,7 +45,7 @@ function listNormalDefenseBattles(battles) {
 
 // Secure the next expansion location. Battle our way to it if necessary.
 function listExpandDefenseBattles(battles) {
-  listBattlesInRedZones(battles, PERIMETER_GREEN);
+  listBattlesInRedZones(battles, PERIMETER_WHITE);
 
   if (!battles.size) {
     const expansion = getBuildingExpansionZone() || getNextExpansionZone();

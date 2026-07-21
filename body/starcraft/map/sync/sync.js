@@ -1,6 +1,7 @@
 import Board from "../board.js";
 import Depot from "../depot.js";
 import { routeZones } from "../routes.js";
+import { mapPerimeters } from "../perimeter.js";
 import { syncAlerts } from "./alert.js";
 import { syncCorridors } from "./corridors.js";
 import { syncEffects } from "./effects.js";
@@ -24,6 +25,8 @@ export default async function(client, gameInfo, observation) {
     loop = Board.refreshLoop;
     bases = countBases();
   }
+
+  mapPerimeters();
 }
 
 function countBases() {

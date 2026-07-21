@@ -54,12 +54,21 @@ function complete() {
   for (const zone of Zone.list()) {
     if (zone.route.length) continue;
 
+    let isRouted = false;
+
     for (const [neighbor, corridor] of zone.exits) {
       if (!neighbor.route.length) continue;
       if (corridor.via && (corridor.via !== zone)) continue;
       if (!corridor.via && !corridor.isGroundPassable) continue;
 
       setRoute(neighbor, zone);
+      isRouted = true;
+    }
+
+    if (!isRouted) {
+      zone.distance = Infinity;
+      zone.offset = Infinity;
+      zone.route = [];
     }
   }
 }
