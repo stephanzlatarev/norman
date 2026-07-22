@@ -1,4 +1,4 @@
-import { Memory, Zone } from "./imports.js";
+import { Memory, Resources, Zone } from "./imports.js";
 import Battle from "./battle.js";
 
 export default function(fights) {
@@ -24,6 +24,11 @@ function listCleanupBattles(fights) {
     battle.mode = Battle.MODE_SMASH;
 
     cleanups.push(battle);
+
+    // Limit the number of cleanup battles based on current supply
+    if ((cleanups.length >= 1) && (Resources.supplyUsed <= 100)) break;
+    if ((cleanups.length >= 2) && (Resources.supplyUsed <= 150)) break;
+    if ((cleanups.length >= 3) && (Resources.supplyUsed <= 180)) break;
   }
 
   return cleanups;

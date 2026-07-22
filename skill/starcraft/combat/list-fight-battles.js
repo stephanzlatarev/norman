@@ -22,7 +22,7 @@ export default function() {
 
   for (const battle of battles) battle.isCleanupBattle = false;
 
-  return battles;
+  return [...battles];
 }
 
 // Defend the largest defendable perimeter with all warriors behind walls.

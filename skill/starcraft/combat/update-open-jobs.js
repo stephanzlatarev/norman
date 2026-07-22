@@ -12,24 +12,62 @@ const GROUND_HITTING_WARRIORS = ["Colossus", "Immortal", "Zealot"];
 const NON_CLEANUP_WARRIORS = ALL_WARRIORS.filter(one => (CLEANUP_WARRIORS.indexOf(one) < 0));
 const NON_GROUND_HITTING_WARRIORS = ALL_WARRIORS.filter(one => (GROUND_HITTING_WARRIORS.indexOf(one) < 0));
 
-export function updateOpenFightJobs(battle) {
-  const shouldHire = (battle.recruitedBalance < MIN_RECRUIT_BALANCE) || (battle.fighters.length < MIN_FIGHTERS);
-  const shouldFire = !shouldHire && (battle.recruitedBalance > MAX_RECRUIT_BALANCE);
+export function updateOpenFightJobs(battles) {
+  const fronts = new Set();
 
-  updateOpenJobs(battle, shouldHire, shouldFire);
+  let focusBattle;
+  let isHiring = false;
+
+  for (const battle of battles) {
+    if (battle.isFocusBattle) focusBattle = battle;
+
+    if (isBattleBlocked(battle, fronts)) {
+      closeAllJobs(battle);
+      battle.shouldHire = false;
+      battle.shouldFire = false;
+      continue;
+    }
+
+    if ((battle.recruitedBalance < MIN_RECRUIT_BALANCE) || (battle.fighters.length < MIN_FIGHTERS)) {
+      isHiring = true;
+      battle.shouldHire = true;
+      battle.shouldFire = false;
+    } else if (battle.recruitedBalance > MAX_RECRUIT_BALANCE) {
+      battle.shouldHire = false;
+      battle.shouldFire = true;
+    } else {
+      battle.shouldHire = false;
+      battle.shouldFire = false;
+    }
+
+    if (!battle.isAmbushBattle && !battle.isSmallBattle && !battle.isCleanupBattle) {
+      fronts.add(battle.front);
+    }
+  }
+
+  if (!isHiring && focusBattle) {
+    focusBattle.shouldHire = true;
+    focusBattle.shouldFire = false;
+  }
+
+  for (const battle of battles) {
+    updateOpenJobs(battle, battle.shouldHire, battle.shouldFire);
+  }
 }
 
-export function updateOpenCleanupJobs(battle) {
-  const shouldHire = (battle.fighters.length < MIN_FIGHTERS);
-  const shouldFire = (battle.fighters.length > MIN_FIGHTERS);
+export function updateOpenCleanupJobs(battles) {
+  for (const battle of battles) {
+    const shouldHire = (battle.fighters.length < MIN_FIGHTERS);
+    const shouldFire = (battle.fighters.length > MIN_FIGHTERS);
 
-  updateOpenJobs(battle, shouldHire, shouldFire);
+    updateOpenJobs(battle, shouldHire, shouldFire);
+  }
 }
 
 function updateOpenJobs(battle, shouldHire, shouldFire) {
   closeOpenJobsOutsideBattle(battle);
 
-  if (battle.isFocusBattle || shouldHire) {
+  if (shouldHire) {
     // Open new jobs
     if (battle.isOnlyBattle) {
       // All warriors go to the only battle in case enemy is reinforced
@@ -51,14 +89,25 @@ function updateOpenJobs(battle, shouldHire, shouldFire) {
         openJobs(battle, ...GROUND_HITTING_WARRIORS);
       }
     }
-  } else if (shouldFire) {
-    // Reduce jobs
-    closeOpenJobs(battle, ...ALL_WARRIORS);
-    if (battle.isAirBattle) closeJobs(battle, ...GROUND_HITTING_WARRIORS);
-    reduceJobs(battle, MIN_FIGHTERS);
-  } else {
+  }
+
+  if (!shouldHire) {
     // Stop hiring
     closeOpenJobs(battle, ...ALL_WARRIORS);
+  }
+
+  if (shouldFire) {
+    // Reduce jobs
+    if (battle.isAirBattle) closeJobs(battle, ...GROUND_HITTING_WARRIORS);
+
+    reduceJobs(battle, MIN_FIGHTERS);
+  }
+}
+
+function isBattleBlocked(battle, fronts) {
+  for (const zone of battle.front.route) {
+    if (zone === battle.front) continue;
+    if (fronts.has(zone)) return true;
   }
 }
 
@@ -85,6 +134,12 @@ function closeJobs(battle, ...warriors) {
     if (job.agent && (warriors.indexOf(job.agent.type.name) >= 0)) {
       job.close(true);
     }
+  }
+}
+
+function closeAllJobs(battle) {
+  for (const job of battle.fighters) {
+    job.close(true);
   }
 }
 

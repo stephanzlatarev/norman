@@ -19,7 +19,6 @@ import trace from "./trace.js";
 
 const FIGHT_OPS = [
   updateThreats,         // Ignore invisible threats for assaults without detector
-  updateOpenFightJobs,   // Open fighter jobs for the active battles. Close obsolete jobs
   updateIdleWarriors,    // Assign idle warriors in battle zones to open fighter jobs
   updateBattleBalance,   // Update the balance scores for each battle
   updateBattleMode,      // Update the mode for each battle
@@ -32,7 +31,6 @@ const FIGHT_OPS = [
 ];
 
 const CLEANUP_OPS = [
-  updateOpenCleanupJobs, // Open fighter jobs for the active battles. Close obsolete jobs
   updateFighterTargets,  // Destroy closest targets
   updateFighterPrio,     // Update the priority of fighter jobs
   updateBattleDetection, // Assign a detector to the battle as soon as fighters join
@@ -46,6 +44,9 @@ export default function() {
 
   // TODO: Calculate sectors while listing battles. Calculate screen there, too.
   updateBattleSectors([...fights, ...cleanups]);
+
+  updateOpenFightJobs(fights);
+  updateOpenCleanupJobs(cleanups);
 
   for (const op of FIGHT_OPS) {
     for (const battle of fights) {
