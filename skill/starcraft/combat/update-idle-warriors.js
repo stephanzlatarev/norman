@@ -1,3 +1,4 @@
+import Battle from "./battle.js";
 
 const IS_WARRIOR = {
   Colossus: true,
@@ -13,18 +14,20 @@ const IS_GROUND_ONLY_WARRIOR = {
   Zealot: true,
 };
 
-export default function(battle) {
-  hireIdleWarriorsInBattleZone(battle);
+export default function() {
+  for (const battle of Battle.list()) {
+    hireIdleWarriorsInBattleZone(battle);
+  }
 }
 
 function hireIdleWarriorsInBattleZone(battle) {
   for (const sector of battle.sectors) {
     for (const warrior of sector.warriors) {
       if (!warrior.isAlive) continue;
+      if (!IS_WARRIOR[warrior.type.name]) continue;
       if (warrior.job && (warrior.job.battle === battle)) continue;
       if (warrior.job && (warrior.job.priority >= battle.priority)) continue;
       if (battle.isAirBattle && IS_GROUND_ONLY_WARRIOR[warrior.type.name]) continue;
-      if (!IS_WARRIOR[warrior.type.name]) continue;
 
       const openJob = findOpenJob(battle, warrior);
 

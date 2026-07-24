@@ -1,6 +1,7 @@
 import { Order, Resources } from "./imports.js";
 
-const CHECKIN_DISTANCE = 5;
+const DEPOT_CHECKIN_DISTANCE = 10;
+const HALL_CHECKIN_DISTANCE = 5;
 const TRAFFIC_RESERVATION_LOOPS = 10;
 
 export function attackTarget(warrior, target) {
@@ -46,9 +47,11 @@ export function routeWarriorTo(warrior, rally) {
   const transitZoneIndex = warrior.transit ? rallyRoute.indexOf(warrior.transit) : -1;
 
   // When warrior is on the route and already knows the transit zone, move to the transit zone
-  if (warriorZoneIndex >= 0 && transitZoneIndex >= 0) {
+  if ((warriorZoneIndex >= 0) && (transitZoneIndex >= 0)) {
     if (warrior.transit === warrior.zone) {
-      if (isClose(warrior.body, warrior.transit, CHECKIN_DISTANCE)) {
+      const checkinDistance = warrior.transit.isDepot ? DEPOT_CHECKIN_DISTANCE : HALL_CHECKIN_DISTANCE;
+
+      if (isClose(warrior.body, warrior.transit, checkinDistance)) {
         // Warrior reached the transit space. Advance to the next zone on the route.
         const nextZone = rallyRoute[transitZoneIndex - 1];
 

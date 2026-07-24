@@ -5,16 +5,21 @@ export function routeZones() {
   if (!Depot.home) return;
 
   for (const zone of Zone.list()) {
-    zone.route.length = 0;
-    zone.distance = 0;
-    zone.offset = 0;
+    zone.route = [];
+    zone.distance = Infinity;
+    zone.offset = Infinity;
+    zone.forward = new Set();
+    zone.backward = null;
   }
 
-  Depot.home.route.push(Depot.home);
+  Depot.home.route = [Depot.home];
   Depot.home.distance = 0;
   Depot.home.offset = 0;
+  Depot.home.forward = new Set();
+  Depot.home.antre = null;
 
   traverse(new Set([Depot.home]));
+  trackBackwardAndForward();
   complete();
 }
 
@@ -50,11 +55,21 @@ function traverse(wave) {
   }
 }
 
-function complete() {
+function trackBackwardAndForward() {
   for (const zone of Zone.list()) {
-    if (zone.route.length) continue;
+    zone.backward = zone.route[1] || null;
 
-    let isRouted = false;
+    if (zone.backward) {
+      zone.backward.forward.add(zone);
+    }
+  }
+}
+
+function complete() {
+  // Set routes to ramps and corridors that don't participate in other routes because of obstacles
+  for (const zone of Zone.list()) {
+    if (zone === Depot.home) continue;
+    if (zone.route.length) continue;
 
     for (const [neighbor, corridor] of zone.exits) {
       if (!neighbor.route.length) continue;
@@ -62,13 +77,6 @@ function complete() {
       if (!corridor.via && !corridor.isGroundPassable) continue;
 
       setRoute(neighbor, zone);
-      isRouted = true;
-    }
-
-    if (!isRouted) {
-      zone.distance = Infinity;
-      zone.offset = Infinity;
-      zone.route = [];
     }
   }
 }
@@ -88,8 +96,4 @@ function setRoute(a, b) {
 // Give weight to distance from home base and nearest base
 function reach({ distance, offset }) {
   return distance + offset;
-}
-
-function calculateDistance(a, b) {
-  return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }

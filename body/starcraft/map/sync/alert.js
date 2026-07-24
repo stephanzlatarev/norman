@@ -30,9 +30,12 @@ export function syncAlerts() {
 
   // Set alert levels for zones according to units present
   for (const zone of Zone.list()) {
-    if (!zone.isDepot && !zone.isHall) continue;
-
-    if (zone.threats().size) {
+    if (!zone.isDepot && !zone.isHall) {
+      // If this is a ramp and there are threats on the ramp then set alert for the 
+      if (zone.backward && (zone.threats().size || zone.contacts().size)) {
+        zone.backward.alertLevel = ALERT_RED;
+      }
+    } else if (zone.threats().size || zone.contacts().size) {
       zone.alertLevel = ALERT_RED;
     } else if (zone.warriors.size) {
       zone.alertLevel = ALERT_BLUE;

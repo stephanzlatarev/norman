@@ -17,6 +17,8 @@ export default class Zone extends Space {
   distance = 0; // Distance from home base
   offset = 0;   // Distance from nearest base
   route = [];
+  forward = new Set();
+  backward = null;
 
   // Perimeter level
   perimeterLevel = Infinity;

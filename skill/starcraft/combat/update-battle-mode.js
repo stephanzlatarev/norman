@@ -23,7 +23,9 @@ The other battles will behave as while building the army.
 export default function(battle) {
   let mode = Battle.MODE_WATCH;
 
-  if ((Memory.DeploymentOutreach >= Memory.DeploymentOutreachFullOffense) && battle.isFocusBattle) {
+  if (battle.isMissionBattle) {
+    mode = Battle.MODE_SMASH;
+  } else if ((Memory.DeploymentOutreach >= Memory.DeploymentOutreachFullOffense) && battle.isFocusBattle) {
     mode = maxoutTransition(battle);
   } else if ((Memory.DeploymentOutreach < Memory.DeploymentOutreachNormalOffense) && (battle.front.alertLevel <= ALERT_YELLOW)) {
     // This is the case when preparing for defence or making an ambush

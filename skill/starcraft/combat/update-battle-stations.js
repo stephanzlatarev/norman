@@ -1,6 +1,11 @@
 import { Board, Depot } from "./imports.js";
 
 export default function(battle) {
+  if (battle.isMissionBattle) {
+    battle.stations = [battle.rally.rally || battle.rally.cell];
+    return;
+  }
+
   const stations = new Set();
 
   for (const station of battle.stations) {

@@ -1,5 +1,13 @@
 
 export default function(battle) {
+  if (battle.isMissionBattle) {
+    battle.recruitedStrength = 0;
+    battle.recruitedBalance = 0;
+    battle.deployedStrength = 0;
+    battle.deployedBalance = 0;
+    return;
+  }
+
   const enemyStrength = calculateEnemyStrength(battle);
   const balanceFactor = calculateBalanceFactor(battle);
 

@@ -40,9 +40,9 @@ function getPerimeterColor(zone) {
 
 function showRoutes(shapes) {
   for (const zone of Zone.list()) {
-    if (!zone.route || (zone.route.length <= 1)) continue;
+    if (!zone.backward) continue;
 
-    arrow(shapes, zone.route[1].cell, zone.cell, getPerimeterColor(zone));
+    arrow(shapes, zone.backward.cell, zone.cell, getPerimeterColor(zone));
   }
 }
 

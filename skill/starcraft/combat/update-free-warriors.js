@@ -1,33 +1,13 @@
-import { Order, Units } from "./imports.js";
-import Battle from "./battle.js";
+import { Depot, Order, Units } from "./imports.js";
 
 export default function() {
   for (const warrior of Units.warriors().values()) {
     if (!warrior.isAlive) continue;
     if (!warrior.type.movementSpeed) continue;
     if (warrior.job) continue;
-    if (warrior.order.abilityId) continue;
 
-    Order.move(warrior, getClosestBattleRally(warrior));
-  }
-}
-
-function getClosestBattleRally(warrior) {
-  let closestRally;
-  let closestDistance = Infinity;
-
-  for (const battle of Battle.list()) {
-    const distance = calculateSquareDistance(warrior.body, battle.rally);
-
-    if (distance < closestDistance) {
-      closestRally = battle.rally;
-      closestDistance = distance;
+    if (!warrior.order.abilityId) {
+      Order.move(warrior, Depot.home);
     }
   }
-
-  return closestRally;
-}
-
-function calculateSquareDistance(a, b) {
-  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }

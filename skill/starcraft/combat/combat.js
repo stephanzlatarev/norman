@@ -1,25 +1,24 @@
+import { ActiveCount, Memory } from "./imports.js";
 import Battle from "./battle.js";
-import listCleanupBattles from "./list-cleanup-battles.js";
-import listFightBattles from "./list-fight-battles.js";
+import listHotspots from "./list-hotspots.js";
 import updateBattleBalance from "./update-battle-balance.js";
 import updateBattleDetection from "./update-battle-detection.js";
-import updateBattleFlags from "./update-battle-flags.js";
 import updateBattleMarching from "./update-battle-marching.js";
 import updateBattleMode from "./update-battle-mode.js";
-import updateBattleSectors from "./update-battle-sectors.js";
 import updateBattleStations from "./update-battle-stations.js";
 import updateFighterPrio from "./update-fighter-prio.js";
 import updateFighterStations from "./update-fighter-stations.js";
 import updateFighterTargets from "./update-fighter-targets.js";
 import updateFreeWarriors from "./update-free-warriors.js";
 import updateIdleWarriors from "./update-idle-warriors.js";
-import { updateOpenFightJobs, updateOpenCleanupJobs } from "./update-open-jobs.js";
+import updateOpenJobs from "./update-open-jobs.js";
 import updateThreats from "./update-threats.js";
 import trace from "./trace.js";
 
-const FIGHT_OPS = [
+const MAX_BATTLE_PRIORITY = 90;
+
+const BATTLE_OPS = [
   updateThreats,         // Ignore invisible threats for assaults without detector
-  updateIdleWarriors,    // Assign idle warriors in battle zones to open fighter jobs
   updateBattleBalance,   // Update the balance scores for each battle
   updateBattleMode,      // Update the mode for each battle
   updateBattleMarching,  // Update the progress data on battle marching
@@ -30,45 +29,209 @@ const FIGHT_OPS = [
   updateBattleDetection, // Assign a detector to the battle if needed
 ];
 
-const CLEANUP_OPS = [
-  updateFighterTargets,  // Destroy closest targets
-  updateFighterPrio,     // Update the priority of fighter jobs
-  updateBattleDetection, // Assign a detector to the battle as soon as fighters join
-];
-
 export default function() {
-  const fights = listFightBattles();
-  const cleanups = listCleanupBattles(fights);
+  mapHotspotsToBattles(selectHotspots());
+  prioritizeBattles();
 
-  updateBattleFlags([...fights, ...cleanups]);
+  updateBattleScreen();
 
-  // TODO: Calculate sectors while listing battles. Calculate screen there, too.
-  updateBattleSectors([...fights, ...cleanups]);
-
-  updateOpenFightJobs(fights);
-  updateOpenCleanupJobs(cleanups);
-
-  for (const op of FIGHT_OPS) {
-    for (const battle of fights) {
-      op(battle);
-    }
-  }
-
-  for (const op of CLEANUP_OPS) {
-    for (const battle of cleanups) {
-      op(battle);
-    }
-  }
-
-  const battles = new Set([...fights, ...cleanups]);
   for (const battle of Battle.list()) {
-    if (!battles.has(battle)) {
+    for (const op of BATTLE_OPS) {
+      op(battle);
+    }
+  }
+
+  updateOpenJobs();
+  updateIdleWarriors();
+  updateFreeWarriors();
+
+  trace();
+}
+
+function selectHotspots() {
+  const hotspots = listHotspots();
+  const selected = [];
+
+  const shouldAvoidTrenches = hotspots.some(hotspot => (hotspot.isNormalHotspot && !hotspot.isTrenchHotspot));
+  const shouldLimitMissions = shouldAvoidTrenches || hotspots.some(hotspot => hotspot.isTrenchHotspot);
+  let missions = shouldLimitMissions ? calculateMissionsLimit() : Infinity;
+
+  for (const hotspot of hotspots) {
+    if (hotspot.isTrenchHotspot) {
+      if (!shouldAvoidTrenches) selected.push(hotspot);
+    } else if (hotspot.isMissionHotspot) {
+      if (missions-- > 0) selected.push(hotspot);
+    } else {
+      selected.push(hotspot);
+    }
+  }
+
+  const closestNormalHotspot = selected.find(one => one.isNormalHotspot);
+  if (closestNormalHotspot) {
+    // Prefer a normal (not cleanup, intercept, or trench) battle close to our home base
+    closestNormalHotspot.isFocusHotspot = true;
+  } else if (selected.length) {
+    // When all battles are cleanup, intercept, or trench, focus on a non-empty battle that is closest to the enemy
+    let found = false;
+
+    for (let i = selected.length - 1; i >= 0; i--) {
+      if (!selected[i].isEmptyHotspot) {
+        selected[i].isFocusHotspot = true;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      selected[selected.length - 1].isFocusHotspot = true;
+    }
+  }
+
+  return selected;
+}
+
+function calculateMissionsLimit(warriorCount) {  
+  if (Memory.DeploymentOutreach < Memory.DeploymentOutreachProbingAttack) return 0;
+
+  const warriors = ActiveCount.Zealot + ActiveCount.Stalker + ActiveCount.Sentry + ActiveCount.Immortal + ActiveCount.Colossus;
+
+  if (warriors >= 24) return 3;
+  if (warriors <= 18) return 2;
+  if (warriors <= 12) return 1;
+
+  return 0;
+}
+
+function mapHotspotsToBattles(hotspots) {
+  const previous = new Set(Battle.list());
+  const current = new Set();
+
+  // First, map same zone
+  for (const hotspot of hotspots) {
+    const battle = Battle.list().find(one => (one.front === hotspot.zone));
+
+    if (battle) {
+      current.add(hotspot.map(battle));
+      hotspot.isMapped = true;
+    }
+  }
+
+  // Second, map route zones
+  for (const hotspot of hotspots) {
+    if (hotspot.isMapped) continue;
+
+    const battle = Battle.list().find(one => (one.front.backward === hotspot.zone) && !current.has(one));
+
+    if (battle) {
+      current.add(hotspot.map(battle));
+      hotspot.isMapped = true;
+    }
+  }
+
+  // Third, map neighbor zones
+  for (const hotspot of hotspots) {
+    if (hotspot.isMapped) continue;
+
+    const battle = Battle.list().find(one => one.front.neighbors.has(hotspot.zone) && !current.has(one));
+
+    if (battle) {
+      current.add(hotspot.map(battle));
+      hotspot.isMapped = true;
+    }
+  }
+
+  // Fourth, create other battles
+  for (const hotspot of hotspots) {
+    if (hotspot.isMapped) continue;
+
+    current.add(hotspot.map(new Battle(hotspot.zone, hotspot.rally)));
+  }
+
+  // Finally, close outdated battles
+  for (const battle of previous) {
+    if (!current.has(battle)) {
       battle.close();
     }
   }
 
-  // Idle warriors outside of battle zones should start moving to the closest battle as reinforcements
-  updateFreeWarriors();
+  const isSingleBattle = (current.size === 1);
+  for (const battle of current) {
+    battle.isOnlyBattle = isSingleBattle;
+  }
+}
 
-  trace();
+function prioritizeBattles() {
+  const battles = Battle.list().sort((a, b) => (a.level - b.level));
+  let priority = MAX_BATTLE_PRIORITY;
+
+  for (const battle of battles) {
+    battle.priority = priority--;
+  }
+}
+
+/*
+For each battle, sectors is the union of the horizon sectors of the front and rally zones.
+The screen maps each sector to the influence weight of the battle over that sector.
+
+When a sector belongs to only one battle, its weight is 1.0.
+When a sector is shared between battles, weights are distributed proportionally to the inverse
+of the squared distance between the sector and each battle's front sector, summing to 1.0.
+If the sector is the front sector of a battle, that battle gets weight 1.0.
+*/
+function updateBattleScreen() {
+  const battles = Battle.list();
+
+  if (battles.length === 1) {
+    updateSingleBattleScreen(battles[0]);
+  } else if (battles.length > 1) {
+    updateMultipleBattlesScreen(battles);
+  }
+}
+
+function updateSingleBattleScreen(battle) {
+  battle.screen = new Map();
+
+  for (const sector of battle.sectors) {
+    battle.screen.set(sector, 1.0);
+  }
+}
+
+function updateMultipleBattlesScreen(battles) {
+  for (const battle of battles) {
+    battle.screen = new Map();
+  }
+
+  const sectorClaims = new Map();
+
+  for (let index = 0; index < battles.length; index++) {
+    const front = battles[index].front.cell.sector;
+
+    for (const sector of battles[index].sectors) {
+      if (!sectorClaims.has(sector)) sectorClaims.set(sector, []);
+
+      const dr = sector.row - front.row;
+      const dc = sector.col - front.col;
+      const distance = dr * dr + dc * dc;
+      sectorClaims.get(sector).push({ index, distance });
+    }
+  }
+
+  for (const [sector, claims] of sectorClaims) {
+    if (claims.length === 1) {
+      battles[claims[0].index].screen.set(sector, 1.0);
+    } else {
+      const frontClaim = claims.find(c => c.distance === 0);
+
+      if (frontClaim) {
+        battles[frontClaim.index].screen.set(sector, 1.0);
+      } else {
+        const inverseDistances = claims.map(c => 1 / c.distance);
+        const total = inverseDistances.reduce((a, b) => a + b, 0);
+
+        for (let i = 0; i < claims.length; i++) {
+          battles[claims[i].index].screen.set(sector, inverseDistances[i] / total);
+        }
+      }
+    }
+  }
 }
