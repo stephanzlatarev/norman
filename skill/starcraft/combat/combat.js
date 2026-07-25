@@ -1,4 +1,4 @@
-import { ActiveCount, Memory } from "./imports.js";
+import { ActiveCount, Memory, ALERT_RED } from "./imports.js";
 import Battle from "./battle.js";
 import listHotspots from "./list-hotspots.js";
 import updateBattleBalance from "./update-battle-balance.js";
@@ -50,15 +50,21 @@ export default function() {
 
 function selectHotspots() {
   const hotspots = listHotspots();
+  const prioritized = [...hotspots.values()].sort((a, b) => (a.level - b.level));
   const selected = [];
 
-  const shouldAvoidTrenches = hotspots.some(hotspot => (hotspot.isNormalHotspot && !hotspot.isTrenchHotspot));
-  const shouldLimitMissions = shouldAvoidTrenches || hotspots.some(hotspot => hotspot.isTrenchHotspot);
-  let missions = shouldLimitMissions ? calculateMissionsLimit() : Infinity;
+  Memory.FlagAvoidTrenches = prioritized.some(hotspot => (hotspot.isNormalHotspot && !hotspot.isTrenchHotspot));
+  Memory.LimitMissions = (Memory.DeploymentOutreach >= Memory.DeploymentOutreachProbingAttack) ? calculateMissionsLimit() : Infinity;
 
-  for (const hotspot of hotspots) {
-    if (hotspot.isTrenchHotspot) {
-      if (!shouldAvoidTrenches) selected.push(hotspot);
+  let focusHotspot;
+  let missions = Memory.LimitMissions;
+
+  for (const hotspot of prioritized) {
+    if (hotspot.isNormalHotspot) {
+      selected.push(hotspot);
+      focusHotspot = hotspot;
+    } else if (hotspot.isTrenchHotspot) {
+      if (!Memory.FlagAvoidTrenches) selected.push(hotspot);
     } else if (hotspot.isMissionHotspot) {
       if (missions-- > 0) selected.push(hotspot);
     } else {
@@ -66,28 +72,56 @@ function selectHotspots() {
     }
   }
 
-  const closestNormalHotspot = selected.find(one => one.isNormalHotspot);
-  if (closestNormalHotspot) {
-    // Prefer a normal (not cleanup, intercept, or trench) battle close to our home base
-    closestNormalHotspot.isFocusHotspot = true;
+  if (focusHotspot) {
+    // Draw back the focus hotspot closer to homebase when its rally zone is a hotspot too
+    const originalHotspot = focusHotspot;
+    let drawBackHotspot = getDrawBackHotspot(hotspots, focusHotspot);
+
+    while (drawBackHotspot) {
+      selected.splice(selected.indexOf(focusHotspot), 1);
+      if (selected.indexOf(drawBackHotspot) < 0) selected.push(drawBackHotspot);
+
+      focusHotspot = drawBackHotspot;
+      drawBackHotspot = getDrawBackHotspot(hotspots, focusHotspot);
+    }
+
+    focusHotspot.copyFlags(originalHotspot);
+    focusHotspot.isFocusHotspot = true;
   } else if (selected.length) {
     // When all battles are cleanup, intercept, or trench, focus on a non-empty battle that is closest to the enemy
-    let found = false;
-
     for (let i = selected.length - 1; i >= 0; i--) {
       if (!selected[i].isEmptyHotspot) {
         selected[i].isFocusHotspot = true;
-        found = true;
+        focusHotspot = selected[i];
         break;
       }
     }
 
-    if (!found) {
+    if (!focusHotspot) {
       selected[selected.length - 1].isFocusHotspot = true;
     }
   }
 
   return selected;
+}
+
+function getDrawBackHotspot(hotspots, hotspot) {
+  // Do not draw back from depot zones
+  if (hotspot.zone.isDepot) return null;
+  if (hotspot.rally.isDepot) return null;
+
+  // Do not draw back from contained hotspots
+  if (hotspot.rally === hotspot.zone) return null;
+
+  const rallyHotspot = hotspots.get(hotspot.rally);
+
+  // Do not draw back if the rally zone is not a hotspot
+  if (!rallyHotspot) return null;
+
+  // Do not draw back because of a cleanup hotspot
+  if (rallyHotspot.isCleanupHotspot) return null;
+
+  return rallyHotspot;
 }
 
 function calculateMissionsLimit(warriorCount) {  
@@ -96,8 +130,8 @@ function calculateMissionsLimit(warriorCount) {
   const warriors = ActiveCount.Zealot + ActiveCount.Stalker + ActiveCount.Sentry + ActiveCount.Immortal + ActiveCount.Colossus;
 
   if (warriors >= 24) return 3;
-  if (warriors <= 18) return 2;
-  if (warriors <= 12) return 1;
+  if (warriors >= 18) return 2;
+  if (warriors >= 12) return 1;
 
   return 0;
 }
@@ -105,6 +139,8 @@ function calculateMissionsLimit(warriorCount) {
 function mapHotspotsToBattles(hotspots) {
   const previous = new Set(Battle.list());
   const current = new Set();
+
+  hotspots.sort((a, b) => (a.level - b.level));
 
   // First, map same zone
   for (const hotspot of hotspots) {

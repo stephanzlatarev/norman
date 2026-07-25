@@ -6,6 +6,10 @@ import Limit from "../memo/limit.js";
 export default function(texts) {
   texts.push("Workers: " + ActiveCount.Probe + " / " + TotalCount.Probe + " / " + Limit.Probe);
 
+  const activeWarriors = ActiveCount.Zealot + ActiveCount.Stalker + ActiveCount.Sentry + ActiveCount.Immortal + ActiveCount.Colossus;
+  const totalWarriors = TotalCount.Zealot + TotalCount.Stalker + TotalCount.Sentry + TotalCount.Immortal + TotalCount.Colossus;
+  texts.push("Warriors: " + activeWarriors + " / " + totalWarriors);
+
   if (Memory.FlagHarvesterCapacity) texts.push("Flag Harvester Capacity");
   if (Memory.FlagSupplyBlocked) texts.push("Flag Supply Blocked");
 
@@ -22,8 +26,11 @@ export default function(texts) {
   }
 
   if (Memory.DeploymentOutreach) texts.push("Deployment Outreach: " + MemoryLabel("DeploymentOutreach", Memory.DeploymentOutreach));
+  if (Memory.LimitMissions) texts.push("Flag Avoid Trenches");
+  texts.push("Limit Missions: " + (Memory.LimitMissions || 0));
   if (Memory.LimitBase) texts.push("Limit Base: " + Memory.LimitBase);
 
+  if (Memory.FlagAvoidTrenches) texts.push("Flag Avoid Trenches");
   if (Memory.FlagSiegeDefense) texts.push("Flag Siege Defense");
   if (Memory.DetectedEnemyExpansion) texts.push("Detected Enemy Expansion");
   if (Memory.DetectedEnemyHoard) texts.push("Detected Enemy Hoard");

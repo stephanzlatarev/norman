@@ -203,13 +203,11 @@ function setSmashTargets(battle) {
     }
   }
 
-  const targets = threats.length ? threats : (contacts.length ? contacts : tumors);
-
   for (const fighter of battle.fighters) {
     const warrior = fighter.assignee;
 
     if (warrior) {
-      fighter.target = getClosestTarget(warrior, targets, false);
+      fighter.target = getClosestSmashTarget(warrior, battle.detector?.assignee, threats, contacts, tumors);
     }
   }
 }
@@ -246,6 +244,47 @@ function getClosestTarget(warrior, targets, isInSight) {
   }
 
   return closestTarget;
+}
+
+function getClosestSmashTarget(warrior, detector, ...targetGroups) {
+  for (const targets of targetGroups) {
+    let primaryTarget;
+    let primaryDistance = Infinity;
+    let secondaryTarget;
+    let secondaryDistance = Infinity;
+
+    for (const target of targets) {
+      if (!warrior.canShootTarget(target, false)) continue;
+
+      if (target.zone && detector) {
+        const distance = calculateSquareDistance(detector.body, target.body);
+
+        if (distance < primaryDistance) {
+          primaryTarget = target;
+          primaryDistance = distance;
+        }
+      }
+
+      if (target.zone && target.isValidShootingTarget(true)) {
+        const distance = calculateSquareDistance(warrior.body, target.body);
+
+        if (distance < primaryDistance) {
+          primaryTarget = target;
+          primaryDistance = distance;
+        }
+      } else if (target.isValidShootingTarget()) {
+        const distance = calculateSquareDistance(warrior.body, target.body);
+
+        if (distance < secondaryDistance) {
+          secondaryTarget = target;
+          secondaryDistance = distance;
+        }
+      }
+    }
+
+    if (primaryTarget) return primaryTarget;
+    if (secondaryTarget) return secondaryTarget;
+  }
 }
 
 function calculateSquareDistance(a, b) {
