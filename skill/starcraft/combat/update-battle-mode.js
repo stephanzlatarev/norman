@@ -1,5 +1,5 @@
 import { Memory, Depot } from "./imports.js";
-import { ALERT_YELLOW, PERIMETER_BLUE, PERIMETER_GREEN } from "./imports.js";
+import { ALERT_YELLOW, PERIMETER_BLUE, PERIMETER_GREEN, PERIMETER_WHITE } from "./imports.js";
 import Battle from "./battle.js";
 
 const ATTACK_BALANCE = 1.6;
@@ -63,35 +63,18 @@ function normalTransition(battle) {
     return Battle.MODE_FIGHT;
   }
 
+  // Check if we're already attacking and should not yet retreat
+  if ((battle.mode === Battle.MODE_FIGHT) && (battle.deployedBalance >= RETREAT_BALANCE)) {
+    return Battle.MODE_FIGHT;
+  }
+
   // Check if this is a fight between small number of warriors, where balance numbers are not exact
   if (battle.isSmallBattle && areWarriorsMoreThanEnemies(battle)) {
     return Battle.MODE_FIGHT;
   }
 
   // Check if we are defending our bases
-  if (battle.front.perimeterLevel <= PERIMETER_BLUE) {
-    if ((battle.deployedBalance >= DEFEND_BALANCE) || (battle.front == Depot.home) || areEnoughFightersRallied(battle)) {
-      return Battle.MODE_FIGHT;
-    } else if (canStandOurGround(battle)) {
-      return Battle.MODE_FIGHT;
-    } else {
-      return Battle.MODE_RALLY;
-    }
-  }
-
-  // Check if we are defending the approaches to our bases
-  if (battle.front.perimeterLevel <= PERIMETER_GREEN) {
-    if ((battle.deployedBalance >= RETREAT_BALANCE) || (battle.front === Depot.home)) {
-      return Battle.MODE_FIGHT;
-    } else if (canStandOurGround(battle)) {
-      return Battle.MODE_FIGHT;
-    } else {
-      return Battle.MODE_RALLY;
-    }
-  }
-
-  // Check if we're already attacking and should not yet retreat
-  if ((battle.mode === Battle.MODE_FIGHT) && (battle.deployedBalance >= RETREAT_BALANCE)) {
+  if (areStandingOurGround(battle)) {
     return Battle.MODE_FIGHT;
   }
 
@@ -120,14 +103,14 @@ function maxoutTransition(battle) {
   }
 
   // Check if enough fighters are rallied
-  if (areEnoughFightersRallied(battle)) {
+  if (areEnoughFightersRallied(battle, 20, 4)) {
     return Battle.MODE_FIGHT;
   }
 
   return Battle.MODE_RALLY;
 }
 
-function areEnoughFightersRallied(battle) {
+function areEnoughFightersRallied(battle, count, ratio) {
   let deployed = 0;
   let rallying = 0;
 
@@ -145,23 +128,36 @@ function areEnoughFightersRallied(battle) {
 
   // TODO: Check for capacity of zone (now hardcoded to 20).
   // If deployed fighters are more than that count units rallied to neighbor zones as deployed
-  return (deployed > 20) || (deployed > rallying * 4);
+  return (deployed > count) || (deployed > rallying * ratio);
 }
 
-function canStandOurGround(battle) {
-  // We need at least some warriors
+function areStandingOurGround(battle) {
+  const ground = battle.rally;
+
+  // Check if this is our ground
+  if (ground.perimeterLevel >= PERIMETER_WHITE) return false;
+
+  // We need warriors to fight
   if (battle.deployedBalance < STAND_BALANCE) return false;
+  if (battle.deployedBalance >= RETREAT_BALANCE) return true;
 
-  // We're this desperate only for the home base and the natural expansion
-  if ((battle.front !== Depot.home) && !Depot.home.neighbors.has(battle.front)) return false;
+  // Always defend the home base
+  if (ground === Depot.home) return true;
 
-  // We also need some workers supporting
-  if (battle.front.workers.size <= 4) return false;
+  // We need at least some advantage when defending and active depot zone
+  if (ground.depot && (ground.workers.size >= 4)) {
+    if (battle.deployedBalance >= DEFEND_BALANCE) {
+      if (hasShieldBattery(ground)) return true;
+      if (areEnoughFightersRallied(battle, 12, 4)) return true;
+    }
 
-  // We also need a shield battery
-  if (!hasShieldBattery(battle.front)) return false;
+    // We desperately defend the natural
+    if (Depot.home.neighbors.has(ground)) {
+      if (hasShieldBattery(ground)) return true;
+    }
+  }
 
-  return true;
+  return false;
 }
 
 function hasShieldBattery(zone) {
