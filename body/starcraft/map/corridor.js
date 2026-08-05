@@ -1,4 +1,6 @@
 
+const CHOKE_THRESHOLD = 25;
+
 export default class Corridor {
 
   constructor(type, path, via) {
@@ -8,7 +10,7 @@ export default class Corridor {
     this.name = name(type, path, via);
 
     this.isAir = (type === "air");
-    this.isChoke = (type === "choke") || !!via;
+    this.isChoke = (type === "choke") || (via && (via.cells.size < CHOKE_THRESHOLD));
     this.isCliff = (type === "cliff");
     this.isCurtain = (type === "curtain");
     this.isGround = (type === "ground");

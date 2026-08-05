@@ -108,7 +108,7 @@ function isCorridorBlocked(warrior, zone) {
     const corridor = warrior.zone.exits.get(zone);
 
     if (corridor?.isChoke) {
-      const movingTowardsHome = (zone.perimeterLevel < warrior.zone.perimeterLevel);
+      const movingTowardsHome = (zone.distance < warrior.zone.distance);
 
       if (movingTowardsHome) {
         corridor.traffic = Resources.loop + TRAFFIC_RESERVATION_LOOPS;
