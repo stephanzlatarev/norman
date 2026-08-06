@@ -32,8 +32,9 @@ function assignWarriorsToTarget(matrix, target) {
 
   for (const warrior of warriors) {
     const attack = target.body.isFlying ? warrior.type.attackAir : warrior.type.attackGround;
+    const fighter = matrix.assign(warrior, target);
 
-    matrix.assign(warrior, target); 
+    fighter.target = target;
     health -= attack;
 
     if (health <= 0) return;
@@ -114,6 +115,8 @@ function getClosestTarget(warrior, targets, isInSight) {
 
 function getClosestSmashTarget(warrior, detector, ...targetGroups) {
   for (const targets of targetGroups) {
+    // primaryTarget: closest target by detector distance (if detector exists) or by warrior distance (if visible)
+    // whichever is smaller wins, so the warrior switches to the detector's target when it gets closer
     let primaryTarget;
     let primaryDistance = Infinity;
     let secondaryTarget;

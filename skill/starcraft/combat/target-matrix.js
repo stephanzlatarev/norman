@@ -1,11 +1,9 @@
 
 /**
-- Filter targets in range of ranged warriors
-- Sort targets by how dangareous it is - damage divided by armor
-- For each target:
-  - Filter warriors in range
-  - Sort warrior by other targets in range
-  - Assign targets, until target health is less than assigned warrior damage
+- Collect all targets and classify primary targets (warriors at the front or able to attack)
+- For each primary target, find ranged warriors in range
+- Sort targets by danger: damage divided by armor
+- Sort warriors per target by total incoming damage from in-range targets (least busy first)
 **/
 export default class TargetMatrix {
 
@@ -77,7 +75,7 @@ export default class TargetMatrix {
       }
     }
 
-    // Orders target by their damage per second
+    // Orders targets by damage per armor point (most dangerous first)
     this.targetsInRange = [...this.targetToWarriors.keys()].sort(orderTargets);
   }
 
@@ -98,7 +96,6 @@ export default class TargetMatrix {
 
   assign(warrior, target) {
     const fighter = this.warriorToFightJob.get(warrior);
-    fighter.target = target;
 
     this.assignedWarriors.add(warrior);
 
@@ -114,6 +111,8 @@ export default class TargetMatrix {
         warriors.delete(warrior);
       }
     }
+
+    return fighter;
   }
 }
 
