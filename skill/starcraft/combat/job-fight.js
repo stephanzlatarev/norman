@@ -16,8 +16,11 @@ export default class Fight extends Job {
     super(warrior);
 
     this.battle = battle;
+    this.priority = battle.priority;
+
     this.zone = station.zone;
     this.station = station;
+
     this.summary = "Fight " + battle.front.name;
     this.details = this.summary;
     this.isBusy = false;

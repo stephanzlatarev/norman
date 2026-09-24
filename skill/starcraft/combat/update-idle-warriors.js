@@ -25,8 +25,13 @@ function hireIdleWarriorsInBattleZone(battle) {
     for (const warrior of sector.warriors) {
       if (!warrior.isAlive) continue;
       if (!IS_WARRIOR[warrior.type.name]) continue;
-      if (warrior.job && (warrior.job.battle === battle)) continue;
-      if (warrior.job && (warrior.job.priority >= battle.priority)) continue;
+
+      if (warrior.job) {
+        if (warrior.job.isBusy) continue;
+        if (warrior.job.battle === battle) continue;
+        if (warrior.job.priority >= battle.priority) continue;
+      }
+
       if (battle.isAirBattle && IS_GROUND_ONLY_WARRIOR[warrior.type.name]) continue;
 
       const openJob = findOpenJob(battle, warrior);
