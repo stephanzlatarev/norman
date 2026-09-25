@@ -91,7 +91,7 @@ export default class Job {
           info("jobs", unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details);
         }
 
-        unit.job.assign(null, true);
+        if (unit.job.assign) unit.job.assign(null, true);
       } else if (this.assignee) {
         info("jobs", unit.type.name, unit.nick, "assigned to job", this.details, "replacing", this.assignee.type.name, this.assignee.nick);
       } else {
