@@ -1,4 +1,4 @@
-import { Job, Order, Resources, ALERT_RED, PERIMETER_WHITE } from "./imports.js";
+import { Job, Order, Resources, ALERT_RED, PERIMETER_WHITE, info } from "./imports.js";
 import Battle from "./battle.js";
 import { attackTarget, routeWarriorTo } from "./ground-movement.js";
 
@@ -41,15 +41,22 @@ export default class Fight extends Job {
     }
   }
 
+  assign(...args) {
+    super.assign(...args);
+
+    if (!this.assignee) {
+      this.details = this.summary;
+      this.isBusy = false;
+    }
+  }
+
   execute() {
     const warrior = this.assignee;
     const target = this.target;
 
     if (!warrior.isAlive) {
-      console.log("Warrior", warrior.type.name, warrior.nick, "died in", this.details);
-      this.details = getDetails(this, "dead");
-      this.assignee = null;
-      this.isBusy = false;
+      info("jobs", "Warrior", warrior.type.name, warrior.nick, "died in", this.details);
+      this.assign(null);
 
       warrior.transit = null;
 

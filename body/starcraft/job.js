@@ -79,8 +79,8 @@ export default class Job {
     }
   }
 
-  // Assigns the given unit to the job.
-  assign(unit) {
+  // Assigns the given unit to the job. Pass null to clear the assignee.
+  assign(unit, mute) {
     if (unit === this.assignee) return;
 
     if (unit) {
@@ -91,7 +91,7 @@ export default class Job {
           info("jobs", unit.type.name, unit.nick, "re-assigned from job", unit.job.details, "to job", this.details);
         }
 
-        unit.job.assignee = null;
+        unit.job.assign(null, true);
       } else if (this.assignee) {
         info("jobs", unit.type.name, unit.nick, "assigned to job", this.details, "replacing", this.assignee.type.name, this.assignee.nick);
       } else {
@@ -105,7 +105,8 @@ export default class Job {
       this.assignee = unit;
       this.assignee.job = this;
     } else if (this.assignee) {
-      info("jobs", this.assignee.type.name, this.assignee.nick, "released from job", this.details);
+      if (!mute) info("jobs", this.assignee.type.name, this.assignee.nick, "released from job", this.details);
+
       this.assignee.job = null;
       this.assignee = null;
     }
