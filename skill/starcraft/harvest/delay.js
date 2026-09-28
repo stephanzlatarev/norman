@@ -38,7 +38,7 @@ class Delay {
       initialized = true;
     } else if ((rally.x !== initialRallyTarget.x) || (rally.y !== initialRallyTarget.y)) {
       // We issue the rally target command on loop 0, and change should be observed on loop 1
-      this.loops = Resources.loop - 1;
+      this.loops = (Resources.loop > 1) ? 2 : 0;
 
       console.log("Delay is", this.loops, "game loops");
       initialized = true;
