@@ -72,7 +72,7 @@ export default class Fight extends Job {
     }
 
     const isAttacking = (warrior && target && warrior.order && (warrior.order.targetUnitTag === target.tag));
-    const isDeployed = this.battle.sectors.has(warrior.sector);
+    const isDeployed = this.battle.warriors.has(warrior);
     let isInTransit = false;
 
     if ((isDeployed || isAttacking) && this.shouldAttack()) {
@@ -285,16 +285,14 @@ export default class Fight extends Job {
     let closestThreat;
     let closestThreatDistance;
 
-    for (const sector of this.battle.sectors) {
-      for (const threat of sector.threats) {
-        if (!threat.isTargetInFireRange(warrior, STALKING_BUFFER_RANGE)) continue;
+    for (const threat of this.battle.threats) {
+      if (!threat.isTargetInFireRange(warrior, STALKING_BUFFER_RANGE)) continue;
 
-        const distance = calculateSquareDistance(warrior.body, threat.body);
+      const distance = calculateSquareDistance(warrior.body, threat.body);
 
-        if (!closestThreat || (distance < closestThreatDistance)) {
-          closestThreat = threat;
-          closestThreatDistance = distance;
-        }
+      if (!closestThreat || (distance < closestThreatDistance)) {
+        closestThreat = threat;
+        closestThreatDistance = distance;
       }
     }
 

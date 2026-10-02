@@ -118,7 +118,7 @@ function areEnoughFightersRallied(battle, count, ratio) {
     const warrior = fighter.assignee;
 
     if (warrior && warrior.isAlive) {
-      if (battle.sectors.has(warrior.sector)) {
+      if (battle.warriors.has(warrior)) {
         deployed++;
       } else {
         rallying++;
@@ -175,16 +175,14 @@ function areWarriorsMoreThanEnemies(battle) {
   for (const fighter of battle.fighters) {
     const warrior = fighter.assignee;
 
-    if (warrior && warrior.isAlive && battle.sectors.has(warrior.sector)) {
+    if (warrior && warrior.isAlive && battle.warriors.has(warrior)) {
       warriorCount++;
     }
   }
 
-  for (const sector of battle.sectors) {
-    for (const enemy of sector.threats) {
-      if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
-        enemyCount++;
-      }
+  for (const enemy of battle.threats) {
+    if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
+      enemyCount++;
     }
   }
 
@@ -221,13 +219,11 @@ function getGroundHittingEnemiesOrDummies(battle) {
   const hitters = new Set();
   const dummies = new Set();
 
-  for (const sector of battle.sectors) {
-    for (const threat of sector.threats) {
-      if (threat.type.damageGround) {
-        hitters.add(threat);
-      } else {
-        dummies.add(threat);
-      }
+  for (const threat of battle.threats) {
+    if (threat.type.damageGround) {
+      hitters.add(threat);
+    } else {
+      dummies.add(threat);
     }
   }
 

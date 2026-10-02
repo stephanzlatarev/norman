@@ -9,6 +9,9 @@ export default class Zone extends Space {
   sectors = new Set();
   horizon = new Set();
 
+  // Enclosing circle around the zone
+  circle = null;
+
   // Maps neighboring zone to exit corridor
   neighbors = new Set();
   exits = new Map();
@@ -50,6 +53,9 @@ export default class Zone extends Space {
       }
     }
 
+    // The enclosing circle is an approximate smallest circle around the zone's border
+    this.circle = enclosingCircle(this.border.size ? this.border : cells);
+
     zones.push(this);
   }
 
@@ -90,3 +96,57 @@ export default class Zone extends Space {
   }
 
 }
+
+// Approximate smallest circle enclosing the given cells, using Ritter's algorithm
+function enclosingCircle(cells) {
+  let seed;
+  for (const cell of cells) { seed = cell; break; }
+  if (!seed) return { x: 0, y: 0, r: 0 };
+
+  // Seed the circle on the diameter between the two mutually farthest-ish cells
+  const a = farthestCell(cells, seed);
+  const b = farthestCell(cells, a);
+
+  let x = (a.x + b.x) / 2;
+  let y = (a.y + b.y) / 2;
+  let r = Math.sqrt(squareDistance(a, b)) / 2;
+
+  // Grow the circle minimally for any cell that falls outside it
+  for (const cell of cells) {
+    const dx = cell.x - x;
+    const dy = cell.y - y;
+    const d = Math.sqrt(dx * dx + dy * dy);
+
+    if (d > r) {
+      const nr = (r + d) / 2;
+      const k = (nr - r) / d;
+
+      x += dx * k;
+      y += dy * k;
+      r = nr;
+    }
+  }
+
+  return { x, y, r };
+}
+
+function farthestCell(cells, from) {
+  let farthest = from;
+  let farthestDistance = -1;
+
+  for (const cell of cells) {
+    const distance = squareDistance(cell, from);
+
+    if (distance > farthestDistance) {
+      farthestDistance = distance;
+      farthest = cell;
+    }
+  }
+
+  return farthest;
+}
+
+function squareDistance(a, b) {
+  return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+}
+

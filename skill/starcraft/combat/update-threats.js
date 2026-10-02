@@ -16,17 +16,18 @@ export default function(battle) {
 
 function clearInvisibleMobileThreats(battle) {
   let cleared = false;
+  const remaining = [];
 
-  for (const sector of battle.sectors) {
-    for (const threat of sector.threats) {
-      if (!threat.type.movementSpeed) continue;
-      if (threat.type.isWorker) continue;
-      if (sector.enemies.has(threat)) continue;
-
-      sector.untrackUnit(threat);
+  for (const threat of battle.threats) {
+    if (threat.type.movementSpeed && !threat.type.isWorker && threat.sector && !threat.sector.enemies.has(threat)) {
+      threat.sector.untrackUnit(threat);
       cleared = true;
+    } else {
+      remaining.push(threat);
     }
   }
+
+  if (cleared) battle.threats = remaining;
 
   return cleared;
 }

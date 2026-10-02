@@ -1,5 +1,6 @@
 import { List } from "./imports.js";
 import { traceBattle } from "./trace.js";
+import Area from "./area.js";
 
 const battles = [];
 
@@ -15,6 +16,7 @@ export default class Battle {
 
   front; // The target zone of the battle
   rally; // The rally zone of the battle
+  area;  // The engagement and threat areas of the battle
 
   enemyHealth = 0;
   enemyStrength = 0;
@@ -27,18 +29,18 @@ export default class Battle {
   mode = Battle.MODE_WATCH;
   priority = 0;
 
-  sectors = new Set();
-  screen = new Map();
   stations = [];
 
-  detector;
-  fighters;
+  detector = null;
+  fighters = [];
+
+  warriors = new Set(); // Our warriors inside the engagement area (the deployed warriors)
+  threats = [];         // The enemy warriors inside the threat area
+  contacts = [];        // The enemy non-warrior units inside the engagement area
 
   constructor(front, rally) {
-    this.detector = null;
-    this.fighters = [];
-
     this.move(front, rally);
+    this.area = new Area(front);
 
     battles.push(this);
     traceBattle(this, "begins");

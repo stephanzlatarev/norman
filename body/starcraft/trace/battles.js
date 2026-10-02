@@ -32,6 +32,10 @@ export default function(shapes, texts) {
     const color = getBattleColor(battle);
     const polygon = getBattlePolygon(battle);
 
+    if (battle.area) {
+      traceAreaCircles(shapes, battle.area);
+    }
+
     if (battle.isFocusBattle) {
       shapes.push({
         shape: "polygon",
@@ -92,17 +96,40 @@ function getBattleColor(battle) {
   }
 }
 
+// Draw the protect, engage and threat areas as faint circle shades over the terrain
+function traceAreaCircles(shapes, area) {
+  const circles = area.circles();
+
+  addAreaCircles(shapes, circles.threat, "red");
+  addAreaCircles(shapes, circles.engage, "blue");
+  addAreaCircles(shapes, circles.protect, "white");
+}
+
+function addAreaCircles(shapes, circles, color) {
+  for (const circle of circles) {
+    shapes.push({
+      shape: "circle",
+      x: circle.x,
+      y: circle.y,
+      r: circle.r,
+      color: color,
+      filled: true,
+      opacity: 0.15,
+    });
+  }
+}
+
 function getBattlePolygon(battle) {
   const bsectors = sectors.get(battle.front);
 
-  if (bsectors && (new Set([...bsectors, ...battle.sectors]).size === battle.sectors.size)) {
+  if (bsectors && (new Set([...bsectors, ...battle.area.horizon]).size === battle.area.horizon.size)) {
     return polygons.get(battle.front);
   }
 
   const polygon = getBattleContour(battle);
 
   polygons.set(battle.front, polygon);
-  sectors.set(battle.front, [...battle.sectors]);
+  sectors.set(battle.front, [...battle.area.horizon]);
 
   return polygon;
 }
@@ -113,7 +140,7 @@ const SIDE_RIGHT = 3;
 const SIDE_BOTTOM = 4;
 
 function getBattleContour(battle) {
-  const sectors = new Set(battle.sectors);
+  const sectors = new Set(battle.area.horizon);
   const start = findLeftSector(sectors);
   const points = [start.bounds.left, start.bounds.top];
 

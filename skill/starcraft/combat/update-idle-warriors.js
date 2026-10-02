@@ -21,7 +21,7 @@ export default function() {
 }
 
 function hireIdleWarriorsInBattleZone(battle) {
-  for (const sector of battle.sectors) {
+  for (const sector of battle.area.horizon) {
     for (const warrior of sector.warriors) {
       if (!warrior.isAlive) continue;
       if (!IS_WARRIOR[warrior.type.name]) continue;

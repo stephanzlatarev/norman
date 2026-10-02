@@ -23,24 +23,22 @@ function calculateEnemyStrength(battle) {
   let armyHealth = 0;
   let totalHealth = 0;
 
-  for (const [sector, weight] of battle.screen) {
-    for (const enemy of sector.threats) {
-      totalHealth += enemy.armor.total * weight;
+  for (const enemy of battle.threats) {
+    totalHealth += enemy.armor.total;
 
-      if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
-        damage += enemy.type.damageGround;
-        armyHealth += enemy.armor.total * weight;
-      }
+    if (!enemy.type.isWorker && (enemy.type.damageGround > 0)) {
+      damage += enemy.type.damageGround;
+      armyHealth += enemy.armor.total;
+    }
 
-      if (enemy.type.name === "Immortal") {
-        // Immortals have bonus damage against my main unit Stalkers
-        damage += enemy.type.damageGround * 1.5;
+    if (enemy.type.name === "Immortal") {
+      // Immortals have bonus damage against my main unit Stalkers
+      damage += enemy.type.damageGround * 1.5;
 
-        // Immortals absorb up to 100 damage
-        armyHealth += 100 * weight;
-      } else if (enemy.type.name === "ShieldBattery") {
-        armyHealth += 300 * weight;
-      }
+      // Immortals absorb up to 100 damage
+      armyHealth += 100;
+    } else if (enemy.type.name === "ShieldBattery") {
+      armyHealth += 300;
     }
   }
 
@@ -58,7 +56,7 @@ function calculateWarriorStrength(battle, isDeployed) {
     const warrior = fighter.assignee;
 
     if (!warrior || !warrior.isAlive) continue;
-    if (isDeployed && !battle.sectors.has(warrior.sector)) continue;
+    if (isDeployed && !battle.warriors.has(warrior)) continue;
 
     warriorDamage += warrior.type.damageGround;
     warriorHealth += warrior.armor.total;

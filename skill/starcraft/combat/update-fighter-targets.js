@@ -54,19 +54,15 @@ function assignRemainingWarriors(battle, matrix) {
 }
 
 function setSmashTargets(battle) {
-  const threats = [];
+  const threats = [...battle.threats];
   const contacts = [];
   const tumors = [];
 
-  for (const sector of battle.sectors) {
-    threats.push(...sector.threats);
-
-    for (const contact of sector.contacts) {
-      if (contact.type.isTumor) {
-        tumors.push(contact);
-      } else {
-        contacts.push(contact);
-      }
+  for (const contact of battle.contacts) {
+    if (contact.type.isTumor) {
+      tumors.push(contact);
+    } else {
+      contacts.push(contact);
     }
   }
 
@@ -80,16 +76,12 @@ function setSmashTargets(battle) {
 }
 
 function setKiteTargets(battle) {
+  const targets = [...battle.threats];
+
   for (const fighter of battle.fighters) {
     const warrior = fighter.assignee;
 
     if (warrior) {
-      const targets = [];
-
-      for (const sector of battle.sectors) {
-        targets.push(...sector.threats);
-      }
-
       fighter.target = getClosestTarget(warrior, targets, true);
     }
   }

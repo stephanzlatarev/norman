@@ -34,19 +34,17 @@ export default class TargetMatrix {
       this.warriorToFightJob.set(warrior, fighter);
     }
 
-    for (const sector of battle.sectors) {
-      for (const threat of sector.threats) {
-        if (!threat.isValidShootingTarget()) continue;
+    for (const threat of battle.threats) {
+      if (!threat.isValidShootingTarget()) continue;
 
-        this.allTargets.push(threat);
+      this.allTargets.push(threat);
 
-        if (!threat.type.isWarrior) continue;
+      if (!threat.type.isWarrior) continue;
 
-        // Treat the enemy warriors that are in the battle zone and those that have range over my warriors as primary targets
-        const isAnAttackerInPrimaryZones = threat.type.damageGround && primaryZones.has(threat.zone);
-        if (isAnAttackerInPrimaryZones || isEnemyWarriorAbleToAttack(primaryZones, threat, groundWarriors)) {
-          this.primaryTargets.push(threat);
-        }
+      // Treat the enemy warriors that are in the battle zone and those that have range over my warriors as primary targets
+      const isAnAttackerInPrimaryZones = threat.type.damageGround && primaryZones.has(threat.zone);
+      if (isAnAttackerInPrimaryZones || isEnemyWarriorAbleToAttack(primaryZones, threat, groundWarriors)) {
+        this.primaryTargets.push(threat);
       }
     }
 

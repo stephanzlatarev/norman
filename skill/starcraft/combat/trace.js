@@ -51,7 +51,7 @@ export function traceBattle(battle, event) {
 
   trace.push("priority:", Math.floor(battle.priority));
   trace.push("perimeter:", battle.front.perimeterLevel.toFixed(2));
-  trace.push("sectors:", [...battle.sectors].map(sector => sector.name).join());
+  trace.push("sectors:", [...battle.area.horizon].map(sector => sector.name).join());
   trace.push("balance:", battle.deployedBalance.toFixed(2), "/", battle.recruitedBalance.toFixed(2));
 
   trace.push("|");
@@ -63,9 +63,9 @@ export function traceBattle(battle, event) {
 
   trace.push("|");
   trace.push("threats:");
-  traceThreats(trace, battle.sectors);
+  traceThreats(trace, battle.threats);
   trace.push("contacts:");
-  traceContacts(trace, battle.sectors);
+  traceContacts(trace, battle.contacts);
 
   info("battles", trace.join(" "));
 }
@@ -100,7 +100,7 @@ function traceFighterType(trace, battle, type) {
     if (fighter.assignee) {
       increment(count, fighter.assignee.sector.name);
 
-      if (battle.sectors.has(fighter.assignee.sector)) {
+      if (battle.warriors.has(fighter.assignee)) {
         deploy.add(fighter.assignee.sector.name);
       } else {
         rally.add(fighter.assignee.sector.name);
@@ -139,41 +139,35 @@ function traceFighterType(trace, battle, type) {
   trace.push("·");
 }
 
-function traceContacts(trace, sectors) {
+function traceContacts(trace, contacts) {
   const types = new Set();
 
-  for (const sector of sectors) {
-    for (const enemy of sector.contacts) {
-      types.add(enemy.type.name);
-    }
+  for (const enemy of contacts) {
+    types.add(enemy.type.name);
   }
 
   trace.push([...types].sort().join(" "));
 }
 
-function traceThreats(trace, sectors) {
+function traceThreats(trace, threats) {
   const types = new Set();
 
-  for (const sector of sectors) {
-    for (const enemy of sector.threats) {
-      types.add(enemy.type.name);
-    }
+  for (const enemy of threats) {
+    types.add(enemy.type.name);
   }
 
   for (const type of types) {
-    traceThreatType(trace, sectors, type);
+    traceThreatType(trace, threats, type);
   }
 }
 
-function traceThreatType(trace, sectors, type) {
+function traceThreatType(trace, threats, type) {
   const count = new Map();
 
-  for (const sector of sectors) {
-    for (const enemy of sector.threats) {
-      if (enemy.type.name !== type) continue;
+  for (const enemy of threats) {
+    if (enemy.type.name !== type) continue;
 
-      increment(count, enemy.sector.name);
-    }
+    increment(count, enemy.sector.name);
   }
 
   trace.push(type);
@@ -225,9 +219,8 @@ function isWarriorDeployed(warrior) {
   if (!sector) return "?";
   if (!fight) return "-";
   if (!fight.battle) return "no battle";
-  if (!fight.battle.sectors) return "no battle sectors";
 
-  return fight.battle.sectors.has(sector) ? "yes" : "no";
+  return fight.battle.warriors.has(warrior) ? "yes" : "no";
 }
 
 function getWarriorTarget(warrior) {

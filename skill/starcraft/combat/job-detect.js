@@ -33,14 +33,14 @@ export default class Detect extends Job {
 
     clearDetectedThreats(observer);
 
-    const { target, isVisible } = findTarget(observer, this.battle.sectors);
+    const { target, isVisible } = findTarget(observer, this.battle.area.horizon);
 
     if ((observer.armor.shield >= observer.armor.shieldMax) && target && !isVisible) {
       // All threats may be outside sight range, so the observer may need to get into their fire range if necessary. That's why do it on full shield.
       this.target = target;
     } else if ((observer.armor.shield < this.shield) || isInEnemyFireRange(this.battle, observer)) {
       this.target = getRetreatPoint(observer, this.battle);
-    } else if (!this.battle.sectors.has(observer.sector)) {
+    } else if (!this.battle.area.horizon.has(observer.sector)) {
       // Rally to battle
       // TODO: Make sure rally move doesn't go through threat zones
       this.target = this.battle.front;
@@ -99,8 +99,8 @@ function selectObserveDirection(battle, previousTarget) {
 
   let candidates;
 
-  if (battle.sectors.size > 1) {
-    candidates = [...battle.sectors].filter(sector => (sector !== battle.front.sector));
+  if (battle.area.horizon.size > 1) {
+    candidates = [...battle.area.horizon].filter(sector => (sector !== battle.front.sector));
   } else {
     candidates = [...battle.front.border];
   }
@@ -146,7 +146,7 @@ function getRetreatPoint(observer, battle) {
   let closestEnemy;
   let closestDistance = Infinity;
 
-  for (const sector of battle.sectors) {
+  for (const sector of battle.area.horizon) {
     for (const threat of sector.threats) {
       if (threat.type.damageAir > 0) {
         const distance = calculateSquareDistance(observer.body, threat.body);
@@ -193,7 +193,7 @@ function isInSight(observer, body) {
 }
 
 function isInEnemyFireRange(battle, observer) {
-  for (const sector of battle.sectors) {
+  for (const sector of battle.area.horizon) {
     for (const threat of sector.threats) {
       if (!threat.type.rangeAir) continue;
 
@@ -216,7 +216,7 @@ function isTargetValid(battle, target) {
     return sector.threats.has(target) && !sector.enemies.has(target);
   }
 
-  return battle.sectors.has(target);
+  return battle.area.horizon.has(target);
 }
 
 function calculateSquareDistance(a, b) {

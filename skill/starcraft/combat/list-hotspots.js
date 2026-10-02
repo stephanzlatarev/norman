@@ -1,5 +1,6 @@
 import { Depot, Memory, Zone } from "./imports.js";
 import { ALERT_RED, PERIMETER_WHITE } from "./imports.js";
+import Area from "./area.js";
 
 const IS_STRONG_ENEMY = {
   Battlecruiser: true,
@@ -50,6 +51,7 @@ class Hotspot {
 
   move(zone) {
     this.zone = zone;
+    this.area = new Area(zone);
 
     this.isEnforcedHotspot = isEnforcedHotspot(this);
 
@@ -57,13 +59,24 @@ class Hotspot {
       this.rally = Depot.home;
     } else if (this.isEnforcedHotspot) {
       this.rally = zone;
-    } else {
+    } else if (zone.backward) {
+      this.area.extendEngageArea(zone);
       this.rally = zone.backward;
-      while (this.rally && !this.rally.isDepot && !this.rally.isHall && this.rally.backward) this.rally = this.rally.backward;
-      if (!this.rally) this.rally = zone;
+
+      while (!this.rally.isDepot && !this.rally.isHall && this.rally.backward) {
+        this.area.extendEngageArea(this.rally);
+        this.rally = this.rally.backward;
+      }
+    } else {
+      this.rally = zone;
     }
 
     this.level = Math.round(this.rally.perimeterLevel * 10000 + this.zone.perimeterLevel * 100);
+
+    this.warriors = this.area.listDeployedWarriors();
+    this.area.extendThreatArea(this.warriors);
+    this.threats = this.area.listEnemyThreats();
+    this.contacts = this.area.listEnemyContacts();
 
     this.isAirHotspot = isAirHotspot(this);
     this.isEmptyHotspot = isEmptyHotspot(this);
@@ -99,11 +112,10 @@ class Hotspot {
 
     battle.level = this.level;
 
-    if (this.isCleanupHotspot || this.isInterceptHotspot) {
-      battle.sectors = new Set([...this.zone.sectors, ...this.rally.sectors]);
-    } else {
-      battle.sectors = new Set([...this.zone.horizon, ...this.rally.sectors]);
-    }
+    battle.area = this.area;
+    battle.warriors = this.warriors;
+    battle.threats = this.threats;
+    battle.contacts = this.contacts;
 
     battle.isAirBattle = this.isAirHotspot;
     battle.isEmptyBattle = this.isEmptyHotspot;
@@ -182,14 +194,8 @@ function isEmptyHotspot(hotspot) {
   if (!hasWarriors) return false;
 
   // The hotspot is not considered empty if there are enemy units inside
-  for (const sector of zone.sectors) {
-    for (const one of sector.threats) {
-      if (isUnitInHotspot(one, hotspot)) return false;
-    }
-    for (const one of sector.contacts) {
-      if (isUnitInHotspot(one, hotspot)) return false;
-    }
-  }
+  if (hotspot.threats.length) return false;
+  if (hotspot.contacts.length) return false;
 
   return true;
 }
@@ -197,17 +203,12 @@ function isEmptyHotspot(hotspot) {
 function isAirHotspot(hotspot) {
   let hasAirThreats = false;
 
-  for (const sector of hotspot.zone.sectors) {
-    for (const threat of sector.threats) {
-      if (!threat.zone) continue;
-      if (!isUnitInHotspot(threat, hotspot)) continue;
-
-      if (threat.body.isGround) {
-        // There's at least this one ground enemy unit, so the battle is not only in the air
-        return false;
-      } else {
-        hasAirThreats = true;
-      }
+  for (const threat of hotspot.threats) {
+    if (threat.body.isGround) {
+      // There's at least this one ground enemy unit, so the battle is not only in the air
+      return false;
+    } else {
+      hasAirThreats = true;
     }
   }
 
@@ -227,40 +228,28 @@ function isEnforcedHotspot(hotspot) {
 function isSmallHotspot(hotspot) {
   let count = 0;
 
-  for (const sector of hotspot.zone.sectors) {
-    for (const threat of sector.threats) {
-      if (!threat.zone) continue;
-      if (!isUnitInHotspot(threat, hotspot)) continue;
-      if (threat.type.isWorker) continue;
-      if (IS_STRONG_ENEMY[threat.type.name]) return false;
-      if (threat.type.damageGround) count++;
-      if (count > 2) return false;
-    }
+  for (const threat of hotspot.threats) {
+    if (threat.type.isWorker) continue;
+    if (IS_STRONG_ENEMY[threat.type.name]) return false;
+    if (threat.type.damageGround) count++;
+    if (count > 2) return false;
   }
 
   return true;
 }
 
 function isCleanupHotspot(hotspot) {
-  for (const sector of hotspot.zone.sectors) {
-    for (const threat of sector.threats) {
-      if (!threat.zone) continue;
-      if (!isUnitInHotspot(threat, hotspot)) continue;
-      if (threat.type.damageGround) return false;
-      if (threat.type.movementSpeed) return false;
-    }
+  for (const threat of hotspot.threats) {
+    if (threat.type.damageGround) return false;
+    if (threat.type.movementSpeed) return false;
   }
 
   return true;
 }
 
 function isTrenchHotspot(hotspot) {
-  for (const sector of hotspot.zone.sectors) {
-    for (const threat of sector.threats) {
-      if (!threat.zone) continue;
-      if (!isUnitInHotspot(threat, hotspot)) continue;
-      if (IS_TRENCH_ENEMY[threat.type.name]) return true;
-    }
+  for (const threat of hotspot.threats) {
+    if (IS_TRENCH_ENEMY[threat.type.name]) return true;
   }
 
   return false;
@@ -306,15 +295,6 @@ function addPerimeterHotspot(hotspots) {
   }
 
   hotspots.set(outerZone, new Hotspot(outerZone));
-}
-
-// Unit is in the hotspot if it is in the hotspot zone or in a corridor to it
-function isUnitInHotspot(unit, hotspot) {
-  if (!unit.zone) return false;
-  if (unit.zone === hotspot.zone) return true;
-
-  if (unit.zone.isDepot || unit.zone.isHall) return false;
-  if (unit.zone.neighbors.has(hotspot.zone)) return true;
 }
 
 function isClose(a, b, span) {
