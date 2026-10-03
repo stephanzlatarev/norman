@@ -1,4 +1,4 @@
-import { Units, TotalCount, Resources, info } from "./imports.js";
+import { Memory, Units, TotalCount, Resources, info } from "./imports.js";
 
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = Math.round(LOOPS_PER_SECOND * 60);
@@ -55,6 +55,8 @@ function clear() {
   gatewayProduction.clear();
   gatewayProductionUsed = 0;
   gatewayProductionTotal = 0;
+
+  Memory.CountOrdersExecuted = 0;
 }
 
 function trackSupply() {
@@ -157,6 +159,11 @@ function show() {
     "Gateways:",
     gatewayProduction.size,
     percentage(gatewayProductionUsed, gatewayProductionTotal),
+
+    "|",
+
+    "APM:",
+    Memory.CountOrdersExecuted,
   );
 }
 

@@ -1,4 +1,5 @@
 import starcraft from "@node-sc2/proto";
+import Memory from "../../code/memory.js";
 import Job from "./job.js";
 import { error, info, warning } from "./log.js";
 import Order from "./order.js";
@@ -42,6 +43,8 @@ export default class Game {
 
     // TODO: Replace all use of Enemy.base with the newer Depot.enemy
     Enemy.base = Depot.enemy;
+
+    Memory.CountOrdersExecuted = 0;
   }
 
   async observe() {
@@ -127,6 +130,8 @@ export default class Game {
     }
 
     if (actions.length) {
+      Memory.CountOrdersExecuted += actions.length;
+
       try {
         const response = await this.client.action({ actions: actions });
 
